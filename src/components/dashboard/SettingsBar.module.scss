@@ -1,0 +1,51 @@
+@use "../styles/breakpoints.scss" as breakpoints;
+
+.overlay {
+  @include breakpoints.m {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 7;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+
+    &.open {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+}
+
+.sidebarWrapper {
+  position: relative;
+  display: flex;
+  z-index: 8;
+
+  @include breakpoints.m {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+}
+
+.sidebarContent {
+  @include breakpoints.m {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    max-height: 100vh !important;
+    border-right: 1px solid var(--neutral-medium) !important;
+    border-left: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+  }
+}

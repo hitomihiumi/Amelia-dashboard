@@ -1,0 +1,7 @@
+@use "../styles/breakpoints.scss" as breakpoints;
+
+.buttonRow {
+  @include breakpoints.s {
+    width: 100%;
+  }
+}

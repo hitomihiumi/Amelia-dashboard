@@ -1,0 +1,9 @@
+.card {
+  transition: transform 0.2s ease-in-out;
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-0.5rem);
+      border-color: var(--scheme-brand-500);
+    }
+  }
+}

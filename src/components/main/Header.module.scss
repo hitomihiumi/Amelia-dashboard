@@ -1,0 +1,26 @@
+@use "../styles/breakpoints.scss" as breakpoints;
+
+.header {
+  padding-left: 20rem;
+  padding-right: 20rem;
+
+  @include breakpoints.l {
+    padding-left: 10rem;
+    padding-right: 10rem;
+  }
+
+  @include breakpoints.m {
+    padding-left: 6rem;
+    padding-right: 6rem;
+  }
+
+  @include breakpoints.s {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+
+  @include breakpoints.xs {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
