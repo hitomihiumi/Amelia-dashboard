@@ -23,7 +23,7 @@ import { DummyInput } from "./DummyInput";
 
 type SelectOptionType = Omit<OptionProps, "selected">;
 
-interface SelectProps
+export interface SelectProps
   extends Omit<InputProps, "onSelect" | "value">,
     Pick<DropdownWrapperProps, "minHeight" | "minWidth" | "maxWidth"> {
   options: SelectOptionType[];

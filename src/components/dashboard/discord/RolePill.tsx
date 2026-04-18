@@ -17,7 +17,7 @@ const RolePill = forwardRef<HTMLDivElement, RolePillProps>(
     const paddingX = size === "s" ? "8" : size === "m" ? "8" : "12";
     const paddingY = size === "s" ? "1" : size === "m" ? "2" : "4";
 
-    const { color, backgroundColor, borderColor } = discordRolePillStyle(roleColor);
+    const { color, backgroundColor } = discordRolePillStyle(roleColor);
 
     return (
       <Row
@@ -32,7 +32,6 @@ const RolePill = forwardRef<HTMLDivElement, RolePillProps>(
           whiteSpace: "nowrap",
           userSelect: "none",
           border: "none",
-          borderColor,
           backgroundColor,
         }}
         {...rest}

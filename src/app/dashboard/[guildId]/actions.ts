@@ -3,7 +3,7 @@
 import { Guild } from "@/lib/db/Guild";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { verifyUserIsGuildAdministrator } from "@/lib/discord/guilds-api";
 import { GuildActionState } from "@/types/dashboard";
 

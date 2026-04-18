@@ -13,14 +13,12 @@ export function discordRolePillStyle(color: number): CSSProperties {
   const rgb = discordRoleRgb(color);
   if (!rgb) {
     return {
-      borderColor: "rgb(161 161 170)",
       color: "rgb(244 244 245)",
       backgroundColor: "rgba(63, 63, 70, 0.35)",
     };
   }
   const { r, g, b } = rgb;
   return {
-    borderColor: `rgb(${r}, ${g}, ${b})`,
     color: `rgb(${r}, ${g}, ${b})`,
     backgroundColor: `rgba(${r}, ${g}, ${b}, 0.18)`,
   };

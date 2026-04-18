@@ -1,7 +1,7 @@
 "use server";
 
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { Guild } from "@/lib/db/Guild";
 import { revalidatePath } from "next/cache";
 import { requireGuildAdmin } from "@/app/dashboard/[guildId]/actions";
@@ -86,7 +86,7 @@ export async function updateShop(guildId: string, formData: FormData): Promise<G
 
     return { ok: true };
   } catch (error) {
-    console.error("[Economy Update Error]:", error);
+    console.error("[Shop Update Error]:", error);
 
     if (error instanceof SyntaxError) {
       return { ok: false, error: "Data format error." };

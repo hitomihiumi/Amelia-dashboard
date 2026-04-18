@@ -11,6 +11,7 @@ import {
 import { RoleSelect } from "@/components/dashboard/discord/RoleSelect";
 import { DiscordRole } from "@/lib/discord/role-style";
 import type { ShopRole } from "@/lib/db/types";
+import { RolePill } from "@/components/dashboard/discord/RolePill";
 
 export interface ShopModalProps {
   open: boolean;
@@ -78,7 +79,17 @@ export const ShopModal: React.FC<ShopModalProps> = ({
     >
       <Column fillWidth gap="16">
         <Column gap={"8"} fillWidth>
-          <RoleSelect roles={roles} selectedRole={role} setSelectedRole={setRole} />
+          <RoleSelect
+            id={"role-select"}
+            label={"Select a role"}
+            options={roles.map((role) => ({
+              label: <RolePill roleColor={role.color} label={role.name} />,
+              value: role.id,
+            }))}
+            max={1}
+            selectedRole={role}
+            setSelectedRole={setRole}
+          />
           <Input
             id={"price-set"}
             label={"Price"}

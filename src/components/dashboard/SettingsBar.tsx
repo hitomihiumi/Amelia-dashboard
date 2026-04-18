@@ -159,6 +159,24 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 </Text>
               </ToggleButton>
             </Column>
+
+            <Column gap={"8"}>
+              <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
+                Utils
+              </Text>
+              <ToggleButton
+                size={"l"}
+                prefixIcon={"microphone"}
+                horizontal="start"
+                fillWidth
+                selected={pathname.endsWith("/dashboard/" + guildId + "/private")}
+                href={"/dashboard/" + guildId + "/private"}
+              >
+                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
+                  Private Rooms
+                </Text>
+              </ToggleButton>
+            </Column>
           </Column>
 
           <Line />

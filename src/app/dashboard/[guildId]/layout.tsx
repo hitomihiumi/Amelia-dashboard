@@ -1,11 +1,10 @@
 import { ReactNode } from "react";
-import { Flex, Text, Button, Row, Column, Avatar, Line } from "@once-ui-system/core";
-import Link from "next/link";
+import { Flex } from "@once-ui-system/core";
 import { UnsavedChangesProvider } from "@/contexts/UnsavedChangesContext";
 import { UnsavedNavigationGuard } from "@/components/layout/UnsavedNavigationGuard";
 import { UnsavedBar } from "@/components/layout/UnsavedBar";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getGuildAccessForDashboard } from "@/lib/discord/guilds-api";
 import { SettingsBar } from "@/components/dashboard/SettingsBar";

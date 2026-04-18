@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { fetchGuildEmojisWithBotToken } from "@/lib/discord/emojis-api";
 import { verifyUserIsGuildAdministrator } from "@/lib/discord/guilds-api";
 
@@ -35,7 +35,7 @@ export async function GET(_req: Request, ctx: RouteCtx) {
     const emojis = await fetchGuildEmojisWithBotToken(token.trim(), guildId);
     return NextResponse.json({ ok: true, emojis });
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Discord API error";
+    const message = e instanceof Error ? e.message : "Unknown error";
     return NextResponse.json({ ok: false, error: message }, { status: 502 });
   }
 }

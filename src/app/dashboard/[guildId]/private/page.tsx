@@ -1,10 +1,10 @@
 import { Guild } from "@/lib/db/Guild";
-import { ShopFrom } from "@/app/dashboard/[guildId]/shop/ShopForm";
+import { PrivateForm } from "@/app/dashboard/[guildId]/private/PrivateForm";
 import {Feedback, Flex, Text} from "@once-ui-system/core";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { fetchGuildRoles } from "@/lib/discord/roles-api";
-import type { DiscordRole } from "@/lib/discord/role-style";
+import {getServerSession} from "next-auth";
+import {authOptions} from "@/lib/auth";
+import {ChannelPickOption} from "@/lib/discord/channel-type";
+import {fetchGuildTextVoiceAndCategories} from "@/lib/discord/channels-api";
 import {DISCORD_SESSION_EXPIRED_ERROR} from "@/lib/auth-errors";
 
 export default async function GeneralSettingsPage({
@@ -15,29 +15,34 @@ export default async function GeneralSettingsPage({
   const resolvedParams = await params;
   const session = await getServerSession(authOptions);
 
-  let roles: DiscordRole[] = [];
+  let voiceChannels: ChannelPickOption[] = [];
+  let categories: ChannelPickOption[] = [];
   let loadError: string | null = null;
 
   if (session?.accessToken) {
     try {
-      const list = await fetchGuildRoles(session.accessToken, resolvedParams.guildId);
-      roles = list.map(({ id, name, color }) => ({ id, name, color }));
-    } catch (e)  {
+      const bundle = await fetchGuildTextVoiceAndCategories(
+          session.accessToken,
+          resolvedParams.guildId,
+      );
+      voiceChannels = bundle.voiceChannels.map((c) => ({...c}));
+      categories = bundle.categories.map((c) => ({...c}));
+    } catch (e) {
       loadError =
-          e instanceof Error ? e.message : 'An unknown error occurred while loading roles.';
+          e instanceof Error ? e.message : 'An unknown error occurred while loading channels.';
     }
   }
 
+
   const guild = new Guild(resolvedParams.guildId);
-  const settings = await guild.get("economy.shop");
+  const settings = await guild.get("utils.join_to_create");
 
   return (
       <Flex direction="column" gap="24">
         <Flex direction="column" gap="8">
-          <Text variant="heading-strong-l">Roles shop</Text>
+          <Text variant="heading-strong-l">Private rooms settings</Text>
           <Text variant="body-default-m" onBackground="neutral-medium">
-            Configure the roles that users can buy in the shop. You can set the price and the role for
-            each item.
+            Configure the settings for private voice channels in your server.
           </Text>
         </Flex>
 
@@ -57,7 +62,7 @@ export default async function GeneralSettingsPage({
             )
         )}
 
-        <ShopFrom guildId={resolvedParams.guildId} defaultShop={settings} guildRoles={roles} />
+        <PrivateForm guildId={resolvedParams.guildId} defaultJTC={settings} voiceChannels={voiceChannels} categories={categories} />
       </Flex>
   );
 }

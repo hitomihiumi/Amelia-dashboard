@@ -4,6 +4,9 @@
   --scheme-brand-300: #85031c;
   --scheme-brand-400: #a62f37;
   --scheme-brand-500: #c54c50;
+  --scheme-brand-500-10: rgba(197, 76, 80, 0.1);
+  --scheme-brand-500-30: rgba(197, 76, 80, 0.3);
+  --scheme-brand-500-50: rgba(197, 76, 80, 0.5);
   --scheme-brand-600: #ec6f70;
   --scheme-brand-600-10: rgba(236, 111, 112, 0.1);
   --scheme-brand-600-30: rgba(236, 111, 112, 0.3);

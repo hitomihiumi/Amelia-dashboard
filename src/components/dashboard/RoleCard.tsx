@@ -45,7 +45,7 @@ export const RoleCard: React.FC<RoleCardProps> = ({
       horizontal="center"
       gap={"16"}
     >
-      <Column center fill gap={'4'}>
+      <Column center fill gap={"4"}>
         <RolePill roleColor={discordRole?.color || 0} label={discordRole?.name || "Unknown Role"} />
         {role.discount.amount > 0 && (
           <Text variant="body-default-s" onBackground={"neutral-weak"}>
@@ -60,20 +60,17 @@ export const RoleCard: React.FC<RoleCardProps> = ({
               PRICE
             </Text>
             {role.discount.amount > 0 ? (
-                <Row gap={"4"} vertical="center">
-                  <Text variant="body-default-m" onBackground={"neutral-weak"}>
-                    <s>{role.price}</s>
-                  </Text>
-                  <Text variant="body-default-m">
-                    {Math.floor(role.price * (1 - role.discount.amount / 100))}
-                  </Text>
-                </Row>
-            ) : (
-                <Text variant="body-default-m">
-                  {role.price}
+              <Row gap={"4"} vertical="center">
+                <Text variant="body-default-m" onBackground={"neutral-weak"}>
+                  <s>{role.price}</s>
                 </Text>
+                <Text variant="body-default-m">
+                  {Math.floor(role.price * (1 - role.discount.amount / 100))}
+                </Text>
+              </Row>
+            ) : (
+              <Text variant="body-default-m">{role.price}</Text>
             )}
-
           </Column>
           {role.discount.amount > 0 && (
             <Column center>
