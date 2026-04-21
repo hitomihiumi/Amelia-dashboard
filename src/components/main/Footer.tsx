@@ -30,7 +30,7 @@ export function Footer() {
       <Row fill horizontal={"between"} vertical={"center"}>
         <Row>
           <Text variant="body-default-s" onBackground="neutral-strong">
-            <Text onBackground="neutral-weak">© 2024-2026 /</Text>
+            <Text onBackground="neutral-weak">© 2026 /</Text>
             <Text onBackground="neutral-weak">
               {" "}
               Built with <SmartLink href="https://once-ui.com">Once UI</SmartLink> / By{" "}
