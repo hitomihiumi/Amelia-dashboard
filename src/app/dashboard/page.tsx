@@ -5,25 +5,23 @@ import {
   Text,
   Button,
   Column,
-  Badge,
-  Logo,
-  Line,
-  LetterFx,
   Grid,
   Row,
-  Background,
+  Background, Feedback,
 } from "@once-ui-system/core";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { UserGuildCard } from "@/types/discord";
 import { GuildCard, SkeletonGuildCard } from "@/components/dashboard/GuildCard";
 import { useSession } from "next-auth/react";
-import { Footer } from "@/components/main/Footer";
+import { useSearchParams } from 'next/navigation';
 
 type ApiOk = { ok: true; guilds: UserGuildCard[] };
 type ApiErr = { ok: false; error: string };
 
 export default function Page() {
   const { status } = useSession();
+  const searchParams = useSearchParams();
+  const discordParam = searchParams.get('discord');
 
   const [guilds, setGuilds] = useState<UserGuildCard[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -191,46 +189,54 @@ export default function Page() {
             </Text>
           </Row>
         </Column>
-        <Column gap={"m"} fillWidth maxWidth={"l"}>
-          <Heading variant={"heading-strong-xl"}>With Amelia</Heading>
-          <Text onBackground={"neutral-weak"}>
-            Servers where you have permission to invite the bot and it's already present.
-          </Text>
+
+        {discordParam === 'access' && (
+            <Feedback
+                variant="danger"
+                title="Discord Access Required"
+                description="To use the dashboard, you need to grant access to your Discord account. Please log out and log in again, making sure to authorize the required permissions."
+            />
+        )}
           {guildsWithBot.length > 0 && (
-            <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fillWidth>
-              {guildsWithBot.map((g: UserGuildCard) => (
-                <GuildCard
-                  name={g.name}
-                  id={g.id}
-                  icon={g.iconUrl}
-                  inviteURL={g.inviteUrl}
-                  hasBot={g.botPresent}
-                  key={`${g.id}`}
-                />
-              ))}
-            </Grid>
+              <Column gap={"m"} fillWidth maxWidth={"l"}>
+                <Heading variant={"heading-strong-xl"}>With Amelia</Heading>
+                <Text onBackground={"neutral-weak"}>
+                  Servers where you have permission to invite the bot and it's already present.
+                </Text>
+                <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fillWidth>
+                  {guildsWithBot.map((g: UserGuildCard) => (
+                      <GuildCard
+                          name={g.name}
+                          id={g.id}
+                          icon={g.iconUrl}
+                          inviteURL={g.inviteUrl}
+                          hasBot={g.botPresent}
+                          key={`${g.id}`}
+                      />
+                  ))}
+                </Grid>
+              </Column>
           )}
-        </Column>
-        <Column gap={"m"} fillWidth maxWidth={"l"}>
-          <Heading variant={"heading-strong-xl"}>Without Amelia</Heading>
-          <Text onBackground={"neutral-weak"}>
-            Servers where you have permission to invite the bot but it's not present yet.
-          </Text>
           {guildsWithoutBot.length > 0 && (
-            <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fillWidth>
-              {guildsWithoutBot.map((g: UserGuildCard) => (
-                <GuildCard
-                  name={g.name}
-                  id={g.id}
-                  icon={g.iconUrl}
-                  inviteURL={g.inviteUrl}
-                  hasBot={g.botPresent}
-                  key={`${g.id}`}
-                />
-              ))}
-            </Grid>
+              <Column gap={"m"} fillWidth maxWidth={"l"}>
+                <Heading variant={"heading-strong-xl"}>Without Amelia</Heading>
+                <Text onBackground={"neutral-weak"}>
+                  Servers where you have permission to invite the bot but it's not present yet.
+                </Text>
+                <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fillWidth>
+                  {guildsWithoutBot.map((g: UserGuildCard) => (
+                      <GuildCard
+                          name={g.name}
+                          id={g.id}
+                          icon={g.iconUrl}
+                          inviteURL={g.inviteUrl}
+                          hasBot={g.botPresent}
+                          key={`${g.id}`}
+                      />
+                  ))}
+                </Grid>
+              </Column>
           )}
-        </Column>
       </Column>
     </Column>
   );

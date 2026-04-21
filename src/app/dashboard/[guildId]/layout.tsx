@@ -29,7 +29,7 @@ export default async function GuildDashboardLayout({
   try {
     access = await getGuildAccessForDashboard(session.accessToken, guildId);
   } catch {
-    redirect("/dashboard?discord=rate_limit");
+    redirect("/dashboard?discord=access");
   }
   if (!access.allowed) {
     redirect("/dashboard");
