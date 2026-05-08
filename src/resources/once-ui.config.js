@@ -37,7 +37,7 @@ const fonts = {
 const style = {
   theme: "dark",
   brand: "custom",
-  accent: "red",
+  accent: "aqua",
   neutral: "gray",
   border: "playful",
   solid: "color",

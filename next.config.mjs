@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  allowedDevOrigins: ["192.168.88.213"],
+  allowedDevOrigins: ["192.168.88.208"],
   sassOptions: {
     compiler: "modern",
     silenceDeprecations: ["legacy-js-api"],
