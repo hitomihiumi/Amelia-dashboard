@@ -6,6 +6,27 @@ import { authOptions } from "@/lib/auth";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import {DISCORD_SESSION_EXPIRED_ERROR} from "@/lib/auth-errors";
+import {ShopRole} from "@/lib/db/types";
+
+const shopRolesProcesse = (roles: ShopRole[]): ShopRole[] => {
+  const now = new Date().getTime();
+  return roles.map((role: ShopRole) => {
+    const hasDiscount = role.discount && role.discount.amount > 0;
+    const isDiscountActive =
+        hasDiscount &&
+        (!role.discount.starts_at || role.discount.starts_at <= now) &&
+        (!role.discount.expires_at || role.discount.expires_at > now);
+    return {
+      ...role,
+      discount: {
+        ...role.discount,
+        amount: isDiscountActive ? role.discount.amount : 0,
+        starts_at: isDiscountActive ? role.discount.starts_at : null,
+        expires_at: isDiscountActive ? role.discount.expires_at : null,
+      }
+    }
+  })
+}
 
 export default async function GeneralSettingsPage({
   params,
@@ -30,6 +51,12 @@ export default async function GeneralSettingsPage({
 
   const guild = new Guild(resolvedParams.guildId);
   const settings = await guild.get("economy.shop");
+
+  const processedRoles = shopRolesProcesse(settings.roles);
+
+  if (settings.roles !== processedRoles) {
+    await guild.set("economy.shop.roles", processedRoles);
+  }
 
   return (
       <Flex direction="column" gap="24">
@@ -57,7 +84,7 @@ export default async function GeneralSettingsPage({
             )
         )}
 
-        <ShopFrom guildId={resolvedParams.guildId} defaultShop={settings} guildRoles={roles} />
+        <ShopFrom guildId={resolvedParams.guildId} defaultShop={{ roles: processedRoles }} guildRoles={roles} />
       </Flex>
   );
 }
