@@ -2,7 +2,18 @@
 
 import { usePathname } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
-import {Avatar, Button, Column, Flex, Row, Text, Icon, Option, Line, SmartLink} from "@once-ui-system/core";
+import {
+  Avatar,
+  Button,
+  Column,
+  Flex,
+  Row,
+  Text,
+  Icon,
+  Option,
+  Line,
+  SmartLink,
+} from "@once-ui-system/core";
 import { UserMenu } from "../user/UserMenu";
 import { openDiscordOAuthPopup } from "@/lib/discord/popup-signin";
 
@@ -42,11 +53,9 @@ export function Header() {
           <AvatarWFrame size={"l"} src={"/images/avatar.jpg"} radius={"full"} />
         </Row>
         <Text variant={"heading-strong-xl"}>Amelia</Text>
-        <Line vert={true}/>
+        <Line vert={true} />
         <Row>
-          <SmartLink href={'/docs/get-started'}>
-            Docs
-          </SmartLink>
+          <SmartLink href={"/docs/get-started"}>Docs</SmartLink>
         </Row>
       </Row>
       <Row>

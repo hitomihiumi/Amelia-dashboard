@@ -8,7 +8,7 @@ import { updateGeneralSettings } from "./actions";
 import type { GuildSchema } from "@/lib/db/types";
 import { useRouter } from "next/navigation";
 import { GuildActionState } from "@/types/dashboard";
-import {DashIcon} from "@/components/dashboard/DashIcon";
+import { DashIcon } from "@/components/dashboard/DashIcon";
 
 type Form = Pick<GuildSchema["settings"], "prefix" | "language">;
 
@@ -88,47 +88,43 @@ export function GeneralForm({
   return (
     <>
       <Flex
-          direction="column"
-          gap="16"
-          padding="24"
-          border="neutral-weak"
-          radius="l"
-          background="surface"
+        direction="column"
+        gap="16"
+        padding="24"
+        border="neutral-weak"
+        radius="l"
+        background="surface"
       >
         <Flex gap="16">
-          <DashIcon
-              name={'ticket'}
-          />
+          <DashIcon name={"ticket"} />
           <Flex direction="column" gap="8">
             <Text variant="body-strong-l">Command prefix</Text>
             <Text variant="body-default-s" onBackground="neutral-medium">
-              Set the prefix that users will use to invoke bot commands. This will not affect to slash
-              commands.
+              Set the prefix that users will use to invoke bot commands. This will not affect to
+              slash commands.
             </Text>
           </Flex>
         </Flex>
 
         <Input
-            id="prefix"
-            value={prefix}
-            onChange={(e) => setPrefix(e.target.value)}
-            placeholder="a., !, etc."
-            maxLength={5}
+          id="prefix"
+          value={prefix}
+          onChange={(e) => setPrefix(e.target.value)}
+          placeholder="a., !, etc."
+          maxLength={5}
         />
       </Flex>
 
       <Flex
-          direction="column"
-          gap="24"
-          padding="24"
-          border="neutral-weak"
-          radius="l"
-          background="surface"
+        direction="column"
+        gap="24"
+        padding="24"
+        border="neutral-weak"
+        radius="l"
+        background="surface"
       >
         <Flex gap="16">
-          <DashIcon
-              name={'sign'}
-          />
+          <DashIcon name={"sign"} />
           <Flex direction="column" gap="8">
             <Text variant="body-strong-l">Interface language</Text>
             <Text variant="body-default-s" onBackground="neutral-medium">
@@ -137,18 +133,17 @@ export function GeneralForm({
           </Flex>
         </Flex>
 
-
         <Select
-            id="language"
-            value={language}
-            options={[
-              { label: "🇬🇧 English", value: "en" },
-              { label: "🇺🇦 Ukrainian", value: "uk" },
-              { label: "🇷🇺 Russian", value: "ru" },
-            ]}
-            label="Choose a language"
-            onSelect={(value) => setLanguage(value)}
-            maxLength={5}
+          id="language"
+          value={language}
+          options={[
+            { label: "🇬🇧 English", value: "en" },
+            { label: "🇺🇦 Ukrainian", value: "uk" },
+            { label: "🇷🇺 Russian", value: "ru" },
+          ]}
+          label="Choose a language"
+          onSelect={(value) => setLanguage(value)}
+          maxLength={5}
         />
       </Flex>
     </>

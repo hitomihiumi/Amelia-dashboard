@@ -9,7 +9,7 @@ interface InputProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "content
   id: string;
   label?: string;
   placeholder?: string;
-  height?: "s" | "m";
+  height?: "xs" | "s" | "m" | "l" | "xl";
   error?: boolean;
   errorMessage?: ReactNode;
   description?: ReactNode;
@@ -142,12 +142,7 @@ const DummyInput = forwardRef<HTMLDivElement, InputProps>(
           vertical="stretch"
           className={classNames(
             styles.base,
-            {
-              [styles.s]: height === "s",
-            },
-            {
-              [styles.m]: height === "m",
-            },
+            height && styles[height],
             radius === "none" ? "radius-none" : radius ? `radius-l-${radius}` : "radius-l",
           )}
         >

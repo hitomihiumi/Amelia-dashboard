@@ -41,7 +41,7 @@ const ChannelPill = forwardRef<HTMLDivElement, ChannelPillProps>(
         {...rest}
       >
         <Icon
-            size={'xs'}
+          size={"xs"}
           name={isCategory ? "folder" : isVoice ? "microphone" : "mail"}
           style={{ color: "rgb(244 244 245)" }}
         />

@@ -133,6 +133,7 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
       fillWidth = true,
       style,
       multiple = false,
+      children,
       ...rest
     },
     ref,

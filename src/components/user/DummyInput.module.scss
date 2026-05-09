@@ -58,10 +58,27 @@
   }
 }
 
+
+.xs {
+  min-height: var(--static-space-40);
+
+  .label, .textareaLabel {
+    &.floating {
+      top: calc(var(--static-space-4) - var(--static-space-1));
+    }
+  }
+
+  .inputLabel, .textareaLabel {
+    &.floating {
+      transform: scale(0.6);
+    }
+  }
+}
+
 .s {
   min-height: var(--static-space-48);
 
-  .label {
+  .label, .textareaLabel {
     &.floating {
       top: calc(var(--static-space-4) - var(--static-space-1));
     }
@@ -69,9 +86,43 @@
 }
 
 .m {
+  min-height: var(--static-space-56);
+
+  .label, .textareaLabel {
+    &.floating {
+      top: calc(var(--static-space-8) - var(--static-space-2));
+    }
+  }
+}
+
+.l {
+  min-height: var(--static-space-64);
+
   .label {
     &.floating {
       top: calc(var(--static-space-8) - var(--static-space-2));
+    }
+  }
+
+  .textareaLabel {
+    &.floating {
+      top: var(--static-space-4);
+    }
+  }
+}
+
+.xl {
+  min-height: var(--static-space-72);
+
+  .label {
+    &.floating {
+      top: calc(var(--static-space-12) - var(--static-space-2));
+    }
+  }
+
+  .textareaLabel {
+    &.floating {
+      top: var(--static-space-4);
     }
   }
 }

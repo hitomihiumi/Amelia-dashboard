@@ -38,4 +38,4 @@ export const defaultPermissions = [
   { name: "Kick Members", bigint: 2 },
   { name: "Ban Members", bigint: 4 },
   { name: "Manage Messages", bigint: 8192 },
-]
+];

@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-import withMDX from '@next/mdx'
+import withMDX from "@next/mdx";
 
 const withMDXConfig = withMDX({
   extension: /\.mdx?$/,
@@ -7,7 +7,7 @@ const withMDXConfig = withMDX({
     remarkPlugins: [],
     rehypePlugins: [],
   },
-})
+});
 
 const nextConfig = {
   allowedDevOrigins: ["192.168.88.208"],

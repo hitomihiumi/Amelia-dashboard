@@ -5,42 +5,43 @@ import "@/resources/custom.css";
 import classNames from "classnames";
 
 import { fonts, style, dataStyle } from "@/resources/once-ui.config";
-import {Column, Flex, Meta, ThemeInit} from "@once-ui-system/core";
+import { Column, Flex, Meta, ThemeInit } from "@once-ui-system/core";
 import { Providers } from "@/components/Providers";
 
 import { getServerSession } from "next-auth";
-import { authOptions } from "./api/auth/[...nextauth]/route";
-import {baseURL, meta, schema} from "@/resources";
+import { authOptions } from "@/lib/auth";
+import { baseURL, meta, schema } from "@/resources";
+import { Metadata } from "next";
 
-export async function generateMetadata() {
-    const baseMetadata = Meta.generate({
-        title: meta.home.title,
-        description: meta.home.description,
-        baseURL: baseURL,
-        path: meta.home.path,
-        image: meta.home.image
-    });
+export async function generateMetadata(): Promise<Metadata> {
+  const baseMetadata = Meta.generate({
+    title: meta.home.title,
+    description: meta.home.description,
+    baseURL: baseURL,
+    path: meta.home.path,
+    image: meta.home.image,
+  });
 
-    return {
-        ...baseMetadata,
-        metadataBase: new URL(`${baseURL}`),
-        openGraph: {
-            ...baseMetadata.openGraph,
-            siteName: meta.home.title,
-            locale: schema.locale,
-        },
-        robots: {
-            index: true,
-            follow: true,
-            googleBot: {
-                index: true,
-                follow: true,
-                "max-video-preview": -1,
-                "max-image-preview": "large",
-                "max-snippet": -1,
-            },
-        },
-    };
+  return {
+    ...baseMetadata,
+    metadataBase: new URL(`${baseURL}`),
+    openGraph: {
+      ...baseMetadata.openGraph,
+      siteName: meta.home.title,
+      locale: schema.locale,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+  };
 }
 
 export default async function RootLayout({

@@ -12,7 +12,10 @@ import {
   IoMail,
   IoSettings,
   IoTerminal,
-  IoAirplane, IoDiamond, IoTrailSign, IoTicket
+  IoAirplane,
+  IoDiamond,
+  IoTrailSign,
+  IoTicket,
 } from "react-icons/io5";
 
 import { FaDiscord } from "react-icons/fa";

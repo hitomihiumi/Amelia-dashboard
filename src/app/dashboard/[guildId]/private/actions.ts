@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { requireGuildAdmin } from "@/app/dashboard/[guildId]/actions";
 import { GuildActionState } from "@/types/dashboard";
 import { GuildSchema } from "@/lib/db/types";
-import {discordAutoSetupTempVoice} from "@/lib/discord/temp-voice";
+import { discordAutoSetupTempVoice } from "@/lib/discord/temp-voice";
 
 export async function updatePrivateRoomSettings(
   guildId: string,
@@ -68,11 +68,11 @@ export async function updatePrivateRoomSettings(
 }
 
 export async function autoSetupTempVoiceSettings(
-    _prev: GuildActionState,
-    formData: FormData,
+  _prev: GuildActionState,
+  formData: FormData,
 ): Promise<GuildActionState> {
   try {
-    const guildId = String(formData.get('guildId') ?? '');
+    const guildId = String(formData.get("guildId") ?? "");
     if (!guildId || guildId.trim().length === 0) {
       return { ok: false, error: "Missing guild ID." };
     }
@@ -93,12 +93,11 @@ export async function autoSetupTempVoiceSettings(
 
     const existingConfig = await guild.get("utils.join_to_create");
 
-
     const joinToCreateConfig: GuildSchema["utils"]["join_to_create"] = {
       enabled: true,
       channel: result.triggerChannelId,
       category: result.categoryId,
-      default_name: existingConfig.default_name
+      default_name: existingConfig.default_name,
     };
 
     await guild.set("utils.join_to_create", joinToCreateConfig);
