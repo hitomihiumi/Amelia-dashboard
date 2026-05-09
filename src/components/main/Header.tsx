@@ -52,10 +52,10 @@ export function Header() {
         <Row padding={"2"} radius={"full"} border={"brand-medium"} borderWidth="2">
           <AvatarWFrame size={"l"} src={"/images/avatar.jpg"} radius={"full"} />
         </Row>
-        <Text variant={"heading-strong-xl"}>Amelia</Text>
+        <Text variant={"heading-strong-xl"}><SmartLink href={"/"}>Amelia</SmartLink></Text>
         <Line vert={true} />
-        <Row>
-          <SmartLink href={"/docs/get-started"}>Docs</SmartLink>
+        <Row marginBottom={'2'}>
+          <Text variant={'label-default-l'}><SmartLink href={"/docs/get-started"}>Docs</SmartLink></Text>
         </Row>
       </Row>
       <Row>

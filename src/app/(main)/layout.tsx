@@ -40,7 +40,9 @@ export default function SiteLayout({
         }}
       />
       <Header />
-      {children}
+      <Column fill>
+          {children}
+      </Column>
       <Footer />
     </Column>
   );
