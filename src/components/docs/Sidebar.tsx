@@ -323,7 +323,7 @@ const Sidebar: React.FC<SidebarProps> = ({ initialNavigation, ...rest }) => {
         >
             <Row paddingBottom={'12'}>
                 <Button size={'s'} fillWidth href={'/'} prefixIcon={'back'}>
-                    Home
+                    Back to Home
                 </Button>
             </Row>
             {hasLoaded && <SidebarContent key={pathname} navigation={navigation} pathname={pathname} />}
