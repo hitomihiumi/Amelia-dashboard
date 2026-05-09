@@ -5,50 +5,43 @@ import "@/resources/custom.css";
 import classNames from "classnames";
 
 import { fonts, style, dataStyle } from "@/resources/once-ui.config";
-import { Column, Flex, ThemeInit } from "@once-ui-system/core";
+import {Column, Flex, Meta, ThemeInit} from "@once-ui-system/core";
 import { Providers } from "@/components/Providers";
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]/route";
-import { Metadata } from "next";
+import {baseURL, meta, schema} from "@/resources";
 
-export const metadata: Metadata = {
-  title: {
-    default: "Amelia",
-    template: "%s · Amelia",
-  },
-  description: "Multipurpose bot for your guild",
-  metadataBase: new URL("https://amelia.hitomihiumi.xyz"),
-  alternates: {
-    canonical: "/",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-  openGraph: {
-    type: "website",
-    locale: "ru_RU",
-    url: "/",
-    siteName: "Amelia",
-    title: "Amelia",
-    description: "Multipurpose bot for your guild",
-    images: [
-      {
-        url: "/images/og/home.png",
-        width: 1200,
-        height: 630,
-        alt: "Amelia — Discord bot",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Amelia",
-    description: "Multipurpose bot for your guild",
-    images: ["/images/og/home.png"],
-  },
-};
+export async function generateMetadata() {
+    const baseMetadata = Meta.generate({
+        title: meta.home.title,
+        description: meta.home.description,
+        baseURL: baseURL,
+        path: meta.home.path,
+        image: meta.home.image
+    });
+
+    return {
+        ...baseMetadata,
+        metadataBase: new URL(`${baseURL}`),
+        openGraph: {
+            ...baseMetadata.openGraph,
+            siteName: meta.home.title,
+            locale: schema.locale,
+        },
+        robots: {
+            index: true,
+            follow: true,
+            googleBot: {
+                index: true,
+                follow: true,
+                "max-video-preview": -1,
+                "max-image-preview": "large",
+                "max-snippet": -1,
+            },
+        },
+    };
+}
 
 export default async function RootLayout({
   children,

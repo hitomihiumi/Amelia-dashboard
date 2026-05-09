@@ -1,10 +1,22 @@
 /** @type {import('next').NextConfig} */
+import withMDX from '@next/mdx'
+
+const withMDXConfig = withMDX({
+  extension: /\.mdx?$/,
+  options: {
+    remarkPlugins: [],
+    rehypePlugins: [],
+  },
+})
+
 const nextConfig = {
   allowedDevOrigins: ["192.168.88.208"],
   sassOptions: {
     compiler: "modern",
     silenceDeprecations: ["legacy-js-api"],
   },
+  pageExtensions: ["ts", "tsx", "md", "mdx"],
+  transpilePackages: ["next-mdx-remote"],
   images: {
     qualities: [75, 90, 100],
     remotePatterns: [
@@ -32,4 +44,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withMDXConfig(nextConfig);

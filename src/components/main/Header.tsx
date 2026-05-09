@@ -44,7 +44,7 @@ export function Header() {
         <Text variant={"heading-strong-xl"}>Amelia</Text>
         <Line vert={true}/>
         <Row>
-          <SmartLink href={'/docs'}>
+          <SmartLink href={'/docs/get-started'}>
             Docs
           </SmartLink>
         </Row>
