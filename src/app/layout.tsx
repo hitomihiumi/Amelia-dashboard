@@ -13,6 +13,8 @@ import { authOptions } from "@/lib/auth";
 import { baseURL, meta, schema } from "@/resources";
 import { Metadata } from "next";
 
+import { Analytics } from "@vercel/analytics/next"
+
 export async function generateMetadata(): Promise<Metadata> {
   const baseMetadata = Meta.generate({
     title: meta.home.title,
@@ -92,6 +94,7 @@ export default async function RootLayout({
         >
           {children}
         </Column>
+        <Analytics/>
       </Providers>
     </Flex>
   );
