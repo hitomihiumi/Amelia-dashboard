@@ -1,0 +1,13 @@
+@use "../styles/breakpoints.scss" as breakpoints;
+
+.notFound {
+  min-width:var(--responsive-width-m);
+
+  @include breakpoints.m {
+    min-width:100%;
+  }
+
+  @include breakpoints.s {
+      min-width:100%;
+  }
+}
