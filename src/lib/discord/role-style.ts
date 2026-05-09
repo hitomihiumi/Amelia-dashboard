@@ -29,3 +29,13 @@ export type DiscordRole = {
   name: string;
   color: number;
 };
+
+export const defaultPermissions = [
+  { name: "Administrator", bigint: 8 },
+  { name: "Manage Guild", bigint: 32 },
+  { name: "Manage Roles", bigint: 268435456 },
+  { name: "Manage Channels", bigint: 16 },
+  { name: "Kick Members", bigint: 2 },
+  { name: "Ban Members", bigint: 4 },
+  { name: "Manage Messages", bigint: 8192 },
+]

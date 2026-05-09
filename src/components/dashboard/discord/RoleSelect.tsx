@@ -5,8 +5,9 @@ import React from "react";
 import { SelectReact, type SelectProps } from "@/components/user/SelectReact";
 
 export interface RoleSelectProps extends SelectProps {
-  selectedRole: string;
-  setSelectedRole: (role: string) => void;
+  selectedRole: string | string[];
+  setSelectedRole: (role: string | string[]) => void;
+  multiple?: boolean;
 }
 
 export const RoleSelect: React.FC<RoleSelectProps> = ({
@@ -16,6 +17,7 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({
   placement,
   label,
   options,
+  multiple = false,
   ...rest
 }) => {
   return (
@@ -26,6 +28,7 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({
       value={selectedRole}
       placement={placement}
       options={options}
+      multiple={multiple}
       {...rest}
     />
   );

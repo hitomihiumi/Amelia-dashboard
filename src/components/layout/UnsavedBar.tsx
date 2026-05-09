@@ -41,6 +41,7 @@ export function UnsavedBar() {
         horizontal="between"
         gap={"8"}
         fillWidth
+        maxWidth={'s'}
         style={{
           boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
         }}
@@ -48,7 +49,7 @@ export function UnsavedBar() {
           direction: "column",
         }}
       >
-        <Text variant="body-strong-m">You have unsaved changes</Text>
+        <Text variant="body-strong-m" paddingX={'s'}>You have unsaved changes</Text>
 
         <Flex gap="16" className={styles.buttonRow}>
           <Button variant="secondary" onClick={runCancel} disabled={isSaving} fillWidth>

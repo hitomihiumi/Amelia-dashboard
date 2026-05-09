@@ -88,7 +88,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({
             }))}
             max={1}
             selectedRole={role}
-            setSelectedRole={setRole}
+            setSelectedRole={(role) => setRole(role as string)}
           />
           <Input
             id={"price-set"}
