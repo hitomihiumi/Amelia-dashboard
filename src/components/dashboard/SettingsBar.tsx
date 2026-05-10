@@ -160,6 +160,18 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                   Shop
                 </Text>
               </ToggleButton>
+              <ToggleButton
+                  size={"l"}
+                  prefixIcon={"ribbon"}
+                  horizontal="start"
+                  fillWidth
+                  selected={pathname.endsWith("/dashboard/" + guildId + "/levels")}
+                  href={"/dashboard/" + guildId + "/levels"}
+              >
+                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
+                  Leveling
+                </Text>
+              </ToggleButton>
             </Column>
 
             <Column gap={"8"}>

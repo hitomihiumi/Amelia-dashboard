@@ -118,8 +118,7 @@ const DummyInput = forwardRef<HTMLDivElement, InputProps>(
         [styles.focused]: isFocused,
         [styles.withPrefix]: hasPrefix,
         [styles.withSuffix]: hasSuffix,
-        [styles.placeholder]: placeholder,
-        [styles.hasChildren]: content,
+        [styles.hasChildren]: Boolean(content),
         [styles.error]: displayError && debouncedValue !== "",
       },
     );

@@ -138,16 +138,7 @@
   display: flex;
   align-items: center;
 
-  &.placeholder {
-    padding-top: 0;
-  }
-
-  &:not(.placeholder) {
-    padding-top: var(--static-space-32);
-    padding-bottom: var(--static-space-16);
-  }
-
-  &.placeholder.hasChildren {
+  &.hasChildren {
     padding-top: var(--static-space-16);
   }
 }
