@@ -38,7 +38,7 @@ export const permissionType = {
   KickMembers: BigInt(2),
   BanMembers: BigInt(4),
   ManageMessages: BigInt(8192),
-}
+};
 
 export const defaultPermissions = [
   { name: "Administrator", bigint: permissionType.Administrator },

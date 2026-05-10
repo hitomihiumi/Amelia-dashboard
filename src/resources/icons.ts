@@ -20,7 +20,8 @@ import {
   IoRibbon,
   IoGitNetwork,
   IoColorPalette,
-  IoPerson, IoBonfire
+  IoPerson,
+  IoBonfire,
 } from "react-icons/io5";
 
 import { FaDiscord } from "react-icons/fa";
@@ -47,7 +48,7 @@ export const iconLibrary: Record<string, IconType> = {
   gitnet: IoGitNetwork,
   palette: IoColorPalette,
   user: IoPerson,
-  bonfire: IoBonfire
+  bonfire: IoBonfire,
 };
 
 export type IconLibrary = typeof iconLibrary;

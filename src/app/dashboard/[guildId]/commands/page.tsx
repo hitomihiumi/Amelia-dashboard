@@ -1,5 +1,5 @@
 import { Guild } from "@/lib/db/Guild";
-import {Column, Feedback, Flex, Text} from "@once-ui-system/core";
+import { Column, Feedback, Flex, Text } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";

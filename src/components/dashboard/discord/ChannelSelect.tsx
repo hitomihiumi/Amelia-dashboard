@@ -10,25 +10,25 @@ export interface ChannelSelectProps extends SelectProps {
 }
 
 export const ChannelSelect: React.FC<ChannelSelectProps> = ({
-                                                              selectedChannel,
-                                                              setSelectedChannel,
-                                                              id,
-                                                              placement,
-                                                              label,
-                                                              options,
-                                                              multiple = false,
-                                                              ...rest
-                                                            }) => {
+  selectedChannel,
+  setSelectedChannel,
+  id,
+  placement,
+  label,
+  options,
+  multiple = false,
+  ...rest
+}) => {
   return (
-      <SelectReact
-          id={id}
-          label={label}
-          onSelect={(value) => setSelectedChannel(value)}
-          value={selectedChannel}
-          placement={placement}
-          options={options}
-          multiple={multiple}
-          {...rest}
-      />
+    <SelectReact
+      id={id}
+      label={label}
+      onSelect={(value) => setSelectedChannel(value)}
+      value={selectedChannel}
+      placement={placement}
+      options={options}
+      multiple={multiple}
+      {...rest}
+    />
   );
 };
