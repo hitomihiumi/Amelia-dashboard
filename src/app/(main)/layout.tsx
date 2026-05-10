@@ -1,4 +1,4 @@
-import { Background, Column } from "@once-ui-system/core";
+import {Background, Banner, Column, Icon} from "@once-ui-system/core";
 import { Header } from "@/components/main/Header";
 import { Footer } from "@/components/main/Footer";
 
@@ -39,6 +39,10 @@ export default function SiteLayout({
           color: "brand-background-strong",
         }}
       />
+        <Banner solid="warning-medium" onSolid="warning-strong">
+            <Icon name="warning" size="s" />
+            Amelia is currently in early development. Expect bugs and breaking changes.
+        </Banner>
       <Header />
       <Column fill>
           {children}
