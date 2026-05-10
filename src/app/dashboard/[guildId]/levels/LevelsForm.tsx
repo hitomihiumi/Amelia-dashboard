@@ -24,6 +24,7 @@ import { DiscordRole } from "@/lib/discord/role-style";
 import { RolePill } from "@/components/dashboard/discord/RolePill";
 import { ChannelPill } from "@/components/dashboard/discord/ChannelPill";
 import { GuildActionState } from "@/types/dashboard";
+import {DashIcon} from "@/components/dashboard/DashIcon";
 
 export function LevelsForm({
   guildId,
@@ -151,12 +152,15 @@ export function LevelsForm({
         background="surface"
       >
         <Row horizontal="between" vertical="center">
-          <Column>
-            <Text variant="body-strong-m">Enable Module</Text>
-            <Text variant="body-default-xs" onBackground="neutral-weak">
-              Toggle the entire leveling and XP system.
-            </Text>
-          </Column>
+          <Flex gap="16">
+            <DashIcon name={"ribbon"} />
+            <Column gap="8">
+              <Text variant="body-strong-l">Enable Module</Text>
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                Toggle the entire leveling and XP system.
+              </Text>
+            </Column>
+          </Flex>
           <Switch
             isChecked={levels.enabled}
             onToggle={() => setLevels((p) => ({ ...p, enabled: !p.enabled }))}
@@ -172,10 +176,15 @@ export function LevelsForm({
         radius="l"
         background="surface"
       >
-        <Text variant="body-strong-l">Role Rewards</Text>
-        <Text variant="body-default-s" onBackground="neutral-weak">
-          Roles automatically granted to users when they reach a specific level.
-        </Text>
+        <Flex gap="16">
+          <DashIcon name={"trophy"} />
+          <Column gap="8">
+            <Text variant="body-strong-l">Role Rewards</Text>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              Roles automatically granted to users when they reach a specific level.
+            </Text>
+          </Column>
+        </Flex>
 
         <Column gap="8">
           {Object.entries(levels.level_roles)
@@ -243,16 +252,21 @@ export function LevelsForm({
         radius="l"
         background="surface"
       >
-        <Text variant="body-strong-l">Announcements</Text>
-        <Row horizontal="between" vertical="center">
-          <Text variant="body-default-m">Send level-up message</Text>
-          <Switch
-            isChecked={levels.message.enabled}
-            onToggle={() =>
-              setLevels((p) => ({ ...p, message: { ...p.message, enabled: !p.message.enabled } }))
-            }
-          />
-        </Row>
+        <Flex gap="16">
+          <DashIcon name={"send"} />
+          <Row horizontal="between" vertical="center" fillWidth>
+            <Column gap="8" fillWidth>
+              <Text variant="body-strong-l">Announcements</Text>
+              <Text variant="body-default-s" onBackground="neutral-weak">Send level-up message</Text>
+            </Column>
+            <Switch
+                isChecked={levels.message.enabled}
+                onToggle={() =>
+                    setLevels((p) => ({ ...p, message: { ...p.message, enabled: !p.message.enabled } }))
+                }
+            />
+          </Row>
+        </Flex>
         <Column gap="12">
           <ChannelSelect
             label={"Announcement Channel"}
@@ -288,7 +302,15 @@ export function LevelsForm({
         radius="l"
         background="surface"
       >
-        <Text variant="body-strong-l">Restrictions</Text>
+        <Flex gap="16">
+          <DashIcon name={"eyeoff"} />
+          <Column gap="8" fillWidth>
+            <Text variant="body-strong-l">Restrictions</Text>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              Exclude certain channels or roles from earning XP and leveling up.
+            </Text>
+          </Column>
+        </Flex>
         <Column gap="12">
           <ChannelSelect
             label={"Ignored Channels"}
@@ -321,19 +343,21 @@ export function LevelsForm({
         radius="l"
         background="surface"
       >
-        <Text variant="body-strong-l">Economy Integration</Text>
-        <Row horizontal="between" vertical="center">
-          <Column>
-            <Text variant="body-strong-m">Cash Reward</Text>
-            <Text variant="body-default-xs" onBackground="neutral-weak">
-              Give currency to users upon leveling up.
-            </Text>
-          </Column>
-          <Switch
-            isChecked={economy.enabled}
-            onToggle={() => setEconomy((p) => ({ ...p, enabled: !p.enabled }))}
-          />
-        </Row>
+        <Flex gap="16">
+          <DashIcon name={"money"} />
+          <Row horizontal="between" vertical="center" fillWidth>
+            <Column gap="8" fillWidth>
+              <Text variant="body-strong-l">Cash Reward</Text>
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                Give currency to users upon leveling up.
+              </Text>
+            </Column>
+            <Switch
+                isChecked={economy.enabled}
+                onToggle={() => setEconomy((p) => ({ ...p, enabled: !p.enabled }))}
+            />
+          </Row>
+        </Flex>
         <Input
           id="eco-reward-amount"
           label="Reward Amount"

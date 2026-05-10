@@ -21,7 +21,7 @@ import {
   IoGitNetwork,
   IoColorPalette,
   IoPerson,
-  IoBonfire,
+  IoBonfire, IoSend, IoTrophy, IoEyeOff,
 } from "react-icons/io5";
 
 import { FaDiscord } from "react-icons/fa";
@@ -49,6 +49,9 @@ export const iconLibrary: Record<string, IconType> = {
   palette: IoColorPalette,
   user: IoPerson,
   bonfire: IoBonfire,
+  send: IoSend,
+  trophy: IoTrophy,
+  eyeoff: IoEyeOff,
 };
 
 export type IconLibrary = typeof iconLibrary;
