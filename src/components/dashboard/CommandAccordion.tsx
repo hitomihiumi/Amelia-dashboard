@@ -4,6 +4,7 @@ import React, { useState, forwardRef, useImperativeHandle, useEffect, useCallbac
 import { Flex, Icon, Text, Column, Grid, Row } from "@once-ui-system/core";
 import styles from "./CommandAccordion.module.scss";
 import classNames from "classnames";
+import {IconName} from "@/resources/icons";
 
 export interface AccordionHandle extends HTMLDivElement {
   toggle: () => void;
@@ -16,6 +17,7 @@ interface CommandAccordionProps extends Omit<React.ComponentProps<typeof Flex>, 
   subline: React.ReactNode;
   children: React.ReactNode;
   icon?: string;
+  iconName?: IconName;
   iconRotation?: number;
   size?: "s" | "m" | "l";
   radius?: "xs" | "s" | "m" | "l" | "xl" | "full";
@@ -36,6 +38,7 @@ const CommandAccordion = forwardRef<AccordionHandle, CommandAccordionProps>(
       iconRotation = 180,
       radius = "m",
       icon = "chevronDown",
+      iconName = "gear",
       size = "m",
       className,
       style,
@@ -116,7 +119,7 @@ const CommandAccordion = forwardRef<AccordionHandle, CommandAccordionProps>(
                         : "xs"
               }
             >
-              <Icon name={"gear"} size={size === "s" ? "xs" : "s"} onBackground={"brand-strong"} />
+              <Icon name={iconName} size={size === "s" ? "xs" : "s"} onBackground={"brand-strong"} />
             </Flex>
             <Column center>
               <Row fillWidth textVariant="body-strong-s">

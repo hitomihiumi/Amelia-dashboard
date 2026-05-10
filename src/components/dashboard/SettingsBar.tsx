@@ -116,7 +116,6 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                   General settings
                 </Text>
               </ToggleButton>
-              {/*
               <ToggleButton
                 size={"l"}
                 prefixIcon={"command"}
@@ -129,7 +128,6 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                   Commands
                 </Text>
               </ToggleButton>
-              */}
             </Column>
 
             <Column gap={"8"}>

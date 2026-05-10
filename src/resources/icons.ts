@@ -16,7 +16,11 @@ import {
   IoDiamond,
   IoTrailSign,
   IoTicket,
-  IoRocket, IoRibbon,
+  IoRocket,
+  IoRibbon,
+  IoGitNetwork,
+  IoColorPalette,
+  IoPerson, IoBonfire
 } from "react-icons/io5";
 
 import { FaDiscord } from "react-icons/fa";
@@ -39,7 +43,11 @@ export const iconLibrary: Record<string, IconType> = {
   sign: IoTrailSign,
   ticket: IoTicket,
   rocket: IoRocket,
-  ribbon: IoRibbon
+  ribbon: IoRibbon,
+  gitnet: IoGitNetwork,
+  palette: IoColorPalette,
+  user: IoPerson,
+  bonfire: IoBonfire
 };
 
 export type IconLibrary = typeof iconLibrary;

@@ -30,12 +30,22 @@ export type DiscordRole = {
   color: number;
 };
 
+export const permissionType = {
+  Administrator: BigInt(8),
+  ManageGuild: BigInt(32),
+  ManageRoles: BigInt(268435456),
+  ManageChannels: BigInt(16),
+  KickMembers: BigInt(2),
+  BanMembers: BigInt(4),
+  ManageMessages: BigInt(8192),
+}
+
 export const defaultPermissions = [
-  { name: "Administrator", bigint: 8 },
-  { name: "Manage Guild", bigint: 32 },
-  { name: "Manage Roles", bigint: 268435456 },
-  { name: "Manage Channels", bigint: 16 },
-  { name: "Kick Members", bigint: 2 },
-  { name: "Ban Members", bigint: 4 },
-  { name: "Manage Messages", bigint: 8192 },
+  { name: "Administrator", bigint: permissionType.Administrator },
+  { name: "Manage Guild", bigint: permissionType.ManageGuild },
+  { name: "Manage Roles", bigint: permissionType.ManageRoles },
+  { name: "Manage Channels", bigint: permissionType.ManageChannels },
+  { name: "Kick Members", bigint: permissionType.KickMembers },
+  { name: "Ban Members", bigint: permissionType.BanMembers },
+  { name: "Manage Messages", bigint: permissionType.ManageMessages },
 ];

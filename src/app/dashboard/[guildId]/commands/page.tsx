@@ -1,11 +1,12 @@
 import { Guild } from "@/lib/db/Guild";
-import { Feedback, Flex, Text } from "@once-ui-system/core";
+import {Column, Feedback, Flex, Text} from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
 import { DiscordRole } from "@/lib/discord/role-style";
 import { CommandsFrom } from "@/app/dashboard/[guildId]/commands/CommandsFrom";
+import React from "react";
 
 export default async function GeneralSettingsPage({
   params,
@@ -28,14 +29,14 @@ export default async function GeneralSettingsPage({
   }
 
   const guild = new Guild(resolvedParams.guildId);
-  const settings = await guild.get("permissions");
+  const settings = await guild.get("permissions.commands");
 
   return (
     <Flex direction="column" gap="24">
       <Flex direction="column" gap="8">
-        <Text variant="heading-strong-l">Commands settings</Text>
+        <Text variant="heading-strong-l">Command Permissions</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
-          Configure the permissions for using bot commands in your server.
+          Define who can use specific bot features by roles or server permissions.
         </Text>
       </Flex>
 
