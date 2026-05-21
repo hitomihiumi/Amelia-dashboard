@@ -14,7 +14,7 @@ export async function updateLevelsSettings(
 ): Promise<GuildActionState> {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return { ok: false, error: "Authentication required." };
+    if (!session) return { ok: false, error: "Not authorized." };
 
     const gate = await requireGuildAdmin(guildId);
     if (gate.error) return { ok: false, error: gate.error };

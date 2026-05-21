@@ -133,7 +133,7 @@ export function UnsavedChangesProvider({ children }: { children: ReactNode }) {
 export function useUnsavedChanges(): UnsavedChangesContextValue {
   const ctx = useContext(UnsavedChangesContext);
   if (!ctx) {
-    throw new Error("useUnsavedChanges должен использоваться внутри UnsavedChangesProvider");
+    throw new Error("useUnsavedChanges need to use inside UnsavedChangesProvider");
   }
   return ctx;
 }
