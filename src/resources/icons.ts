@@ -22,6 +22,7 @@ import {
   IoColorPalette,
   IoPerson,
   IoBonfire, IoSend, IoTrophy, IoEyeOff,
+  IoLink, IoDocumentAttach, IoList, IoRemove, IoText, IoFolder, IoTrash
 } from "react-icons/io5";
 
 import { FaDiscord } from "react-icons/fa";
@@ -52,6 +53,12 @@ export const iconLibrary: Record<string, IconType> = {
   send: IoSend,
   trophy: IoTrophy,
   eyeoff: IoEyeOff,
+  link: IoLink,
+  documentattach: IoDocumentAttach,
+  list: IoList,
+  minus: IoRemove,
+  text: IoText,
+  trash: IoTrash
 };
 
 export type IconLibrary = typeof iconLibrary;
