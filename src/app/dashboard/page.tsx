@@ -9,6 +9,7 @@ import {
   Row,
   Background,
   Feedback,
+  useToast,
 } from "@once-ui-system/core";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { UserGuildCard } from "@/types/discord";
@@ -21,11 +22,11 @@ type ApiErr = { ok: false; error: string };
 
 export default function Page() {
   const { status } = useSession();
+  const { addToast } = useToast();
   const searchParams = useSearchParams();
   const discordParam = searchParams.get("discord");
 
   const [guilds, setGuilds] = useState<UserGuildCard[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const loadIdRef = useRef(0);
 
@@ -38,20 +39,25 @@ export default function Page() {
     const fetchGuilds = async () => {
       const id = ++loadIdRef.current;
       if (id === 1) setLoading(true);
-      setError(null);
       try {
         const res = await fetch("/api/user/guilds");
         const data = (await res.json()) as ApiOk | ApiErr;
         if (loadIdRef.current !== id) return;
         if (!res.ok || !data.ok) {
-          setError("error" in data ? data.error : `Ошибка ${res.status}`);
+          addToast({
+            variant: "danger",
+            message: "error" in data ? data.error : `Error ${res.status}`
+          });
           setGuilds([]);
           return;
         }
         setGuilds(data.guilds);
       } catch {
         if (loadIdRef.current === id) {
-          setError("Не удалось загрузить серверы");
+          addToast({
+            variant: "danger",
+            message: "Failed to fetch guilds. Please try again."
+          });
           setGuilds([]);
         }
       } finally {
