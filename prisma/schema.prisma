@@ -17,7 +17,7 @@ model Guild {
 
   // Settings
   prefix   String @default("a.")
-  language String @default("ru")
+  language String @default("en")
 
   // Join to Create settings
   jtcEnabled     Boolean @default(false)

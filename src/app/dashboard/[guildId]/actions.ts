@@ -55,18 +55,18 @@ export async function requireGuildAdmin(
 ): Promise<{ error: string } | { error: null }> {
   const session = await getServerSession(authOptions);
   if (!session?.accessToken) {
-    return { error: "Нужна авторизация" };
+    return { error: "Auth required" };
   }
   try {
     const allowed = await verifyUserIsGuildAdministrator(session.accessToken, guildId);
     if (!allowed) {
       return {
-        error: "Нужны права администратора Discord на этом сервере",
+        error: "Access denied. You must be a server administrator to access this page.",
       };
     }
   } catch {
     return {
-      error: "Discord временно недоступен (лимит запросов). Подождите и попробуйте снова.",
+      error: "Failed to verify permissions. Please try again later.",
     };
   }
   return { error: null };

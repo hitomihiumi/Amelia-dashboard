@@ -16,7 +16,7 @@ export interface DashIconProps extends React.ComponentProps<typeof Flex> {
   style?: React.CSSProperties;
 }
 
-export const DashIcon: React.FC<DashIconProps> = ({
+export const DashIcon = ({
   name,
   size = "m",
   decorative = false,
@@ -25,7 +25,7 @@ export const DashIcon: React.FC<DashIconProps> = ({
   className,
   style,
   ...rest
-}) => {
+}: DashIconProps) => {
   return (
     <Icon
       name={name}
