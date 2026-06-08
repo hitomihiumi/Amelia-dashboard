@@ -13,7 +13,7 @@ export async function refreshDiscordAccessToken(
   const clientId = process.env.DISCORD_CLIENT_ID;
   const clientSecret = process.env.DISCORD_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
-    throw new Error("Не заданы DISCORD_CLIENT_ID / DISCORD_CLIENT_SECRET");
+    throw new Error("Not set DISCORD_CLIENT_ID / DISCORD_CLIENT_SECRET");
   }
 
   const body = new URLSearchParams({

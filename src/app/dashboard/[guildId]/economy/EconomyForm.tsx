@@ -11,6 +11,7 @@ import {
   SegmentedControl,
   Slider,
   useToast,
+  NumberInput,
 } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { updateEconomySettings } from "./actions";
@@ -189,28 +190,28 @@ export function EconomyForm({
           </Row>
           <Column gap={"8"}>
             <Row gap={"8"}>
-              <Input
+              <NumberInput
                 id={"work-min-income"}
                 label={"Min Income"}
                 value={income.work.min}
-                onChange={(e) =>
+                onChange={(value) =>
                   setIncome((prev) => ({
                     ...prev,
-                    work: { ...prev.work, min: Number(e.target.value) },
+                    work: { ...prev.work, min: Number(value) },
                   }))
                 }
                 min={0}
                 max={10000}
                 step={1}
               />
-              <Input
+              <NumberInput
                 id={"work-max-income"}
                 label={"Max Income"}
                 value={income.work.max}
-                onChange={(e) =>
+                onChange={(value) =>
                   setIncome((prev) => ({
                     ...prev,
-                    work: { ...prev.work, max: Number(e.target.value) },
+                    work: { ...prev.work, max: Number(value) },
                   }))
                 }
                 min={0}
@@ -218,14 +219,14 @@ export function EconomyForm({
                 step={1}
               />
             </Row>
-            <Input
+            <NumberInput
               id={"work-cooldown-income"}
               label={"Cooldown (s)"}
               value={income.work.cooldown}
-              onChange={(e) =>
+              onChange={(value) =>
                 setIncome((prev) => ({
                   ...prev,
-                  work: { ...prev.work, cooldown: Number(e.target.value) },
+                  work: { ...prev.work, cooldown: Number(value) },
                 }))
               }
               min={0}
@@ -277,16 +278,16 @@ export function EconomyForm({
             />
             <Column gap={"8"}>
               <Row gap={"8"}>
-                <Input
+                <NumberInput
                   id={"rob-min-income"}
                   label={"Min Income"}
                   value={income.rob.income.min}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setIncome((prev) => ({
                       ...prev,
                       rob: {
                         ...prev.rob,
-                        income: { ...prev.rob.income, min: Number(e.target.value) },
+                        income: { ...prev.rob.income, min: Number(value) },
                       },
                     }))
                   }
@@ -294,16 +295,16 @@ export function EconomyForm({
                   max={10000}
                   step={1}
                 />
-                <Input
+                <NumberInput
                   id={"rob-max-income"}
                   label={"Max Income"}
                   value={income.rob.income.max}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setIncome((prev) => ({
                       ...prev,
                       rob: {
                         ...prev.rob,
-                        income: { ...prev.rob.income, max: Number(e.target.value) },
+                        income: { ...prev.rob.income, max: Number(value) },
                       },
                     }))
                   }
@@ -312,14 +313,14 @@ export function EconomyForm({
                   step={1}
                 />
               </Row>
-              <Input
+              <NumberInput
                 id={"rob-cooldown-income"}
                 label={"Cooldown (s)"}
                 value={income.rob.cooldown}
-                onChange={(e) =>
+                onChange={(value) =>
                   setIncome((prev) => ({
                     ...prev,
-                    rob: { ...prev.rob, cooldown: Number(e.target.value) },
+                    rob: { ...prev.rob, cooldown: Number(value) },
                   }))
                 }
                 min={0}
@@ -344,16 +345,16 @@ export function EconomyForm({
             />
             <Column gap={"8"}>
               <Row gap={"8"}>
-                <Input
+                <NumberInput
                   id={"rob-min-punishment"}
                   label={"Min Punishment"}
                   value={income.rob.punishment.min}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setIncome((prev) => ({
                       ...prev,
                       rob: {
                         ...prev.rob,
-                        punishment: { ...prev.rob.punishment, min: Number(e.target.value) },
+                        punishment: { ...prev.rob.punishment, min: Number(value) },
                       },
                     }))
                   }
@@ -361,16 +362,16 @@ export function EconomyForm({
                   max={10000}
                   step={1}
                 />
-                <Input
+                <NumberInput
                   id={"rob-max-punishment"}
                   label={"Max Punishment"}
                   value={income.rob.punishment.max}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setIncome((prev) => ({
                       ...prev,
                       rob: {
                         ...prev.rob,
-                        punishment: { ...prev.rob.punishment, max: Number(e.target.value) },
+                        punishment: { ...prev.rob.punishment, max: Number(value) },
                       },
                     }))
                   }
@@ -442,14 +443,14 @@ export function EconomyForm({
               }
             />
           </Row>
-          <Input
+          <NumberInput
             id={"timely-income"}
             label={"Income"}
             value={income.timely.amount}
-            onChange={(e) =>
+            onChange={(value) =>
               setIncome((prev) => ({
                 ...prev,
-                timely: { ...prev.timely, amount: Number(e.target.value) },
+                timely: { ...prev.timely, amount: Number(value) },
               }))
             }
             min={0}
@@ -482,14 +483,14 @@ export function EconomyForm({
               }
             />
           </Row>
-          <Input
+          <NumberInput
             id={"daily-income"}
             label={"Income"}
             value={income.daily.amount}
-            onChange={(e) =>
+            onChange={(value) =>
               setIncome((prev) => ({
                 ...prev,
-                daily: { ...prev.daily, amount: Number(e.target.value) },
+                daily: { ...prev.daily, amount: Number(value) },
               }))
             }
             min={0}
@@ -522,14 +523,14 @@ export function EconomyForm({
               }
             />
           </Row>
-          <Input
+          <NumberInput
             id={"weekly-income"}
             label={"Income"}
             value={income.weekly.amount}
-            onChange={(e) =>
+            onChange={(value) =>
               setIncome((prev) => ({
                 ...prev,
-                weekly: { ...prev.weekly, amount: Number(e.target.value) },
+                weekly: { ...prev.weekly, amount: Number(value) },
               }))
             }
             min={0}

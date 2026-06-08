@@ -11,7 +11,7 @@ import {
   IconButton,
   Button,
   useToast,
-  Line,
+  Line, NumberInput,
 } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { updateLevelsSettings } from "./actions";
@@ -49,7 +49,7 @@ export function LevelsForm({
   const [economy, setEconomy] = useState(defaultEconomy);
   const [baseline, setBaseline] = useState({ levels: defaultLevels, economy: defaultEconomy });
 
-  const [newLevel, setNewLevel] = useState<string>("");
+  const [newLevel, setNewLevel] = useState<number>(1);
   const [newRoleId, setNewRoleId] = useState<string>("");
 
   const isDirty = useMemo(
@@ -97,14 +97,13 @@ export function LevelsForm({
   }, [handleSave, handleCancel, setSaveAction, setCancelAction]);
 
   const addRoleReward = () => {
-    const lvl = parseInt(newLevel);
-    if (isNaN(lvl) || lvl <= 0 || !newRoleId) return;
+    if (isNaN(newLevel) || newLevel <= 0 || !newRoleId) return;
 
     setLevels((prev) => ({
       ...prev,
-      level_roles: { ...prev.level_roles, [lvl]: newRoleId },
+      level_roles: { ...prev.level_roles, [newLevel]: newRoleId },
     }));
-    setNewLevel("");
+    setNewLevel(1);
     setNewRoleId("");
   };
 
@@ -222,10 +221,10 @@ export function LevelsForm({
 
         <Row gap="12" vertical="center" s={{ direction: "column" }}>
           <Column fillWidth>
-            <Input
+            <NumberInput
               id="new-reward-level"
               value={newLevel}
-              onChange={(e) => setNewLevel(e.target.value)}
+              onChange={(value) => setNewLevel(value)}
               placeholder="5"
               label={"Level"}
             />
@@ -280,14 +279,14 @@ export function LevelsForm({
               }))
             }
           />
-          <Input
+          <NumberInput
             id="msg-delete-delay"
             label="Auto-delete delay (seconds, 0 to keep)"
             value={levels.message.delete}
-            onChange={(e) =>
+            onChange={(value) =>
               setLevels((p) => ({
                 ...p,
-                message: { ...p.message, delete: Number(e.target.value) },
+                message: { ...p.message, delete: Number(value) },
               }))
             }
           />
@@ -358,11 +357,11 @@ export function LevelsForm({
             />
           </Row>
         </Flex>
-        <Input
+        <NumberInput
           id="eco-reward-amount"
           label="Reward Amount"
           value={economy.amount}
-          onChange={(e) => setEconomy((p) => ({ ...p, amount: Number(e.target.value) }))}
+          onChange={(value) => setEconomy((p) => ({ ...p, amount: Number(value) }))}
         />
       </Flex>
     </Flex>

@@ -5,7 +5,7 @@ import {
   DateRange,
   DateRangeInput,
   Dialog,
-  Input,
+  Input, NumberInput,
   Text,
 } from "@once-ui-system/core";
 import { RoleSelect } from "@/components/dashboard/discord/RoleSelect";
@@ -90,11 +90,11 @@ export const ShopModal: React.FC<ShopModalProps> = ({
             selectedRole={role}
             setSelectedRole={(role) => setRole(role as string)}
           />
-          <Input
+          <NumberInput
             id={"price-set"}
             label={"Price"}
             value={shopRole.price}
-            onChange={(e) => setShopRole((prev) => ({ ...prev, price: Number(e.target.value) }))}
+            onChange={(value) => setShopRole((prev) => ({ ...prev, price: Number(value) }))}
             min={0}
             max={1000000}
             step={1}
@@ -105,14 +105,14 @@ export const ShopModal: React.FC<ShopModalProps> = ({
             You can set a discount for this role. You can set the discount amount and the start and
             end date of the discount.
           </Text>
-          <Input
+          <NumberInput
             id={"discount-amount"}
             label={"Discount amount (%)"}
             value={shopRole.discount.amount}
-            onChange={(e) =>
+            onChange={(value) =>
               setShopRole((prev) => ({
                 ...prev,
-                discount: { ...prev.discount, amount: Number(e.target.value) },
+                discount: { ...prev.discount, amount: Number(value) },
               }))
             }
             min={0}
