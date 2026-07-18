@@ -1,12 +1,14 @@
 import { ReactNode } from "react";
 import { Flex } from "@once-ui-system/core";
 import { UnsavedChangesProvider } from "@/contexts/UnsavedChangesContext";
+import { DiscordPreviewProvider } from "@/contexts/DiscordPreviewContext";
 import { UnsavedNavigationGuard } from "@/components/layout/UnsavedNavigationGuard";
 import { UnsavedBar } from "@/components/layout/UnsavedBar";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getGuildAccessForDashboard } from "@/lib/discord/guilds-api";
+import { getBotPreviewIdentity } from "@/lib/discord/bot-preview";
 import { SettingsBar } from "@/components/dashboard/SettingsBar";
 
 export default async function GuildDashboardLayout({
@@ -35,18 +37,29 @@ export default async function GuildDashboardLayout({
     redirect("/dashboard");
   }
 
+  const botIdentity = await getBotPreviewIdentity();
+
   return (
     <UnsavedChangesProvider>
-      <UnsavedNavigationGuard />
-      <Flex fillWidth fillHeight direction={"row"} m={{ direction: "column" }}>
-        <SettingsBar access={access} guildId={guildId} />
-        <Flex fill horizontal={"center"}>
-          <Flex direction="column" fillWidth padding="24" overflow="auto" maxWidth={"m"}>
-            {children}
+      <DiscordPreviewProvider
+        value={{
+          ...botIdentity,
+          guildId,
+          guildName: access.guildName,
+          guildIconUrl: access.guildIconUrl,
+        }}
+      >
+        <UnsavedNavigationGuard />
+        <Flex fillWidth fillHeight direction={"row"} m={{ direction: "column" }}>
+          <SettingsBar access={access} guildId={guildId} />
+          <Flex fill horizontal={"center"}>
+            <Flex direction="column" fillWidth padding="24" overflow="auto" maxWidth={"m"}>
+              {children}
+            </Flex>
           </Flex>
         </Flex>
-      </Flex>
-      <UnsavedBar />
+        <UnsavedBar />
+      </DiscordPreviewProvider>
     </UnsavedChangesProvider>
   );
 }

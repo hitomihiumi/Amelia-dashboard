@@ -1,1 +1,28 @@
 @import "tailwindcss";
+
+/* Real Discord dark-theme palette, used exclusively by the Discord message
+   preview (src/components/dashboard/discord/preview) so it stays visually
+   accurate regardless of the dashboard's own Once UI theme. */
+@theme {
+  --font-discord: "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  --color-discord-bg-primary: #313338;
+  --color-discord-bg-secondary: #2b2d31;
+  --color-discord-bg-tertiary: #1e1f22;
+  --color-discord-bg-floating: #111214;
+  --color-discord-bg-hover: #2e3035;
+  --color-discord-bg-modifier-hover: #404249;
+
+  --color-discord-header-primary: #f2f3f5;
+  --color-discord-text-normal: #dbdee1;
+  --color-discord-text-muted: #949ba4;
+  --color-discord-text-faint: #b5bac1;
+  --color-discord-interactive-muted: #4e5058;
+
+  --color-discord-brand: #5865f2;
+  --color-discord-brand-hover: #4752c4;
+  --color-discord-brand-light: #7289da;
+  --color-discord-link: #00a8fc;
+  --color-discord-green: #23a559;
+  --color-discord-red: #da373c;
+}

@@ -189,6 +189,36 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 </Text>
               </ToggleButton>
             </Column>
+
+            <Column gap={"8"}>
+              <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
+                Interactions
+              </Text>
+              <ToggleButton
+                size={"l"}
+                prefixIcon={"target"}
+                horizontal="start"
+                fillWidth
+                selected={pathname.endsWith("/dashboard/" + guildId + "/components")}
+                href={"/dashboard/" + guildId + "/components"}
+              >
+                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
+                  Components
+                </Text>
+              </ToggleButton>
+              <ToggleButton
+                size={"l"}
+                prefixIcon={"gitnet"}
+                horizontal="start"
+                fillWidth
+                selected={pathname.endsWith("/dashboard/" + guildId + "/scenarios")}
+                href={"/dashboard/" + guildId + "/scenarios"}
+              >
+                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
+                  Scenarios
+                </Text>
+              </ToggleButton>
+            </Column>
           </Column>
 
           <Line />

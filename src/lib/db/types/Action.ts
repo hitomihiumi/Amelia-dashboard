@@ -1,4 +1,4 @@
-import { ColorResolvable, EmojiResolvable } from "discord.js";
+import type { ColorResolvable, EmojiResolvable } from "discord.js";
 
 export interface ModalCustom {
   id: string;
@@ -158,10 +158,15 @@ export interface ScenarioCustom {
   name: string;
   description?: string;
   enabled: boolean;
+  /**
+   * The interaction component that auto-fires this scenario. `null` means the
+   * scenario never fires automatically (manual/draft) — it must then be invoked
+   * by another step's onSuccess/onFailure or scheduled manually.
+   */
   trigger: {
     type: ScenarioTriggerType;
-    componentId: string; // ID of button/select menu/modal that triggers this
-  };
+    componentId: string;
+  } | null;
   variables?: Record<string, string>; // Predefined variables
   steps: ScenarioStep[];
   // Restrictions

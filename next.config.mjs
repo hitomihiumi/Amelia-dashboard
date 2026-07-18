@@ -10,7 +10,7 @@ const withMDXConfig = withMDX({
 });
 
 const nextConfig = {
-  allowedDevOrigins: ["192.168.88.208"],
+  allowedDevOrigins: ["192.168.88.200"],
   sassOptions: {
     compiler: "modern",
     silenceDeprecations: ["legacy-js-api"],
