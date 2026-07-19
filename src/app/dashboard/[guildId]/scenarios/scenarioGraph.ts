@@ -25,9 +25,15 @@ const ARROW_MARKER = { type: MarkerType.ArrowClosed as const, width: 16, height:
 
 /**
  * Convert a `ScenarioCustom.steps` array plus trigger to ReactFlow nodes/edges.
- * The trigger node is always present as a visual canvas entry point. Only
- * `step.onSuccess`/`onFailure` become edges; no auto-edge from the trigger is
- * synthesised — the user wires the entry themselves (default branch).
+ * The trigger node is always present as a visual canvas entry point.
+ *
+ * The trigger→step edge is never persisted on `ScenarioStep` (there's no field
+ * for it), and the bot's runner falls through to "the next step in `order`"
+ * whenever a step has no explicit `onSuccess` — scenarios authored via the
+ * bot's own `/scenario` command rely entirely on this fallback and never set
+ * onSuccess/onFailure at all. Both edge kinds are therefore synthesised here
+ * so the canvas reflects actual execution order instead of showing detached
+ * nodes for every scenario that doesn't explicitly wire every link.
  */
 export function stepsToNodesEdges(scenario: ScenarioCustom): {
   nodes: Node<ScenarioNodeData>[];
@@ -50,9 +56,42 @@ export function stepsToNodesEdges(scenario: ScenarioCustom): {
   }));
 
   const edges: Edge<ScenarioEdgeData>[] = [];
-  for (const step of sortedSteps) {
-    if (step.onSuccess) edges.push(makeEdge(step.id, step.onSuccess, "success"));
-    if (step.onFailure) edges.push(makeEdge(step.id, step.onFailure, "fail"));
+  const targeted = new Set<string>();
+
+  for (let i = 0; i < sortedSteps.length; i++) {
+    const step = sortedSteps[i];
+    const nextStep = sortedSteps[i + 1];
+
+    if (step.onSuccess) {
+      edges.push(makeEdge(step.id, step.onSuccess, "success"));
+      targeted.add(step.onSuccess);
+    } else if (nextStep) {
+      // No explicit link — mirror the runner's "next step in order" fallback.
+      edges.push(makeEdge(step.id, nextStep.id, "success"));
+      targeted.add(nextStep.id);
+    }
+
+    if (step.onFailure) {
+      edges.push(makeEdge(step.id, step.onFailure, "fail"));
+      targeted.add(step.onFailure);
+    }
+  }
+
+  // Wire the trigger to the first step nothing else points to, so the entry
+  // point is visible even though it's never actually stored anywhere.
+  const entryStep = sortedSteps.find((s) => !targeted.has(s.id)) ?? sortedSteps[0];
+  if (entryStep) {
+    edges.push({
+      id: `e-${TRIGGER_NODE_ID}-${entryStep.id}-default`,
+      source: TRIGGER_NODE_ID,
+      target: entryStep.id,
+      sourceHandle: "success",
+      targetHandle: "in",
+      type: "smoothstep",
+      data: { branch: "default" },
+      markerEnd: ARROW_MARKER,
+      className: "scenario-edge scenario-edge-default",
+    });
   }
 
   return { nodes: [triggerNode, ...stepNodes], edges };
