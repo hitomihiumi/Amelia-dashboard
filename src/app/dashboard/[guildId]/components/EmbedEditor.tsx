@@ -4,14 +4,15 @@ import { ColorInput } from "@/components/dashboard/ColorInput";
 import type { EmbedCustom, EmbedField } from "@/lib/db/types";
 import { resolveDiscordColor } from "@/lib/discord/discord-style";
 import {
-  Button,
-  Column,
-  IconButton,
-  Input,
-  Row,
-  Switch,
-  Text,
-  Textarea,
+    Accordion,
+    Button,
+    Column,
+    IconButton,
+    Input,
+    Row,
+    Switch,
+    Text,
+    Textarea,
 } from "@once-ui-system/core";
 import React from "react";
 
@@ -45,143 +46,127 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
           onChange={(e) => update({ name: e.target.value })}
           maxLength={100}
         />
-        <Input
-          id="embed-title"
-          label="Title"
-          value={value.title ?? ""}
-          onChange={(e) => update({ title: e.target.value || undefined })}
-          maxLength={256}
-          characterCount
-        />
-        <Textarea
-          id="embed-description"
-          label="Description"
-          value={value.description ?? ""}
-          onChange={(e) => update({ description: e.target.value || undefined })}
-          maxLength={4096}
-          lines={4}
-          characterCount
-          resize="vertical"
-        />
-        <ColorInput
-          id="embed-color"
-          label="Color"
-          value={resolveDiscordColor(value.color)}
-          onChange={(e) => update({ color: (e.target.value || undefined) as EmbedCustom["color"] })}
-          presets={PRESERVED_COLORS}
-        />
 
-        <Column
-          gap="12"
-          fillWidth
-          padding="16"
-          border="neutral-weak"
-          radius="m"
-          background="neutral-alpha-weak"
-        >
-          <Text variant="label-strong-s">Author</Text>
-          <Input
-            id="embed-author-name"
-            label="Author name"
-            value={value.author?.name ?? ""}
-            onChange={(e) =>
-              update({
-                author: {
-                  name: e.target.value,
-                  icon_url: value.author?.icon_url,
-                  url: value.author?.url,
-                },
-              })
-            }
-            maxLength={256}
-          />
-          <Row gap="12" fillWidth>
-            <Input
-              id="embed-author-icon"
-              label="Author icon URL"
-              value={value.author?.icon_url ?? ""}
-              onChange={(e) =>
-                update({
-                  author: {
-                    ...(value.author ?? { name: "" }),
-                    icon_url: e.target.value || undefined,
-                  },
-                })
-              }
-            />
-            <Input
-              id="embed-author-url"
-              label="Author URL"
-              value={value.author?.url ?? ""}
-              onChange={(e) =>
-                update({
-                  author: { ...(value.author ?? { name: "" }), url: e.target.value || undefined },
-                })
-              }
-            />
-          </Row>
-        </Column>
+        <Accordion title={"Content"} fillWidth>
+            <Column fillWidth gap="8">
+                <Input
+                    id="embed-title"
+                    label="Title"
+                    value={value.title ?? ""}
+                    onChange={(e) => update({ title: e.target.value || undefined })}
+                    maxLength={256}
+                    characterCount
+                />
+                <Textarea
+                    id="embed-description"
+                    label="Description"
+                    value={value.description ?? ""}
+                    onChange={(e) => update({ description: e.target.value || undefined })}
+                    maxLength={4096}
+                    lines={4}
+                    characterCount
+                    resize="vertical"
+                />
+                <ColorInput
+                    id="embed-color"
+                    label="Color"
+                    value={resolveDiscordColor(value.color)}
+                    onChange={(e) => update({ color: (e.target.value || undefined) as EmbedCustom["color"] })}
+                    presets={PRESERVED_COLORS}
+                />
+            </Column>
+        </Accordion>
 
-        <Column
-          gap="12"
-          fillWidth
-          padding="16"
-          border="neutral-weak"
-          radius="m"
-          background="neutral-alpha-weak"
-        >
-          <Text variant="label-strong-s">Media</Text>
-          <Row gap="12" fillWidth>
-            <Input
-              id="embed-thumbnail"
-              label="Thumbnail URL"
-              value={value.thumbnail ?? ""}
-              onChange={(e) => update({ thumbnail: e.target.value || undefined })}
-            />
-            <Input
-              id="embed-image"
-              label="Image URL"
-              value={value.image ?? ""}
-              onChange={(e) => update({ image: e.target.value || undefined })}
-            />
-          </Row>
-        </Column>
+        <Accordion title={"Author"} fillWidth>
+            <Column fillWidth gap="8">
+                <Input
+                    id="embed-author-name"
+                    label="Author name"
+                    value={value.author?.name ?? ""}
+                    onChange={(e) =>
+                        update({
+                            author: {
+                                name: e.target.value,
+                                icon_url: value.author?.icon_url,
+                                url: value.author?.url,
+                            },
+                        })
+                    }
+                    maxLength={256}
+                />
+                <Input
+                    id="embed-author-icon"
+                    label="Author icon URL"
+                    value={value.author?.icon_url ?? ""}
+                    onChange={(e) =>
+                        update({
+                            author: {
+                                ...(value.author ?? { name: "" }),
+                                icon_url: e.target.value || undefined,
+                            },
+                        })
+                    }
+                />
+                <Input
+                    id="embed-author-url"
+                    label="Author URL"
+                    value={value.author?.url ?? ""}
+                    onChange={(e) =>
+                        update({
+                            author: { ...(value.author ?? { name: "" }), url: e.target.value || undefined },
+                        })
+                    }
+                />
+            </Column>
+        </Accordion>
 
-        <Column
-          gap="12"
-          fillWidth
-          padding="16"
-          border="neutral-weak"
-          radius="m"
-          background="neutral-alpha-weak"
-        >
-          <Text variant="label-strong-s">Footer</Text>
-          <Input
-            id="embed-footer-text"
-            label="Footer text"
-            value={value.footer?.text ?? ""}
-            onChange={(e) =>
-              update({ footer: { text: e.target.value, icon_url: value.footer?.icon_url } })
-            }
-            maxLength={2048}
-          />
-          <Input
-            id="embed-footer-icon"
-            label="Footer icon URL"
-            value={value.footer?.icon_url ?? ""}
-            onChange={(e) =>
-              update({
-                footer: { text: value.footer?.text ?? "", icon_url: e.target.value || undefined },
-              })
-            }
-          />
-          <Switch
-            label="Show timestamp"
-            description="Append the current time to the footer"
-            isChecked={!!value.timestamp}
-            onToggle={() => update({ timestamp: !value.timestamp })}
-          />
-        </Column>
+        <Accordion title={"Media"} fillWidth>
+            <Column fillWidth gap="8">
+                <Input
+                    id="embed-thumbnail"
+                    label="Thumbnail URL"
+                    value={value.thumbnail ?? ""}
+                    onChange={(e) => update({ thumbnail: e.target.value || undefined })}
+                />
+                <Input
+                    id="embed-image"
+                    label="Image URL"
+                    value={value.image ?? ""}
+                    onChange={(e) => update({ image: e.target.value || undefined })}
+                />
+            </Column>
+        </Accordion>
+
+
+        <Accordion title={"Footer"} fillWidth>
+            <Column fillWidth gap="8">
+                <Input
+                    id="embed-footer-text"
+                    label="Footer text"
+                    value={value.footer?.text ?? ""}
+                    onChange={(e) =>
+                        update({ footer: { text: e.target.value, icon_url: value.footer?.icon_url } })
+                    }
+                    maxLength={2048}
+                />
+                <Input
+                    id="embed-footer-icon"
+                    label="Footer icon URL"
+                    value={value.footer?.icon_url ?? ""}
+                    onChange={(e) =>
+                        update({
+                            footer: { text: value.footer?.text ?? "", icon_url: e.target.value || undefined },
+                        })
+                    }
+                />
+                <Switch
+                    label="Show timestamp"
+                    description="Append the current time to the footer"
+                    isChecked={!!value.timestamp}
+                    onToggle={() => update({ timestamp: !value.timestamp })}
+                />
+            </Column>
+        </Accordion>
 
         <Row fillWidth horizontal="between" vertical="center" gap="8">
           <Text variant="label-default-s">Fields ({value.fields?.length ?? 0}/25)</Text>
@@ -212,38 +197,46 @@ function FieldEditor({
   onDelete: () => void;
 }) {
   return (
-    <Column fillWidth gap="8" padding="16" border="neutral-weak" radius="m">
-      <Row fillWidth horizontal="between" vertical="center" gap="8">
-        <Input
-          id={`field-name-${field.name}`}
-          label="Field name"
-          value={field.name}
-          onChange={(e) => onChange({ name: e.target.value })}
-          maxLength={256}
-        />
-        <IconButton
-          icon="trash"
-          variant="ghost"
-          size="s"
-          tooltip="Delete field"
-          onClick={onDelete}
-        />
-      </Row>
-      <Textarea
-        id={`field-value-${field.name}`}
-        label="Field value"
-        value={field.value}
-        onChange={(e) => onChange({ value: e.target.value })}
-        maxLength={1024}
-        lines={2}
-        resize="vertical"
-      />
-      <Switch
-        label="Inline"
-        isChecked={!!field.inline}
-        onToggle={() => onChange({ inline: !field.inline })}
-      />
-    </Column>
+      <Accordion title={
+          <Row horizontal="between" vertical="center" gap="8">
+              <Text variant="body-strong-s" style={{ wordBreak: "break-word" }}>
+                  {field.name || "Unnamed field"}
+              </Text>
+              <Row gap="4" vertical="center" onClick={(e) => e.stopPropagation()}>
+                  <IconButton
+                      icon="trash"
+                      variant="ghost"
+                      size="s"
+                      tooltip="Delete field"
+                      onClick={onDelete}
+                  />
+              </Row>
+          </Row>
+      } fillWidth>
+          <Column fillWidth gap="8" border="neutral-weak" radius="m">
+                  <Input
+                      id={`field-name-${field.name}`}
+                      label="Field name"
+                      value={field.name}
+                      onChange={(e) => onChange({ name: e.target.value })}
+                      maxLength={256}
+                  />
+              <Textarea
+                  id={`field-value-${field.name}`}
+                  label="Field value"
+                  value={field.value}
+                  onChange={(e) => onChange({ value: e.target.value })}
+                  maxLength={1024}
+                  lines={2}
+                  resize="vertical"
+              />
+              <Switch
+                  label="Inline"
+                  isChecked={!!field.inline}
+                  onToggle={() => onChange({ inline: !field.inline })}
+              />
+          </Column>
+      </Accordion>
   );
 }
 

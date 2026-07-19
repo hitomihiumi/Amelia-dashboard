@@ -3,15 +3,16 @@
 import { generateID } from "@/lib/db/generateID";
 import type { SelectMenuCustom, SelectMenuOptionCustom } from "@/lib/db/types";
 import {
-  Button,
-  Column,
-  IconButton,
-  InlineCode,
-  Input,
-  NumberInput,
-  Row,
-  Switch,
-  Text,
+    Accordion,
+    Button,
+    Column,
+    IconButton,
+    InlineCode,
+    Input,
+    NumberInput,
+    Row,
+    Switch,
+    Text,
 } from "@once-ui-system/core";
 import React from "react";
 
@@ -118,42 +119,50 @@ function OptionEditor({
   onDelete: () => void;
 }) {
   return (
-    <Column fillWidth gap="8" padding="16" border="neutral-weak" radius="m">
-      <Row fillWidth horizontal="between" vertical="center" gap="8">
-        <Input
-          id={`opt-label-${option.value}`}
-          label="Label"
-          value={option.label}
-          onChange={(e) => onChange({ label: e.target.value })}
-          maxLength={100}
-        />
-        <IconButton
-          icon="trash"
-          variant="ghost"
-          size="s"
-          tooltip="Delete option"
-          onClick={onDelete}
-        />
-      </Row>
-      <Input
-        id={`opt-desc-${option.value}`}
-        label="Description"
-        value={option.description ?? ""}
-        onChange={(e) => onChange({ description: e.target.value || undefined })}
-        maxLength={100}
-      />
-      <Input
-        id={`opt-emoji-${option.value}`}
-        label="Emoji (unicode or <name:id>)"
-        value={emojiToString(option.emoji)}
-        onChange={(e) => onChange({ emoji: e.target.value || undefined })}
-      />
-      <Switch
-        label="Default selected"
-        isChecked={!!option.default}
-        onToggle={() => onChange({ default: !option.default })}
-      />
-    </Column>
+      <Accordion title={
+          <Row horizontal="between" vertical="center" gap="8">
+              <Text variant="body-strong-s" style={{ wordBreak: "break-word" }}>
+                  {option.label || "Unnamed option"}
+              </Text>
+              <Row gap="4" vertical="center" onClick={(e) => e.stopPropagation()}>
+                  <IconButton
+                      icon="trash"
+                      variant="ghost"
+                      size="s"
+                      tooltip="Delete option"
+                      onClick={onDelete}
+                  />
+              </Row>
+          </Row>
+      } fillWidth>
+          <Column fillWidth gap="8" border="neutral-weak" radius="m">
+              <Input
+                  id={`opt-label-${option.value}`}
+                  label="Label"
+                  value={option.label}
+                  onChange={(e) => onChange({ label: e.target.value })}
+                  maxLength={100}
+              />
+              <Input
+                  id={`opt-desc-${option.value}`}
+                  label="Description"
+                  value={option.description ?? ""}
+                  onChange={(e) => onChange({ description: e.target.value || undefined })}
+                  maxLength={100}
+              />
+              <Input
+                  id={`opt-emoji-${option.value}`}
+                  label="Emoji (unicode or <name:id>)"
+                  value={emojiToString(option.emoji)}
+                  onChange={(e) => onChange({ emoji: e.target.value || undefined })}
+              />
+              <Switch
+                  label="Default selected"
+                  isChecked={!!option.default}
+                  onToggle={() => onChange({ default: !option.default })}
+              />
+          </Column>
+      </Accordion>
   );
 }
 

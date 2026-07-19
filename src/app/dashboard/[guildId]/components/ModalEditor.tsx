@@ -3,16 +3,17 @@
 import { generateID } from "@/lib/db/generateID";
 import type { IModalField, ModalCustom } from "@/lib/db/types";
 import {
-  Button,
-  Column,
-  IconButton,
-  InlineCode,
-  Input,
-  NumberInput,
-  Row,
-  SegmentedControl,
-  Switch,
-  Text,
+    Accordion,
+    Button,
+    Column,
+    IconButton,
+    InlineCode,
+    Input,
+    NumberInput,
+    Row,
+    SegmentedControl,
+    Switch,
+    Text,
 } from "@once-ui-system/core";
 import React from "react";
 
@@ -90,67 +91,75 @@ function FieldRow({
   onDelete: () => void;
 }) {
   return (
-    <Column fillWidth gap="8" padding="16" border="neutral-weak" radius="m" background="surface">
-      <Row fillWidth horizontal="between" vertical="center" gap="8">
-        <Input
-          id={`field-${field.id}-name`}
-          label="Label"
-          value={field.name}
-          onChange={(e) => onChange({ name: e.target.value })}
-          maxLength={45}
-          characterCount
-        />
-        <IconButton
-          icon="trash"
-          variant="ghost"
-          size="s"
-          tooltip="Delete field"
-          onClick={onDelete}
-        />
-      </Row>
-      <Input
-        id={`field-${field.id}-placeholder`}
-        label="Placeholder"
-        value={field.placeholder ?? ""}
-        onChange={(e) => onChange({ placeholder: e.target.value || undefined })}
-        maxLength={100}
-        characterCount
-      />
-      <SegmentedControl
-        fillWidth
-        selected={field.type}
-        onToggle={(v) => onChange({ type: v as "short" | "long" })}
-        buttons={[
-          { label: "Short", value: "short" },
-          { label: "Paragraph", value: "long" },
-        ]}
-      />
-      <Switch
-        label="Required"
-        isChecked={field.required}
-        onToggle={() => onChange({ required: !field.required })}
-      />
-      <Row gap="12" fillWidth>
-        <NumberInput
-          id={`field-${field.id}-min`}
-          label="Min length"
-          value={field.min ?? 0}
-          min={0}
-          max={4000}
-          step={1}
-          onChange={(v) => onChange({ min: Number(v) || undefined })}
-        />
-        <NumberInput
-          id={`field-${field.id}-max`}
-          label="Max length"
-          value={field.max ?? 0}
-          min={1}
-          max={4000}
-          step={1}
-          onChange={(v) => onChange({ max: Number(v) || undefined })}
-        />
-      </Row>
-    </Column>
+    <Accordion title={
+        <Row horizontal="between" vertical="center" gap="8">
+            <Text variant="body-strong-s" style={{ wordBreak: "break-word" }}>
+                {field.name || "Unnamed field"}
+            </Text>
+            <Row gap="4" vertical="center" onClick={(e) => e.stopPropagation()}>
+                <IconButton
+                    icon="trash"
+                    variant="ghost"
+                    size="s"
+                    tooltip="Delete field"
+                    onClick={onDelete}
+                />
+            </Row>
+        </Row>
+    } fillWidth>
+        <Column fillWidth gap="8" border="neutral-weak" radius="m" background="surface">
+            <Input
+                id={`field-${field.id}-name`}
+                label="Label"
+                value={field.name}
+                onChange={(e) => onChange({ name: e.target.value })}
+                maxLength={45}
+                characterCount
+            />
+            <Input
+                id={`field-${field.id}-placeholder`}
+                label="Placeholder"
+                value={field.placeholder ?? ""}
+                onChange={(e) => onChange({ placeholder: e.target.value || undefined })}
+                maxLength={100}
+                characterCount
+            />
+            <SegmentedControl
+                fillWidth
+                selected={field.type}
+                onToggle={(v) => onChange({ type: v as "short" | "long" })}
+                buttons={[
+                    { label: "Short", value: "short" },
+                    { label: "Paragraph", value: "long" },
+                ]}
+            />
+            <Row gap="12" fillWidth>
+                <NumberInput
+                    id={`field-${field.id}-min`}
+                    label="Min length"
+                    value={field.min ?? 0}
+                    min={0}
+                    max={4000}
+                    step={1}
+                    onChange={(v) => onChange({ min: Number(v) || undefined })}
+                />
+                <NumberInput
+                    id={`field-${field.id}-max`}
+                    label="Max length"
+                    value={field.max ?? 0}
+                    min={1}
+                    max={4000}
+                    step={1}
+                    onChange={(v) => onChange({ max: Number(v) || undefined })}
+                />
+            </Row>
+            <Switch
+                label="Required"
+                isChecked={field.required}
+                onToggle={() => onChange({ required: !field.required })}
+            />
+        </Column>
+    </Accordion>
   );
 }
 
