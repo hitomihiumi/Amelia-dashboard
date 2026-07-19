@@ -227,8 +227,7 @@ function AddStepPanel({
   onAddStep: (actionType: ScenarioStep["action"]["type"]) => void;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
-  const [openSettings, setOpenSettings] = useState(false);
+  const [open, setOpen] = useState<"settings" | "steps" | null>(null);
   return (
     <Panel position="top-left">
       <Column
@@ -238,29 +237,29 @@ function AddStepPanel({
         background="surface"
         border="neutral-medium"
         className="nodrag nopan"
-        style={{ boxShadow: "0 6px 16px rgba(0,0,0,0.25)", maxWidth: 320 }}
+        style={{ boxShadow: "0 6px 16px rgba(0,0,0,0.25)", maxWidth: 334 }}
       >
-          <Row>
+          <Row gap="16">
             <Button
                 size="s"
-                variant={openSettings ? "primary" : "tertiary"}
+                variant={open === "settings" ? "primary" : "tertiary"}
                 prefixIcon="gear"
-                suffixIcon={openSettings ? "chevronUp" : "chevronDown"}
-                onClick={() => setOpenSettings((v) => !v)}
+                suffixIcon={open === "settings" ? "chevronUp" : "chevronDown"}
+                onClick={() => setOpen((v) => v === "settings" ? null : "settings")}
             >
               Scenario settings
             </Button>
             <Button
                 size="s"
-                variant={open ? "primary" : "tertiary"}
+                variant={open === "steps" ? "primary" : "tertiary"}
                 prefixIcon="plus"
-                suffixIcon={open ? "chevronUp" : "chevronDown"}
-                onClick={() => setOpen((v) => !v)}
+                suffixIcon={open === "steps" ? "chevronUp" : "chevronDown"}
+                onClick={() => setOpen((v) => v === "steps" ? null : "steps")}
             >
               Add step
             </Button>
           </Row>
-          {open && (
+          {open === "steps" && (
               <Row gap="8" wrap>
                 {ADD_STEP_TYPES.map((t) => (
                     <Button
@@ -270,7 +269,7 @@ function AddStepPanel({
                         prefixIcon={ACTION_icons[t]}
                         onClick={() => {
                           onAddStep(t);
-                          setOpen(false);
+                          setOpen(null);
                         }}
                     >
                       {t.replace(/_/g, " ")}
@@ -278,7 +277,7 @@ function AddStepPanel({
                 ))}
               </Row>
           )}
-          {openSettings && (
+          {open === "settings" && (
               <div className="nowheel" style={{ maxHeight: 600, overflowY: "auto" }}>
                 {children}
               </div>
