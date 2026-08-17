@@ -1,0 +1,66 @@
+---
+title: "Moderation"
+updatedAt: "2026-08-17"
+summary: "Set up punishments, auto moderation and the report / appeal forms."
+navLabel: "Moderation"
+navIcon: "security"
+---
+
+## What the moderation system does
+
+Every moderation action — a slash command, an auto moderation hit or a decision taken in the
+dashboard — is stored as a numbered **case**. Cases can be looked up, revoked and appealed, and
+they are mirrored into the moderation log channel.
+
+## Settings
+
+Open **Moderation → Settings** in the dashboard:
+
+- **Moderator roles** — members holding one of them may use the `/mod` commands. Administrators
+  always can.
+- **Moderation log channel** — every case is posted there.
+- **Notify punished members** — sends a direct message with the reason, the duration and a link
+  to the appeal form.
+- **Warn escalation** — punish a member automatically once they reach a given number of active
+  warns. Warns can also expire after a number of days.
+- **Invite / link filters** — delete the message and punish the author, with per-channel and
+  per-role exceptions and a domain whitelist for links.
+
+## Report and appeal forms
+
+**Moderation → Report & appeal forms** is a form builder. Add as many questions as you need — short
+text, long text, numbers, yes/no, a list of choices, a user or channel ID, a message link or a
+plain link — mark them required or optional and choose the channel the submissions are posted to.
+
+Each form has its own public link:
+
+```
+https://<dashboard>/submit/<server id>/report
+https://<dashboard>/submit/<server id>/appeal
+```
+
+`/mod link` prints both links in Discord.
+
+Reports are open to members of the server. Appeals are open to members, to banned users and to
+anyone who was punished on the server before — a banned user can still open the appeal page and
+send the form.
+
+## Handling submissions
+
+A submission arrives in two places at once:
+
+1. In the configured Discord channel, as an embed with **Take in review**, **Approve** and
+   **Reject** buttons. Approving or rejecting asks for a response that is sent to the author.
+2. In **Moderation → Submission queue**, with the same actions.
+
+Approving an appeal automatically revokes the case it was filed against: the ban is lifted, the
+time out is removed and a counterpart case is written to the log.
+
+## Commands
+
+`/mod warn`, `/mod unwarn`, `/mod mute`, `/mod unmute`, `/mod kick`, `/mod ban`, `/mod unban`,
+`/mod note`, `/mod case`, `/mod cases`, `/mod purge`, `/mod slowmode`, `/mod link`.
+
+Durations accept values like `30m`, `2h`, `7d`; a bare number is read as minutes. Mutes use the
+native Discord time out and are capped at 28 days. Temporary bans are lifted by the bot once they
+expire.

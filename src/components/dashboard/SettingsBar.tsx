@@ -132,6 +132,60 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
 
             <Column gap={"8"}>
               <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
+                Moderation
+              </Text>
+              <ToggleButton
+                size={"l"}
+                prefixIcon={"security"}
+                horizontal="start"
+                fillWidth
+                selected={pathname.endsWith("/dashboard/" + guildId + "/moderation")}
+                href={"/dashboard/" + guildId + "/moderation"}
+              >
+                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
+                  Settings
+                </Text>
+              </ToggleButton>
+              <ToggleButton
+                size={"l"}
+                prefixIcon={"clipboard"}
+                horizontal="start"
+                fillWidth
+                selected={pathname.endsWith("/dashboard/" + guildId + "/moderation/forms")}
+                href={"/dashboard/" + guildId + "/moderation/forms"}
+              >
+                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
+                  Report & appeal forms
+                </Text>
+              </ToggleButton>
+              <ToggleButton
+                size={"l"}
+                prefixIcon={"mail"}
+                horizontal="start"
+                fillWidth
+                selected={pathname.endsWith("/dashboard/" + guildId + "/moderation/queue")}
+                href={"/dashboard/" + guildId + "/moderation/queue"}
+              >
+                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
+                  Submission queue
+                </Text>
+              </ToggleButton>
+              <ToggleButton
+                size={"l"}
+                prefixIcon={"list"}
+                horizontal="start"
+                fillWidth
+                selected={pathname.endsWith("/dashboard/" + guildId + "/moderation/cases")}
+                href={"/dashboard/" + guildId + "/moderation/cases"}
+              >
+                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
+                  Case log
+                </Text>
+              </ToggleButton>
+            </Column>
+
+            <Column gap={"8"}>
+              <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
                 Engagement
               </Text>
               <ToggleButton
