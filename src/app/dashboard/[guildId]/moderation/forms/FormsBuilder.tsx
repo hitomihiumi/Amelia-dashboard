@@ -383,14 +383,6 @@ function FieldEditor({
         onToggle={(value) => onChange({ type: value as ModerationFormFieldType })}
       />
 
-      <Row fillWidth gap="12" vertical="center">
-        <Switch
-          isChecked={field.required}
-          onToggle={() => onChange({ required: !field.required })}
-        />
-        <Text variant="label-default-s">Required</Text>
-      </Row>
-
       {(field.type === "short" || field.type === "paragraph" || field.type === "number") && (
         <Row fillWidth gap="12" wrap>
           <NumberInput
@@ -475,20 +467,27 @@ function FieldEditor({
         </Column>
       )}
 
-      <Row fillWidth gap="8" horizontal="end">
-        <IconButton
-          icon="chevronUp"
-          variant="secondary"
-          onClick={() => onMove(-1)}
-          tooltip="Move up"
+      <Row fillWidth gap="8" horizontal="between" vertical="center">
+        <Switch
+          label="Required"
+          isChecked={field.required}
+          onToggle={() => onChange({ required: !field.required })}
         />
-        <IconButton
-          icon="chevronDown"
-          variant="secondary"
-          onClick={() => onMove(1)}
-          tooltip="Move down"
-        />
-        <IconButton icon="trash" variant="danger" onClick={onDelete} tooltip="Delete question" />
+        <Row gap="8" vertical="center">
+          <IconButton
+            icon="chevronUp"
+            variant="secondary"
+            onClick={() => onMove(-1)}
+            tooltip="Move up"
+          />
+          <IconButton
+            icon="chevronDown"
+            variant="secondary"
+            onClick={() => onMove(1)}
+            tooltip="Move down"
+          />
+          <IconButton icon="trash" variant="danger" onClick={onDelete} tooltip="Delete question" />
+        </Row>
       </Row>
     </Column>
   );

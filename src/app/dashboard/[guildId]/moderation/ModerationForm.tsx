@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Accordion,
   Button,
   Column,
   Flex,
@@ -214,47 +215,51 @@ export function ModerationForm({
 
         <Column fillWidth gap="12">
           {settings.warn_thresholds.map((rule, index) => (
-            <Row key={`${rule.count}-${index}`} fillWidth gap="8" vertical="center" wrap>
-              <NumberInput
-                id={`threshold-count-${index}`}
-                label="Warns"
-                value={rule.count}
-                min={1}
-                max={100}
-                onChange={(value: number) => updateThreshold(index, { count: Number(value) || 1 })}
-              />
-              <SegmentedControl
-                fillWidth
-                buttons={PUNISHMENT_OPTIONS.map((option) => ({
-                  value: option.value,
-                  label: option.label,
-                }))}
-                selected={rule.punishment.type}
-                onToggle={(value) =>
-                  updateThreshold(index, {
-                    punishment: { ...rule.punishment, type: value as PunishmentType },
-                  })
-                }
-              />
-              <NumberInput
-                id={`threshold-time-${index}`}
-                label="Duration (seconds)"
-                value={rule.punishment.time}
-                min={0}
-                max={2419200}
-                onChange={(value: number) =>
-                  updateThreshold(index, {
-                    punishment: { ...rule.punishment, time: Number(value) || 0 },
-                  })
-                }
-              />
-              <IconButton
-                icon="trash"
-                variant="danger"
-                onClick={() => removeThreshold(index)}
-                tooltip="Remove rule"
-              />
-            </Row>
+            <Accordion title={`Rule ${index + 1}`} key={`${rule.count}-${index}`}>
+              <Row fillWidth gap="8" vertical="center" wrap>
+                <Row fillWidth gap="8" vertical="center" horizontal="end" onClick={(e) => e.stopPropagation()}>
+                  <IconButton
+                      icon="trash"
+                      variant="danger"
+                      onClick={() => removeThreshold(index)}
+                      tooltip="Remove rule"
+                  />
+                </Row>
+                <NumberInput
+                    id={`threshold-count-${index}`}
+                    label="Warns"
+                    value={rule.count}
+                    min={1}
+                    max={100}
+                    onChange={(value: number) => updateThreshold(index, { count: Number(value) || 1 })}
+                />
+                <SegmentedControl
+                    fillWidth
+                    buttons={PUNISHMENT_OPTIONS.map((option) => ({
+                      value: option.value,
+                      label: option.label,
+                    }))}
+                    selected={rule.punishment.type}
+                    onToggle={(value) =>
+                        updateThreshold(index, {
+                          punishment: { ...rule.punishment, type: value as PunishmentType },
+                        })
+                    }
+                />
+                <NumberInput
+                    id={`threshold-time-${index}`}
+                    label="Duration (seconds)"
+                    value={rule.punishment.time}
+                    min={0}
+                    max={2419200}
+                    onChange={(value: number) =>
+                        updateThreshold(index, {
+                          punishment: { ...rule.punishment, time: Number(value) || 0 },
+                        })
+                    }
+                />
+              </Row>
+            </Accordion>
           ))}
 
           {settings.warn_thresholds.length === 0 && (
