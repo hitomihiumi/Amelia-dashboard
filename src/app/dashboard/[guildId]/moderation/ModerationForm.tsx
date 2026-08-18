@@ -5,8 +5,10 @@ import {
   Accordion,
   Button,
   Column,
+  Feedback,
   Flex,
   IconButton,
+  InlineCode,
   Input,
   Line,
   NumberInput,
@@ -27,6 +29,7 @@ import type { DiscordRole } from "@/lib/discord/role-style";
 import type { GuildActionState } from "@/types/dashboard";
 import type { GuildSchema, WarnThreshold } from "@/lib/db/types";
 import { PunishmentType } from "@/lib/db/types";
+import { isLinkIgnored, validateLinkPattern } from "@/lib/moderation/linkPatterns";
 import { updateModerationSettings } from "./actions";
 
 type AutoModeration = GuildSchema["moderation"]["auto_moderation"];
@@ -217,46 +220,54 @@ export function ModerationForm({
           {settings.warn_thresholds.map((rule, index) => (
             <Accordion title={`Rule ${index + 1}`} key={`${rule.count}-${index}`}>
               <Row fillWidth gap="8" vertical="center" wrap>
-                <Row fillWidth gap="8" vertical="center" horizontal="end" onClick={(e) => e.stopPropagation()}>
+                <Row
+                  fillWidth
+                  gap="8"
+                  vertical="center"
+                  horizontal="end"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <IconButton
-                      icon="trash"
-                      variant="danger"
-                      onClick={() => removeThreshold(index)}
-                      tooltip="Remove rule"
+                    icon="trash"
+                    variant="danger"
+                    onClick={() => removeThreshold(index)}
+                    tooltip="Remove rule"
                   />
                 </Row>
                 <NumberInput
-                    id={`threshold-count-${index}`}
-                    label="Warns"
-                    value={rule.count}
-                    min={1}
-                    max={100}
-                    onChange={(value: number) => updateThreshold(index, { count: Number(value) || 1 })}
+                  id={`threshold-count-${index}`}
+                  label="Warns"
+                  value={rule.count}
+                  min={1}
+                  max={100}
+                  onChange={(value: number) =>
+                    updateThreshold(index, { count: Number(value) || 1 })
+                  }
                 />
                 <SegmentedControl
-                    fillWidth
-                    buttons={PUNISHMENT_OPTIONS.map((option) => ({
-                      value: option.value,
-                      label: option.label,
-                    }))}
-                    selected={rule.punishment.type}
-                    onToggle={(value) =>
-                        updateThreshold(index, {
-                          punishment: { ...rule.punishment, type: value as PunishmentType },
-                        })
-                    }
+                  fillWidth
+                  buttons={PUNISHMENT_OPTIONS.map((option) => ({
+                    value: option.value,
+                    label: option.label,
+                  }))}
+                  selected={rule.punishment.type}
+                  onToggle={(value) =>
+                    updateThreshold(index, {
+                      punishment: { ...rule.punishment, type: value as PunishmentType },
+                    })
+                  }
                 />
                 <NumberInput
-                    id={`threshold-time-${index}`}
-                    label="Duration (seconds)"
-                    value={rule.punishment.time}
-                    min={0}
-                    max={2419200}
-                    onChange={(value: number) =>
-                        updateThreshold(index, {
-                          punishment: { ...rule.punishment, time: Number(value) || 0 },
-                        })
-                    }
+                  id={`threshold-time-${index}`}
+                  label="Duration (seconds)"
+                  value={rule.punishment.time}
+                  min={0}
+                  max={2419200}
+                  onChange={(value: number) =>
+                    updateThreshold(index, {
+                      punishment: { ...rule.punishment, time: Number(value) || 0 },
+                    })
+                  }
                 />
               </Row>
             </Accordion>
@@ -354,7 +365,6 @@ function AutoModerationSection({
   whitelist?: boolean;
 }) {
   const linkRule = rule as AutoModRule;
-  const [newLink, setNewLink] = useState("");
 
   const update = (patch: Record<string, unknown>) => onChange({ ...rule, ...patch });
 
@@ -402,50 +412,10 @@ function AutoModerationSection({
       />
 
       {whitelist && (
-        <Column fillWidth gap="8">
-          <Text variant="label-default-s">Allowed domains</Text>
-          <Row fillWidth gap="8" vertical="center">
-            <Input
-              id="link-whitelist"
-              label="Domain"
-              value={newLink}
-              onChange={(e) => setNewLink(e.target.value)}
-            />
-            <Button
-              variant="secondary"
-              onClick={() => {
-                const value = newLink.trim().toLowerCase();
-                if (!value || linkRule.ignore_links.includes(value)) return;
-                update({ ignore_links: [...linkRule.ignore_links, value] });
-                setNewLink("");
-              }}
-            >
-              Add
-            </Button>
-          </Row>
-          <Row fillWidth gap="8" wrap>
-            {linkRule.ignore_links.map((link) => (
-              <Row
-                key={link}
-                gap="4"
-                vertical="center"
-                padding="4"
-                radius="m"
-                border="neutral-medium"
-              >
-                <Text variant="body-default-xs">{link}</Text>
-                <IconButton
-                  size="s"
-                  icon="close"
-                  variant="ghost"
-                  onClick={() =>
-                    update({ ignore_links: linkRule.ignore_links.filter((l) => l !== link) })
-                  }
-                />
-              </Row>
-            ))}
-          </Row>
-        </Column>
+        <LinkWhitelist
+          patterns={linkRule.ignore_links}
+          onChange={(next) => update({ ignore_links: next })}
+        />
       )}
 
       <Line />
@@ -482,5 +452,132 @@ function AutoModerationSection({
         />
       </Column>
     </Section>
+  );
+}
+
+const PATTERN_EXAMPLES: [string, string][] = [
+  ["youtube.com", "the domain itself, every subdomain and every page"],
+  ["*.wikipedia.org", "subdomains only"],
+  ["discord.com/channels/*", "only links pointing at a channel"],
+  ["*docs*", "any link containing “docs”"],
+];
+
+/**
+ * Whitelist editor for the link filter.
+ *
+ * Patterns use one wildcard character (`*`) instead of regular expressions, so
+ * they stay readable for server owners. The tester below runs the very same
+ * matcher the bot uses.
+ */
+function LinkWhitelist({
+  patterns,
+  onChange,
+}: {
+  patterns: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const [draft, setDraft] = useState("");
+  const [probe, setProbe] = useState("");
+
+  const trimmed = draft.trim();
+  const draftError = trimmed ? validateLinkPattern(trimmed) : null;
+  const duplicate = trimmed.length > 0 && patterns.includes(trimmed.toLowerCase());
+
+  const probeMatch = probe.trim() ? isLinkIgnored(probe, patterns) : null;
+
+  const addPattern = () => {
+    const value = trimmed.toLowerCase();
+    if (!value || draftError || duplicate) return;
+    onChange([...patterns, value]);
+    setDraft("");
+  };
+
+  return (
+    <Column fillWidth gap="12">
+      <Text variant="label-default-s">Allowed links ({patterns.length}/100)</Text>
+
+      <Row fillWidth gap="8" vertical="center">
+        <Input
+          id="link-whitelist"
+          label="Pattern"
+          value={draft}
+          maxLength={200}
+          placeholder="youtube.com"
+          errorMessage={
+            draftError ?? (duplicate ? "This pattern is already in the list." : undefined)
+          }
+          onChange={(e) => setDraft(e.target.value)}
+        />
+        <Button
+          variant="secondary"
+          onClick={addPattern}
+          disabled={!trimmed || Boolean(draftError) || duplicate || patterns.length >= 100}
+        >
+          Add
+        </Button>
+      </Row>
+
+      <Accordion title="How patterns work">
+        <Column fillWidth gap="8">
+          <Text variant="body-default-s" onBackground="neutral-medium">
+            Write the address as you would read it. The star stands for “anything”; everything else
+            is matched literally. A pattern always covers the deeper pages of what it matched.
+          </Text>
+          {PATTERN_EXAMPLES.map(([pattern, meaning]) => (
+            <Row key={pattern} fillWidth gap="8" vertical="center" wrap>
+              <InlineCode>{pattern}</InlineCode>
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                {meaning}
+              </Text>
+            </Row>
+          ))}
+        </Column>
+      </Accordion>
+
+      <Row fillWidth gap="8" wrap>
+        {patterns.map((pattern) => (
+          <Row
+            key={pattern}
+            gap="4"
+            vertical="center"
+            padding="4"
+            radius="m"
+            border={probeMatch === pattern ? "success-medium" : "neutral-medium"}
+          >
+            <Text variant="body-default-xs">{pattern}</Text>
+            <IconButton
+              size="s"
+              icon="close"
+              variant="ghost"
+              onClick={() => onChange(patterns.filter((entry) => entry !== pattern))}
+            />
+          </Row>
+        ))}
+      </Row>
+
+      <Input
+        id="link-whitelist-test"
+        label="Test a link against the list"
+        value={probe}
+        maxLength={400}
+        placeholder="https://www.youtube.com/watch?v=1"
+        onChange={(e) => setProbe(e.target.value)}
+      />
+
+      {probe.trim() &&
+        (probeMatch ? (
+          <Feedback
+            variant="success"
+            title="This link is allowed"
+            description={`Matched by the pattern “${probeMatch}”.`}
+          />
+        ) : (
+          <Feedback
+            variant="warning"
+            title="This link is moderated"
+            description="No pattern matches it, so the filter would act on this link."
+          />
+        ))}
+    </Column>
   );
 }

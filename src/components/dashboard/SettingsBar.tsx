@@ -182,6 +182,18 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                   Case log
                 </Text>
               </ToggleButton>
+              <ToggleButton
+                size={"l"}
+                prefixIcon={"documentattach"}
+                horizontal="start"
+                fillWidth
+                selected={pathname.endsWith("/dashboard/" + guildId + "/moderation/audit")}
+                href={"/dashboard/" + guildId + "/moderation/audit"}
+              >
+                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
+                  Audit log
+                </Text>
+              </ToggleButton>
             </Column>
 
             <Column gap={"8"}>

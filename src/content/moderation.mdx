@@ -24,7 +24,23 @@ Open **Moderation → Settings** in the dashboard:
 - **Warn escalation** — punish a member automatically once they reach a given number of active
   warns. Warns can also expire after a number of days.
 - **Invite / link filters** — delete the message and punish the author, with per-channel and
-  per-role exceptions and a domain whitelist for links.
+  per-role exceptions and a whitelist for links.
+
+### Link whitelist patterns
+
+The whitelist is not a list of plain domains any more: it accepts one wildcard character, `*`,
+which stands for “anything”. Everything else is matched literally, and a pattern always covers the
+deeper pages of whatever it matched.
+
+| Pattern | Ignores |
+| --- | --- |
+| `youtube.com` | the domain, all of its subdomains and every page |
+| `*.wikipedia.org` | subdomains only, not `wikipedia.org` itself |
+| `discord.com/channels/*` | only links pointing at a channel |
+| `*docs*` | any link containing “docs” |
+
+The settings page has a tester: paste a link and it tells you which pattern lets it through. Plain
+domains you configured before keep working exactly as they did.
 
 ## Report and appeal forms
 
@@ -64,3 +80,36 @@ time out is removed and a counterpart case is written to the log.
 Durations accept values like `30m`, `2h`, `7d`; a bare number is read as minutes. Mutes use the
 native Discord time out and are capped at 28 days. Temporary bans are lifted by the bot once they
 expire.
+
+## Audit log
+
+**Moderation → Audit log** records what happens on the server. The bot creates a webhook in the
+channel you choose and posts through it, so the entries stay visually separate from the bot's own
+messages.
+
+Twenty-one events are covered, grouped into four categories:
+
+- **Members** — joins, leaves, kicks, bans, unbans, role changes, nickname changes, timeouts.
+- **Messages** — deletion (with the auto moderation reason, when the bot removed it), edits shown
+  as a diff, bulk deletion.
+- **Voice** — joining, leaving and switching channels.
+- **Server** — channels, roles and server settings.
+
+Every event can be switched off on its own, or sent to a channel of its own — leave the override
+empty to use the main audit channel.
+
+You can also ignore whole channels or roles, skip everything bots do, and give the webhook its own
+name and avatar.
+
+### What the bot needs
+
+- **Manage Webhooks** in every channel the log posts to — without it the bot cannot create the
+  webhook and the log stays silent.
+- **View Audit Log** on the server, so bans, kicks and role changes can name the moderator behind
+  them.
+
+### Message content
+
+Discord sends only the new version of an edited message, and nothing at all for a deleted one, so
+the previous text comes from the bot's own cache (the last 500 messages per channel). Older
+messages, or messages from before the last restart, are logged with “content unavailable” instead.

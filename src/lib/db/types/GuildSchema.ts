@@ -9,6 +9,7 @@ import {
 } from "./Action";
 import { SchemaKey, LiteralSchemaKey } from "./SchemaKeys";
 import { ModerationForm, Punishment, WarnThreshold } from "./Moderation";
+import { AuditSettings } from "./Audit";
 
 export interface GuildSchema {
   id: string;
@@ -138,6 +139,7 @@ export interface GuildSchema {
       };
     };
   };
+  audit: AuditSettings;
   permissions: {
     commands: {
       [key: string]: CommandPermission;

@@ -7,13 +7,17 @@ import { Guild } from "@/lib/db/Guild";
 import { requireGuildAdmin } from "@/app/dashboard/[guildId]/actions";
 import { GuildActionState } from "@/types/dashboard";
 import type {
+  AuditSettings,
   GuildSchema,
   ModerationForm,
   ModerationSubmissionStatus,
   WarnThreshold,
 } from "@/lib/db/types";
+import { AUDIT_EVENT_KEYS } from "@/lib/db/types";
 import { normalizeForm, validateFormConfiguration } from "@/lib/moderation/forms";
+import { validateLinkPattern } from "@/lib/moderation/linkPatterns";
 import { resolveSubmission, revokeCase } from "@/lib/moderation/service";
+import { syncAuditWebhooks } from "@/lib/moderation/webhooks";
 
 type ModerationSettings = {
   moderation_roles: string[];
@@ -140,12 +144,15 @@ function validateAutoModeration(autoMod: AutoModeration): string | null {
     }
   }
 
-  if (
-    !Array.isArray(autoMod.links.ignore_links) ||
-    autoMod.links.ignore_links.length > 100 ||
-    autoMod.links.ignore_links.some((link) => typeof link !== "string" || link.length > 200)
-  ) {
-    return "The link whitelist accepts at most 100 entries of 200 characters.";
+  if (!Array.isArray(autoMod.links.ignore_links) || autoMod.links.ignore_links.length > 100) {
+    return "The link whitelist accepts at most 100 entries.";
+  }
+
+  for (const pattern of autoMod.links.ignore_links) {
+    if (typeof pattern !== "string") return "The link whitelist accepts text patterns only.";
+
+    const error = validateLinkPattern(pattern);
+    if (error) return error;
   }
 
   return null;
@@ -248,4 +255,102 @@ export async function revokeModerationCase(
     console.error("[Case Revoke Error]:", error);
     return { ok: false, error: "Internal server error occurred." };
   }
+}
+
+/** Audit log settings, including the webhooks the log posts through. */
+export async function updateAuditSettings(
+  guildId: string,
+  formData: FormData,
+): Promise<GuildActionState> {
+  try {
+    const gate = await requireGuildAdmin(guildId);
+    if (gate.error) return { ok: false, error: gate.error };
+
+    const raw = formData.get("audit");
+    if (!raw) return { ok: false, error: "Required data is missing." };
+
+    const audit = JSON.parse(raw as string) as AuditSettings;
+
+    const error = validateAudit(audit);
+    if (error) return { ok: false, error };
+
+    const guild = new Guild(guildId);
+
+    await guild.set("audit.enabled", audit.enabled);
+    await guild.set("audit.channel", audit.channel);
+    await guild.set("audit.ignore_channels", audit.ignore_channels);
+    await guild.set("audit.ignore_roles", audit.ignore_roles);
+    await guild.set("audit.ignore_bots", audit.ignore_bots);
+    await guild.set("audit.webhook.name", audit.webhook.name);
+    await guild.set("audit.webhook.avatar", audit.webhook.avatar);
+    await guild.set("audit.events", audit.events);
+
+    // Create the webhooks up front so the admin finds out about missing
+    // permissions here, and not when the first event silently goes nowhere.
+    let webhookError: string | null = null;
+
+    if (audit.enabled) {
+      const channels = [
+        audit.channel,
+        ...Object.values(audit.events)
+          .filter((event) => event?.enabled)
+          .map((event) => event?.channel ?? null),
+      ].filter((channel): channel is string => Boolean(channel));
+
+      webhookError = await syncAuditWebhooks(
+        guildId,
+        channels,
+        audit.webhook.name,
+        audit.webhook.avatar,
+      );
+    }
+
+    revalidatePath(`/dashboard/${guildId}/moderation/audit`);
+
+    return webhookError ? { ok: false, error: webhookError } : { ok: true };
+  } catch (error) {
+    console.error("[Audit Action Error]:", error);
+    if (error instanceof SyntaxError) return { ok: false, error: "Failed to parse data payload." };
+    return { ok: false, error: "Internal server error occurred while saving." };
+  }
+}
+
+function validateAudit(audit: AuditSettings): string | null {
+  if (typeof audit?.enabled !== "boolean") return "Invalid audit log data.";
+
+  if (audit.channel !== null && !SNOWFLAKE.test(String(audit.channel))) {
+    return "Invalid audit log channel.";
+  }
+  if (audit.enabled && !audit.channel) {
+    return "Choose the channel the audit log posts to before enabling it.";
+  }
+
+  for (const [field, list] of [
+    ["Ignored channels", audit.ignore_channels],
+    ["Ignored roles", audit.ignore_roles],
+  ] as const) {
+    if (!Array.isArray(list) || list.length > 50) {
+      return `${field} must be a list of at most 50 entries.`;
+    }
+    if (list.some((entry) => !SNOWFLAKE.test(String(entry)))) {
+      return `${field} contains an invalid ID.`;
+    }
+  }
+
+  if (audit.webhook?.name && audit.webhook.name.length > 80) {
+    return "The webhook name must be at most 80 characters long.";
+  }
+  if (audit.webhook?.avatar && !/^https?:\/\/\S+$/i.test(audit.webhook.avatar)) {
+    return "The webhook avatar must be a link to an image.";
+  }
+
+  for (const [key, event] of Object.entries(audit.events ?? {})) {
+    if (!AUDIT_EVENT_KEYS.includes(key as never)) return `Unknown audit event "${key}".`;
+    if (typeof event?.enabled !== "boolean") return `Invalid configuration for "${key}".`;
+    if (event.channel !== null && !SNOWFLAKE.test(String(event.channel))) {
+      return `Invalid channel selected for "${key}".`;
+    }
+  }
+
+  return null;
 }
