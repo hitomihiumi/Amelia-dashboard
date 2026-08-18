@@ -188,41 +188,41 @@ export function ScenarioFlow({
   );
 
   return (
-      <Column fill>
-        <ScenarioFlowLibraryContext.Provider value={contextValue}>
-          <ReactFlowProvider>
-            <ReactFlow
-                nodes={decoratedNodes}
-                edges={edges}
-                nodeTypes={nodeTypes as NodeTypes}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={onConnect as any}
-                onNodeClick={(_evt: React.MouseEvent, node: ScenarioNode) => onSelectNode(node.id)}
-                onPaneClick={onPaneClick}
-                onNodesDelete={onNodesDelete}
-                fitView
-                deleteKeyCode={["Backspace", "Delete"]}
-                proOptions={{ hideAttribution: true }}
-            >
-              <Background
-                  variant={BackgroundVariant.Dots}
-                  gap={16}
-                  size={1}
-                  style={{ opacity: 0.5 }}
-              />
-              <AddStepPanel onAddStep={onAddStep}>{settingsPanel}</AddStepPanel>
-              <CanvasControls />
-            </ReactFlow>
-          </ReactFlowProvider>
-        </ScenarioFlowLibraryContext.Provider>
-      </Column>
+    <Column fill>
+      <ScenarioFlowLibraryContext.Provider value={contextValue}>
+        <ReactFlowProvider>
+          <ReactFlow
+            nodes={decoratedNodes}
+            edges={edges}
+            nodeTypes={nodeTypes as NodeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect as any}
+            onNodeClick={(_evt: React.MouseEvent, node: ScenarioNode) => onSelectNode(node.id)}
+            onPaneClick={onPaneClick}
+            onNodesDelete={onNodesDelete}
+            fitView
+            deleteKeyCode={["Backspace", "Delete"]}
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={16}
+              size={1}
+              style={{ opacity: 0.5 }}
+            />
+            <AddStepPanel onAddStep={onAddStep}>{settingsPanel}</AddStepPanel>
+            <CanvasControls />
+          </ReactFlow>
+        </ReactFlowProvider>
+      </ScenarioFlowLibraryContext.Provider>
+    </Column>
   );
 }
 
 function AddStepPanel({
   onAddStep,
-                        children
+  children,
 }: {
   onAddStep: (actionType: ScenarioStep["action"]["type"]) => void;
   children: React.ReactNode;
@@ -239,49 +239,49 @@ function AddStepPanel({
         className="nodrag nopan"
         style={{ boxShadow: "0 6px 16px rgba(0,0,0,0.25)", maxWidth: 334 }}
       >
-          <Row gap="16">
-            <Button
+        <Row gap="16">
+          <Button
+            size="s"
+            variant={open === "settings" ? "primary" : "tertiary"}
+            prefixIcon="gear"
+            suffixIcon={open === "settings" ? "chevronUp" : "chevronDown"}
+            onClick={() => setOpen((v) => (v === "settings" ? null : "settings"))}
+          >
+            Scenario settings
+          </Button>
+          <Button
+            size="s"
+            variant={open === "steps" ? "primary" : "tertiary"}
+            prefixIcon="plus"
+            suffixIcon={open === "steps" ? "chevronUp" : "chevronDown"}
+            onClick={() => setOpen((v) => (v === "steps" ? null : "steps"))}
+          >
+            Add step
+          </Button>
+        </Row>
+        {open === "steps" && (
+          <Row gap="8" wrap>
+            {ADD_STEP_TYPES.map((t) => (
+              <Button
+                key={t}
                 size="s"
-                variant={open === "settings" ? "primary" : "tertiary"}
-                prefixIcon="gear"
-                suffixIcon={open === "settings" ? "chevronUp" : "chevronDown"}
-                onClick={() => setOpen((v) => v === "settings" ? null : "settings")}
-            >
-              Scenario settings
-            </Button>
-            <Button
-                size="s"
-                variant={open === "steps" ? "primary" : "tertiary"}
-                prefixIcon="plus"
-                suffixIcon={open === "steps" ? "chevronUp" : "chevronDown"}
-                onClick={() => setOpen((v) => v === "steps" ? null : "steps")}
-            >
-              Add step
-            </Button>
+                variant="secondary"
+                prefixIcon={ACTION_icons[t]}
+                onClick={() => {
+                  onAddStep(t);
+                  setOpen(null);
+                }}
+              >
+                {t.replace(/_/g, " ")}
+              </Button>
+            ))}
           </Row>
-          {open === "steps" && (
-              <Row gap="8" wrap>
-                {ADD_STEP_TYPES.map((t) => (
-                    <Button
-                        key={t}
-                        size="s"
-                        variant="secondary"
-                        prefixIcon={ACTION_icons[t]}
-                        onClick={() => {
-                          onAddStep(t);
-                          setOpen(null);
-                        }}
-                    >
-                      {t.replace(/_/g, " ")}
-                    </Button>
-                ))}
-              </Row>
-          )}
-          {open === "settings" && (
-              <div className="nowheel" style={{ maxHeight: 600, overflowY: "auto" }}>
-                {children}
-              </div>
-          )}
+        )}
+        {open === "settings" && (
+          <div className="nowheel" style={{ maxHeight: 600, overflowY: "auto" }}>
+            {children}
+          </div>
+        )}
       </Column>
     </Panel>
   );
@@ -406,7 +406,9 @@ function StepNode({ data, selected }: NodeProps<ScenarioNode>) {
     >
       <Handle type="target" position={Position.Left} id="in" style={{ top: "50%" }} />
 
-      {actionType && <DashIcon name={ACTION_icons[actionType]} size="s" style={{ flexShrink: 0 }} />}
+      {actionType && (
+        <DashIcon name={ACTION_icons[actionType]} size="s" style={{ flexShrink: 0 }} />
+      )}
 
       <Column gap="4" style={{ minWidth: 0 }}>
         <Text variant="label-strong-s">{label}</Text>

@@ -208,15 +208,15 @@ function ScenarioCard({
       href={`/dashboard/${guildId}/scenarios/${scenario.id}`}
       fill
     >
-      <Row fillWidth horizontal="between" vertical="start" gap="8">
+      <Row fillWidth horizontal="between" vertical="center" gap="8">
         <Text variant="body-strong-s" style={{ wordBreak: "break-word" }}>
           {scenario.name || "Untitled"}
         </Text>
-        <Row gap="4" style={{ flexShrink: 0 }}>
+        <Row gap="8" style={{ flexShrink: 0 }}>
           <IconButton
             icon="copy"
-            variant="ghost"
-            size="s"
+            variant="secondary"
+            size="m"
             tooltip="Duplicate"
             onClick={(e: any) => {
               e?.stopPropagation();
@@ -224,11 +224,16 @@ function ScenarioCard({
               onDuplicate();
             }}
           />
-          <ConfirmIconButton
-            variant="confirm"
+          <IconButton
+            icon="trash"
+            variant="danger"
+            size="m"
             tooltip="Delete"
-            confirmMessage={`Delete "${scenario.name || "Untitled"}"?`}
-            onConfirm={onDelete}
+            onClick={(e: any) => {
+              e?.stopPropagation();
+              e?.preventDefault();
+              onDelete();
+            }}
           />
         </Row>
       </Row>

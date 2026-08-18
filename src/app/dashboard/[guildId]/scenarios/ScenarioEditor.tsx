@@ -26,7 +26,8 @@ import {
   Row,
   SegmentedControl,
   Switch,
-  Text, Textarea,
+  Text,
+  Textarea,
 } from "@once-ui-system/core";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -340,27 +341,25 @@ export function ScenarioEditor({
         radius="l"
         background="surface"
         minHeight={55}
-        style={{ flex: "3 1 600px", minWidth: 360  }}
+        style={{ flex: "3 1 600px", minWidth: 360 }}
       >
-        <Flex
-            fill
-        >
-            <ScenarioFlow
-                guildId={guildId}
-                nodes={nodes}
-                edges={edges}
-                selectedNodeId={selectedNodeId}
-                setNodes={setNodes}
-                setEdges={setEdges}
-                onCanvasChange={handleCanvasChange}
-                onSelectNode={setSelectedNodeId}
-                onRemoveStep={removeStep}
-                onAddStep={addStep}
-                settingsPanel={settingsPanel}
-                library={library}
-                roles={roles}
-                channels={channels}
-            />
+        <Flex fill>
+          <ScenarioFlow
+            guildId={guildId}
+            nodes={nodes}
+            edges={edges}
+            selectedNodeId={selectedNodeId}
+            setNodes={setNodes}
+            setEdges={setEdges}
+            onCanvasChange={handleCanvasChange}
+            onSelectNode={setSelectedNodeId}
+            onRemoveStep={removeStep}
+            onAddStep={addStep}
+            settingsPanel={settingsPanel}
+            library={library}
+            roles={roles}
+            channels={channels}
+          />
         </Flex>
       </Column>
 
@@ -389,11 +388,11 @@ export function ScenarioEditor({
             onUpdateMeta={(patch) => updateStepMeta(selectedStep.id, patch)}
           />
         ) : (
-            <Flex center>
-              <Text variant="body-default-s" onBackground="neutral-weak" align="center">
-                Select a step on the canvas to edit its action and conditions.
-              </Text>
-            </Flex>
+          <Flex center>
+            <Text variant="body-default-s" onBackground="neutral-weak" align="center">
+              Select a step on the canvas to edit its action and conditions.
+            </Text>
+          </Flex>
         )}
       </Column>
     </Flex>

@@ -300,6 +300,17 @@ export function ComponentsManager({
                 onChange={(next) => updateItemById(tab, item.id, next)}
                 onDelete={() => deleteItemById(tab, item.id)}
                 onDuplicate={() => duplicateItemById(tab, item.id)}
+                onMove={(direction) => {
+                  const list = listOf(state, tab);
+                  const index = list.findIndex((it) => it.id === item.id);
+                  if (index < 0) return;
+                  const newIndex = index + direction;
+                  if (newIndex < 0 || newIndex >= list.length) return;
+                  const reordered = [...list];
+                  const [moved] = reordered.splice(index, 1);
+                  reordered.splice(newIndex, 0, moved);
+                  setState((prev) => ({ ...prev, [tab]: reordered }) as ComponentsState);
+                }}
               />
             ))}
           </Column>
@@ -307,10 +318,7 @@ export function ComponentsManager({
       </Flex>
 
       {/* Preview */}
-      <Flex
-        direction="column"
-        fill
-      >
+      <Flex direction="column" fill>
         <Flex fillHeight fillWidth>
           <DiscordPreview message={previewMsg} />
         </Flex>
@@ -381,6 +389,7 @@ function ComponentItem({
   onChange,
   onDelete,
   onDuplicate,
+  onMove,
 }: {
   tab: TabValue;
   item: AnyComponent;
@@ -393,6 +402,7 @@ function ComponentItem({
   onChange: (next: AnyComponent) => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onMove: (direction: number) => void;
 }) {
   const usage = usageNames && usageNames.length > 0 ? usageNames : undefined;
 
@@ -403,27 +413,6 @@ function ComponentItem({
           <Text variant="body-strong-s" style={{ wordBreak: "break-word" }}>
             {name}
           </Text>
-          <Row gap="4" vertical="center" onClick={(e) => e.stopPropagation()}>
-            <IconButton
-              icon="copy"
-              variant="ghost"
-              size="s"
-              tooltip="Duplicate"
-              onClick={(e: React.SyntheticEvent) => {
-                e.stopPropagation();
-                onDuplicate();
-              }}
-            />
-            <ConfirmIconButton
-              variant={usage ? "confirm" : "immediate"}
-              onConfirm={onDelete}
-              confirmMessage={
-                usage
-                  ? `Used in ${usage.length} scenario${usage.length === 1 ? "" : "s"}: ${usage.join(", ")}`
-                  : undefined
-              }
-            />
-          </Row>
         </Row>
       }
       subline={
@@ -439,7 +428,29 @@ function ComponentItem({
       iconName={tabIcon(tab)}
       open={open}
       onToggle={onToggle}
+      gap="8"
     >
+      <Row gap="4" horizontal="end" vertical="center" onClick={(e) => e.stopPropagation()}>
+        <IconButton
+          icon="copy"
+          variant="secondary"
+          tooltip="Duplicate"
+          onClick={() => onDuplicate()}
+        />
+        <IconButton
+          icon="chevronUp"
+          variant="secondary"
+          onClick={() => onMove(-1)}
+          tooltip="Move up"
+        />
+        <IconButton
+          icon="chevronDown"
+          variant="secondary"
+          onClick={() => onMove(1)}
+          tooltip="Move down"
+        />
+        <IconButton icon="trash" variant="danger" tooltip="Delete component" onClick={onDelete} />
+      </Row>
       {tab === "buttons" && (
         <ButtonEditor guildId={guildId} value={item as ButtonCustom} onChange={onChange} />
       )}
