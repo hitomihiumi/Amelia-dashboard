@@ -11,7 +11,8 @@ import {
   IconButton,
   Button,
   useToast,
-  Line, NumberInput,
+  Line,
+  NumberInput,
 } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { updateLevelsSettings } from "./actions";
@@ -24,7 +25,7 @@ import { DiscordRole } from "@/lib/discord/role-style";
 import { RolePill } from "@/components/dashboard/discord/RolePill";
 import { ChannelPill } from "@/components/dashboard/discord/ChannelPill";
 import { GuildActionState } from "@/types/dashboard";
-import {DashIcon} from "@/components/dashboard/DashIcon";
+import { DashIcon } from "@/components/dashboard/DashIcon";
 
 export function LevelsForm({
   guildId,
@@ -256,13 +257,15 @@ export function LevelsForm({
           <Row horizontal="between" vertical="center" fillWidth>
             <Column gap="8" fillWidth>
               <Text variant="body-strong-l">Announcements</Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">Send level-up message</Text>
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                Send level-up message
+              </Text>
             </Column>
             <Switch
-                isChecked={levels.message.enabled}
-                onToggle={() =>
-                    setLevels((p) => ({ ...p, message: { ...p.message, enabled: !p.message.enabled } }))
-                }
+              isChecked={levels.message.enabled}
+              onToggle={() =>
+                setLevels((p) => ({ ...p, message: { ...p.message, enabled: !p.message.enabled } }))
+              }
             />
           </Row>
         </Flex>
@@ -352,8 +355,8 @@ export function LevelsForm({
               </Text>
             </Column>
             <Switch
-                isChecked={economy.enabled}
-                onToggle={() => setEconomy((p) => ({ ...p, enabled: !p.enabled }))}
+              isChecked={economy.enabled}
+              onToggle={() => setEconomy((p) => ({ ...p, enabled: !p.enabled }))}
             />
           </Row>
         </Flex>

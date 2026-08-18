@@ -46,7 +46,7 @@ export default function Page() {
         if (!res.ok || !data.ok) {
           addToast({
             variant: "danger",
-            message: "error" in data ? data.error : `Error ${res.status}`
+            message: "error" in data ? data.error : `Error ${res.status}`,
           });
           setGuilds([]);
           return;
@@ -56,7 +56,7 @@ export default function Page() {
         if (loadIdRef.current === id) {
           addToast({
             variant: "danger",
-            message: "Failed to fetch guilds. Please try again."
+            message: "Failed to fetch guilds. Please try again.",
           });
           setGuilds([]);
         }

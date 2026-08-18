@@ -228,7 +228,36 @@ function FormField({
           value={String(value ?? "")}
           maxLength={field.max ?? 1024}
           onChange={(e) => onChange(e.target.value)}
+          validate={
+            field.type === "url"
+              ? validateLink
+              : field.type === "message_link"
+                ? validateMessageLink
+                : undefined
+          }
         />
       );
   }
 }
+
+const validateLink = (url: any) => {
+  if (!url) return null;
+
+  const urlRegex = /^https?:\/\/[^\s]+$/;
+  if (!urlRegex.test(url)) {
+    return "Please enter a valid URL";
+  }
+
+  return null;
+};
+
+const validateMessageLink = (url: any) => {
+  if (!url) return null;
+
+  const urlRegex = /^https?:\/\/(canary|ptb)?\.?discord\.com\/channels\/\d+\/\d+\/\d+$/;
+  if (!urlRegex.test(url)) {
+    return "Please enter a valid message link";
+  }
+
+  return null;
+};

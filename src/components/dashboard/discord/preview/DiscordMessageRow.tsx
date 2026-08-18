@@ -43,35 +43,35 @@ export function DiscordMessageRow({
 
   return (
     <div>
-        {text ? (
-          <div className="mt-1 text-discord-text-normal">
-            <DiscordText text={content ?? ""} />
-          </div>
-        ) : null}
+      {text ? (
+        <div className="mt-1 text-discord-text-normal">
+          <DiscordText text={content ?? ""} />
+        </div>
+      ) : null}
 
-        {visibleEmbeds.length > 0 ? (
-          <div className="mt-1 space-y-2">
-            {visibleEmbeds.map((embed, i) => (
-              <DiscordEmbed key={i} embed={embed} />
-            ))}
-          </div>
-        ) : null}
+      {visibleEmbeds.length > 0 ? (
+        <div className="mt-1 space-y-2">
+          {visibleEmbeds.map((embed, i) => (
+            <DiscordEmbed key={i} embed={embed} />
+          ))}
+        </div>
+      ) : null}
 
-        {hasComponents ? (
-          <div className="mt-1 flex flex-col gap-2">
-            {selectMenus.map((menu, i) => (
-              <DiscordSelectMenu key={i} menu={menu} />
-            ))}
-            {renderActionRows(buttons, buttonSize)}
-          </div>
-        ) : null}
+      {hasComponents ? (
+        <div className="mt-1 flex flex-col gap-2">
+          {selectMenus.map((menu, i) => (
+            <DiscordSelectMenu key={i} menu={menu} />
+          ))}
+          {renderActionRows(buttons, buttonSize)}
+        </div>
+      ) : null}
 
-        {isEmpty && showEmptyHint ? (
-          <p className="mt-1 text-sm italic text-discord-text-muted">
-            Empty message — add text or an embed.
-          </p>
-        ) : null}
-      </div>
+      {isEmpty && showEmptyHint ? (
+        <p className="mt-1 text-sm italic text-discord-text-muted">
+          Empty message — add text or an embed.
+        </p>
+      ) : null}
+    </div>
   );
 }
 
