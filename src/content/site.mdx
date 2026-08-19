@@ -1,0 +1,44 @@
+---
+title: "Site & administration"
+updatedAt: "2026-08-19"
+summary: "News, the status page and the global configuration panel."
+navLabel: "Site"
+navIcon: "gear"
+---
+
+## Status page
+
+`/status` shows whether the bot is reachable. The bot writes a heartbeat with its ping, uptime,
+shard count, server and member totals every 30 seconds; the website reads it and treats anything
+older than 90 seconds as an outage. The database is checked with a query on every render, and the
+website is operational by definition when the page loads.
+
+Incidents are recorded automatically: when a service goes down or degrades, an incident is opened,
+and it is resolved as soon as the service recovers. Manual incidents can be filed in the admin
+panel and both kinds share the same history.
+
+If nobody is browsing the site, nothing evaluates the health, so `/api/status/check` exists for a
+scheduler — Vercel Cron is configured to call it every five minutes. Protect it by setting
+`STATUS_CRON_SECRET` and sending it as `Authorization: Bearer <secret>`.
+
+## News
+
+`/news` lists everything published, filtered by category (update, feature, maintenance,
+announcement) and paginated. Posts are written in Markdown and rendered with the same renderer as
+these docs, so the formatting you know from the documentation works there as well.
+
+## Administration
+
+`/admin` is reserved for the accounts listed in `ADMIN_USER_IDS` (comma separated Discord ids).
+Everyone else gets a 404 — the panel does not advertise itself.
+
+It holds three things:
+
+- **News** — write, edit, publish and delete posts. A draft stays invisible until published; the
+  publication date is stamped once, the first time it goes live.
+- **Incidents** — file an incident by hand, post updates on it and resolve it.
+- **Global config** — the site banner (text, colour, on/off), the bot invite, support and GitHub
+  links, the landing tagline and hero text, maintenance mode and per-service status overrides.
+
+The banner and the invite button on the landing page read from this configuration, so they can be
+changed without a deploy.

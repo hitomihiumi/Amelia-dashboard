@@ -40,6 +40,8 @@ export function Footer() {
         </Row>
         <Row>
           <Text onBackground="neutral-weak" variant={"body-default-s"}>
+            <SmartLink href={"/news"}>News</SmartLink> /{" "}
+            <SmartLink href={"/status"}>Status</SmartLink> /{" "}
             <SmartLink href={"/terms"}>Terms of Service</SmartLink> /{" "}
             <SmartLink href={"/privacy"}>Privacy Policy</SmartLink>
           </Text>
