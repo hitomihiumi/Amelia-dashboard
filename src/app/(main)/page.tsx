@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Column, Flex, Row, Text } from "@once-ui-system/core";
+import {Button, Column, Flex, Line, Row, Text} from "@once-ui-system/core";
 import { CONFIG_DEFAULTS, getGlobalConfig } from "@/lib/admin/config";
 import { getStatusSnapshot } from "@/lib/status/status";
 import { getPublishedPosts } from "@/lib/news/news";
@@ -21,56 +21,40 @@ export default async function Home() {
   const inviteUrl = config.inviteUrl || CONFIG_DEFAULTS.inviteUrl;
 
   return (
-    <Flex fillWidth horizontal="center" paddingY="32" paddingX="16">
-      <Column maxWidth="l" fillWidth gap="48">
-        <Hero
-          tagline={config.heroTagline || CONFIG_DEFAULTS.heroTagline}
-          text={config.heroText || CONFIG_DEFAULTS.heroText}
-          inviteUrl={inviteUrl}
-        />
+    <Flex fill horizontal="center" paddingY="32" paddingX="16">
+      <Column maxWidth="l" fill gap="xl">
+        <Row fill center>
+          <Row fillWidth fitHeight>
+            <Hero
+                tagline={config.heroTagline || CONFIG_DEFAULTS.heroTagline}
+                text={config.heroText || CONFIG_DEFAULTS.heroText}
+                inviteUrl={inviteUrl}
+            />
+          </Row>
+        </Row>
 
-        <Column fillWidth gap="16">
-          <Column gap="4" horizontal="center">
-            <Text variant="label-default-s" onBackground="brand-medium">
-              ALREADY RUNNING
-            </Text>
-            <Text variant="heading-strong-l" align="center">
-              Amelia is live on Discord servers
-            </Text>
+        <Line vert={false}/>
+
+          <Column fill gap="16">
+            <Column gap="4" horizontal="center">
+              <Text variant="label-default-s" onBackground="brand-medium">
+                ALREADY RUNNING
+              </Text>
+              <Text variant="heading-strong-l" align="center">
+                Amelia is live on Discord servers
+              </Text>
+            </Column>
+            <LandingStats initialSnapshot={snapshot} />
+            <StatusTeaser status={snapshot.overall} />
           </Column>
-          <LandingStats initialSnapshot={snapshot} />
-          <StatusTeaser status={snapshot.overall} />
-        </Column>
+
+        <Line vert={false}/>
 
         <Features />
 
-        <LatestNews posts={news.posts} />
+        <Line vert={false}/>
 
-        <Flex
-          direction="column"
-          fillWidth
-          center
-          gap="16"
-          padding="40"
-          radius="l"
-          border="neutral-medium"
-          background="surface"
-        >
-          <Text variant="heading-strong-l" align="center">
-            Ready to try it?
-          </Text>
-          <Text variant="body-default-m" onBackground="neutral-medium" align="center">
-            Invite the bot, open the dashboard and configure everything in a couple of minutes.
-          </Text>
-          <Row gap="12" wrap horizontal="center">
-            <Button prefixIcon="plus" variant="primary" href={inviteUrl} target="_blank">
-              Invite Bot
-            </Button>
-            <Button prefixIcon="documentattach" variant="secondary" href="/docs/get-started">
-              Read the docs
-            </Button>
-          </Row>
-        </Flex>
+        <LatestNews posts={news.posts} />
       </Column>
     </Flex>
   );
