@@ -18,7 +18,7 @@ importers:
         specifier: ^15.5.9
         version: 15.5.23(@mdx-js/loader@3.1.1)(@mdx-js/react@3.1.1(@types/react@19.0.1)(react@19.2.8))
       '@once-ui-system/core':
-        specifier: ^1.7.7
+        specifier: ^1.8.2
         version: 1.8.2(@types/react@19.0.1)(next@16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1)(sass@1.102.0)(sharp@0.33.5)
       '@prisma/adapter-pg':
         specifier: ^7.7.0

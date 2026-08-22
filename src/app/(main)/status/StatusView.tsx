@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Column, Flex, Grid, Icon, Line, Row, Text } from "@once-ui-system/core";
+import { Column, Flex, Grid, Icon, Line, Row, Text, RevealFx } from "@once-ui-system/core";
 import type { ServiceStatus, StatusSnapshot } from "@/lib/status/status";
 
 const STATUS_COLOR: Record<ServiceStatus, string> = {
@@ -82,95 +82,101 @@ export function StatusView({
 
   return (
     <Column fillWidth gap="32" key={tick}>
-      <Flex
-        direction="column"
-        fillWidth
-        center
-        gap="16"
-        padding="40"
-        radius="l"
-        border="neutral-medium"
-        background="surface"
-      >
-        <Flex
-          center
-          padding="16"
-          radius="l"
-          border="neutral-medium"
-          style={{ color: STATUS_COLOR[overall] }}
-        >
-          <Icon name={HEADLINE_ICON[overall]} size="l" />
-        </Flex>
-        <Text variant="display-strong-xs" align="center">
-          {HEADLINE[overall]}
-        </Text>
-        <Text variant="body-default-m" onBackground="neutral-weak" align="center">
-          Last updated: {relativeTime(snapshot.checkedAt)}
-        </Text>
-      </Flex>
-
-      <Grid columns={3} m={{ columns: 3 }} s={{ columns: 1 }} gap="16" fillWidth>
-        <MetricCard
-          icon="target"
-          label="Shard ping"
-          value={snapshot.metrics.ping === null ? "—" : `${snapshot.metrics.ping} ms`}
-          description="Average WebSocket latency to the Discord gateway"
-        />
-        <MetricCard
-          icon="play"
-          label="Bot uptime"
-          value={uptime}
-          description="Time since the bot process last restarted"
-        />
-        <MetricCard
-          icon="boxes"
-          label="Shards"
-          value={`${snapshot.metrics.shards.ready}/${snapshot.metrics.shards.total || 1}`}
-          description="Discord gateway processes reporting in"
-        />
-      </Grid>
-
-      <Column fillWidth gap="12">
-        <Text variant="heading-strong-m">Services</Text>
+      <RevealFx translateY={-0.5}>
         <Flex
           direction="column"
           fillWidth
+          center
+          gap="16"
+          padding="40"
           radius="l"
           border="neutral-medium"
           background="surface"
-          overflow="hidden"
         >
-          {snapshot.services.map((service, index) => (
-            <React.Fragment key={service.key}>
-              {index > 0 && <Line />}
-              <Row fillWidth horizontal="between" vertical="center" padding="16" gap="12">
-                <Column gap="2">
-                  <Text variant="body-default-m">{service.label}</Text>
-                  {service.note && (
-                    <Text variant="body-default-xs" onBackground="neutral-weak">
-                      {service.note}
-                    </Text>
-                  )}
-                </Column>
-                <Row gap="8" vertical="center">
-                  <span
-                    aria-hidden
-                    style={{
-                      width: "0.5rem",
-                      height: "0.5rem",
-                      borderRadius: "50%",
-                      background: STATUS_COLOR[service.status],
-                    }}
-                  />
-                  <Text variant="body-default-s" onBackground="neutral-medium">
-                    {STATUS_LABEL[service.status]}
-                  </Text>
-                </Row>
-              </Row>
-            </React.Fragment>
-          ))}
+          <Flex
+            center
+            padding="16"
+            radius="l"
+            border="neutral-medium"
+            style={{ color: STATUS_COLOR[overall] }}
+          >
+            <Icon name={HEADLINE_ICON[overall]} size="l" />
+          </Flex>
+          <Text variant="display-strong-xs" align="center">
+            {HEADLINE[overall]}
+          </Text>
+          <Text variant="body-default-m" onBackground="neutral-weak" align="center">
+            Last updated: {relativeTime(snapshot.checkedAt)}
+          </Text>
         </Flex>
-      </Column>
+      </RevealFx>
+
+      <RevealFx delay={0.3} translateY={-0.5}>
+        <Grid columns={3} m={{ columns: 3 }} s={{ columns: 1 }} gap="16" fillWidth>
+          <MetricCard
+            icon="target"
+            label="Shard ping"
+            value={snapshot.metrics.ping === null ? "—" : `${snapshot.metrics.ping} ms`}
+            description="Average WebSocket latency to the Discord gateway"
+          />
+          <MetricCard
+            icon="play"
+            label="Bot uptime"
+            value={uptime}
+            description="Time since the bot process last restarted"
+          />
+          <MetricCard
+            icon="boxes"
+            label="Shards"
+            value={`${snapshot.metrics.shards.ready}/${snapshot.metrics.shards.total || 1}`}
+            description="Discord gateway processes reporting in"
+          />
+        </Grid>
+      </RevealFx>
+
+      <RevealFx delay={0.6} translateY={-0.5}>
+        <Column fillWidth gap="12">
+          <Text variant="heading-strong-m">Services</Text>
+          <Flex
+            direction="column"
+            fillWidth
+            radius="l"
+            border="neutral-medium"
+            background="surface"
+            overflow="hidden"
+          >
+            {snapshot.services.map((service, index) => (
+              <React.Fragment key={service.key}>
+                {index > 0 && <Line />}
+                <Row fillWidth horizontal="between" vertical="center" padding="16" gap="12">
+                  <Column gap="2">
+                    <Text variant="body-default-m">{service.label}</Text>
+                    {service.note && (
+                      <Text variant="body-default-xs" onBackground="neutral-weak">
+                        {service.note}
+                      </Text>
+                    )}
+                  </Column>
+                  <Row gap="8" vertical="center">
+                    <span
+                      aria-hidden
+                      style={{
+                        width: "0.5rem",
+                        height: "0.5rem",
+                        borderRadius: "50%",
+                        background: STATUS_COLOR[service.status],
+                      }}
+                    />
+                    <Text variant="body-default-s" onBackground="neutral-medium">
+                      {STATUS_LABEL[service.status]}
+                    </Text>
+                  </Row>
+                </Row>
+              </React.Fragment>
+            ))}
+          </Flex>
+        </Column>
+      </RevealFx>
     </Column>
   );
 }

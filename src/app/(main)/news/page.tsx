@@ -1,6 +1,18 @@
 import React from "react";
 import Link from "next/link";
-import { Button, Column, Flex, Grid, Media, Row, Tag, Text, Meta } from "@once-ui-system/core";
+import {
+  Button,
+  Column,
+  Flex,
+  Grid,
+  Media,
+  Row,
+  Tag,
+  Text,
+  Meta,
+  RevealFx,
+  Card,
+} from "@once-ui-system/core";
 import type { Metadata } from "next";
 import { baseURL, schema } from "@/resources";
 import { formatDate } from "@/app/utils/formatDate";
@@ -47,43 +59,49 @@ export default async function NewsPage({
   return (
     <Flex fillWidth horizontal="center" paddingY="40" paddingX="16">
       <Column maxWidth="l" fillWidth gap="32">
-        <Column gap="8">
-          <Text variant="display-strong-xs">News</Text>
-          <Text variant="body-default-m" onBackground="neutral-medium">
-            Releases, new features and everything else worth knowing about the bot.
-          </Text>
-        </Column>
+        <RevealFx translateY={-0.5}>
+          <Column gap="8">
+            <Text variant="display-strong-xs">News</Text>
+            <Text variant="body-default-m" onBackground="neutral-medium">
+              Releases, new features and everything else worth knowing about the bot.
+            </Text>
+          </Column>
+        </RevealFx>
 
-        <Row gap="8" wrap>
-          <Button
-            size="s"
-            variant={category === null ? "primary" : "secondary"}
-            href={href({ category: null, page: 1 })}
-          >
-            All
-          </Button>
-          {NEWS_CATEGORIES.map((item) => (
+        <RevealFx delay={0.3} translateY={-0.5}>
+          <Row gap="8" wrap>
             <Button
-              key={item}
               size="s"
-              variant={category === item ? "primary" : "secondary"}
-              href={href({ category: item, page: 1 })}
+              variant={category === null ? "primary" : "secondary"}
+              href={href({ category: null, page: 1 })}
             >
-              {NEWS_CATEGORY_LABELS[item]}
+              All
             </Button>
-          ))}
-        </Row>
+            {NEWS_CATEGORIES.map((item) => (
+              <Button
+                key={item}
+                size="s"
+                variant={category === item ? "primary" : "secondary"}
+                href={href({ category: item, page: 1 })}
+              >
+                {NEWS_CATEGORY_LABELS[item]}
+              </Button>
+            ))}
+          </Row>
+        </RevealFx>
 
-        {posts.length === 0 && (
-          <Text variant="body-default-m" onBackground="neutral-weak">
-            Nothing published here yet.
-          </Text>
-        )}
+        <RevealFx delay={0.6} translateY={-0.5}>
+          {posts.length === 0 && (
+            <Text variant="body-default-m" onBackground="neutral-weak">
+              Nothing published here yet.
+            </Text>
+          )}
+        </RevealFx>
 
         <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="16" fillWidth>
-          {posts.map((post) => (
-            <Link key={post.id} href={`/news/${post.slug}`} style={{ textDecoration: "none" }}>
-              <Flex
+          {posts.map((post, idx) => (
+            <RevealFx delay={0.9 + 0.1 * idx} translateY={-0.5}>
+              <Card
                 direction="column"
                 fillWidth
                 fillHeight
@@ -92,6 +110,8 @@ export default async function NewsPage({
                 radius="l"
                 border="neutral-medium"
                 background="surface"
+                key={post.id}
+                href={`/news/${post.slug}`}
               >
                 {post.coverUrl && (
                   <Media src={post.coverUrl} radius="m" aspectRatio="16 / 9" alt={post.title} />
@@ -110,34 +130,36 @@ export default async function NewsPage({
                     {post.summary}
                   </Text>
                 )}
-              </Flex>
-            </Link>
+              </Card>
+            </RevealFx>
           ))}
         </Grid>
 
-        {pages > 1 && (
-          <Row fillWidth horizontal="center" gap="8" vertical="center">
-            <Button
-              size="s"
-              variant="secondary"
-              disabled={page <= 1}
-              href={href({ page: page - 1 })}
-            >
-              Previous
-            </Button>
-            <Text variant="body-default-s" onBackground="neutral-weak">
-              Page {page} / {pages}
-            </Text>
-            <Button
-              size="s"
-              variant="secondary"
-              disabled={page >= pages}
-              href={href({ page: page + 1 })}
-            >
-              Next
-            </Button>
-          </Row>
-        )}
+        <RevealFx delay={1.2} translateY={-0.5}>
+          {pages > 1 && (
+            <Row fillWidth horizontal="center" gap="8" vertical="center">
+              <Button
+                size="s"
+                variant="secondary"
+                disabled={page <= 1}
+                href={href({ page: page - 1 })}
+              >
+                Previous
+              </Button>
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                Page {page} / {pages}
+              </Text>
+              <Button
+                size="s"
+                variant="secondary"
+                disabled={page >= pages}
+                href={href({ page: page + 1 })}
+              >
+                Next
+              </Button>
+            </Row>
+          )}
+        </RevealFx>
       </Column>
     </Flex>
   );

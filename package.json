@@ -20,7 +20,7 @@
     "@amelia/dashboard": "link:",
     "@mdx-js/loader": "^3.1.0",
     "@next/mdx": "^15.5.9",
-    "@once-ui-system/core": "^1.7.7",
+    "@once-ui-system/core": "^1.8.2",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "@tailwindcss/postcss": "^4.2.2",

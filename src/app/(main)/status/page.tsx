@@ -1,5 +1,5 @@
 import React from "react";
-import { Column, Flex, Line, Row, Tag, Text } from "@once-ui-system/core";
+import { Column, Flex, Line, RevealFx, Row, Tag, Text } from "@once-ui-system/core";
 import { Meta } from "@once-ui-system/core";
 import type { Metadata } from "next";
 import { baseURL, schema } from "@/resources";
@@ -46,70 +46,72 @@ export default async function StatusPage() {
           uptimeLabel={formatUptime(snapshot.metrics.uptimeMs)}
         />
 
-        <Column fillWidth gap="16">
-          <Text variant="heading-strong-m">Incident history</Text>
+        <RevealFx delay={0.9} translateY={-0.5}>
+          <Column fillWidth gap="16">
+            <Text variant="heading-strong-m">Incident history</Text>
 
-          {incidents.length === 0 && (
-            <Text variant="body-default-m" onBackground="neutral-weak">
-              No incidents recorded yet.
-            </Text>
-          )}
-
-          {incidents.map((incident) => (
-            <Flex
-              key={incident.id}
-              direction="column"
-              fillWidth
-              gap="12"
-              padding="20"
-              radius="l"
-              border="neutral-medium"
-              background="surface"
-            >
-              <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
-                <Text variant="heading-strong-s">{incident.title}</Text>
-                <Row gap="8" vertical="center">
-                  <Tag variant={SEVERITY_VARIANT[incident.severity] ?? "neutral"}>
-                    {incident.severity}
-                  </Tag>
-                  <Tag variant={incident.resolvedAt ? "success" : "warning"}>
-                    {incident.resolvedAt ? "resolved" : incident.status}
-                  </Tag>
-                </Row>
-              </Row>
-
-              <Text variant="body-default-xs" onBackground="neutral-weak">
-                {formatDate(incident.startedAt.toISOString())}
-                {incident.resolvedAt ? ` — ${formatDate(incident.resolvedAt.toISOString())}` : ""}
+            {incidents.length === 0 && (
+              <Text variant="body-default-m" onBackground="neutral-weak">
+                No incidents recorded yet.
               </Text>
+            )}
 
-              {incident.body && (
-                <Text variant="body-default-s" onBackground="neutral-medium">
-                  {incident.body}
+            {incidents.map((incident) => (
+              <Flex
+                key={incident.id}
+                direction="column"
+                fillWidth
+                gap="12"
+                padding="20"
+                radius="l"
+                border="neutral-medium"
+                background="surface"
+              >
+                <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
+                  <Text variant="heading-strong-s">{incident.title}</Text>
+                  <Row gap="8" vertical="center">
+                    <Tag variant={SEVERITY_VARIANT[incident.severity] ?? "neutral"}>
+                      {incident.severity}
+                    </Tag>
+                    <Tag variant={incident.resolvedAt ? "success" : "warning"}>
+                      {incident.resolvedAt ? "resolved" : incident.status}
+                    </Tag>
+                  </Row>
+                </Row>
+
+                <Text variant="body-default-xs" onBackground="neutral-weak">
+                  {formatDate(incident.startedAt.toISOString())}
+                  {incident.resolvedAt ? ` — ${formatDate(incident.resolvedAt.toISOString())}` : ""}
                 </Text>
-              )}
 
-              {incident.updates.length > 0 && (
-                <>
-                  <Line />
-                  <Column gap="8">
-                    {incident.updates.map((update) => (
-                      <Column key={update.id} gap="2">
-                        <Text variant="label-default-s">{update.status}</Text>
-                        <Text variant="body-default-s" onBackground="neutral-medium">
-                          {update.body}
-                        </Text>
-                        <Text variant="body-default-xs" onBackground="neutral-weak">
-                          {formatDate(update.createdAt.toISOString())}
-                        </Text>
-                      </Column>
-                    ))}
-                  </Column>
-                </>
-              )}
-            </Flex>
-          ))}
-        </Column>
+                {incident.body && (
+                  <Text variant="body-default-s" onBackground="neutral-medium">
+                    {incident.body}
+                  </Text>
+                )}
+
+                {incident.updates.length > 0 && (
+                  <>
+                    <Line />
+                    <Column gap="8">
+                      {incident.updates.map((update) => (
+                        <Column key={update.id} gap="2">
+                          <Text variant="label-default-s">{update.status}</Text>
+                          <Text variant="body-default-s" onBackground="neutral-medium">
+                            {update.body}
+                          </Text>
+                          <Text variant="body-default-xs" onBackground="neutral-weak">
+                            {formatDate(update.createdAt.toISOString())}
+                          </Text>
+                        </Column>
+                      ))}
+                    </Column>
+                  </>
+                )}
+              </Flex>
+            ))}
+          </Column>
+        </RevealFx>
       </Column>
     </Flex>
   );

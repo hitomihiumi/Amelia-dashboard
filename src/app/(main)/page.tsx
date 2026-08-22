@@ -1,5 +1,5 @@
 import React from "react";
-import {Button, Column, Flex, Line, Row, Text} from "@once-ui-system/core";
+import { Button, Column, Flex, Line, RevealFx, Row, Text } from "@once-ui-system/core";
 import { CONFIG_DEFAULTS, getGlobalConfig } from "@/lib/admin/config";
 import { getStatusSnapshot } from "@/lib/status/status";
 import { getPublishedPosts } from "@/lib/news/news";
@@ -23,18 +23,23 @@ export default async function Home() {
   return (
     <Flex fill horizontal="center" paddingY="32" paddingX="16">
       <Column maxWidth="l" fill gap="xl">
-        <Row fill center>
-          <Row fillWidth fitHeight>
-            <Hero
+        <RevealFx translateY={-0.5}>
+          <Row fill center>
+            <Row fillWidth fitHeight>
+              <Hero
                 tagline={config.heroTagline || CONFIG_DEFAULTS.heroTagline}
                 text={config.heroText || CONFIG_DEFAULTS.heroText}
                 inviteUrl={inviteUrl}
-            />
+              />
+            </Row>
           </Row>
-        </Row>
+        </RevealFx>
 
-        <Line vert={false}/>
+        <RevealFx delay={0.1} translateY={-0.5}>
+          <Line vert={false} />
+        </RevealFx>
 
+        <RevealFx delay={0.4} translateY={-0.5}>
           <Column fill gap="16">
             <Column gap="4" horizontal="center">
               <Text variant="label-default-s" onBackground="brand-medium">
@@ -47,14 +52,23 @@ export default async function Home() {
             <LandingStats initialSnapshot={snapshot} />
             <StatusTeaser status={snapshot.overall} />
           </Column>
+        </RevealFx>
 
-        <Line vert={false}/>
+        <RevealFx delay={0.5} translateY={-0.5}>
+          <Line vert={false} />
+        </RevealFx>
 
-        <Features />
+        <RevealFx delay={0.8} translateY={-0.5}>
+          <Features />
+        </RevealFx>
 
-        <Line vert={false}/>
+        <RevealFx delay={0.9} translateY={-0.5}>
+          <Line vert={false} />
+        </RevealFx>
 
-        <LatestNews posts={news.posts} />
+        <RevealFx delay={1.2} translateY={-0.5}>
+          <LatestNews posts={news.posts} />
+        </RevealFx>
       </Column>
     </Flex>
   );
