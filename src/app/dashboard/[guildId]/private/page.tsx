@@ -1,6 +1,6 @@
 import { Guild } from "@/lib/db/Guild";
 import { PrivateForm } from "@/app/dashboard/[guildId]/private/PrivateForm";
-import { Feedback, Flex, Text } from "@once-ui-system/core";
+import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ChannelPickOption } from "@/lib/discord/channel-type";
@@ -38,12 +38,12 @@ export default async function GeneralSettingsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
+      <RevealFx direction="column" gap="8" translateY={-0.5}>
         <Text variant="heading-strong-l">Private rooms settings</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
           Configure the settings for private voice channels in your server.
         </Text>
-      </Flex>
+      </RevealFx>
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

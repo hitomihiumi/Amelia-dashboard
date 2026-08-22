@@ -30,7 +30,6 @@ import {
   IoList,
   IoRemove,
   IoText,
-  IoFolder,
   IoTrash,
   IoCubeOutline,
   IoToggleOutline,
@@ -49,6 +48,7 @@ import {
   IoPlayOutline,
   IoChatboxEllipsesOutline,
   IoTrashOutline,
+  IoShieldOutline,
 } from "react-icons/io5";
 
 import { FaDiscord } from "react-icons/fa";
@@ -106,6 +106,7 @@ export const iconLibrary: Record<string, IconType> = {
   trigger: IoPlayForwardOutline,
   play: IoPlayOutline,
   redo: IoArrowRedoOutline,
+  shield: IoShieldOutline,
 };
 
 export type IconLibrary = typeof iconLibrary;

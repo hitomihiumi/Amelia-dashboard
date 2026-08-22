@@ -11,6 +11,7 @@ import {
   Input,
   Switch,
   InlineCode,
+  RevealFx,
 } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { autoSetupTempVoiceSettings, updatePrivateRoomSettings } from "./actions";
@@ -131,104 +132,107 @@ export function PrivateForm({
   }, []);
 
   return (
-    <Flex
-      direction="column"
-      gap="24"
-      padding="24"
-      border="neutral-weak"
-      radius="l"
-      background="surface"
-    >
-      <Row horizontal={"between"} gap="24">
-        <Flex gap="16">
-          <DashIcon name={"microphone"} />
-          <Column gap="8">
-            <Text variant="body-strong-l">Private rooms</Text>
-            <Text variant="body-default-s" onBackground="neutral-medium">
-              Users will be able to create temporary voice channels by joining a designated "Join to
-              Create" channel.
-            </Text>
-          </Column>
-        </Flex>
-        <Switch
-          isChecked={joinToCreate.enabled}
-          onToggle={() => setJoinToCreate((prev) => ({ ...prev, enabled: !prev.enabled }))}
-        />
-      </Row>
-      <form action={autoAction}>
-        <input type="hidden" name="guildId" value={guildId} />
-        <Column
-          background={"overlay"}
-          border={"neutral-medium"}
-          radius={"m"}
-          padding={"20"}
-          gap={"12"}
-        >
-          <Row gap={"12"}>
-            <DashIcon name={"plane"} />
-            <Flex direction="column" gap="12">
-              <Text variant="body-strong-m">Auto-setup</Text>
-              <Text variant="body-default-xs" onBackground="neutral-medium">
-                Automatically create a "Join to Create" voice channel, category and the necessary
-                permissions for it.
+    <RevealFx delay={0.3} translateY={-0.5}>
+      <Flex
+        direction="column"
+        gap="24"
+        padding="24"
+        border="neutral-weak"
+        radius="l"
+        background="surface"
+        fillWidth
+      >
+        <Row horizontal={"between"} gap="24">
+          <Flex gap="16">
+            <DashIcon name={"microphone"} />
+            <Column gap="8">
+              <Text variant="body-strong-l">Private rooms</Text>
+              <Text variant="body-default-s" onBackground="neutral-medium">
+                Users will be able to create temporary voice channels by joining a designated "Join
+                to Create" channel.
               </Text>
-              <Button prefixIcon={"plane"} type="submit" disabled={autoPending}>
-                {autoPending ? "Setting up..." : "Auto-setup"}
-              </Button>
-            </Flex>
-          </Row>
-        </Column>
-      </form>
-      <Column gap="16">
-        <Text variant="body-strong-s">CHANNEL TRIGGER</Text>
-        <Text variant="body-default-xs" onBackground="neutral-medium">
-          Select the voice channel that users will join to create their private rooms.
-        </Text>
-        <ChannelSelect
-          label={"Select trigger channel"}
-          selectedChannel={joinToCreate.channel || ""}
-          setSelectedChannel={handleVoiceChannel}
-          options={voiceChannels.map((channel) => ({
-            label: <ChannelPill channel={channel} />,
-            value: channel.id,
-          }))}
-          id={"trigger-channel"}
-        />
-      </Column>
-      <Column gap="16">
-        <Text variant="body-strong-s">CATEGORY FOR NEW ROOMS</Text>
-        <Text variant="body-default-xs" onBackground="neutral-medium">
-          Select the category where the new private rooms will be created.
-        </Text>
-        <ChannelSelect
-          label={"Select category"}
-          selectedChannel={joinToCreate.category || ""}
-          setSelectedChannel={handleCategory}
-          options={categories.map((channel) => ({
-            label: <ChannelPill channel={channel} />,
-            value: channel.id,
-          }))}
-          id={"trigger-channel"}
-        />
-      </Column>
-      <Column gap="16">
-        <Text variant="body-strong-s">DEFAULT NAME</Text>
-        <Text variant="body-default-xs" onBackground="neutral-medium">
-          Set the default name for the private rooms. Users will be able to change it after the room
-          is created.
-        </Text>
-        <Input
-          id={"default-name"}
-          value={joinToCreate.default_name}
-          onChange={(e) => handleChannelName(e.target.value)}
-          placeholder="Private Room"
-          description={
-            <Row vertical="center" gap="4">
-              Use <InlineCode>{"%{VAR}%"}</InlineCode> to include user name in the channel name.
+            </Column>
+          </Flex>
+          <Switch
+            isChecked={joinToCreate.enabled}
+            onToggle={() => setJoinToCreate((prev) => ({ ...prev, enabled: !prev.enabled }))}
+          />
+        </Row>
+        <form action={autoAction}>
+          <input type="hidden" name="guildId" value={guildId} />
+          <Column
+            background={"overlay"}
+            border={"neutral-medium"}
+            radius={"m"}
+            padding={"20"}
+            gap={"12"}
+          >
+            <Row gap={"12"}>
+              <DashIcon name={"plane"} />
+              <Flex direction="column" gap="12">
+                <Text variant="body-strong-m">Auto-setup</Text>
+                <Text variant="body-default-xs" onBackground="neutral-medium">
+                  Automatically create a "Join to Create" voice channel, category and the necessary
+                  permissions for it.
+                </Text>
+                <Button prefixIcon={"plane"} type="submit" disabled={autoPending}>
+                  {autoPending ? "Setting up..." : "Auto-setup"}
+                </Button>
+              </Flex>
             </Row>
-          }
-        />
-      </Column>
-    </Flex>
+          </Column>
+        </form>
+        <Column gap="16">
+          <Text variant="body-strong-s">CHANNEL TRIGGER</Text>
+          <Text variant="body-default-xs" onBackground="neutral-medium">
+            Select the voice channel that users will join to create their private rooms.
+          </Text>
+          <ChannelSelect
+            label={"Select trigger channel"}
+            selectedChannel={joinToCreate.channel || ""}
+            setSelectedChannel={handleVoiceChannel}
+            options={voiceChannels.map((channel) => ({
+              label: <ChannelPill channel={channel} />,
+              value: channel.id,
+            }))}
+            id={"trigger-channel"}
+          />
+        </Column>
+        <Column gap="16">
+          <Text variant="body-strong-s">CATEGORY FOR NEW ROOMS</Text>
+          <Text variant="body-default-xs" onBackground="neutral-medium">
+            Select the category where the new private rooms will be created.
+          </Text>
+          <ChannelSelect
+            label={"Select category"}
+            selectedChannel={joinToCreate.category || ""}
+            setSelectedChannel={handleCategory}
+            options={categories.map((channel) => ({
+              label: <ChannelPill channel={channel} />,
+              value: channel.id,
+            }))}
+            id={"trigger-channel"}
+          />
+        </Column>
+        <Column gap="16">
+          <Text variant="body-strong-s">DEFAULT NAME</Text>
+          <Text variant="body-default-xs" onBackground="neutral-medium">
+            Set the default name for the private rooms. Users will be able to change it after the
+            room is created.
+          </Text>
+          <Input
+            id={"default-name"}
+            value={joinToCreate.default_name}
+            onChange={(e) => handleChannelName(e.target.value)}
+            placeholder="Private Room"
+            description={
+              <Row vertical="center" gap="4">
+                Use <InlineCode>{"%{VAR}%"}</InlineCode> to include user name in the channel name.
+              </Row>
+            }
+          />
+        </Column>
+      </Flex>
+    </RevealFx>
   );
 }

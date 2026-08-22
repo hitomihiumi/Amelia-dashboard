@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Flex, Text, Input, Select, useToast } from "@once-ui-system/core";
+import { Flex, Text, Input, Select, useToast, RevealFx } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { updateGeneralSettings } from "./actions";
 
@@ -87,65 +87,71 @@ export function GeneralForm({
 
   return (
     <>
-      <Flex
-        direction="column"
-        gap="16"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-      >
-        <Flex gap="16">
-          <DashIcon name={"ticket"} />
-          <Flex direction="column" gap="8">
-            <Text variant="body-strong-l">Command prefix</Text>
-            <Text variant="body-default-s" onBackground="neutral-medium">
-              Set the prefix that users will use to invoke bot commands. This will not affect to
-              slash commands.
-            </Text>
+      <RevealFx delay={0.3} translateY={-0.5}>
+        <Flex
+          direction="column"
+          gap="16"
+          padding="24"
+          border="neutral-weak"
+          radius="l"
+          background="surface"
+          fillWidth
+        >
+          <Flex gap="16">
+            <DashIcon name={"ticket"} />
+            <Flex direction="column" gap="8">
+              <Text variant="body-strong-l">Command prefix</Text>
+              <Text variant="body-default-s" onBackground="neutral-medium">
+                Set the prefix that users will use to invoke bot commands. This will not affect to
+                slash commands.
+              </Text>
+            </Flex>
           </Flex>
+
+          <Input
+            id="prefix"
+            value={prefix}
+            onChange={(e) => setPrefix(e.target.value)}
+            placeholder="a., !, etc."
+            maxLength={5}
+          />
         </Flex>
+      </RevealFx>
 
-        <Input
-          id="prefix"
-          value={prefix}
-          onChange={(e) => setPrefix(e.target.value)}
-          placeholder="a., !, etc."
-          maxLength={5}
-        />
-      </Flex>
-
-      <Flex
-        direction="column"
-        gap="24"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-      >
-        <Flex gap="16">
-          <DashIcon name={"sign"} />
-          <Flex direction="column" gap="8">
-            <Text variant="body-strong-l">Interface language</Text>
-            <Text variant="body-default-s" onBackground="neutral-medium">
-              Choose the language for bot responses and interface.
-            </Text>
+      <RevealFx delay={0.6} translateY={-0.5}>
+        <Flex
+          direction="column"
+          gap="24"
+          padding="24"
+          border="neutral-weak"
+          radius="l"
+          background="surface"
+          fillWidth
+        >
+          <Flex gap="16">
+            <DashIcon name={"sign"} />
+            <Flex direction="column" gap="8">
+              <Text variant="body-strong-l">Interface language</Text>
+              <Text variant="body-default-s" onBackground="neutral-medium">
+                Choose the language for bot responses and interface.
+              </Text>
+            </Flex>
           </Flex>
-        </Flex>
 
-        <Select
-          id="language"
-          value={language}
-          options={[
-            { label: "🇬🇧 English", value: "en" },
-            { label: "🇺🇦 Ukrainian", value: "uk" },
-            { label: "🇷🇺 Russian", value: "ru" },
-          ]}
-          label="Choose a language"
-          onSelect={(value) => setLanguage(value)}
-          maxLength={5}
-        />
-      </Flex>
+          <Select
+            id="language"
+            value={language}
+            options={[
+              { label: "🇬🇧 English", value: "en" },
+              { label: "🇺🇦 Ukrainian", value: "uk" },
+              { label: "🇷🇺 Russian", value: "ru" },
+            ]}
+            label="Choose a language"
+            onSelect={(value) => setLanguage(value)}
+            maxLength={5}
+          />
+        </Flex>
+      </RevealFx>
     </>
   );
 }

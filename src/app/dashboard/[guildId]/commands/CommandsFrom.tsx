@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Flex, Text, useToast, Column, Line, Row, Select } from "@once-ui-system/core";
+import { Flex, Text, useToast, Column, Line, Row, Select, RevealFx } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { updateCommandPermissions } from "./actions";
 import { RoleSelect } from "@/components/dashboard/discord/RoleSelect";
@@ -42,6 +42,13 @@ const commandList: {
     description: "Use economy commands like balance, daily rewards, and leaderboards.",
     icon: "money",
     defaultPermission: null,
+  },
+  {
+    name: "mod",
+    label: "Moderation",
+    description: "Commands for moderation like ban, kick, and mute.",
+    icon: "shield",
+    defaultPermission: permissionType.ModerateMembers,
   },
   {
     name: "setting",
@@ -205,6 +212,7 @@ export function CommandsFrom({
           </Row>
         }
         subline={description}
+        fillWidth
       >
         <Column gap="16" paddingBottom="12">
           <Column gap="8">
@@ -264,9 +272,11 @@ export function CommandsFrom({
   return (
     <Flex direction="column" gap="24">
       <Column gap="12">
-        {commandList.map((cmd) =>
-          renderCommandSettings(cmd.name, cmd.label, cmd.description, cmd.icon),
-        )}
+        {commandList.map((cmd, idx) => (
+          <RevealFx key={cmd.name} delay={0.1 * idx} translateY={-0.5}>
+            {renderCommandSettings(cmd.name, cmd.label, cmd.description, cmd.icon)}
+          </RevealFx>
+        ))}
       </Column>
     </Flex>
   );
