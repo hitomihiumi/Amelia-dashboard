@@ -15,7 +15,7 @@ import {
 } from "@once-ui-system/core";
 import { SelectReact } from "@/components/user/SelectReact";
 import type { ModerationFormField, ModerationSubmissionKind } from "@/lib/db/types";
-import { submitForm } from "@/app/submit/[guildId]/actions";
+import { submitForm } from "@/app/(main)/submit/[guildId]/actions";
 
 export interface AppealableCase {
   id: string;
