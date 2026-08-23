@@ -21,8 +21,16 @@ import {
   IoGitNetwork,
   IoColorPalette,
   IoPerson,
-  IoBonfire, IoSend, IoTrophy, IoEyeOff,
-  IoLink, IoDocumentAttach, IoList, IoRemove, IoText, IoFolder, IoTrash,
+  IoBonfire,
+  IoSend,
+  IoTrophy,
+  IoEyeOff,
+  IoLink,
+  IoDocumentAttach,
+  IoList,
+  IoRemove,
+  IoText,
+  IoTrash,
   IoCubeOutline,
   IoToggleOutline,
   IoDocumentTextOutline,
@@ -40,6 +48,9 @@ import {
   IoPlayOutline,
   IoChatboxEllipsesOutline,
   IoTrashOutline,
+  IoShieldOutline,
+  IoPersonAddOutline,
+  IoClipboardOutline,
 } from "react-icons/io5";
 
 import { FaDiscord } from "react-icons/fa";
@@ -97,6 +108,9 @@ export const iconLibrary: Record<string, IconType> = {
   trigger: IoPlayForwardOutline,
   play: IoPlayOutline,
   redo: IoArrowRedoOutline,
+  shield: IoShieldOutline,
+  invite: IoPersonAddOutline,
+  clipboard: IoClipboardOutline,
 };
 
 export type IconLibrary = typeof iconLibrary;

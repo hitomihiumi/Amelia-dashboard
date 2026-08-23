@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Flex, Text, useToast, Button, Grid, Row } from "@once-ui-system/core";
+import { Flex, Text, useToast, Button, Grid, Row, RevealFx } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 
 import type { GuildSchema, ShopRole } from "@/lib/db/types";
@@ -102,52 +102,56 @@ export function ShopFrom({
 
   return (
     <>
-      <Flex
-        direction="row"
-        gap="24"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-        horizontal={"between"}
-        vertical={"center"}
-      >
-        <Row gap="16" center>
-          <DashIcon name={"cart"} />
-          <Text variant="body-strong-l">Add role to shop</Text>
-        </Row>
-        <Button
-          prefixIcon={"plus"}
-          onClick={() => {
-            setNewRole({
-              role: "",
-              price: 100,
-              discount: {
-                amount: 0,
-                starts_at: null,
-                expires_at: null,
-              },
-            });
-            setOpenModal(true);
-          }}
+      <RevealFx delay={0.3} translateY={-0.5}>
+        <Flex
+          direction="row"
+          gap="24"
+          padding="24"
+          border="neutral-weak"
+          radius="l"
+          background="surface"
+          horizontal={"between"}
+          vertical={"center"}
+          fillWidth
         >
-          Add role
-        </Button>
-      </Flex>
+          <Row gap="16" center>
+            <DashIcon name={"cart"} />
+            <Text variant="body-strong-l">Add role to shop</Text>
+          </Row>
+          <Button
+            prefixIcon={"plus"}
+            onClick={() => {
+              setNewRole({
+                role: "",
+                price: 100,
+                discount: {
+                  amount: 0,
+                  starts_at: null,
+                  expires_at: null,
+                },
+              });
+              setOpenModal(true);
+            }}
+          >
+            Add role
+          </Button>
+        </Flex>
+      </RevealFx>
 
       {roles.length > 0 && (
         <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fillWidth>
           {roles.map((item, id) => {
             const discordRole = guildRoles.find((r) => r.id === item.role) as DiscordRole;
             return (
-              <RoleCard
-                key={id}
-                setRoles={setRoles}
-                setOpenModal={setOpenModal}
-                setNewRole={setNewRole}
-                role={item}
-                discordRole={discordRole}
-              />
+              <RevealFx delay={0.4 + 0.1 * id} translateY={-0.5} key={id}>
+                <RoleCard
+                  setRoles={setRoles}
+                  setOpenModal={setOpenModal}
+                  setNewRole={setNewRole}
+                  role={item}
+                  discordRole={discordRole}
+                />
+              </RevealFx>
             );
           })}
         </Grid>

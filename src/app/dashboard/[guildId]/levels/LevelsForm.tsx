@@ -11,7 +11,9 @@ import {
   IconButton,
   Button,
   useToast,
-  Line, NumberInput,
+  Line,
+  NumberInput,
+  RevealFx,
 } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { updateLevelsSettings } from "./actions";
@@ -24,7 +26,8 @@ import { DiscordRole } from "@/lib/discord/role-style";
 import { RolePill } from "@/components/dashboard/discord/RolePill";
 import { ChannelPill } from "@/components/dashboard/discord/ChannelPill";
 import { GuildActionState } from "@/types/dashboard";
-import {DashIcon} from "@/components/dashboard/DashIcon";
+import { DashIcon } from "@/components/dashboard/DashIcon";
+import { Section } from "@/components/dashboard/Section";
 
 export function LevelsForm({
   guildId,
@@ -142,79 +145,78 @@ export function LevelsForm({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex
-        direction="column"
-        gap="16"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-      >
-        <Row horizontal="between" vertical="center">
-          <Flex gap="16">
-            <DashIcon name={"ribbon"} />
-            <Column gap="8">
-              <Text variant="body-strong-l">Enable Module</Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">
-                Toggle the entire leveling and XP system.
-              </Text>
-            </Column>
-          </Flex>
-          <Switch
-            isChecked={levels.enabled}
-            onToggle={() => setLevels((p) => ({ ...p, enabled: !p.enabled }))}
-          />
-        </Row>
-      </Flex>
-
-      <Flex
-        direction="column"
-        gap="16"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-      >
-        <Flex gap="16">
-          <DashIcon name={"trophy"} />
-          <Column gap="8">
-            <Text variant="body-strong-l">Role Rewards</Text>
-            <Text variant="body-default-s" onBackground="neutral-weak">
-              Roles automatically granted to users when they reach a specific level.
-            </Text>
-          </Column>
+      <RevealFx delay={0.3} translateY={-0.5}>
+        <Flex
+          direction="column"
+          gap="16"
+          padding="24"
+          border="neutral-weak"
+          radius="l"
+          background="surface"
+          fillWidth
+        >
+          <Row horizontal="between" vertical="center">
+            <Flex gap="16">
+              <DashIcon name={"ribbon"} />
+              <Column gap="8">
+                <Text variant="body-strong-l">Enable Module</Text>
+                <Text variant="body-default-s" onBackground="neutral-weak">
+                  Toggle the entire leveling and XP system.
+                </Text>
+              </Column>
+            </Flex>
+            <Switch
+              isChecked={levels.enabled}
+              onToggle={() => setLevels((p) => ({ ...p, enabled: !p.enabled }))}
+            />
+          </Row>
         </Flex>
+      </RevealFx>
 
+      <Section
+        title="Role Rewards"
+        description="Roles automatically granted to users when they reach a specific level."
+        num={2}
+        icon="trophy"
+      >
         <Column gap="8">
-          {Object.entries(levels.level_roles)
-            .sort(([a], [b]) => parseInt(a) - parseInt(b))
-            .map(([lvl, rId]) => {
-              const role = roles.find((r) => r.id === rId);
-              return (
-                <Row
-                  key={lvl}
-                  horizontal="between"
-                  vertical="center"
-                  padding="12"
-                  background="overlay"
-                  radius="m"
-                  border="neutral-alpha-medium"
-                >
-                  <Row gap="16" vertical="center">
-                    <Flex width="48">
-                      <Text variant="body-strong-m">Lv. {lvl}</Text>
-                    </Flex>
-                    <RolePill roleColor={role?.color || 0} label={role?.name || "Unknown Role"} />
+          {Object.entries(levels.level_roles).length === 0 ? (
+            <Row fillWidth center padding="s">
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                No role rewards configured.
+              </Text>
+            </Row>
+          ) : (
+            Object.entries(levels.level_roles)
+              .sort(([a], [b]) => parseInt(a) - parseInt(b))
+              .map(([lvl, rId]) => {
+                const role = roles.find((r) => r.id === rId);
+                return (
+                  <Row
+                    key={lvl}
+                    horizontal="between"
+                    vertical="center"
+                    padding="12"
+                    background="overlay"
+                    radius="m"
+                    border="neutral-alpha-medium"
+                  >
+                    <Row gap="16" vertical="center">
+                      <Flex width="48">
+                        <Text variant="body-strong-m">Lv. {lvl}</Text>
+                      </Flex>
+                      <RolePill roleColor={role?.color || 0} label={role?.name || "Unknown Role"} />
+                    </Row>
+                    <IconButton
+                      icon="close"
+                      variant="tertiary"
+                      size="s"
+                      onClick={() => removeRoleReward(lvl)}
+                    />
                   </Row>
-                  <IconButton
-                    icon="close"
-                    variant="tertiary"
-                    size="s"
-                    onClick={() => removeRoleReward(lvl)}
-                  />
-                </Row>
-              );
-            })}
+                );
+              })
+          )}
         </Column>
 
         <Line />
@@ -241,31 +243,25 @@ export function LevelsForm({
             Add
           </Button>
         </Row>
-      </Flex>
+      </Section>
 
-      <Flex
-        direction="column"
-        gap="16"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
+      <Section
+        title="Announcements"
+        description="Configure level-up announcements."
+        num={3}
+        icon="send"
+        switcher={
+          <Switch
+            isChecked={levels.message.enabled}
+            onToggle={() =>
+              setLevels((p) => ({
+                ...p,
+                message: { ...p.message, enabled: !p.message.enabled },
+              }))
+            }
+          />
+        }
       >
-        <Flex gap="16">
-          <DashIcon name={"send"} />
-          <Row horizontal="between" vertical="center" fillWidth>
-            <Column gap="8" fillWidth>
-              <Text variant="body-strong-l">Announcements</Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">Send level-up message</Text>
-            </Column>
-            <Switch
-                isChecked={levels.message.enabled}
-                onToggle={() =>
-                    setLevels((p) => ({ ...p, message: { ...p.message, enabled: !p.message.enabled } }))
-                }
-            />
-          </Row>
-        </Flex>
         <Column gap="12">
           <ChannelSelect
             label={"Announcement Channel"}
@@ -291,25 +287,14 @@ export function LevelsForm({
             }
           />
         </Column>
-      </Flex>
+      </Section>
 
-      <Flex
-        direction="column"
-        gap="16"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
+      <Section
+        title="Restrictions"
+        description={"Exclude certain channels or roles from earning XP and leveling up."}
+        num={4}
+        icon="eyeoff"
       >
-        <Flex gap="16">
-          <DashIcon name={"eyeoff"} />
-          <Column gap="8" fillWidth>
-            <Text variant="body-strong-l">Restrictions</Text>
-            <Text variant="body-default-s" onBackground="neutral-weak">
-              Exclude certain channels or roles from earning XP and leveling up.
-            </Text>
-          </Column>
-        </Flex>
         <Column gap="12">
           <ChannelSelect
             label={"Ignored Channels"}
@@ -332,38 +317,27 @@ export function LevelsForm({
             setSelectedRole={(val) => setLevels((p) => ({ ...p, ignore_roles: val as string[] }))}
           />
         </Column>
-      </Flex>
+      </Section>
 
-      <Flex
-        direction="column"
-        gap="16"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
+      <Section
+        title="Cash Reward"
+        description="Give currency to users upon leveling up."
+        num={5}
+        icon={"money"}
+        switcher={
+          <Switch
+            isChecked={economy.enabled}
+            onToggle={() => setEconomy((p) => ({ ...p, enabled: !p.enabled }))}
+          />
+        }
       >
-        <Flex gap="16">
-          <DashIcon name={"money"} />
-          <Row horizontal="between" vertical="center" fillWidth>
-            <Column gap="8" fillWidth>
-              <Text variant="body-strong-l">Cash Reward</Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">
-                Give currency to users upon leveling up.
-              </Text>
-            </Column>
-            <Switch
-                isChecked={economy.enabled}
-                onToggle={() => setEconomy((p) => ({ ...p, enabled: !p.enabled }))}
-            />
-          </Row>
-        </Flex>
         <NumberInput
           id="eco-reward-amount"
           label="Reward Amount"
           value={economy.amount}
           onChange={(value) => setEconomy((p) => ({ ...p, amount: Number(value) }))}
         />
-      </Flex>
+      </Section>
     </Flex>
   );
 }

@@ -1,5 +1,38 @@
 @use "../styles/breakpoints.scss" as breakpoints;
 
+.barAnimation {
+  &.animation-bottom {
+    animation: fadeInBottom 0.2s ease-out forwards;
+  }
+
+  &.animation-bottom-out {
+    animation: fadeOutBottom 0.2s ease-in forwards;
+  }
+}
+
+@keyframes fadeInBottom {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutBottom {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+}
+
+
 .buttonRow {
   @include breakpoints.s {
     width: 100%;

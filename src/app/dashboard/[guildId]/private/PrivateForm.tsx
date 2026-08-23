@@ -11,6 +11,7 @@ import {
   Input,
   Switch,
   InlineCode,
+  RevealFx,
 } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { autoSetupTempVoiceSettings, updatePrivateRoomSettings } from "./actions";
@@ -22,6 +23,7 @@ import { DashIcon } from "@/components/dashboard/DashIcon";
 import { ChannelPickOption } from "@/lib/discord/channel-type";
 import { ChannelSelect } from "@/components/dashboard/discord/ChannelSelect";
 import { ChannelPill } from "@/components/dashboard/discord/ChannelPill";
+import { Section } from "@/components/dashboard/Section";
 
 type Form = Pick<GuildSchema["utils"], "join_to_create">;
 
@@ -131,30 +133,20 @@ export function PrivateForm({
   }, []);
 
   return (
-    <Flex
-      direction="column"
-      gap="24"
-      padding="24"
-      border="neutral-weak"
-      radius="l"
-      background="surface"
-    >
-      <Row horizontal={"between"} gap="24">
-        <Flex gap="16">
-          <DashIcon name={"microphone"} />
-          <Column gap="8">
-            <Text variant="body-strong-l">Private rooms</Text>
-            <Text variant="body-default-s" onBackground="neutral-medium">
-              Users will be able to create temporary voice channels by joining a designated "Join to
-              Create" channel.
-            </Text>
-          </Column>
-        </Flex>
+    <Section
+      title="Private rooms"
+      description={
+        'Users will be able to create temporary voice channels by joining a designated "Join to Create" channel.'
+      }
+      num={1}
+      switcher={
         <Switch
           isChecked={joinToCreate.enabled}
           onToggle={() => setJoinToCreate((prev) => ({ ...prev, enabled: !prev.enabled }))}
         />
-      </Row>
+      }
+      icon="microphone"
+    >
       <form action={autoAction}>
         <input type="hidden" name="guildId" value={guildId} />
         <Column
@@ -229,6 +221,6 @@ export function PrivateForm({
           }
         />
       </Column>
-    </Flex>
+    </Section>
   );
 }

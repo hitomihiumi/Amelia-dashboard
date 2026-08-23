@@ -15,7 +15,13 @@ export function DiscordModal({ modal }: DiscordModalProps) {
           <h3 className="text-white text-[18px] font-semibold truncate max-w-[70%]">
             {modal.title || "Modal title"}
           </h3>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-discord-text-muted shrink-0">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            className="text-discord-text-muted shrink-0"
+          >
             <path
               d="M18 6 6 18M6 6l12 12"
               stroke="currentColor"

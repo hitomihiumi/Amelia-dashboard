@@ -56,9 +56,15 @@ export function Header() {
           <SmartLink href={"/"}>Amelia</SmartLink>
         </Text>
         <Line vert={true} />
-        <Row marginBottom={"2"}>
+        <Row marginBottom={"2"} gap={"16"}>
           <Text variant={"label-default-l"}>
             <SmartLink href={"/docs/get-started"}>Docs</SmartLink>
+          </Text>
+          <Text variant={"label-default-l"}>
+            <SmartLink href={"/news"}>News</SmartLink>
+          </Text>
+          <Text variant={"label-default-l"}>
+            <SmartLink href={"/status"}>Status</SmartLink>
           </Text>
         </Row>
       </Row>

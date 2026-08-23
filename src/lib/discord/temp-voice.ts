@@ -1,39 +1,12 @@
 import "server-only";
 
-const DISCORD_API = "https://discord.com/api/v10";
+import { DISCORD_API, discordFetch } from "./rest";
 
 const CATEGORY_NAME = "Join To Create";
 const TRIGGER_VOICE_NAME = "Join To Create";
 
 const CHANNEL_TYPE_CATEGORY = 4;
 const CHANNEL_TYPE_VOICE = 2;
-
-function sleep(ms: number) {
-  return new Promise<void>((resolve) => setTimeout(resolve, ms));
-}
-
-async function discordFetch(url: string, init: RequestInit, maxRetries = 6): Promise<Response> {
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    const res = await fetch(url, { ...init, cache: "no-store" });
-    if (res.status !== 429) return res;
-    let waitMs = 800;
-    const h = res.headers.get("retry-after");
-    if (h) waitMs = Math.max(Number(h) * 1000, 100);
-    else {
-      try {
-        const j = (await res.json()) as { retry_after?: number };
-        if (typeof j.retry_after === "number") {
-          waitMs = Math.ceil(j.retry_after * 1000) + 100;
-        }
-      } catch {
-        waitMs = 500;
-      }
-    }
-    if (attempt >= maxRetries) return res;
-    await sleep(waitMs);
-  }
-  return fetch(url, { ...init, cache: "no-store" });
-}
 
 type ApiChannel = {
   id: string;
