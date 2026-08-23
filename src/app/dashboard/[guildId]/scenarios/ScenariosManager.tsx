@@ -15,6 +15,7 @@ import {
   Flex,
   Grid,
   IconButton,
+  RevealFx,
   Row,
   Tag,
   Text,
@@ -143,39 +144,44 @@ export function ScenariosManager({
 
   return (
     <Flex direction="column" gap="16" fillWidth>
-      <Row fillWidth horizontal="between" vertical="center">
-        <Row gap="12" center>
-          <DashIcon name="gitnet" />
-          <Text variant="heading-strong-s">Scenarios</Text>
-          <Text variant="body-default-s" onBackground="neutral-weak">
-            {scenarios.length}/10
-          </Text>
+      <RevealFx delay={0.3} translateY={-0.5}>
+        <Row fillWidth horizontal="between" vertical="center">
+          <Row gap="12" center>
+            <DashIcon name="gitnet" />
+            <Text variant="heading-strong-s">Scenarios</Text>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              {scenarios.length}/10
+            </Text>
+          </Row>
+          <Button
+            prefixIcon="plus"
+            onClick={createScenario}
+            disabled={creating || scenarios.length >= 10}
+          >
+            New scenario
+          </Button>
         </Row>
-        <Button
-          prefixIcon="plus"
-          onClick={createScenario}
-          disabled={creating || scenarios.length >= 10}
-        >
-          New scenario
-        </Button>
-      </Row>
+      </RevealFx>
 
       {scenarios.length === 0 ? (
-        <Feedback
-          variant="info"
-          title="No scenarios"
-          description="Create your first scenario to wire a custom component to multi-step bot behaviour."
-        />
+        <RevealFx delay={0.6} translateY={-0.5}>
+          <Feedback
+            variant="info"
+            title="No scenarios"
+            description="Create your first scenario to wire a custom component to multi-step bot behaviour."
+          />
+        </RevealFx>
       ) : (
         <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fill>
-          {scenarios.map((scenario) => (
-            <ScenarioCard
-              key={scenario.id}
-              scenario={scenario}
-              guildId={guildId}
-              onDuplicate={() => duplicateScenario(scenario.id)}
-              onDelete={() => deleteScenario(scenario.id)}
-            />
+          {scenarios.map((scenario, idx) => (
+            <RevealFx delay={0.4 + idx * 0.1} translateY={-0.5} key={scenario.id}>
+              <ScenarioCard
+                scenario={scenario}
+                guildId={guildId}
+                onDuplicate={() => duplicateScenario(scenario.id)}
+                onDelete={() => deleteScenario(scenario.id)}
+              />
+            </RevealFx>
           ))}
         </Grid>
       )}

@@ -12,7 +12,7 @@ import { fetchGuildTextChannels } from "@/lib/discord/channels-api";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
-import { Button, Feedback, Flex, Text } from "@once-ui-system/core";
+import { Button, Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import type { ComponentsLibrary } from "../scenariosTypes";
 import { ScenarioEditorPage } from "./ScenarioEditorPage";
@@ -61,7 +61,7 @@ export default async function ScenarioEditorRoute({
 
   return (
     <Flex direction="column" gap="24" fillWidth>
-      <Flex direction="row" gap="8" vertical="center" wrap>
+      <RevealFx direction="row" gap="8" translateY={-0.5} vertical="center" wrap>
         <Button
           variant="secondary"
           size="s"
@@ -70,7 +70,7 @@ export default async function ScenarioEditorRoute({
         >
           All scenarios
         </Button>
-      </Flex>
+      </RevealFx>
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

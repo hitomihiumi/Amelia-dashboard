@@ -12,7 +12,7 @@ import { fetchGuildTextChannels } from "@/lib/discord/channels-api";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
-import { Feedback, Flex, Text } from "@once-ui-system/core";
+import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import { ComponentsManager } from "./ComponentsManager";
 import type { ComponentsState } from "./componentsTypes";
@@ -59,13 +59,13 @@ export default async function ComponentsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
+      <RevealFx direction="column" gap="8" translateY={-0.5}>
         <Text variant="heading-strong-l">Custom components</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
           Build reusable Buttons, Modals, Embeds and Select Menus that power your bot's scenarios.
           Every item is reflected in the live Discord preview on the right.
         </Text>
-      </Flex>
+      </RevealFx>
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

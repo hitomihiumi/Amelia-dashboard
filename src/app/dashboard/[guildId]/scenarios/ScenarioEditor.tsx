@@ -23,6 +23,7 @@ import {
   IconButton,
   Input,
   NumberInput,
+  RevealFx,
   Row,
   SegmentedControl,
   Switch,
@@ -333,68 +334,72 @@ export function ScenarioEditor({
       style={{ alignItems: "flex-start" }}
     >
       {/* Canvas — scenario settings and add-step live inside it as collapsible overlays */}
-      <Column
-        gap="12"
-        fillWidth
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-        minHeight={55}
-        style={{ flex: "3 1 600px", minWidth: 360 }}
-      >
-        <Flex fill>
-          <ScenarioFlow
-            guildId={guildId}
-            nodes={nodes}
-            edges={edges}
-            selectedNodeId={selectedNodeId}
-            setNodes={setNodes}
-            setEdges={setEdges}
-            onCanvasChange={handleCanvasChange}
-            onSelectNode={setSelectedNodeId}
-            onRemoveStep={removeStep}
-            onAddStep={addStep}
-            settingsPanel={settingsPanel}
-            library={library}
-            roles={roles}
-            channels={channels}
-          />
-        </Flex>
-      </Column>
-
-      <Column
-        gap="12"
-        fillWidth
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-        style={{ minWidth: 320 }}
-      >
-        <Text variant="label-default-s">Preview</Text>
-        <Flex center>
-          <DiscordPreview message={previewMessage} />
-        </Flex>
-        {selectedStep ? (
-          <ActionNodeForm
-            guildId={guildId}
-            step={selectedStep}
-            library={library}
-            roles={roles}
-            channels={channels}
-            triggerModalFields={triggerModalFields}
-            onUpdate={(action) => updateStepAction(selectedStep.id, action)}
-            onUpdateMeta={(patch) => updateStepMeta(selectedStep.id, patch)}
-          />
-        ) : (
-          <Flex center>
-            <Text variant="body-default-s" onBackground="neutral-weak" align="center">
-              Select a step on the canvas to edit its action and conditions.
-            </Text>
+      <RevealFx delay={0.6} translateY={-0.5}>
+        <Column
+          gap="12"
+          fillWidth
+          padding="24"
+          border="neutral-weak"
+          radius="l"
+          background="surface"
+          minHeight={55}
+          style={{ flex: "3 1 600px", minWidth: 360 }}
+        >
+          <Flex fill>
+            <ScenarioFlow
+              guildId={guildId}
+              nodes={nodes}
+              edges={edges}
+              selectedNodeId={selectedNodeId}
+              setNodes={setNodes}
+              setEdges={setEdges}
+              onCanvasChange={handleCanvasChange}
+              onSelectNode={setSelectedNodeId}
+              onRemoveStep={removeStep}
+              onAddStep={addStep}
+              settingsPanel={settingsPanel}
+              library={library}
+              roles={roles}
+              channels={channels}
+            />
           </Flex>
-        )}
-      </Column>
+        </Column>
+      </RevealFx>
+
+      <RevealFx delay={0.9} translateY={-0.5}>
+        <Column
+          gap="12"
+          fillWidth
+          padding="24"
+          border="neutral-weak"
+          radius="l"
+          background="surface"
+          style={{ minWidth: 320 }}
+        >
+          <Text variant="label-default-s">Preview</Text>
+          <Flex center>
+            <DiscordPreview message={previewMessage} />
+          </Flex>
+          {selectedStep ? (
+            <ActionNodeForm
+              guildId={guildId}
+              step={selectedStep}
+              library={library}
+              roles={roles}
+              channels={channels}
+              triggerModalFields={triggerModalFields}
+              onUpdate={(action) => updateStepAction(selectedStep.id, action)}
+              onUpdateMeta={(patch) => updateStepMeta(selectedStep.id, patch)}
+            />
+          ) : (
+            <Flex center>
+              <Text variant="body-default-s" onBackground="neutral-weak" align="center">
+                Select a step on the canvas to edit its action and conditions.
+              </Text>
+            </Flex>
+          )}
+        </Column>
+      </RevealFx>
     </Flex>
   );
 }
