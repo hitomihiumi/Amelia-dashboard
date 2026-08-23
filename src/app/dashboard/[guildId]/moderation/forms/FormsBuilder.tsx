@@ -26,6 +26,8 @@ import type { ChannelPickOption } from "@/lib/discord/channel-type";
 import type { ModerationForm, ModerationFormField, ModerationFormFieldType } from "@/lib/db/types";
 import type { GuildActionState } from "@/types/dashboard";
 import { updateModerationForms } from "../actions";
+import { Section } from "@/components/dashboard/Section";
+import { IconName } from "@/resources/icons";
 
 const FIELD_TYPES: { value: ModerationFormFieldType; label: string }[] = [
   { value: "short", label: "Short text" },
@@ -121,6 +123,8 @@ export function FormsBuilder({
         onChange={setReport}
         channelOptions={channelOptions}
         kind="report"
+        num={1}
+        icon="warning"
       />
 
       <FormEditor
@@ -132,6 +136,8 @@ export function FormsBuilder({
         onChange={setAppeal}
         channelOptions={channelOptions}
         kind="appeal"
+        num={2}
+        icon="refresh"
       />
     </Column>
   );
@@ -146,6 +152,8 @@ function FormEditor({
   onChange,
   channelOptions,
   kind,
+  num,
+  icon,
 }: {
   title: string;
   description: string;
@@ -155,6 +163,8 @@ function FormEditor({
   onChange: (next: ModerationForm) => void;
   channelOptions: { label: React.ReactNode; value: string }[];
   kind: "report" | "appeal";
+  num: number;
+  icon: IconName;
 }) {
   const update = (patch: Partial<ModerationForm>) => onChange({ ...form, ...patch });
 
@@ -190,29 +200,15 @@ function FormEditor({
   };
 
   return (
-    <Flex
-      direction="column"
-      fillWidth
-      gap="16"
-      padding="24"
-      radius="l"
-      border="neutral-medium"
-      background="surface"
-    >
-      <Column gap="4">
-        <Text variant="heading-strong-s">{title}</Text>
-        <Text variant="body-default-s" onBackground="neutral-weak">
-          {description}
-        </Text>
-      </Column>
-
-      <Line />
-
-      <Row fillWidth gap="12" vertical="center">
+    <Section
+      title={title}
+      description={description}
+      num={num}
+      icon={icon}
+      switcher={
         <Switch isChecked={form.enabled} onToggle={() => update({ enabled: !form.enabled })} />
-        <Text variant="label-default-s">Form is open</Text>
-      </Row>
-
+      }
+    >
       <Text variant="body-default-s" onBackground="neutral-weak">
         Public link: {publicUrl}
       </Text>
@@ -329,7 +325,7 @@ function FormEditor({
         value={form.reject_message ?? ""}
         onChange={(e) => update({ reject_message: e.target.value || null })}
       />
-    </Flex>
+    </Section>
   );
 }
 

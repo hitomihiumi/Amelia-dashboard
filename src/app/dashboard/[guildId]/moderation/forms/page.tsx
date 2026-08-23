@@ -1,6 +1,6 @@
 import React from "react";
 import { getServerSession } from "next-auth";
-import { Feedback, Flex, Text } from "@once-ui-system/core";
+import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
 import { authOptions } from "@/lib/auth";
 import { Guild } from "@/lib/db/Guild";
 import { fetchGuildTextChannels } from "@/lib/discord/channels-api";
@@ -36,13 +36,13 @@ export default async function ModerationFormsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
+      <RevealFx direction="column" gap="8" translateY={-0.5}>
         <Text variant="heading-strong-l">Report & appeal forms</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
           Build the forms your members fill in. Submissions land in the channel you pick, with
           buttons for your moderators, and in the dashboard queue.
         </Text>
-      </Flex>
+      </RevealFx>
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

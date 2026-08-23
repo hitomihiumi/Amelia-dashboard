@@ -6,7 +6,6 @@ import {
   Button,
   Column,
   Feedback,
-  Flex,
   IconButton,
   InlineCode,
   Input,
@@ -31,6 +30,8 @@ import type { GuildSchema, WarnThreshold } from "@/lib/db/types";
 import { PunishmentType } from "@/lib/db/types";
 import { isLinkIgnored, validateLinkPattern } from "@/lib/moderation/linkPatterns";
 import { updateModerationSettings } from "./actions";
+import { Section } from "@/components/dashboard/Section";
+import { IconName } from "@/resources/icons";
 
 type AutoModeration = GuildSchema["moderation"]["auto_moderation"];
 
@@ -162,7 +163,12 @@ export function ModerationForm({
 
   return (
     <Column fillWidth gap="24">
-      <Section title="General" description="Who may moderate and where actions are recorded.">
+      <Section
+        title="General"
+        description="Who may moderate and where actions are recorded."
+        icon="shield"
+        num={1}
+      >
         <RoleSelect
           fillWidth
           multiple
@@ -204,6 +210,8 @@ export function ModerationForm({
       <Section
         title="Warn escalation"
         description="Punish members automatically once they collect a given number of active warns."
+        icon="warning"
+        num={2}
       >
         <NumberInput
           id="warn-expiry"
@@ -299,6 +307,8 @@ export function ModerationForm({
         onChange={(next) => setAutoMod((prev) => ({ ...prev, invite: next }))}
         roleOptions={roleOptions}
         channelOptions={channelOptions}
+        num={4}
+        icon="invite"
       />
 
       <AutoModerationSection
@@ -308,40 +318,11 @@ export function ModerationForm({
         onChange={(next) => setAutoMod((prev) => ({ ...prev, links: next }))}
         roleOptions={roleOptions}
         channelOptions={channelOptions}
+        num={5}
         whitelist
+        icon="link"
       />
     </Column>
-  );
-}
-
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Flex
-      direction="column"
-      fillWidth
-      gap="16"
-      padding="24"
-      radius="l"
-      border="neutral-medium"
-      background="surface"
-    >
-      <Column gap="4">
-        <Text variant="heading-strong-s">{title}</Text>
-        <Text variant="body-default-s" onBackground="neutral-weak">
-          {description}
-        </Text>
-      </Column>
-      <Line />
-      {children}
-    </Flex>
   );
 }
 
@@ -354,6 +335,8 @@ function AutoModerationSection({
   onChange,
   roleOptions,
   channelOptions,
+  num,
+  icon,
   whitelist = false,
 }: {
   title: string;
@@ -362,6 +345,8 @@ function AutoModerationSection({
   onChange: (next: any) => void;
   roleOptions: { label: React.ReactNode; value: string }[];
   channelOptions: { label: React.ReactNode; value: string }[];
+  num: number;
+  icon: IconName;
   whitelist?: boolean;
 }) {
   const linkRule = rule as AutoModRule;
@@ -369,12 +354,15 @@ function AutoModerationSection({
   const update = (patch: Record<string, unknown>) => onChange({ ...rule, ...patch });
 
   return (
-    <Section title={title} description={description}>
-      <Row fillWidth gap="12" vertical="center">
+    <Section
+      title={title}
+      description={description}
+      num={num}
+      icon={icon}
+      switcher={
         <Switch isChecked={rule.enabled} onToggle={() => update({ enabled: !rule.enabled })} />
-        <Text variant="label-default-s">Enabled</Text>
-      </Row>
-
+      }
+    >
       <Row fillWidth gap="12" vertical="center">
         <Switch
           isChecked={rule.delete_message}

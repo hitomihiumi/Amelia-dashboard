@@ -6,6 +6,7 @@ import {
   Column,
   Feedback,
   Flex,
+  RevealFx,
   Row,
   SegmentedControl,
   Tag,
@@ -68,39 +69,45 @@ export function QueueClient({
 
   return (
     <Column fillWidth gap="16">
-      <Row fillWidth gap="12" wrap>
-        <SegmentedControl
-          buttons={[
-            { value: "open", label: "Open" },
-            { value: "pending", label: "Pending" },
-            { value: "in_review", label: "In review" },
-            { value: "approved", label: "Approved" },
-            { value: "rejected", label: "Rejected" },
-          ]}
-          selected={status}
-          onToggle={(value) => setFilter({ status: value })}
-        />
-        <SegmentedControl
-          buttons={[
-            { value: "all", label: "All" },
-            { value: "report", label: "Reports" },
-            { value: "appeal", label: "Appeals" },
-          ]}
-          selected={kind}
-          onToggle={(value) => setFilter({ kind: value })}
-        />
-      </Row>
+      <RevealFx delay={0.3} translateY={-0.5}>
+        <Row fillWidth gap="12" wrap>
+          <SegmentedControl
+            buttons={[
+              { value: "open", label: "Open" },
+              { value: "pending", label: "Pending" },
+              { value: "in_review", label: "In review" },
+              { value: "approved", label: "Approved" },
+              { value: "rejected", label: "Rejected" },
+            ]}
+            selected={status}
+            onToggle={(value) => setFilter({ status: value })}
+          />
+          <SegmentedControl
+            buttons={[
+              { value: "all", label: "All" },
+              { value: "report", label: "Reports" },
+              { value: "appeal", label: "Appeals" },
+            ]}
+            selected={kind}
+            onToggle={(value) => setFilter({ kind: value })}
+          />
+        </Row>
+      </RevealFx>
 
       {items.length === 0 && (
-        <Feedback
-          variant="info"
-          title="Nothing here"
-          description="No submissions match the current filters."
-        />
+        <RevealFx delay={0.4} translateY={-0.5}>
+          <Feedback
+            variant="info"
+            title="Nothing here"
+            description="No submissions match the current filters."
+          />
+        </RevealFx>
       )}
 
-      {items.map((item) => (
-        <SubmissionCard key={item.id} guildId={guildId} item={item} />
+      {items.map((item, idx) => (
+        <RevealFx delay={0.4 + idx * 0.1} translateY={-0.5}>
+          <SubmissionCard key={item.id} guildId={guildId} item={item} />
+        </RevealFx>
       ))}
     </Column>
   );

@@ -1,6 +1,6 @@
 import React from "react";
 import { getServerSession } from "next-auth";
-import { Feedback, Flex, Text } from "@once-ui-system/core";
+import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
 import { authOptions } from "@/lib/auth";
 import { Guild } from "@/lib/db/Guild";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
@@ -49,13 +49,13 @@ export default async function AuditPage({ params }: { params: Promise<{ guildId:
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
+      <RevealFx direction="column" gap="8" translateY={-0.5}>
         <Text variant="heading-strong-l">Audit log</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
           Record what happens on the server — joins, punishments, message edits, voice activity and
           server changes — in a channel of your choice.
         </Text>
-      </Flex>
+      </RevealFx>
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

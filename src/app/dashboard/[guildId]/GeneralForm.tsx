@@ -9,6 +9,7 @@ import type { GuildSchema } from "@/lib/db/types";
 import { useRouter } from "next/navigation";
 import { GuildActionState } from "@/types/dashboard";
 import { DashIcon } from "@/components/dashboard/DashIcon";
+import { Section } from "@/components/dashboard/Section";
 
 type Form = Pick<GuildSchema["settings"], "prefix" | "language">;
 
@@ -87,71 +88,40 @@ export function GeneralForm({
 
   return (
     <>
-      <RevealFx delay={0.3} translateY={-0.5}>
-        <Flex
-          direction="column"
-          gap="16"
-          padding="24"
-          border="neutral-weak"
-          radius="l"
-          background="surface"
-          fillWidth
-        >
-          <Flex gap="16">
-            <DashIcon name={"ticket"} />
-            <Flex direction="column" gap="8">
-              <Text variant="body-strong-l">Command prefix</Text>
-              <Text variant="body-default-s" onBackground="neutral-medium">
-                Set the prefix that users will use to invoke bot commands. This will not affect to
-                slash commands.
-              </Text>
-            </Flex>
-          </Flex>
+      <Section
+        title="Command Prefix"
+        description="Set the prefix that users will use to invoke bot commands. This will not affect to slash commands."
+        icon="ticket"
+        num={1}
+      >
+        <Input
+          id="prefix"
+          value={prefix}
+          onChange={(e) => setPrefix(e.target.value)}
+          placeholder="a., !, etc."
+          maxLength={5}
+        />
+      </Section>
 
-          <Input
-            id="prefix"
-            value={prefix}
-            onChange={(e) => setPrefix(e.target.value)}
-            placeholder="a., !, etc."
-            maxLength={5}
-          />
-        </Flex>
-      </RevealFx>
-
-      <RevealFx delay={0.6} translateY={-0.5}>
-        <Flex
-          direction="column"
-          gap="24"
-          padding="24"
-          border="neutral-weak"
-          radius="l"
-          background="surface"
-          fillWidth
-        >
-          <Flex gap="16">
-            <DashIcon name={"sign"} />
-            <Flex direction="column" gap="8">
-              <Text variant="body-strong-l">Interface language</Text>
-              <Text variant="body-default-s" onBackground="neutral-medium">
-                Choose the language for bot responses and interface.
-              </Text>
-            </Flex>
-          </Flex>
-
-          <Select
-            id="language"
-            value={language}
-            options={[
-              { label: "🇬🇧 English", value: "en" },
-              { label: "🇺🇦 Ukrainian", value: "uk" },
-              { label: "🇷🇺 Russian", value: "ru" },
-            ]}
-            label="Choose a language"
-            onSelect={(value) => setLanguage(value)}
-            maxLength={5}
-          />
-        </Flex>
-      </RevealFx>
+      <Section
+        title="Interface Language"
+        description="Choose the language for bot responses and interface."
+        icon="sign"
+        num={2}
+      >
+        <Select
+          id="language"
+          value={language}
+          options={[
+            { label: "🇬🇧 English", value: "en" },
+            { label: "🇺🇦 Ukrainian", value: "uk" },
+            { label: "🇷🇺 Russian", value: "ru" },
+          ]}
+          label="Choose a language"
+          onSelect={(value) => setLanguage(value)}
+          maxLength={5}
+        />
+      </Section>
     </>
   );
 }

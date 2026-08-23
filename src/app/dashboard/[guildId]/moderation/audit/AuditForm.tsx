@@ -25,6 +25,7 @@ import type { GuildActionState } from "@/types/dashboard";
 import type { AuditCategory, AuditEventKey, AuditSettings } from "@/lib/db/types";
 import { AUDIT_CATEGORIES, AUDIT_EVENT_CATEGORY, AUDIT_EVENT_KEYS } from "@/lib/db/types";
 import { updateAuditSettings } from "../actions";
+import { Section } from "@/components/dashboard/Section";
 
 const CATEGORY_LABELS: Record<AuditCategory, string> = {
   members: "Members",
@@ -147,12 +148,12 @@ export function AuditForm({
       <Section
         title="General"
         description="The bot posts through a webhook it creates in the channel you pick."
-      >
-        <Row fillWidth gap="12" vertical="center">
+        num={1}
+        icon="clipboard"
+        switcher={
           <Switch isChecked={audit.enabled} onToggle={() => update({ enabled: !audit.enabled })} />
-          <Text variant="label-default-s">Audit log is on</Text>
-        </Row>
-
+        }
+      >
         <ChannelSelect
           fillWidth
           id="audit-channel"
@@ -216,11 +217,12 @@ export function AuditForm({
         />
       </Section>
 
-      {AUDIT_CATEGORIES.map((category) => (
+      {AUDIT_CATEGORIES.map((category, idx) => (
         <Section
           key={category}
           title={CATEGORY_LABELS[category]}
           description="Turn single events off, or send them to their own channel."
+          num={idx + 2}
         >
           {AUDIT_EVENT_KEYS.filter((event) => AUDIT_EVENT_CATEGORY[event] === category).map(
             (event) => (
@@ -251,36 +253,5 @@ export function AuditForm({
         </Section>
       ))}
     </Column>
-  );
-}
-
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Flex
-      direction="column"
-      fillWidth
-      gap="16"
-      padding="24"
-      radius="l"
-      border="neutral-medium"
-      background="surface"
-    >
-      <Column gap="4">
-        <Text variant="heading-strong-s">{title}</Text>
-        <Text variant="body-default-s" onBackground="neutral-weak">
-          {description}
-        </Text>
-      </Column>
-      <Line />
-      {children}
-    </Flex>
   );
 }

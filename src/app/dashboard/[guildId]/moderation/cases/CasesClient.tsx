@@ -6,7 +6,9 @@ import {
   Column,
   Feedback,
   Flex,
+  IconButton,
   Input,
+  RevealFx,
   Row,
   SegmentedControl,
   Tag,
@@ -71,55 +73,67 @@ export function CasesClient({
 
   return (
     <Column fillWidth gap="16">
-      <Row fillWidth gap="12" vertical="center" wrap>
-        <SegmentedControl
-          buttons={TYPE_FILTERS}
-          selected={type}
-          onToggle={(value) => navigate({ type: value, page: 1 })}
-        />
-        <Input
-          id="case-user"
-          label="Filter by user ID"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Button variant="secondary" onClick={() => navigate({ user: search, page: 1 })}>
-          Search
-        </Button>
-      </Row>
+      <RevealFx delay={0.3} translateY={-0.5}>
+        <Row fillWidth gap="12" vertical="center" wrap>
+          <SegmentedControl
+            buttons={TYPE_FILTERS}
+            selected={type}
+            onToggle={(value) => navigate({ type: value, page: 1 })}
+          />
+          <Input
+            id="case-user"
+            label="Filter by user ID"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            hasPrefix={
+              <IconButton
+                icon="search"
+                variant="ghost"
+                onClick={() => navigate({ user: search, page: 1 })}
+              />
+            }
+          />
+        </Row>
+      </RevealFx>
 
       {items.length === 0 && (
-        <Feedback
-          variant="info"
-          title="No cases"
-          description="Nothing matches the current filters."
-        />
+        <RevealFx delay={0.6} translateY={-0.5}>
+          <Feedback
+            variant="info"
+            title="No cases"
+            description="Nothing matches the current filters."
+          />
+        </RevealFx>
       )}
 
-      {items.map((item) => (
-        <CaseCard key={item.id} guildId={guildId} item={item} />
+      {items.map((item, idx) => (
+        <RevealFx delay={0.4 + idx * 0.1} translateY={-0.5}>
+          <CaseCard key={item.id} guildId={guildId} item={item} />
+        </RevealFx>
       ))}
 
       {pages > 1 && (
-        <Row fillWidth gap="8" horizontal="center" vertical="center">
-          <Button
-            variant="secondary"
-            disabled={page <= 1}
-            onClick={() => navigate({ page: page - 1 })}
-          >
-            Previous
-          </Button>
-          <Text variant="body-default-s" onBackground="neutral-weak">
-            Page {page} / {pages}
-          </Text>
-          <Button
-            variant="secondary"
-            disabled={page >= pages}
-            onClick={() => navigate({ page: page + 1 })}
-          >
-            Next
-          </Button>
-        </Row>
+        <RevealFx delay={0.6} translateY={-0.5}>
+          <Row fillWidth gap="8" horizontal="center" vertical="center">
+            <Button
+              variant="secondary"
+              disabled={page <= 1}
+              onClick={() => navigate({ page: page - 1 })}
+            >
+              Previous
+            </Button>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              Page {page} / {pages}
+            </Text>
+            <Button
+              variant="secondary"
+              disabled={page >= pages}
+              onClick={() => navigate({ page: page + 1 })}
+            >
+              Next
+            </Button>
+          </Row>
+        </RevealFx>
       )}
     </Column>
   );

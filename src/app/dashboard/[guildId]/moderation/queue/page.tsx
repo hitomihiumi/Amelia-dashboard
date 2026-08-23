@@ -1,5 +1,5 @@
 import React from "react";
-import { Flex, Text } from "@once-ui-system/core";
+import { Flex, RevealFx, Text } from "@once-ui-system/core";
 import { prisma } from "@/lib/db/db";
 import type { ModerationSubmissionAnswer } from "@/lib/db/types";
 import { QueueClient, type QueueItem } from "./QueueClient";
@@ -49,13 +49,13 @@ export default async function ModerationQueuePage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
+      <RevealFx direction="column" gap="8" translateY={-0.5}>
         <Text variant="heading-strong-l">Submission queue</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
           Reports and appeals sent through the dashboard forms. Approving an appeal automatically
           lifts the punishment it was filed against.
         </Text>
-      </Flex>
+      </RevealFx>
 
       <QueueClient guildId={guildId} items={items} status={status} kind={kind} />
     </Flex>

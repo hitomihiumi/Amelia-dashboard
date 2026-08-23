@@ -1,5 +1,5 @@
 import React from "react";
-import { Flex, Text } from "@once-ui-system/core";
+import { Flex, RevealFx, Text } from "@once-ui-system/core";
 import { prisma } from "@/lib/db/db";
 import { CASE_TYPE_LABELS } from "@/lib/moderation/embeds";
 import { CasesClient, type CaseItem } from "./CasesClient";
@@ -55,13 +55,13 @@ export default async function ModerationCasesPage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
+      <RevealFx direction="column" gap="8" translateY={-0.5}>
         <Text variant="heading-strong-l">Case log</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
           Every moderation action taken by commands, auto moderation or the dashboard. Revoking a
           case lifts the punishment in Discord as well.
         </Text>
-      </Flex>
+      </RevealFx>
 
       <CasesClient
         guildId={guildId}
