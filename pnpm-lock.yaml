@@ -18,8 +18,8 @@ importers:
         specifier: ^15.5.9
         version: 15.5.23(@mdx-js/loader@3.1.1)(@mdx-js/react@3.1.1(@types/react@19.0.1)(react@19.2.8))
       '@once-ui-system/core':
-        specifier: ^1.8.2
-        version: 1.8.2(@types/react@19.0.1)(next@16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1)(sass@1.102.0)(sharp@0.33.5)
+        specifier: ^1.8.5
+        version: 1.8.5(@types/react@19.0.1)(next@16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1)(sass@1.102.0)(sharp@0.33.5)
       '@prisma/adapter-pg':
         specifier: ^7.7.0
         version: 7.9.1
@@ -595,8 +595,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@once-ui-system/core@1.8.2':
-    resolution: {integrity: sha512-Cx8N+EKEWE3ZJk9PIssWSGQWnyea7QSpmQLzV4tgMTXLastMhOV2bocZnksU/urc91zMmeUny1bgaWbKST8g9A==}
+  '@once-ui-system/core@1.8.5':
+    resolution: {integrity: sha512-JvG7mIDVTVoYbnX43jpZle9nJ6JV0mhU5BJComVsrPJvJx37YR6C8aoB6kCsfjcvfeeJNTo/PbMI2AjT798NHA==}
     hasBin: true
     peerDependencies:
       next: '>=15.5'
@@ -2852,7 +2852,7 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.3.1':
     optional: true
 
-  '@once-ui-system/core@1.8.2(@types/react@19.0.1)(next@16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1)(sass@1.102.0)(sharp@0.33.5)':
+  '@once-ui-system/core@1.8.5(@types/react@19.0.1)(next@16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1)(sass@1.102.0)(sharp@0.33.5)':
     dependencies:
       '@floating-ui/react-dom': 2.1.9(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       clsx: 2.1.1
