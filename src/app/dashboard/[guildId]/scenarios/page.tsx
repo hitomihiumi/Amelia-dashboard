@@ -12,7 +12,7 @@ import { fetchGuildTextChannels } from "@/lib/discord/channels-api";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
-import { Feedback, Flex, Text } from "@once-ui-system/core";
+import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import { ScenariosManager } from "./ScenariosManager";
 import type { ComponentsLibrary } from "./scenariosTypes";
@@ -59,13 +59,13 @@ export default async function ScenariosPage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
+      <RevealFx direction="column" gap="8" translateY={-0.5}>
         <Text variant="heading-strong-l">Scenarios</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
           Compose multi-step reactions to button, select-menu and modal-submit interactions using a
           node canvas. Each scenario binds to one of your custom components as its trigger.
         </Text>
-      </Flex>
+      </RevealFx>
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

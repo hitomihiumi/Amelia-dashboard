@@ -1,6 +1,6 @@
 import { Guild } from "@/lib/db/Guild";
 import { ShopFrom } from "@/app/dashboard/[guildId]/shop/ShopForm";
-import { Feedback, Flex, Text } from "@once-ui-system/core";
+import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
@@ -59,13 +59,13 @@ export default async function GeneralSettingsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
+      <RevealFx direction="column" gap="8" translateY={-0.5}>
         <Text variant="heading-strong-l">Roles shop</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
           Configure the roles that users can buy in the shop. You can set the price and the role for
           each item.
         </Text>
-      </Flex>
+      </RevealFx>
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

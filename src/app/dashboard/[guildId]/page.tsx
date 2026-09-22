@@ -1,6 +1,6 @@
 import { Guild } from "@/lib/db/Guild";
 import { GeneralForm } from "./GeneralForm";
-import { Flex, Text } from "@once-ui-system/core";
+import { Flex, RevealFx, Text } from "@once-ui-system/core";
 
 export default async function GeneralSettingsPage({
   params,
@@ -14,12 +14,12 @@ export default async function GeneralSettingsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
+      <RevealFx direction="column" gap="8" translateY={-0.5}>
         <Text variant="heading-strong-l">General settings</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
           Configure the basic settings of your bot, such as command prefix and interface language.
         </Text>
-      </Flex>
+      </RevealFx>
 
       <GeneralForm
         guildId={resolvedParams.guildId}

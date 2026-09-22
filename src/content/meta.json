@@ -1,5 +1,7 @@
 {
   "pages": {
-    "get-started": 1
+    "get-started": 1,
+    "moderation": 2,
+    "site": 3
   }
 }

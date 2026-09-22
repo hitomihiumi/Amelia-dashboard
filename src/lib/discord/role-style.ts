@@ -38,6 +38,7 @@ export const permissionType = {
   KickMembers: BigInt(2),
   BanMembers: BigInt(4),
   ManageMessages: BigInt(8192),
+  ModerateMembers: BigInt(40),
 };
 
 export const defaultPermissions = [
@@ -48,4 +49,5 @@ export const defaultPermissions = [
   { name: "Kick Members", bigint: permissionType.KickMembers },
   { name: "Ban Members", bigint: permissionType.BanMembers },
   { name: "Manage Messages", bigint: permissionType.ManageMessages },
+  { name: "Moderate Members", bigint: permissionType.ModerateMembers },
 ];

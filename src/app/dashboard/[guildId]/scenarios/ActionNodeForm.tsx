@@ -95,7 +95,11 @@ export function ActionNodeForm({
         update={update}
       />
 
-      <ConditionsEditor step={step} onUpdate={onUpdateMeta} triggerModalFields={triggerModalFields} />
+      <ConditionsEditor
+        step={step}
+        onUpdate={onUpdateMeta}
+        triggerModalFields={triggerModalFields}
+      />
       <Switch
         label="Stop if this step fails"
         description="Prevent the scenario from continuing"

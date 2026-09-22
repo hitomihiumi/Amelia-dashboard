@@ -21,6 +21,7 @@ import {
   Feedback,
   Flex,
   IconButton,
+  RevealFx,
   Row,
   SegmentedControl,
   Text,
@@ -244,77 +245,89 @@ export function ComponentsManager({
       style={{ alignItems: "flex-start" }}
     >
       {/* Workspace */}
-      <Flex
-        direction="column"
-        fillWidth
-        gap="16"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-        style={{ minWidth: 0 }}
-      >
-        <SegmentedControl
+      <RevealFx delay={0.3} translateY={-0.5}>
+        <Flex
+          direction="column"
           fillWidth
-          selected={tab}
-          onToggle={(val) => setTab(val as TabValue)}
-          buttons={[
-            { label: TAB_LABELS.buttons, value: "buttons" },
-            { label: TAB_LABELS.modals, value: "modals" },
-            { label: TAB_LABELS.embed, value: "embed" },
-            { label: TAB_LABELS.selectMenus, value: "selectMenus" },
-          ]}
-        />
-
-        <Row fillWidth horizontal="between" vertical="center" gap="16">
-          <Row gap="12" center>
-            <Text variant="heading-strong-s">{TAB_LABELS[tab]}</Text>
-            <Text variant="body-default-s" onBackground="neutral-weak">
-              {itemsByTab[tab].length}
-            </Text>
-          </Row>
-          <Button prefixIcon="plus" onClick={() => startCreate(tab)}>
-            New {SINGULAR[tab]}
-          </Button>
-        </Row>
-
-        {itemsByTab[tab].length === 0 ? (
-          <Feedback
-            variant="info"
-            title="No items yet"
-            description={`Create your first ${SINGULAR[tab]} to see it in the Discord preview.`}
+          gap="16"
+          padding="24"
+          border="neutral-weak"
+          radius="l"
+          background="surface"
+          style={{ minWidth: 0 }}
+        >
+          <SegmentedControl
+            fillWidth
+            selected={tab}
+            onToggle={(val) => setTab(val as TabValue)}
+            buttons={[
+              { label: TAB_LABELS.buttons, value: "buttons" },
+              { label: TAB_LABELS.modals, value: "modals" },
+              { label: TAB_LABELS.embed, value: "embed" },
+              { label: TAB_LABELS.selectMenus, value: "selectMenus" },
+            ]}
           />
-        ) : (
-          <Column gap="8" fillWidth>
-            {itemsByTab[tab].map((item) => (
-              <ComponentItem
-                key={item.id}
-                tab={tab}
-                item={item}
-                name={componentName(tab, item)}
-                subtitle={componentSubtitle(tab, item)}
-                usageNames={usageByComponentId.get(item.id)}
-                guildId={guildId}
-                open={editing?.kind === tab && editing.id === item.id}
-                onToggle={() => toggleEdit(tab, item.id)}
-                onChange={(next) => updateItemById(tab, item.id, next)}
-                onDelete={() => deleteItemById(tab, item.id)}
-                onDuplicate={() => duplicateItemById(tab, item.id)}
-              />
-            ))}
-          </Column>
-        )}
-      </Flex>
+
+          <Row fillWidth horizontal="between" vertical="center" gap="16">
+            <Row gap="12" center>
+              <Text variant="heading-strong-s">{TAB_LABELS[tab]}</Text>
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                {itemsByTab[tab].length}
+              </Text>
+            </Row>
+            <Button prefixIcon="plus" onClick={() => startCreate(tab)}>
+              New {SINGULAR[tab]}
+            </Button>
+          </Row>
+
+          {itemsByTab[tab].length === 0 ? (
+            <Feedback
+              variant="info"
+              title="No items yet"
+              description={`Create your first ${SINGULAR[tab]} to see it in the Discord preview.`}
+            />
+          ) : (
+            <Column gap="8" fillWidth>
+              {itemsByTab[tab].map((item) => (
+                <ComponentItem
+                  key={item.id}
+                  tab={tab}
+                  item={item}
+                  name={componentName(tab, item)}
+                  subtitle={componentSubtitle(tab, item)}
+                  usageNames={usageByComponentId.get(item.id)}
+                  guildId={guildId}
+                  open={editing?.kind === tab && editing.id === item.id}
+                  onToggle={() => toggleEdit(tab, item.id)}
+                  onChange={(next) => updateItemById(tab, item.id, next)}
+                  onDelete={() => deleteItemById(tab, item.id)}
+                  onDuplicate={() => duplicateItemById(tab, item.id)}
+                  onMove={(direction) => {
+                    const list = listOf(state, tab);
+                    const index = list.findIndex((it) => it.id === item.id);
+                    if (index < 0) return;
+                    const newIndex = index + direction;
+                    if (newIndex < 0 || newIndex >= list.length) return;
+                    const reordered = [...list];
+                    const [moved] = reordered.splice(index, 1);
+                    reordered.splice(newIndex, 0, moved);
+                    setState((prev) => ({ ...prev, [tab]: reordered }) as ComponentsState);
+                  }}
+                />
+              ))}
+            </Column>
+          )}
+        </Flex>
+      </RevealFx>
 
       {/* Preview */}
-      <Flex
-        direction="column"
-        fill
-      >
-        <Flex fillHeight fillWidth>
-          <DiscordPreview message={previewMsg} />
+      <RevealFx delay={0.6} translateY={-0.5}>
+        <Flex direction="column" fill>
+          <Flex fillHeight fillWidth>
+            <DiscordPreview message={previewMsg} />
+          </Flex>
         </Flex>
-      </Flex>
+      </RevealFx>
     </Flex>
   );
 }
@@ -381,6 +394,7 @@ function ComponentItem({
   onChange,
   onDelete,
   onDuplicate,
+  onMove,
 }: {
   tab: TabValue;
   item: AnyComponent;
@@ -393,6 +407,7 @@ function ComponentItem({
   onChange: (next: AnyComponent) => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onMove: (direction: number) => void;
 }) {
   const usage = usageNames && usageNames.length > 0 ? usageNames : undefined;
 
@@ -403,27 +418,6 @@ function ComponentItem({
           <Text variant="body-strong-s" style={{ wordBreak: "break-word" }}>
             {name}
           </Text>
-          <Row gap="4" vertical="center" onClick={(e) => e.stopPropagation()}>
-            <IconButton
-              icon="copy"
-              variant="ghost"
-              size="s"
-              tooltip="Duplicate"
-              onClick={(e: React.SyntheticEvent) => {
-                e.stopPropagation();
-                onDuplicate();
-              }}
-            />
-            <ConfirmIconButton
-              variant={usage ? "confirm" : "immediate"}
-              onConfirm={onDelete}
-              confirmMessage={
-                usage
-                  ? `Used in ${usage.length} scenario${usage.length === 1 ? "" : "s"}: ${usage.join(", ")}`
-                  : undefined
-              }
-            />
-          </Row>
         </Row>
       }
       subline={
@@ -439,7 +433,29 @@ function ComponentItem({
       iconName={tabIcon(tab)}
       open={open}
       onToggle={onToggle}
+      gap="8"
     >
+      <Row gap="4" horizontal="end" vertical="center" onClick={(e) => e.stopPropagation()}>
+        <IconButton
+          icon="copy"
+          variant="secondary"
+          tooltip="Duplicate"
+          onClick={() => onDuplicate()}
+        />
+        <IconButton
+          icon="chevronUp"
+          variant="secondary"
+          onClick={() => onMove(-1)}
+          tooltip="Move up"
+        />
+        <IconButton
+          icon="chevronDown"
+          variant="secondary"
+          onClick={() => onMove(1)}
+          tooltip="Move down"
+        />
+        <IconButton icon="trash" variant="danger" tooltip="Delete component" onClick={onDelete} />
+      </Row>
       {tab === "buttons" && (
         <ButtonEditor guildId={guildId} value={item as ButtonCustom} onChange={onChange} />
       )}

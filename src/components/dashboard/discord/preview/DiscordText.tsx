@@ -146,7 +146,12 @@ function consumeUrl(rest: string): { node: ReactNode; consumed: number } | null 
   const href = m[1];
   return {
     node: (
-      <a href={href} target="_blank" rel="noopener noreferrer" className="text-discord-link hover:underline">
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-discord-link hover:underline"
+      >
         {href}
       </a>
     ),
@@ -417,7 +422,12 @@ export interface DiscordTextProps {
   replaceTags?: boolean;
 }
 
-export function DiscordText({ text, className, inline = false, replaceTags = true }: DiscordTextProps) {
+export function DiscordText({
+  text,
+  className,
+  inline = false,
+  replaceTags = true,
+}: DiscordTextProps) {
   const ctx = useDiscordPreviewOptional();
   const normalized = useMemo(() => {
     const raw = (text ?? "").replace(/\r\n/g, "\n");

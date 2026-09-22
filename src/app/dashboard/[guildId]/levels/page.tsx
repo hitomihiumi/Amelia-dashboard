@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { fetchGuildTextVoiceAndCategories } from "@/lib/discord/channels-api";
 import { ChannelPickOption } from "@/lib/discord/channel-type";
-import { Feedback, Flex, Text } from "@once-ui-system/core";
+import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import React from "react";
 
@@ -46,12 +46,12 @@ export default async function LevelsSettingsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
+      <RevealFx direction="column" gap="8" translateY={-0.5}>
         <Text variant="heading-strong-l">Leveling System</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
           Manage experience gain, automated role rewards, and level-up announcements.
         </Text>
-      </Flex>
+      </RevealFx>
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

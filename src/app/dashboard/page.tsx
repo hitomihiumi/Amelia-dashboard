@@ -10,6 +10,7 @@ import {
   Background,
   Feedback,
   useToast,
+  RevealFx,
 } from "@once-ui-system/core";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { UserGuildCard } from "@/types/discord";
@@ -46,7 +47,7 @@ export default function Page() {
         if (!res.ok || !data.ok) {
           addToast({
             variant: "danger",
-            message: "error" in data ? data.error : `Error ${res.status}`
+            message: "error" in data ? data.error : `Error ${res.status}`,
           });
           setGuilds([]);
           return;
@@ -56,7 +57,7 @@ export default function Page() {
         if (loadIdRef.current === id) {
           addToast({
             variant: "danger",
-            message: "Failed to fetch guilds. Please try again."
+            message: "Failed to fetch guilds. Please try again.",
           });
           setGuilds([]);
         }
@@ -97,18 +98,22 @@ export default function Page() {
           }}
         />
         <Column fillWidth minHeight="100vh" maxWidth={"l"} padding="xl" gap={"xl"}>
-          <Button prefixIcon={"back"} variant={"tertiary"} href={"/"}>
-            Back to Home
-          </Button>
-          <Column center gap={"16"} fill>
-            <Heading variant={"display-strong-l"}>Login Required</Heading>
-            <Row maxWidth={"s"}>
-              <Text onBackground={"neutral-weak"} align={"center"}>
-                You need to be logged in to view your guilds. Please log in with your Discord
-                account to see the servers where you have permission to manage the bot.
-              </Text>
-            </Row>
-          </Column>
+          <RevealFx translateY={-0.5}>
+            <Button prefixIcon={"back"} variant={"tertiary"} href={"/"}>
+              Back to Home
+            </Button>
+          </RevealFx>
+          <RevealFx delay={0.3} translateY={-0.5} center>
+            <Column center gap={"16"} fill>
+              <Heading variant={"display-strong-l"}>Login Required</Heading>
+              <Row maxWidth={"s"}>
+                <Text onBackground={"neutral-weak"} align={"center"}>
+                  You need to be logged in to view your guilds. Please log in with your Discord
+                  account to see the servers where you have permission to manage the bot.
+                </Text>
+              </Row>
+            </Column>
+          </RevealFx>
         </Column>
       </Column>
     );
@@ -136,26 +141,29 @@ export default function Page() {
           }}
         />
         <Column fillWidth minHeight="100vh" maxWidth={"l"} padding="xl" gap={"xl"}>
-          <Button prefixIcon={"back"} variant={"tertiary"} href={"/"}>
-            Back to Home
-          </Button>
-          <Column center gap={"16"}>
-            <Heading variant={"display-strong-l"}>Your Guilds</Heading>
-            <Row maxWidth={"s"}>
-              <Text onBackground={"neutral-weak"} align={"center"}>
-                List of servers where you have permission to manage the bot. If you don't see a
-                server here, make sure you have the "Manage Server" permission on that server and
-                try refreshing.
-              </Text>
-            </Row>
-          </Column>
+          <RevealFx translateY={-0.5}>
+            <Button prefixIcon={"back"} variant={"tertiary"} href={"/"}>
+              Back to Home
+            </Button>
+          </RevealFx>
+          <RevealFx delay={0.3} translateY={-0.5} center>
+            <Column center gap={"16"}>
+              <Heading variant={"display-strong-l"}>Your Guilds</Heading>
+              <Row maxWidth={"s"}>
+                <Text onBackground={"neutral-weak"} align={"center"}>
+                  List of servers where you have permission to manage the bot. If you don't see a
+                  server here, make sure you have the "Manage Server" permission on that server and
+                  try refreshing.
+                </Text>
+              </Row>
+            </Column>
+          </RevealFx>
           <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fillWidth>
-            <SkeletonGuildCard />
-            <SkeletonGuildCard />
-            <SkeletonGuildCard />
-            <SkeletonGuildCard />
-            <SkeletonGuildCard />
-            <SkeletonGuildCard />
+            {[...Array(6)].map((_, idx) => (
+              <RevealFx delay={0.4 + idx * 0.1} translateY={-0.5} key={idx}>
+                <SkeletonGuildCard />
+              </RevealFx>
+            ))}
           </Grid>
         </Column>
       </Column>
@@ -183,63 +191,76 @@ export default function Page() {
         }}
       />
       <Column fillWidth minHeight="100vh" maxWidth={"l"} padding="xl" gap={"xl"}>
-        <Button prefixIcon={"back"} variant={"tertiary"} href={"/"}>
-          Back to Home
-        </Button>
-        <Column center gap={"16"}>
-          <Heading variant={"display-strong-l"}>Your Guilds</Heading>
-          <Row maxWidth={"s"}>
-            <Text onBackground={"neutral-weak"} align={"center"}>
-              List of servers where you have permission to manage the bot. If you don't see a server
-              here, make sure you have the "Manage Server" permission on that server and try
-              refreshing.
-            </Text>
-          </Row>
-        </Column>
+        <RevealFx translateY={-0.5}>
+          <Button prefixIcon={"back"} variant={"tertiary"} href={"/"}>
+            Back to Home
+          </Button>
+        </RevealFx>
+        <RevealFx delay={0.3} translateY={-0.5} center>
+          <Column center gap={"16"}>
+            <Heading variant={"display-strong-l"}>Your Guilds</Heading>
+            <Row maxWidth={"s"}>
+              <Text onBackground={"neutral-weak"} align={"center"}>
+                List of servers where you have permission to manage the bot. If you don't see a
+                server here, make sure you have the "Manage Server" permission on that server and
+                try refreshing.
+              </Text>
+            </Row>
+          </Column>
+        </RevealFx>
 
         {discordParam === "access" && (
-          <Feedback
-            variant="danger"
-            title="Discord Access Required"
-            description="To use the dashboard, you need to grant access to your Discord account. Please log out and log in again, making sure to authorize the required permissions."
-          />
+          <RevealFx translateY={-0.5}>
+            <Feedback
+              variant="danger"
+              title="Discord Access Required"
+              description="To use the dashboard, you need to grant access to your Discord account. Please log out and log in again, making sure to authorize the required permissions."
+            />
+          </RevealFx>
         )}
         {guildsWithBot.length > 0 && (
           <Column gap={"m"} fillWidth maxWidth={"l"}>
-            <Heading variant={"heading-strong-xl"}>With Amelia</Heading>
-            <Text onBackground={"neutral-weak"}>
-              Servers where you have permission to invite the bot and it's already present.
-            </Text>
+            <RevealFx translateY={-0.5} direction="column" gap="m">
+              <Heading variant={"heading-strong-xl"}>With Amelia</Heading>
+              <Text onBackground={"neutral-weak"}>
+                Servers where you have permission to invite the bot and it's already present.
+              </Text>
+            </RevealFx>
             <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fillWidth>
-              {guildsWithBot.map((g: UserGuildCard) => (
-                <GuildCard
-                  name={g.name}
-                  id={g.id}
-                  icon={g.iconUrl}
-                  inviteURL={g.inviteUrl}
-                  hasBot={g.botPresent}
-                  key={`${g.id}`}
-                />
+              {guildsWithBot.map((g: UserGuildCard, idx) => (
+                <RevealFx delay={0.1 + idx * 0.1} translateY={-0.5} key={`${g.id}`}>
+                  <GuildCard
+                    name={g.name}
+                    id={g.id}
+                    icon={g.iconUrl}
+                    inviteURL={g.inviteUrl}
+                    hasBot={g.botPresent}
+                  />
+                </RevealFx>
               ))}
             </Grid>
           </Column>
         )}
         {guildsWithoutBot.length > 0 && (
           <Column gap={"m"} fillWidth maxWidth={"l"}>
-            <Heading variant={"heading-strong-xl"}>Without Amelia</Heading>
-            <Text onBackground={"neutral-weak"}>
-              Servers where you have permission to invite the bot but it's not present yet.
-            </Text>
+            <RevealFx delay={0.3} translateY={-0.5} direction="column" gap="m">
+              <Heading variant={"heading-strong-xl"}>Without Amelia</Heading>
+              <Text onBackground={"neutral-weak"}>
+                Servers where you have permission to invite the bot but it's not present yet.
+              </Text>
+            </RevealFx>
             <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fillWidth>
-              {guildsWithoutBot.map((g: UserGuildCard) => (
-                <GuildCard
-                  name={g.name}
-                  id={g.id}
-                  icon={g.iconUrl}
-                  inviteURL={g.inviteUrl}
-                  hasBot={g.botPresent}
-                  key={`${g.id}`}
-                />
+              {guildsWithoutBot.map((g: UserGuildCard, idx) => (
+                <RevealFx delay={0.4 + idx * 0.1} translateY={-0.5} key={`${g.id}`}>
+                  <GuildCard
+                    name={g.name}
+                    id={g.id}
+                    icon={g.iconUrl}
+                    inviteURL={g.inviteUrl}
+                    hasBot={g.botPresent}
+                    key={`${g.id}`}
+                  />
+                </RevealFx>
               ))}
             </Grid>
           </Column>

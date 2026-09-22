@@ -85,7 +85,7 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
           clicks.
         </Text>
       )}
-      <Row gap="12" center>
+      <Row gap="12" horizontal="start" vertical="center">
         <Switch
           label="Disabled"
           description="Render the button as disabled"

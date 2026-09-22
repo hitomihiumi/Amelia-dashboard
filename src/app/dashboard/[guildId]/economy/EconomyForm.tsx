@@ -12,6 +12,7 @@ import {
   Slider,
   useToast,
   NumberInput,
+  RevealFx,
 } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { updateEconomySettings } from "./actions";
@@ -22,6 +23,7 @@ import { useRouter } from "next/navigation";
 import { EmojiPickerDropdown } from "@/components/dashboard/discord/EmojiPickerDropdown";
 import { emojiFromString, formatCustomEmojiString, isUnicodeEmoji } from "@/lib/discord/emojis-api";
 import { DashIcon } from "@/components/dashboard/DashIcon";
+import { Section } from "@/components/dashboard/Section";
 
 type Form = Pick<GuildSchema["economy"], "income" | "currency">;
 
@@ -98,25 +100,12 @@ export function EconomyForm({
 
   return (
     <>
-      <Flex
-        direction="column"
-        gap="24"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
+      <Section
+        title="Currency emoji"
+        description="This emoji will be used to represent your currency across the bot, such as in the balance command and shop listings."
+        num={1}
+        icon="money"
       >
-        <Flex gap="16">
-          <DashIcon name={"money"} />
-          <Flex direction={"column"} gap="8">
-            <Text variant="body-strong-l">Currency emoji</Text>
-            <Text variant="body-default-s" onBackground="neutral-medium">
-              This emoji will be used to represent your currency across the bot, such as in the
-              balance command and shop listings.
-            </Text>
-          </Flex>
-        </Flex>
-
         <Flex direction="column" gap="8">
           <Row gap={"12"} vertical={"center"} horizontal={"between"}>
             <Input
@@ -144,26 +133,14 @@ export function EconomyForm({
             You can use either a custom emoji from your server or a standard Unicode emoji.
           </Text>
         </Flex>
-      </Flex>
+      </Section>
 
-      <Flex
-        direction="column"
-        gap="16"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
+      <Section
+        title={"Income"}
+        description={"Configure how much currency users will earn."}
+        num={2}
+        icon="diamond"
       >
-        <Flex gap="16">
-          <DashIcon name={"diamond"} />
-          <Flex direction="column" gap="8">
-            <Text variant="body-strong-l">Income</Text>
-            <Text variant="body-default-s" onBackground="neutral-medium">
-              Set the amount of currency users will earn.
-            </Text>
-          </Flex>
-        </Flex>
-
         <Column
           background={"overlay"}
           border={"neutral-medium"}
@@ -538,7 +515,7 @@ export function EconomyForm({
             step={1}
           />
         </Column>
-      </Flex>
+      </Section>
     </>
   );
 }

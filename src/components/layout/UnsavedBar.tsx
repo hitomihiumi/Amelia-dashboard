@@ -5,10 +5,13 @@ import { Flex, Text, Button } from "@once-ui-system/core";
 import { useEffect, useState } from "react";
 
 import styles from "./UnsavedBar.module.scss";
+import classNames from "classnames";
 
 export function UnsavedBar() {
   const { isDirty, isSaving, runSave, runCancel, blockedNavigationSignal } = useUnsavedChanges();
   const [attention, setAttention] = useState(false);
+  const [isRendered, setIsRendered] = useState(isDirty);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     if (blockedNavigationSignal === 0) return;
@@ -17,7 +20,25 @@ export function UnsavedBar() {
     return () => window.clearTimeout(t);
   }, [blockedNavigationSignal]);
 
-  if (!isDirty) {
+  useEffect(() => {
+    if (isDirty) {
+      setIsRendered(true);
+      setIsClosing(false);
+      return;
+    }
+
+    if (!isRendered) return;
+
+    setIsClosing(true);
+    const t = window.setTimeout(() => {
+      setIsRendered(false);
+      setIsClosing(false);
+    }, 200);
+
+    return () => window.clearTimeout(t);
+  }, [isDirty, isRendered]);
+
+  if (!isRendered) {
     return null;
   }
 
@@ -31,6 +52,7 @@ export function UnsavedBar() {
       paddingBottom={"xl"}
       horizontal="center"
       zIndex={"9"}
+      className={classNames(styles.barAnimation, styles[isClosing ? "animation-bottom-out" : "animation-bottom"])}
     >
       <Flex
         background="surface"
