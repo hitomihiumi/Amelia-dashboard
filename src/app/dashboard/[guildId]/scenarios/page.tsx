@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import { authOptions } from "@/lib/auth";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import { Guild } from "@/lib/db/Guild";
@@ -23,6 +24,7 @@ export default async function ScenariosPage({
   params: Promise<{ guildId: string }>;
 }) {
   const { guildId } = await params;
+  const t = await getT();
   const session = await getServerSession(authOptions);
 
   let roles: DiscordRole[] = [];
@@ -34,12 +36,12 @@ export default async function ScenariosPage({
       const roleList = await fetchGuildRoles(session.accessToken, guildId);
       roles = roleList.map(({ id, name, color }) => ({ id, name, color }));
     } catch (e) {
-      loadError = e instanceof Error ? e.message : "Failed to load roles";
+      loadError = e instanceof Error ? e.message : t("builder.shared.loadRolesFailed");
     }
     try {
       channels = await fetchGuildTextChannels(session.accessToken, guildId);
     } catch (e) {
-      if (!loadError) loadError = e instanceof Error ? e.message : "Failed to load channels";
+      if (!loadError) loadError = e instanceof Error ? e.message : t("builder.shared.loadChannelsFailed");
     }
   }
 
@@ -60,18 +62,22 @@ export default async function ScenariosPage({
   return (
     <Flex direction="column" gap="24">
       <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">Scenarios</Text>
+        <Text variant="heading-strong-l">{t("builder.scenarios.title")}</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
-          Compose multi-step reactions to button, select-menu and modal-submit interactions using a
-          node canvas. Each scenario binds to one of your custom components as its trigger.
+          {t("builder.scenarios.subtitle")}
         </Text>
       </RevealFx>
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (
-          <Feedback variant="danger" title="Session expired" description="Please log in again." />
+          <Feedback variant="danger" title={t("builder.shared.sessionExpiredTitle")}
+            description={t("builder.scenarios.sessionExpiredText")} />
         ) : (
-          <Feedback variant="warning" title="Partial data" description={loadError} />
+          <Feedback
+            variant="warning"
+            title={t("builder.shared.partialDataTitle")}
+            description={loadError}
+          />
         ))}
 
       <ScenariosManager

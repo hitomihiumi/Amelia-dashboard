@@ -66,11 +66,12 @@ export async function createSubmission(
   input: CreateSubmissionInput,
 ): Promise<CreateSubmissionResult> {
   const { guildId, kind, authorId, form } = input;
+  const t = await getT();
 
   if (!form.enabled)
-    return { ok: false, error: "This form is currently disabled." };
+    return { ok: false, error: t("site.submit.validation.formDisabled") };
   if (!form.channel)
-    return { ok: false, error: "This form is not fully configured yet." };
+    return { ok: false, error: t("site.submit.validation.notConfigured") };
 
   const pending = await prisma.moderationSubmission.count({
     where: {
@@ -84,7 +85,7 @@ export async function createSubmission(
   if (pending >= form.max_pending) {
     return {
       ok: false,
-      error: `You already have ${pending} submission(s) waiting for review. Please wait until they are handled.`,
+      error: t("site.submit.validation.pendingLimit", { count: pending }),
     };
   }
 
@@ -101,7 +102,7 @@ export async function createSubmission(
         const wait = Math.ceil((form.cooldown - elapsed) / 60);
         return {
           ok: false,
-          error: `Please wait ${wait} more minute(s) before submitting again.`,
+          error: t("site.submit.validation.cooldown", { minutes: wait }),
         };
       }
     }

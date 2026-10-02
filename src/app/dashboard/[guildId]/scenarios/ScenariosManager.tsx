@@ -3,8 +3,10 @@
 import { DashIcon } from "@/components/dashboard/DashIcon";
 import { ConfirmIconButton } from "@/components/dashboard/ConfirmIconButton";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
+import { useT } from "@/i18n/client";
+import type { Translator } from "@/i18n/translate";
 import { generateID } from "@/lib/db/generateID";
-import type { ScenarioCustom } from "@/lib/db/types";
+import type { ScenarioCustom, ScenarioTriggerType } from "@/lib/db/types";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import type { GuildActionState } from "@/types/dashboard";
@@ -24,6 +26,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createScenarioAction, deleteScenarioAction, updateScenarios } from "./actions";
+import { TRIGGER_TYPE_LABEL } from "./scenarioGraph";
 import type { ComponentsLibrary } from "./scenariosTypes";
 
 export interface ScenariosManagerProps {
@@ -33,11 +36,8 @@ export interface ScenariosManagerProps {
   channels: GuildChannelOption[];
 }
 
-const TRIGGER_TYPE_LABEL: Record<string, string> = {
-  button: "Button click",
-  select_menu: "Select menu",
-  modal_submit: "Modal submit",
-};
+/** Mirrors SCENARIO_LIMITS.MAX_SCENARIOS_PER_GUILD, enforced again server-side. */
+const MAX_SCENARIOS = 10;
 
 export function ScenariosManager({
   guildId,
@@ -48,6 +48,7 @@ export function ScenariosManager({
   // roles/channels are not used by the manager itself; reserved for future inline filter UI.
   void roles;
   void channels;
+  const t = useT();
   const router = useRouter();
   const { addToast } = useToast();
   const { setIsDirty, setSaveAction, setCancelAction } = useUnsavedChanges();
@@ -72,11 +73,11 @@ export function ScenariosManager({
     if (result?.ok) {
       setBaseline(scenarios);
       router.refresh();
-      addToast({ variant: "success", message: "Scenarios saved" });
+      addToast({ variant: "success", message: t("builder.scenarios.saved") });
     } else {
-      addToast({ variant: "danger", message: result?.error ?? "Failed to save scenarios" });
+      addToast({ variant: "danger", message: result?.error ?? t("builder.scenarios.saveFailed") });
     }
-  }, [guildId, scenarios, router, addToast]);
+  }, [guildId, scenarios, router, addToast, t]);
 
   const handleCancel = useCallback(() => {
     setScenarios(baseline);
@@ -96,8 +97,11 @@ export function ScenariosManager({
   }, [setIsDirty]);
 
   const createScenario = useCallback(async () => {
-    if (scenarios.length >= 10) {
-      addToast({ variant: "danger", message: "Scenario limit reached (10)." });
+    if (scenarios.length >= MAX_SCENARIOS) {
+      addToast({
+        variant: "danger",
+        message: t("builder.scenarios.limitReached", { max: MAX_SCENARIOS }),
+      });
       return;
     }
     setCreating(true);
@@ -107,12 +111,12 @@ export function ScenariosManager({
         router.refresh();
         router.push(`/dashboard/${guildId}/scenarios/${res.scenarioId}`);
       } else {
-        addToast({ variant: "danger", message: res.error ?? "Failed to create scenario" });
+        addToast({ variant: "danger", message: res.error ?? t("builder.scenarios.createFailed") });
       }
     } finally {
       setCreating(false);
     }
-  }, [guildId, scenarios.length, router, addToast]);
+  }, [guildId, scenarios.length, router, addToast, t]);
 
   const duplicateScenario = useCallback(
     (id: string) => {
@@ -120,11 +124,11 @@ export function ScenariosManager({
       if (!orig) return;
       const copy: ScenarioCustom = JSON.parse(JSON.stringify(orig));
       copy.id = generateID(guildId, "scenario");
-      copy.name = `${orig.name} copy`;
+      copy.name = t("builder.shared.copyName", { name: orig.name });
       copy.steps = copy.steps.map((s) => ({ ...s, id: generateID(guildId, "step") }));
       setScenarios((prev) => [...prev, copy]);
     },
-    [scenarios, guildId],
+    [scenarios, guildId, t],
   );
 
   const deleteScenario = useCallback(
@@ -136,10 +140,10 @@ export function ScenariosManager({
         setBaseline((prev) => prev.filter((s) => s.id !== id));
         router.refresh();
       } else {
-        addToast({ variant: "danger", message: res?.error ?? "Failed to delete scenario" });
+        addToast({ variant: "danger", message: res?.error ?? t("builder.scenarios.deleteFailed") });
       }
     },
-    [guildId, router, addToast],
+    [guildId, router, addToast, t],
   );
 
   return (
@@ -148,17 +152,17 @@ export function ScenariosManager({
         <Row fillWidth horizontal="between" vertical="center">
           <Row gap="12" center>
             <DashIcon name="gitnet" />
-            <Text variant="heading-strong-s">Scenarios</Text>
+            <Text variant="heading-strong-s">{t("builder.scenarios.title")}</Text>
             <Text variant="body-default-s" onBackground="neutral-weak">
-              {scenarios.length}/10
+              {scenarios.length}/{MAX_SCENARIOS}
             </Text>
           </Row>
           <Button
             prefixIcon="plus"
             onClick={createScenario}
-            disabled={creating || scenarios.length >= 10}
+            disabled={creating || scenarios.length >= MAX_SCENARIOS}
           >
-            New scenario
+            {t("builder.scenarios.newScenario")}
           </Button>
         </Row>
       </RevealFx>
@@ -167,8 +171,8 @@ export function ScenariosManager({
         <RevealFx delay={600} translateY={-0.5}>
           <Feedback
             variant="info"
-            title="No scenarios"
-            description="Create your first scenario to wire a custom component to multi-step bot behaviour."
+            title={t("builder.scenarios.emptyTitle")}
+            description={t("builder.scenarios.emptyText")}
           />
         </RevealFx>
       ) : (
@@ -200,6 +204,7 @@ function ScenarioCard({
   onDuplicate: () => void;
   onDelete: () => void;
 }) {
+  const t = useT();
   const triggerMissing = scenario.trigger == null;
   return (
     <Card
@@ -216,14 +221,14 @@ function ScenarioCard({
     >
       <Row fillWidth horizontal="between" vertical="center" gap="8">
         <Text variant="body-strong-s" style={{ wordBreak: "break-word" }}>
-          {scenario.name || "Untitled"}
+          {scenario.name || t("builder.scenarios.untitled")}
         </Text>
         <Row gap="8" style={{ flexShrink: 0 }}>
           <IconButton
             icon="copy"
             variant="secondary"
             size="m"
-            tooltip="Duplicate"
+            tooltip={t("builder.shared.duplicate")}
             onClick={(e: any) => {
               e?.stopPropagation();
               e?.preventDefault();
@@ -234,7 +239,7 @@ function ScenarioCard({
             icon="trash"
             variant="danger"
             size="m"
-            tooltip="Delete"
+            tooltip={t("common.actions.delete")}
             onClick={(e: any) => {
               e?.stopPropagation();
               e?.preventDefault();
@@ -250,25 +255,35 @@ function ScenarioCard({
       )}
       <Row gap="8" wrap>
         {triggerMissing ? (
-          <Tag label="No trigger" scheme="warning" />
+          <Tag label={t("builder.scenarios.noTrigger")} scheme="warning" />
         ) : (
           <Tag
-            label={TRIGGER_TYPE_LABEL[scenario.trigger!.type] ?? scenario.trigger!.type}
+            label={triggerTypeLabel(scenario.trigger!.type, t)}
             scheme="accent"
           />
         )}
-        <Tag label={`${scenario.steps.length} step(s)`} scheme="brand" />
+        <Tag label={t("builder.scenarios.stepsCount", { count: scenario.steps.length })} scheme="brand" />
         {(scenario.cooldown ?? 0) > 0 && (
-          <Tag label={`cooldown ${scenario.cooldown}s`} scheme="neutral" />
+          <Tag
+            label={t("builder.scenarios.cooldownTag", { seconds: scenario.cooldown ?? 0 })}
+            scheme="neutral"
+          />
         )}
         {(scenario.allowedRoles?.length ?? 0) > 0 && (
-          <Tag label={`roles ${scenario.allowedRoles!.length}`} scheme="neutral" />
+          <Tag
+            label={t("builder.scenarios.rolesTag", { count: scenario.allowedRoles!.length })}
+            scheme="neutral"
+          />
         )}
         <Tag
-          label={scenario.enabled ? "enabled" : "disabled"}
+          label={scenario.enabled ? t("common.state.enabled") : t("common.state.disabled")}
           scheme={scenario.enabled ? "success" : "danger"}
         />
       </Row>
     </Card>
   );
+}
+
+function triggerTypeLabel(type: ScenarioTriggerType | string, t: Translator): string {
+  return type in TRIGGER_TYPE_LABEL ? t(TRIGGER_TYPE_LABEL[type as ScenarioTriggerType]) : type;
 }

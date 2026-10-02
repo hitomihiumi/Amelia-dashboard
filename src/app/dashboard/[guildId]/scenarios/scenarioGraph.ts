@@ -1,8 +1,10 @@
+import type { MessageKey } from "@/i18n/messages";
 import type {
   ScenarioActionType,
   ScenarioCondition,
   ScenarioCustom,
   ScenarioStep,
+  ScenarioTriggerType,
 } from "@/lib/db/types";
 import { MarkerType } from "@xyflow/react";
 import type { Edge, Node } from "@xyflow/react";
@@ -264,18 +266,33 @@ export const ACTION_TYPES: ScenarioActionType[] = [
   "delete_message",
 ];
 
-export const ACTION_LABELS: Record<ScenarioActionType, string> = {
-  show_modal: "Show Modal",
-  send_message: "Send Message",
-  send_embed: "Send Embed",
-  reply: "Reply",
-  send_dm: "Send DM",
-  add_role: "Add Role",
-  remove_role: "Remove Role",
-  create_thread: "Create Thread",
-  set_variable: "Set Variable",
-  edit_message: "Edit Message",
-  delete_message: "Delete Message",
+/** Dictionary keys for each action's label; components translate them with `t(ACTION_LABELS[type])`. */
+export const ACTION_LABELS: Record<ScenarioActionType, MessageKey> = {
+  show_modal: "builder.actions.labels.show_modal",
+  send_message: "builder.actions.labels.send_message",
+  send_embed: "builder.actions.labels.send_embed",
+  reply: "builder.actions.labels.reply",
+  send_dm: "builder.actions.labels.send_dm",
+  add_role: "builder.actions.labels.add_role",
+  remove_role: "builder.actions.labels.remove_role",
+  create_thread: "builder.actions.labels.create_thread",
+  set_variable: "builder.actions.labels.set_variable",
+  edit_message: "builder.actions.labels.edit_message",
+  delete_message: "builder.actions.labels.delete_message",
+};
+
+/** Long trigger-type names (scenario cards). */
+export const TRIGGER_TYPE_LABEL: Record<ScenarioTriggerType, MessageKey> = {
+  button: "builder.triggers.types.button",
+  select_menu: "builder.triggers.types.select_menu",
+  modal_submit: "builder.triggers.types.modal_submit",
+};
+
+/** Short trigger-type names (segmented control in the scenario settings). */
+export const TRIGGER_TYPE_OPTION_LABEL: Record<ScenarioTriggerType, MessageKey> = {
+  button: "builder.triggers.options.button",
+  select_menu: "builder.triggers.options.select_menu",
+  modal_submit: "builder.triggers.options.modal_submit",
 };
 
 export const ACTION_icons: Record<ScenarioActionType, IconName> = {

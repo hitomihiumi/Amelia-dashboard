@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/i18n/client";
 import { generateID } from "@/lib/db/generateID";
 import type { SelectMenuCustom, SelectMenuOptionCustom } from "@/lib/db/types";
 import {
@@ -16,6 +17,9 @@ import {
 } from "@once-ui-system/core";
 import React from "react";
 
+/** Discord allows at most 25 options per select menu. */
+const MAX_OPTIONS = 25;
+
 export interface SelectMenuEditorProps {
   value: SelectMenuCustom;
   guildId: string;
@@ -23,11 +27,12 @@ export interface SelectMenuEditorProps {
 }
 
 export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorProps) {
+  const t = useT();
   const update = (patch: Partial<SelectMenuCustom>) => onChange({ ...value, ...patch });
 
   const addOption = () => {
     const opt: SelectMenuOptionCustom = {
-      label: "New option",
+      label: t("builder.defaults.selectMenu.option"),
       value: generateID(guildId, "opt"),
       description: undefined,
       emoji: undefined,
@@ -54,27 +59,27 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
     <Column fillWidth gap="16">
       <Input
         id="select-name"
-        label="Name (internal)"
+        label={t("builder.shared.internalName")}
         value={value.name}
         onChange={(e) => update({ name: e.target.value })}
         maxLength={100}
       />
       <Input
         id="select-placeholder"
-        label="Placeholder"
+        label={t("builder.selectMenus.placeholder")}
         value={value.placeholder ?? ""}
         onChange={(e) => update({ placeholder: e.target.value || undefined })}
         maxLength={150}
         characterCount
       />
       <Text variant="body-default-s" onBackground="neutral-weak">
-        Custom id: <InlineCode>{value.id}</InlineCode>
+        {t("builder.shared.customId")} <InlineCode>{value.id}</InlineCode>
       </Text>
 
       <Row gap="12" fillWidth>
         <NumberInput
           id="select-min"
-          label="Min selected"
+          label={t("builder.selectMenus.minSelected")}
           value={value.minValues ?? 1}
           min={0}
           max={25}
@@ -83,7 +88,7 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
         />
         <NumberInput
           id="select-max"
-          label="Max selected"
+          label={t("builder.selectMenus.maxSelected")}
           value={value.maxValues ?? 1}
           min={1}
           max={25}
@@ -93,15 +98,17 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
       </Row>
 
       <Switch
-        label="Disabled"
+        label={t("builder.selectMenus.disabled")}
         checked={!!value.disabled}
         onToggle={() => update({ disabled: !value.disabled })}
       />
 
       <Row fillWidth horizontal="between" vertical="center" gap="8">
-        <Text variant="label-default-s">Options ({value.options.length}/25)</Text>
-        <Button prefixIcon="plus" onClick={addOption} disabled={value.options.length >= 25}>
-          Add option
+        <Text variant="label-default-s">
+          {t("builder.selectMenus.optionsCount", { count: value.options.length, max: MAX_OPTIONS })}
+        </Text>
+        <Button prefixIcon="plus" onClick={addOption} disabled={value.options.length >= MAX_OPTIONS}>
+          {t("builder.selectMenus.addOption")}
         </Button>
       </Row>
 
@@ -129,12 +136,13 @@ function OptionEditor({
   onDelete: () => void;
   onMove: (direction: number) => void;
 }) {
+  const t = useT();
   return (
     <Accordion
       title={
         <Row horizontal="between" vertical="center" gap="8">
           <Text variant="body-strong-s" style={{ wordBreak: "break-word" }}>
-            {option.label || "Unnamed option"}
+            {option.label || t("builder.fallback.unnamedOption")}
           </Text>
         </Row>
       }
@@ -146,38 +154,38 @@ function OptionEditor({
             icon="chevronUp"
             variant="secondary"
             onClick={() => onMove(-1)}
-            tooltip="Move up"
+            tooltip={t("builder.shared.moveUp")}
           />
           <IconButton
             icon="chevronDown"
             variant="secondary"
             onClick={() => onMove(1)}
-            tooltip="Move down"
+            tooltip={t("builder.shared.moveDown")}
           />
-          <IconButton icon="trash" variant="danger" tooltip="Delete option" onClick={onDelete} />
+          <IconButton icon="trash" variant="danger" tooltip={t("builder.selectMenus.deleteOption")} onClick={onDelete} />
         </Row>
         <Input
           id={`opt-label-${option.value}`}
-          label="Label"
+          label={t("builder.selectMenus.label")}
           value={option.label}
           onChange={(e) => onChange({ label: e.target.value })}
           maxLength={100}
         />
         <Input
           id={`opt-desc-${option.value}`}
-          label="Description"
+          label={t("builder.selectMenus.description")}
           value={option.description ?? ""}
           onChange={(e) => onChange({ description: e.target.value || undefined })}
           maxLength={100}
         />
         <Input
           id={`opt-emoji-${option.value}`}
-          label="Emoji (unicode or <name:id>)"
+          label={t("builder.shared.emoji")}
           value={emojiToString(option.emoji)}
           onChange={(e) => onChange({ emoji: e.target.value || undefined })}
         />
         <Switch
-          label="Default selected"
+          label={t("builder.selectMenus.defaultSelected")}
           checked={!!option.default}
           onToggle={() => onChange({ default: !option.default })}
         />

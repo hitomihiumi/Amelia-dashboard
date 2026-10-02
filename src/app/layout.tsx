@@ -5,7 +5,7 @@ import "@/resources/custom.css";
 
 import classNames from "classnames";
 
-import { fonts, style, dataStyle } from "@/resources/once-ui.config";
+import { fonts, fontStacks, style, dataStyle } from "@/resources/once-ui.config";
 import { Column, Flex, Meta, ThemeInit } from "@once-ui-system/core";
 import { Providers } from "@/components/Providers";
 
@@ -68,7 +68,10 @@ export default async function RootLayout({
         fonts.body.variable,
         fonts.label.variable,
         fonts.code.variable,
+        fonts.headingCyrillic.variable,
+        fonts.bodyCyrillic.variable,
       )}
+
     >
       <head>
         <ThemeInit
@@ -94,7 +97,14 @@ export default async function RootLayout({
           fillWidth
           margin="0"
           padding="0"
-          style={{ minHeight: "100vh" }}
+          style={
+            {
+              minHeight: "100vh",
+              // Cyrillic companions for the heading and body faces, see once-ui.config.js.
+              "--font-heading": fontStacks.heading,
+              "--font-body": fontStacks.body,
+            } as React.CSSProperties
+          }
         >
           {children}
         </Column>

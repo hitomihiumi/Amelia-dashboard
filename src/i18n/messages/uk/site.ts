@@ -229,6 +229,21 @@ export const site: Dict<typeof en> = {
   },
 
   submit: {
+    validation: {
+      required: 'Поле «{label}» обов’язкове для заповнення.',
+      number: 'Поле «{label}» має бути числом.',
+      min: 'Значення поля «{label}» має бути не меншим за {min}.',
+      max: 'Значення поля «{label}» має бути не більшим за {max}.',
+      option: 'У полі «{label}» обрано недопустимий варіант.',
+      discordId: 'Поле «{label}» має містити коректний Discord ID.',
+      link: 'Поле «{label}» має містити коректне посилання.',
+      minLength: 'Довжина поля «{label}» має бути не менше {min, plural, one {# символу} few {# символів} many {# символів} other {# символу}}.',
+      maxLength: 'Довжина поля «{label}» має бути не більше {max, plural, one {# символу} few {# символів} many {# символів} other {# символу}}.',
+      formDisabled: "Ця форма зараз вимкнена.",
+      notConfigured: "Цю форму ще не налаштовано до кінця.",
+      pendingLimit: "У вас уже є {count, plural, one {# звернення} few {# звернення} many {# звернень} other {# звернення}}, що очікують на розгляд. Зачекайте, поки їх опрацюють.",
+      cooldown: "Зачекайте ще {minutes, plural, one {# хвилину} few {# хвилини} many {# хвилин} other {# хвилини}}, перш ніж надсилати знову.",
+    },
     layout: {
       subtitle: "Звернення до модерації",
     },

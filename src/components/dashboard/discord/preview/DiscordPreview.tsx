@@ -2,6 +2,7 @@
 "use client";
 
 import { useDiscordPreviewOptional } from "@/contexts/DiscordPreviewContext";
+import { useT } from "@/i18n/client";
 import type { ButtonCustom, EmbedCustom, ModalCustom, SelectMenuCustom } from "@/lib/db/types";
 import { DiscordMessageRow } from "./DiscordMessageRow";
 import { DiscordModal } from "./DiscordModal";
@@ -42,6 +43,7 @@ function PreviewChrome({
   className?: string;
   children: ReactNode;
 }) {
+  const t = useT();
   const ctx = useDiscordPreviewOptional();
   const name = botName || ctx?.botName || "Amelia";
   const avatarUrl = botAvatarUrl ?? ctx?.botAvatarUrl ?? DEFAULT_AVATAR;
@@ -61,9 +63,9 @@ function PreviewChrome({
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <span className="font-medium text-[#f2f3f5]">{name}</span>
             <span className="rounded bg-[#5865F2] px-2 py-px text-[10px] font-semibold uppercase leading-none text-white">
-              BOT
+              {t("builder.preview.botBadge")}
             </span>
-            <span className="text-xs font-medium text-[#949ba4]">today at 12 PM</span>
+            <span className="text-xs font-medium text-[#949ba4]">{t("builder.preview.timeToday")}</span>
           </div>
           {children}
         </div>
@@ -73,10 +75,11 @@ function PreviewChrome({
 }
 
 export function DiscordPreview({ message }: DiscordPreviewProps) {
+  const t = useT();
   if (!message) {
     return (
       <div className="flex items-center justify-center h-full text-discord-text-muted text-sm text-center p-6">
-        Nothing to preview yet. Configure the item to see how it will render in Discord.
+        {t("builder.preview.nothingToPreview")}
       </div>
     );
   }
@@ -132,6 +135,7 @@ function DiscordDMFrame({
   buttons?: ButtonCustom[];
   selectMenus?: SelectMenuCustom[];
 }) {
+  const t = useT();
   const ctx = useDiscordPreviewOptional();
   const name = botName || ctx?.botName || "Amelia";
   const avatarUrl = botAvatarUrl ?? ctx?.botAvatarUrl ?? null;
@@ -149,7 +153,7 @@ function DiscordDMFrame({
           />
         )}
         <span className="text-white font-semibold text-[15px]">{name}</span>
-        <span className="text-discord-text-muted text-xs">Direct message</span>
+        <span className="text-discord-text-muted text-xs">{t("builder.preview.directMessage")}</span>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         <DiscordMessageRow

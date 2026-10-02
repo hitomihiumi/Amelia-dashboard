@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { useT } from "@/i18n/client";
 import type { ButtonCustom, EmbedCustom, SelectMenuCustom } from "@/lib/db/types";
 import { cn } from "@/lib/utils";
 import { DiscordButton } from "./DiscordButton";
@@ -36,6 +37,7 @@ export function DiscordMessageRow({
   showEmptyHint = false,
   className,
 }: DiscordMessageRowProps) {
+  const t = useT();
   const text = (content ?? "").trim();
   const visibleEmbeds = embeds.slice(0, 10);
   const hasComponents = buttons.length > 0 || selectMenus.length > 0;
@@ -68,7 +70,7 @@ export function DiscordMessageRow({
 
       {isEmpty && showEmptyHint ? (
         <p className="mt-1 text-sm italic text-discord-text-muted">
-          Empty message — add text or an embed.
+          {t("builder.preview.emptyMessage")}
         </p>
       ) : null}
     </div>

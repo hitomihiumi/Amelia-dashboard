@@ -89,6 +89,10 @@ export const common = {
     loadFailed: "Failed to load emojis",
     networkError: "Network error",
   },
+  avatar: {
+    loading: "Loading avatar",
+    empty: "Empty avatar",
+  },
   confirmDelete: {
     tooltip: "Delete",
     question: "Delete?",

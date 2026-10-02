@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/i18n/client";
 import { generateID } from "@/lib/db/generateID";
 import type { IModalField, ModalCustom } from "@/lib/db/types";
 import {
@@ -17,6 +18,9 @@ import {
 } from "@once-ui-system/core";
 import React from "react";
 
+/** Discord allows at most 5 text inputs per modal. */
+const MAX_FIELDS = 5;
+
 export interface ModalEditorProps {
   value: ModalCustom;
   guildId: string;
@@ -24,12 +28,13 @@ export interface ModalEditorProps {
 }
 
 export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
+  const t = useT();
   const update = (patch: Partial<ModalCustom>) => onChange({ ...value, ...patch });
 
   const addField = () => {
     const field: IModalField = {
       id: generateID(guildId, "field"),
-      name: "New field",
+      name: t("builder.defaults.modal.field"),
       type: "short",
       required: true,
     };
@@ -55,25 +60,28 @@ export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
     <Column fillWidth gap="16">
       <Input
         id="modal-title"
-        label="Title"
+        label={t("builder.modals.title")}
         value={value.title}
         onChange={(e) => update({ title: e.target.value })}
         characterCount
         maxLength={45}
       />
       <Text variant="body-default-s" onBackground="neutral-weak">
-        Custom id: <InlineCode>{value.id}</InlineCode>. Discord allows up to 5 fields per modal.
+        {t("builder.shared.customId")} <InlineCode>{value.id}</InlineCode>.{" "}
+        {t("builder.modals.limitHint", { max: MAX_FIELDS })}
       </Text>
       <Row fillWidth horizontal="between" vertical="center" gap="8">
-        <Text variant="label-default-s">Fields ({value.fields.length}/5)</Text>
-        <Button prefixIcon="plus" onClick={addField} disabled={value.fields.length >= 5}>
-          Add field
+        <Text variant="label-default-s">
+          {t("builder.modals.fieldsCount", { count: value.fields.length, max: MAX_FIELDS })}
+        </Text>
+        <Button prefixIcon="plus" onClick={addField} disabled={value.fields.length >= MAX_FIELDS}>
+          {t("builder.modals.addField")}
         </Button>
       </Row>
 
       {value.fields.length === 0 && (
         <Text variant="body-default-s" onBackground="neutral-weak">
-          No fields yet. A modal can optionally have up to 5 text inputs.
+          {t("builder.modals.noFields", { max: MAX_FIELDS })}
         </Text>
       )}
 
@@ -101,12 +109,13 @@ function FieldRow({
   onDelete: () => void;
   onMove: (direction: number) => void;
 }) {
+  const t = useT();
   return (
     <Accordion
       title={
         <Row horizontal="between" vertical="center" gap="8">
           <Text variant="body-strong-s" style={{ wordBreak: "break-word" }}>
-            {field.name || "Unnamed field"}
+            {field.name || t("builder.fallback.unnamedField")}
           </Text>
         </Row>
       }
@@ -118,19 +127,19 @@ function FieldRow({
             icon="chevronUp"
             variant="secondary"
             onClick={() => onMove(-1)}
-            tooltip="Move up"
+            tooltip={t("builder.shared.moveUp")}
           />
           <IconButton
             icon="chevronDown"
             variant="secondary"
             onClick={() => onMove(1)}
-            tooltip="Move down"
+            tooltip={t("builder.shared.moveDown")}
           />
-          <IconButton icon="trash" variant="danger" tooltip="Delete field" onClick={onDelete} />
+          <IconButton icon="trash" variant="danger" tooltip={t("builder.modals.deleteField")} onClick={onDelete} />
         </Row>
         <Input
           id={`field-${field.id}-name`}
-          label="Label"
+          label={t("builder.modals.label")}
           value={field.name}
           onChange={(e) => onChange({ name: e.target.value })}
           maxLength={45}
@@ -138,7 +147,7 @@ function FieldRow({
         />
         <Input
           id={`field-${field.id}-placeholder`}
-          label="Placeholder"
+          label={t("builder.modals.placeholder")}
           value={field.placeholder ?? ""}
           onChange={(e) => onChange({ placeholder: e.target.value || undefined })}
           maxLength={100}
@@ -149,14 +158,14 @@ function FieldRow({
           value={field.type}
           onChange={(v) => onChange({ type: v as "short" | "long" })}
           buttons={[
-            { label: "Short", value: "short" },
-            { label: "Paragraph", value: "long" },
+            { label: t("builder.modals.short"), value: "short" },
+            { label: t("builder.modals.paragraph"), value: "long" },
           ]}
         />
         <Row gap="12" fillWidth>
           <NumberInput
             id={`field-${field.id}-min`}
-            label="Min length"
+            label={t("builder.modals.minLength")}
             value={field.min ?? 0}
             min={0}
             max={4000}
@@ -165,7 +174,7 @@ function FieldRow({
           />
           <NumberInput
             id={`field-${field.id}-max`}
-            label="Max length"
+            label={t("builder.modals.maxLength")}
             value={field.max ?? 0}
             min={1}
             max={4000}
@@ -174,7 +183,7 @@ function FieldRow({
           />
         </Row>
         <Switch
-          label="Required"
+          label={t("builder.modals.required")}
           checked={field.required}
           onToggle={() => onChange({ required: !field.required })}
         />

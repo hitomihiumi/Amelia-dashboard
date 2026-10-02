@@ -21,6 +21,8 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { DashIcon } from "@/components/dashboard/DashIcon";
+import { useT } from "@/i18n/client";
+import type { Translator } from "@/i18n/translate";
 import type { ScenarioStep } from "@/lib/db/types";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
@@ -227,6 +229,7 @@ function AddStepPanel({
   onAddStep: (actionType: ScenarioStep["action"]["type"]) => void;
   children: React.ReactNode;
 }) {
+  const t = useT();
   const [open, setOpen] = useState<"settings" | "steps" | null>(null);
   return (
     <Panel position="top-left">
@@ -247,7 +250,7 @@ function AddStepPanel({
             suffixIcon={open === "settings" ? "chevronUp" : "chevronDown"}
             onClick={() => setOpen((v) => (v === "settings" ? null : "settings"))}
           >
-            Scenario settings
+            {t("builder.flow.scenarioSettings")}
           </Button>
           <Button
             size="s"
@@ -256,23 +259,23 @@ function AddStepPanel({
             suffixIcon={open === "steps" ? "chevronUp" : "chevronDown"}
             onClick={() => setOpen((v) => (v === "steps" ? null : "steps"))}
           >
-            Add step
+            {t("builder.flow.addStep")}
           </Button>
         </Row>
         {open === "steps" && (
           <Row gap="8" wrap>
-            {ADD_STEP_TYPES.map((t) => (
+            {ADD_STEP_TYPES.map((type) => (
               <Button
-                key={t}
+                key={type}
                 size="s"
                 variant="secondary"
-                prefixIcon={ACTION_icons[t]}
+                prefixIcon={ACTION_icons[type]}
                 onClick={() => {
-                  onAddStep(t);
+                  onAddStep(type);
                   setOpen(null);
                 }}
               >
-                {t.replace(/_/g, " ")}
+                {t(ACTION_LABELS[type])}
               </Button>
             ))}
           </Row>
@@ -291,6 +294,7 @@ function AddStepPanel({
  * Once UI's global button reset and renders as a blank box — this is a small
  * Once-UI-native zoom/fit panel instead. */
 function CanvasControls() {
+  const t = useT();
   const { zoomIn, zoomOut, fitView } = useReactFlow();
   return (
     <Panel position="bottom-left">
@@ -307,21 +311,21 @@ function CanvasControls() {
           icon="plus"
           variant="ghost"
           size="s"
-          tooltip="Zoom in"
+          tooltip={t("builder.flow.zoomIn")}
           onClick={() => zoomIn()}
         />
         <IconButton
           icon="minus"
           variant="ghost"
           size="s"
-          tooltip="Zoom out"
+          tooltip={t("builder.flow.zoomOut")}
           onClick={() => zoomOut()}
         />
         <IconButton
           icon="maximize"
           variant="ghost"
           size="s"
-          tooltip="Fit view"
+          tooltip={t("builder.flow.fitView")}
           onClick={() => fitView()}
         />
       </Row>
@@ -330,6 +334,7 @@ function CanvasControls() {
 }
 
 function TriggerNode({ data }: NodeProps<ScenarioNode>) {
+  const t = useT();
   const hasTrigger = Boolean((data as ScenarioNodeData | undefined)?.step);
   return (
     <Row
@@ -342,7 +347,7 @@ function TriggerNode({ data }: NodeProps<ScenarioNode>) {
       style={{ minWidth: 160, boxShadow: "0 6px 16px rgba(0,0,0,0.25)", overflow: "visible" }}
     >
       <DashIcon name="trigger" size="s" />
-      <Text variant="label-strong-s">{hasTrigger ? "Trigger" : "Entry (no trigger)"}</Text>
+      <Text variant="label-strong-s">{hasTrigger ? t("builder.flow.trigger") : t("builder.flow.entryNoTrigger")}</Text>
       <Handle type="source" position={Position.Right} id="success" />
     </Row>
   );
@@ -352,6 +357,7 @@ function TriggerNode({ data }: NodeProps<ScenarioNode>) {
 function describeStepTarget(
   step: ScenarioStep | undefined,
   ctx: ScenarioFlowLibraryContextValue | null,
+  t: Translator,
 ): string | null {
   if (!step || !ctx) return null;
   const action = step.action;
@@ -366,7 +372,7 @@ function describeStepTarget(
     case "edit_message":
     case "create_thread": {
       const channel = ctx.channels.find((c) => c.id === action.channelId);
-      return channel ? `#${channel.name}` : "same channel";
+      return channel ? `#${channel.name}` : t("builder.flow.sameChannel");
     }
     case "show_modal": {
       const modal = ctx.library.modals.find((m) => m.id === action.modalId);
@@ -374,7 +380,11 @@ function describeStepTarget(
     }
     case "send_dm": {
       const embed = ctx.library.embed.find((e) => e.id === action.dmEmbedId);
-      return embed ? `DM + ${embed.name || embed.title || "embed"}` : "DM";
+      return embed
+        ? t("builder.flow.dmWithEmbed", {
+            name: embed.name || embed.title || t("builder.fallback.embed"),
+          })
+        : t("builder.flow.dm");
     }
     case "set_variable":
       return action.variableName || null;
@@ -384,12 +394,13 @@ function describeStepTarget(
 }
 
 function StepNode({ data, selected }: NodeProps<ScenarioNode>) {
+  const t = useT();
   const step = (data ?? {}).step as ScenarioStep | undefined;
   const actionType = step?.action?.type;
   const hasConditions = (step?.conditions?.length ?? 0) > 0;
-  const label = actionType ? (ACTION_LABELS as Record<string, string>)[actionType] : "Step";
+  const label = actionType ? t(ACTION_LABELS[actionType]) : t("builder.flow.step");
   const libraryContext = useContext(ScenarioFlowLibraryContext);
-  const target = describeStepTarget(step, libraryContext);
+  const target = describeStepTarget(step, libraryContext, t);
   return (
     <Row
       gap="8"
@@ -432,7 +443,7 @@ function StepNode({ data, selected }: NodeProps<ScenarioNode>) {
         )}
         {hasConditions && (
           <Text variant="label-default-s" onBackground="warning-medium">
-            ⚡ {step?.conditions?.length} condition(s)
+            ⚡ {t("builder.flow.conditionsCount", { count: step?.conditions?.length ?? 0 })}
           </Text>
         )}
       </Column>

@@ -62,7 +62,7 @@ export async function submitForm(
       return { ok: false, error: t("site.submit.actions.invalidData") };
     }
 
-    const validated = validateAnswers(form, payload.answers as Record<string, unknown>);
+    const validated = validateAnswers(form, payload.answers as Record<string, unknown>, t);
     if (!validated.ok) {
       return { ok: false, error: validated.error };
     }

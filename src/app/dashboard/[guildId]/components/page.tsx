@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import { authOptions } from "@/lib/auth";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import { Guild } from "@/lib/db/Guild";
@@ -25,6 +26,7 @@ export default async function ComponentsPage({
   params: Promise<{ guildId: string }>;
 }) {
   const { guildId } = await params;
+  const t = await getT();
   const session = await getServerSession(authOptions);
 
   let roles: DiscordRole[] = [];
@@ -36,12 +38,12 @@ export default async function ComponentsPage({
       const roleList = await fetchGuildRoles(session.accessToken, guildId);
       roles = roleList.map(({ id, name, color }) => ({ id, name, color }));
     } catch (e) {
-      loadError = e instanceof Error ? e.message : "Failed to load roles";
+      loadError = e instanceof Error ? e.message : t("builder.shared.loadRolesFailed");
     }
     try {
       channels = await fetchGuildTextChannels(session.accessToken, guildId);
     } catch (e) {
-      if (!loadError) loadError = e instanceof Error ? e.message : "Failed to load channels";
+      if (!loadError) loadError = e instanceof Error ? e.message : t("builder.shared.loadChannelsFailed");
     }
   }
 
@@ -60,10 +62,9 @@ export default async function ComponentsPage({
   return (
     <Flex direction="column" gap="24">
       <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">Custom components</Text>
+        <Text variant="heading-strong-l">{t("builder.components.title")}</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
-          Build reusable Buttons, Modals, Embeds and Select Menus that power your bot's scenarios.
-          Every item is reflected in the live Discord preview on the right.
+          {t("builder.components.subtitle")}
         </Text>
       </RevealFx>
 
@@ -71,11 +72,11 @@ export default async function ComponentsPage({
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (
           <Feedback
             variant="danger"
-            title="Session expired"
-            description="Your Discord session has expired. Please log in again."
+            title={t("builder.shared.sessionExpiredTitle")}
+            description={t("builder.shared.sessionExpiredText")}
           />
         ) : (
-          <Feedback variant="warning" title="Partial data" description={loadError} />
+          <Feedback variant="warning" title={t("builder.shared.partialDataTitle")} description={loadError} />
         ))}
 
       <ComponentsManager

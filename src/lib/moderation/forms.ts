@@ -49,12 +49,13 @@ export type ValidationResult =
 export function validateAnswers(
   form: ModerationForm,
   raw: Record<string, unknown>,
+  t: Translator,
 ): ValidationResult {
   const answers: ModerationSubmissionAnswer[] = [];
 
   for (const field of form.fields.slice(0, MAX_FIELDS_PER_FORM)) {
     const provided = raw[field.id];
-    const result = validateField(field, provided);
+    const result = validateField(field, provided, t);
 
     if (!result.ok) return result;
 
@@ -76,7 +77,9 @@ type FieldResult =
 function validateField(
   field: ModerationFormField,
   provided: unknown,
+  t: Translator,
 ): FieldResult {
+  const label = field.label;
   const missing =
     provided === undefined ||
     provided === null ||
@@ -84,7 +87,7 @@ function validateField(
 
   if (missing) {
     if (field.required && field.type !== "boolean") {
-      return { ok: false, error: `Field "${field.label}" is required.` };
+      return { ok: false, error: t("site.submit.validation.required", { label }) };
     }
     return { ok: true, value: field.type === "boolean" ? false : null };
   }
@@ -93,18 +96,18 @@ function validateField(
     case "number": {
       const value = Number(provided);
       if (!Number.isFinite(value)) {
-        return { ok: false, error: `Field "${field.label}" must be a number.` };
+        return { ok: false, error: t("site.submit.validation.number", { label }) };
       }
       if (field.min !== null && value < field.min) {
         return {
           ok: false,
-          error: `Field "${field.label}" must be at least ${field.min}.`,
+          error: t("site.submit.validation.min", { label, min: field.min }),
         };
       }
       if (field.max !== null && value > field.max) {
         return {
           ok: false,
-          error: `Field "${field.label}" must be at most ${field.max}.`,
+          error: t("site.submit.validation.max", { label, max: field.max }),
         };
       }
       return { ok: true, value };
@@ -119,7 +122,7 @@ function validateField(
       if (!allowed) {
         return {
           ok: false,
-          error: `Field "${field.label}" has an invalid option selected.`,
+          error: t("site.submit.validation.option", { label }),
         };
       }
       return { ok: true, value };
@@ -131,7 +134,7 @@ function validateField(
       if (!SNOWFLAKE.test(value)) {
         return {
           ok: false,
-          error: `Field "${field.label}" must be a valid Discord ID.`,
+          error: t("site.submit.validation.discordId", { label }),
         };
       }
       return { ok: true, value };
@@ -143,7 +146,7 @@ function validateField(
       if (!/^https?:\/\/\S+$/i.test(value) || value.length > MAX_TEXT_LENGTH) {
         return {
           ok: false,
-          error: `Field "${field.label}" must be a valid link.`,
+          error: t("site.submit.validation.link", { label }),
         };
       }
       return { ok: true, value };
@@ -156,16 +159,16 @@ function validateField(
       if (field.min !== null && value.length < field.min) {
         return {
           ok: false,
-          error: `Field "${field.label}" must be at least ${field.min} characters long.`,
+          error: t("site.submit.validation.minLength", { label, min: field.min }),
         };
       }
       if (value.length > Math.min(field.max ?? limit, limit)) {
         return {
           ok: false,
-          error: `Field "${field.label}" must be at most ${Math.min(
-            field.max ?? limit,
-            limit,
-          )} characters long.`,
+          error: t("site.submit.validation.maxLength", {
+            label,
+            max: Math.min(field.max ?? limit, limit),
+          }),
         };
       }
 

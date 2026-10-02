@@ -1,6 +1,9 @@
 "use server";
 
 import { requireGuildAdmin } from "@/app/dashboard/[guildId]/actions";
+import { getT } from "@/i18n/server";
+import type { builder as enBuilder } from "@/i18n/messages/en/builder";
+import type { Translator } from "@/i18n/translate";
 import { authOptions } from "@/lib/auth";
 import { Guild } from "@/lib/db/Guild";
 import {
@@ -24,26 +27,36 @@ function fail(error: string): GuildActionState {
   return { ok: false, error };
 }
 
+type ErrorKey = keyof (typeof enBuilder)["errors"]["components"];
+
+/** Returns a function that translates a validation error and appends it to `errors`. */
+function makeReporter(errors: string[], t: Translator) {
+  return (key: ErrorKey, ctx: string, params: Record<string, string | number> = {}) => {
+    errors.push(t(`builder.errors.components.${key}`, { ctx, ...params }));
+  };
+}
+
 export async function updateComponents(
   guildId: string,
   formData: FormData,
 ): Promise<GuildActionState> {
+  const t = await getT();
   const session = await getServerSession(authOptions);
-  if (!session) return fail("Not authorized.");
+  if (!session) return fail(t("builder.errors.notAuthorized"));
 
   const gate = await requireGuildAdmin(guildId);
   if (gate.error) return fail(gate.error);
 
   const raw = formData.get("components");
-  if (!raw) return fail("Missing data");
+  if (!raw) return fail(t("builder.errors.missingData"));
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw as string);
   } catch {
-    return fail("Invalid data format");
+    return fail(t("builder.errors.invalidFormat"));
   }
-  if (!parsed || typeof parsed !== "object") return fail("Invalid components payload");
+  if (!parsed || typeof parsed !== "object") return fail(t("builder.errors.invalidPayload"));
 
   const data = parsed as {
     modals?: ModalCustom[];
@@ -59,18 +72,18 @@ export async function updateComponents(
   const buttons = Array.isArray(data.buttons) ? data.buttons : [];
   const selectMenus = Array.isArray(data.selectMenus) ? data.selectMenus : [];
 
-  checkUniqueIds("modal", modals, errors);
-  checkUniqueIds("embed", embeds, errors);
-  checkUniqueIds("button", buttons, errors);
-  checkUniqueIds("selectMenu", selectMenus, errors);
+  checkUniqueIds("modal", modals, errors, t);
+  checkUniqueIds("embed", embeds, errors, t);
+  checkUniqueIds("button", buttons, errors, t);
+  checkUniqueIds("selectMenu", selectMenus, errors, t);
 
-  modals.forEach((m, i) => validateModal(m, i, errors));
-  embeds.forEach((e, i) => validateEmbed(e, i, errors));
-  buttons.forEach((b, i) => validateButton(b, i, errors));
-  selectMenus.forEach((s, i) => validateSelectMenu(s, i, errors));
+  modals.forEach((m, i) => validateModal(m, i, errors, t));
+  embeds.forEach((e, i) => validateEmbed(e, i, errors, t));
+  buttons.forEach((b, i) => validateButton(b, i, errors, t));
+  selectMenus.forEach((s, i) => validateSelectMenu(s, i, errors, t));
 
   if (errors.length > 0) {
-    return fail("Validation failed:\n" + errors.join("\n"));
+    return fail(`${t("builder.errors.validationFailed")}\n${errors.join("\n")}`);
   }
 
   const guild = new Guild(guildId);
@@ -83,60 +96,64 @@ export async function updateComponents(
   return { ok: true };
 }
 
-function checkUniqueIds(label: string, items: { id?: string }[], errors: string[]) {
+function checkUniqueIds(
+  label: "modal" | "embed" | "button" | "selectMenu",
+  items: { id?: string }[],
+  errors: string[],
+  t: Translator,
+) {
+  const kind = t(`builder.errors.kinds.${label}`);
   const seen = new Set<string>();
   for (const item of items) {
     if (!item.id || typeof item.id !== "string") {
-      errors.push(`${label}: an item is missing an id`);
+      errors.push(t("builder.errors.components.itemMissingId", { kind }));
       continue;
     }
-    if (seen.has(item.id)) errors.push(`${label}: duplicate id "${item.id}"`);
+    if (seen.has(item.id)) errors.push(t("builder.errors.components.duplicateId", { kind, id: item.id }));
     seen.add(item.id);
   }
 }
 
-function validateModal(m: ModalCustom, i: number, errors: string[]) {
+function validateModal(m: ModalCustom, i: number, errors: string[], t: Translator) {
   const ctx = `modal[${i}] "${m.id}"`;
+  const fail = makeReporter(errors, t);
   if (!m.title || m.title.length === 0 || m.title.length > 45) {
-    errors.push(`${ctx}: title must be between 1 and 45 characters`);
+    fail("modalTitleLength", ctx);
   }
   if (!Array.isArray(m.fields)) {
-    errors.push(`${ctx}: fields must be an array`);
+    fail("modalFieldsNotArray", ctx);
     return;
   }
-  if (m.fields.length > 5) errors.push(`${ctx}: modals may have at most 5 fields`);
+  if (m.fields.length > 5) fail("modalTooManyFields", ctx, { max: 5 });
   const fieldIds = new Set<string>();
   for (const [fi, fRaw] of m.fields.entries()) {
     const f = fRaw as IModalField;
     const fctx = `${ctx} field[${fi}]`;
-    if (!f.id || typeof f.id !== "string") errors.push(`${fctx}: missing field id`);
-    else if (fieldIds.has(f.id)) errors.push(`${fctx}: duplicate field id`);
+    if (!f.id || typeof f.id !== "string") fail("fieldMissingId", fctx);
+    else if (fieldIds.has(f.id)) fail("fieldDuplicateId", fctx);
     else fieldIds.add(f.id);
-    if (!f.name || f.name.length === 0 || f.name.length > 45)
-      errors.push(`${fctx}: label must be 1-45 characters`);
-    if (f.type !== "short" && f.type !== "long") errors.push(`${fctx}: invalid type`);
-    if (f.placeholder && f.placeholder.length > 100)
-      errors.push(`${fctx}: placeholder exceeds 100 characters`);
+    if (!f.name || f.name.length === 0 || f.name.length > 45) fail("fieldLabelLength", fctx);
+    if (f.type !== "short" && f.type !== "long") fail("fieldInvalidType", fctx);
+    if (f.placeholder && f.placeholder.length > 100) fail("fieldPlaceholderLong", fctx);
     if (typeof f.min === "number") {
-      if (f.min < 0 || f.min > DISCORD_ID_MAX)
-        errors.push(`${fctx}: min must be 0-${DISCORD_ID_MAX}`);
-      if (f.min < 0) errors.push(`${fctx}: min cannot be negative`);
+      if (f.min < 0 || f.min > DISCORD_ID_MAX) fail("fieldMinRange", fctx, { max: DISCORD_ID_MAX });
+      if (f.min < 0) fail("fieldMinNegative", fctx);
     }
     if (typeof f.max === "number") {
-      if (f.max < 0 || f.max > 4000) errors.push(`${fctx}: max must be 0-4000`);
+      if (f.max < 0 || f.max > 4000) fail("fieldMaxRange", fctx);
     }
     if (typeof f.min === "number" && typeof f.max === "number" && f.max > 0 && f.min > f.max) {
-      errors.push(`${fctx}: min cannot exceed max`);
+      fail("fieldMinExceedsMax", fctx);
     }
-    if (typeof f.required !== "boolean") errors.push(`${fctx}: required must be boolean`);
+    if (typeof f.required !== "boolean") fail("fieldRequiredBool", fctx);
   }
 }
 
-function validateEmbed(e: EmbedCustom, i: number, errors: string[]) {
+function validateEmbed(e: EmbedCustom, i: number, errors: string[], t: Translator) {
   const ctx = `embed[${i}] "${e.name || e.id}"`;
-  if (e.title && e.title.length > 256) errors.push(`${ctx}: title cannot exceed 256 characters`);
-  if (e.description && e.description.length > 4096)
-    errors.push(`${ctx}: description cannot exceed 4096 characters`);
+  const fail = makeReporter(errors, t);
+  if (e.title && e.title.length > 256) fail("embedTitleLong", ctx);
+  if (e.description && e.description.length > 4096) fail("embedDescriptionLong", ctx);
   if (e.color != null) {
     const c = e.color as unknown;
     const valid =
@@ -144,34 +161,28 @@ function validateEmbed(e: EmbedCustom, i: number, errors: string[]) {
       (typeof c === "string" &&
         (/^#?[0-9a-fA-F]{3,6}$/.test(c.replace(/^#/, "")) ||
           NAMED_DISCORD_COLORS[c.toUpperCase()] != null));
-    if (!valid) errors.push(`${ctx}: invalid color "${String(c)}"`);
+    if (!valid) fail("embedInvalidColor", ctx, { color: String(c) });
   }
   if (e.author) {
-    if (e.author.name && e.author.name.length > 256)
-      errors.push(`${ctx}: author name exceeds 256 characters`);
-    if (e.author.icon_url && !LINK_URL_RE.test(e.author.icon_url))
-      errors.push(`${ctx}: author icon_url must be http(s)`);
-    if (e.author.url && !LINK_URL_RE.test(e.author.url))
-      errors.push(`${ctx}: author url must be http(s)`);
+    if (e.author.name && e.author.name.length > 256) fail("authorNameLong", ctx);
+    if (e.author.icon_url && !LINK_URL_RE.test(e.author.icon_url)) fail("authorIconUrl", ctx);
+    if (e.author.url && !LINK_URL_RE.test(e.author.url)) fail("authorUrl", ctx);
   }
-  if (e.image && !LINK_URL_RE.test(e.image)) errors.push(`${ctx}: image must be http(s)`);
-  if (e.thumbnail && !LINK_URL_RE.test(e.thumbnail))
-    errors.push(`${ctx}: thumbnail must be http(s)`);
+  if (e.image && !LINK_URL_RE.test(e.image)) fail("imageUrl", ctx);
+  if (e.thumbnail && !LINK_URL_RE.test(e.thumbnail)) fail("thumbnailUrl", ctx);
   if (e.footer) {
-    if (e.footer.text && e.footer.text.length > 2048)
-      errors.push(`${ctx}: footer text exceeds 2048 characters`);
-    if (e.footer.icon_url && !LINK_URL_RE.test(e.footer.icon_url))
-      errors.push(`${ctx}: footer icon_url must be http(s)`);
+    if (e.footer.text && e.footer.text.length > 2048) fail("footerTextLong", ctx);
+    if (e.footer.icon_url && !LINK_URL_RE.test(e.footer.icon_url)) fail("footerIconUrl", ctx);
   }
   if (e.fields && Array.isArray(e.fields)) {
     if (e.fields.length > SCENARIO_LIMITS.MAX_EMBED_FIELDS)
-      errors.push(`${ctx}: embeds may have at most ${SCENARIO_LIMITS.MAX_EMBED_FIELDS} fields`);
+      fail("embedTooManyFields", ctx, { max: SCENARIO_LIMITS.MAX_EMBED_FIELDS });
     for (const [fi, f] of e.fields.entries()) {
       const fctx = `${ctx} field[${fi}]`;
       if (!f.name || f.name.length === 0 || f.name.length > 256)
-        errors.push(`${fctx}: name must be 1-256 characters`);
+        fail("embedFieldNameLength", fctx);
       if (!f.value || f.value.length === 0 || f.value.length > 1024)
-        errors.push(`${fctx}: value must be 1-1024 characters`);
+        fail("embedFieldValueLength", fctx);
     }
   }
 }
@@ -209,46 +220,39 @@ const NAMED_DISCORD_COLORS: Record<string, string> = {
   NOT_QUITE_BLACK: "#23272a",
 };
 
-function validateButton(b: ButtonCustom, i: number, errors: string[]) {
+function validateButton(b: ButtonCustom, i: number, errors: string[], t: Translator) {
   const ctx = `button[${i}] "${b.name || b.id}"`;
-  if (!b.label || b.label.length === 0 || b.label.length > 80)
-    errors.push(`${ctx}: label must be 1-80 characters`);
-  if (!BUTTON_STYLES.has(b.style)) errors.push(`${ctx}: invalid style "${b.style}"`);
-  if (b.style === "LINK" && !b.url) errors.push(`${ctx}: LINK buttons require a url`);
-  if (b.style === "LINK" && b.url && !LINK_URL_RE.test(b.url)) errors.push(`${ctx}: invalid url`);
-  if (b.style !== "LINK" && b.url) errors.push(`${ctx}: only LINK buttons may have a url`);
+  const fail = makeReporter(errors, t);
+  if (!b.label || b.label.length === 0 || b.label.length > 80) fail("buttonLabelLength", ctx);
+  if (!BUTTON_STYLES.has(b.style)) fail("buttonInvalidStyle", ctx, { style: String(b.style) });
+  if (b.style === "LINK" && !b.url) fail("buttonLinkNeedsUrl", ctx);
+  if (b.style === "LINK" && b.url && !LINK_URL_RE.test(b.url)) fail("buttonInvalidUrl", ctx);
+  if (b.style !== "LINK" && b.url) fail("buttonUrlOnlyLink", ctx);
 }
 
-function validateSelectMenu(s: SelectMenuCustom, i: number, errors: string[]) {
+function validateSelectMenu(s: SelectMenuCustom, i: number, errors: string[], t: Translator) {
   const ctx = `selectMenu[${i}] "${s.name || s.id}"`;
-  if (s.placeholder && s.placeholder.length > 150)
-    errors.push(`${ctx}: placeholder cannot exceed 150 characters`);
-  if (s.minValues != null && (s.minValues < 0 || s.minValues > 25))
-    errors.push(`${ctx}: minValues must be 0-25`);
-  if (s.maxValues != null && (s.maxValues < 1 || s.maxValues > 25))
-    errors.push(`${ctx}: maxValues must be 1-25`);
+  const fail = makeReporter(errors, t);
+  if (s.placeholder && s.placeholder.length > 150) fail("selectPlaceholderLong", ctx);
+  if (s.minValues != null && (s.minValues < 0 || s.minValues > 25)) fail("selectMinRange", ctx);
+  if (s.maxValues != null && (s.maxValues < 1 || s.maxValues > 25)) fail("selectMaxRange", ctx);
   if (s.minValues != null && s.maxValues != null && s.minValues > s.maxValues)
-    errors.push(`${ctx}: minValues cannot exceed maxValues`);
+    fail("selectMinExceedsMax", ctx);
   if (!Array.isArray(s.options) || s.options.length === 0) {
-    errors.push(`${ctx}: at least one option is required`);
+    fail("selectNeedsOption", ctx);
     return;
   }
   if (s.options.length > SCENARIO_LIMITS.MAX_SELECT_MENU_OPTIONS) {
-    errors.push(
-      `${ctx}: select menus may have at most ${SCENARIO_LIMITS.MAX_SELECT_MENU_OPTIONS} options`,
-    );
+    fail("selectTooManyOptions", ctx, { max: SCENARIO_LIMITS.MAX_SELECT_MENU_OPTIONS });
   }
   const valueIds = new Set<string>();
   for (const [oi, oRaw] of s.options.entries()) {
     const o = oRaw as SelectMenuOptionCustom;
     const octx = `${ctx} option[${oi}]`;
-    if (!o.label || o.label.length === 0 || o.label.length > 100)
-      errors.push(`${octx}: label must be 1-100 characters`);
-    if (!o.value || o.value.length === 0 || o.value.length > 100)
-      errors.push(`${octx}: value must be 1-100 characters`);
-    if (valueIds.has(o.value)) errors.push(`${octx}: duplicate value "${o.value}"`);
+    if (!o.label || o.label.length === 0 || o.label.length > 100) fail("optionLabelLength", octx);
+    if (!o.value || o.value.length === 0 || o.value.length > 100) fail("optionValueLength", octx);
+    if (valueIds.has(o.value)) fail("optionDuplicateValue", octx, { value: o.value });
     else valueIds.add(o.value);
-    if (o.description && o.description.length > 100)
-      errors.push(`${octx}: description cannot exceed 100 characters`);
+    if (o.description && o.description.length > 100) fail("optionDescriptionLong", octx);
   }
 }

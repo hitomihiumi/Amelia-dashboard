@@ -226,6 +226,21 @@ export const site = {
   },
 
   submit: {
+    validation: {
+      required: 'Field "{label}" is required.',
+      number: 'Field "{label}" must be a number.',
+      min: 'Field "{label}" must be at least {min}.',
+      max: 'Field "{label}" must be at most {max}.',
+      option: 'Field "{label}" has an invalid option selected.',
+      discordId: 'Field "{label}" must be a valid Discord ID.',
+      link: 'Field "{label}" must be a valid link.',
+      minLength: 'Field "{label}" must be at least {min, plural, one {# character} other {# characters}} long.',
+      maxLength: 'Field "{label}" must be at most {max, plural, one {# character} other {# characters}} long.',
+      formDisabled: "This form is currently disabled.",
+      notConfigured: "This form is not fully configured yet.",
+      pendingLimit: "You already have {count, plural, one {# submission} other {# submissions}} waiting for review. Please wait until they are handled.",
+      cooldown: "Please wait {minutes, plural, one {# more minute} other {# more minutes}} before submitting again.",
+    },
     layout: {
       subtitle: "Moderation requests",
     },

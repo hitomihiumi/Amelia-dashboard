@@ -1,6 +1,7 @@
 "use client";
 
 import { ColorInput } from "@/components/dashboard/ColorInput";
+import { useT } from "@/i18n/client";
 import type { EmbedCustom, EmbedField } from "@/lib/db/types";
 import { resolveDiscordColor } from "@/lib/discord/discord-style";
 import {
@@ -16,6 +17,9 @@ import {
 } from "@once-ui-system/core";
 import React from "react";
 
+/** Discord allows at most 25 fields per embed. */
+const MAX_FIELDS = 25;
+
 export interface EmbedEditorProps {
   value: EmbedCustom;
   guildId: string;
@@ -23,10 +27,15 @@ export interface EmbedEditorProps {
 }
 
 export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
+  const t = useT();
   const update = (patch: Partial<EmbedCustom>) => onChange({ ...value, ...patch });
 
   const addField = () => {
-    const f: EmbedField = { name: "New field", value: "Value", inline: false };
+    const f: EmbedField = {
+      name: t("builder.defaults.embed.field"),
+      value: t("builder.defaults.embed.fieldValue"),
+      inline: false,
+    };
     update({ fields: [...(value.fields ?? []), f] });
   };
   const updateFieldAt = (i: number, patch: Partial<EmbedField>) => {
@@ -50,17 +59,17 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
     <Column fillWidth gap="16">
       <Input
         id="embed-name"
-        label="Name (internal)"
+        label={t("builder.shared.internalName")}
         value={value.name}
         onChange={(e) => update({ name: e.target.value })}
         maxLength={100}
       />
 
-      <Accordion title={"Content"} fillWidth>
+      <Accordion title={t("builder.embeds.sectionContent")} fillWidth>
         <Column fillWidth gap="8">
           <Input
             id="embed-title"
-            label="Title"
+            label={t("builder.embeds.title")}
             value={value.title ?? ""}
             onChange={(e) => update({ title: e.target.value || undefined })}
             maxLength={256}
@@ -68,7 +77,7 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
           />
           <Textarea
             id="embed-description"
-            label="Description"
+            label={t("builder.embeds.description")}
             value={value.description ?? ""}
             onChange={(e) => update({ description: e.target.value || undefined })}
             maxLength={4096}
@@ -78,7 +87,7 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
           />
           <ColorInput
             id="embed-color"
-            label="Color"
+            label={t("builder.embeds.color")}
             value={resolveDiscordColor(value.color)}
             onChange={(e) =>
               update({ color: (e.target.value || undefined) as EmbedCustom["color"] })
@@ -88,11 +97,11 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
         </Column>
       </Accordion>
 
-      <Accordion title={"Author"} fillWidth>
+      <Accordion title={t("builder.embeds.sectionAuthor")} fillWidth>
         <Column fillWidth gap="8">
           <Input
             id="embed-author-name"
-            label="Author name"
+            label={t("builder.embeds.authorName")}
             value={value.author?.name ?? ""}
             onChange={(e) =>
               update({
@@ -107,7 +116,7 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
           />
           <Input
             id="embed-author-icon"
-            label="Author icon URL"
+            label={t("builder.embeds.authorIcon")}
             value={value.author?.icon_url ?? ""}
             onChange={(e) =>
               update({
@@ -120,7 +129,7 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
           />
           <Input
             id="embed-author-url"
-            label="Author URL"
+            label={t("builder.embeds.authorUrl")}
             value={value.author?.url ?? ""}
             onChange={(e) =>
               update({
@@ -131,28 +140,28 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
         </Column>
       </Accordion>
 
-      <Accordion title={"Media"} fillWidth>
+      <Accordion title={t("builder.embeds.sectionMedia")} fillWidth>
         <Column fillWidth gap="8">
           <Input
             id="embed-thumbnail"
-            label="Thumbnail URL"
+            label={t("builder.embeds.thumbnail")}
             value={value.thumbnail ?? ""}
             onChange={(e) => update({ thumbnail: e.target.value || undefined })}
           />
           <Input
             id="embed-image"
-            label="Image URL"
+            label={t("builder.embeds.image")}
             value={value.image ?? ""}
             onChange={(e) => update({ image: e.target.value || undefined })}
           />
         </Column>
       </Accordion>
 
-      <Accordion title={"Footer"} fillWidth>
+      <Accordion title={t("builder.embeds.sectionFooter")} fillWidth>
         <Column fillWidth gap="8">
           <Input
             id="embed-footer-text"
-            label="Footer text"
+            label={t("builder.embeds.footerText")}
             value={value.footer?.text ?? ""}
             onChange={(e) =>
               update({ footer: { text: e.target.value, icon_url: value.footer?.icon_url } })
@@ -161,7 +170,7 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
           />
           <Input
             id="embed-footer-icon"
-            label="Footer icon URL"
+            label={t("builder.embeds.footerIcon")}
             value={value.footer?.icon_url ?? ""}
             onChange={(e) =>
               update({
@@ -170,8 +179,8 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
             }
           />
           <Switch
-            label="Show timestamp"
-            description="Append the current time to the footer"
+            label={t("builder.embeds.showTimestamp")}
+            description={t("builder.embeds.showTimestampHint")}
             checked={!!value.timestamp}
             onToggle={() => update({ timestamp: !value.timestamp })}
           />
@@ -179,9 +188,11 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
       </Accordion>
 
       <Row fillWidth horizontal="between" vertical="center" gap="8">
-        <Text variant="label-default-s">Fields ({value.fields?.length ?? 0}/25)</Text>
-        <Button prefixIcon="plus" onClick={addField} disabled={(value.fields?.length ?? 0) >= 25}>
-          Add field
+        <Text variant="label-default-s">
+          {t("builder.embeds.fieldsCount", { count: value.fields?.length ?? 0, max: MAX_FIELDS })}
+        </Text>
+        <Button prefixIcon="plus" onClick={addField} disabled={(value.fields?.length ?? 0) >= MAX_FIELDS}>
+          {t("builder.embeds.addField")}
         </Button>
       </Row>
 
@@ -209,12 +220,13 @@ function FieldEditor({
   onMove: (direction: number) => void;
   onDelete: () => void;
 }) {
+  const t = useT();
   return (
     <Accordion
       title={
         <Row horizontal="between" vertical="center" gap="8">
           <Text variant="body-strong-s" style={{ wordBreak: "break-word" }}>
-            {field.name || "Unnamed field"}
+            {field.name || t("builder.fallback.unnamedField")}
           </Text>
         </Row>
       }
@@ -226,26 +238,26 @@ function FieldEditor({
             icon="chevronUp"
             variant="secondary"
             onClick={() => onMove(-1)}
-            tooltip="Move up"
+            tooltip={t("builder.shared.moveUp")}
           />
           <IconButton
             icon="chevronDown"
             variant="secondary"
             onClick={() => onMove(1)}
-            tooltip="Move down"
+            tooltip={t("builder.shared.moveDown")}
           />
-          <IconButton icon="trash" variant="danger" tooltip="Delete field" onClick={onDelete} />
+          <IconButton icon="trash" variant="danger" tooltip={t("builder.embeds.deleteField")} onClick={onDelete} />
         </Row>
         <Input
           id={`field-name-${field.name}`}
-          label="Field name"
+          label={t("builder.embeds.fieldName")}
           value={field.name}
           onChange={(e) => onChange({ name: e.target.value })}
           maxLength={256}
         />
         <Textarea
           id={`field-value-${field.name}`}
-          label="Field value"
+          label={t("builder.embeds.fieldValue")}
           value={field.value}
           onChange={(e) => onChange({ value: e.target.value })}
           maxLength={1024}
@@ -253,7 +265,7 @@ function FieldEditor({
           resize="vertical"
         />
         <Switch
-          label="Inline"
+          label={t("builder.embeds.inline")}
           checked={!!field.inline}
           onToggle={() => onChange({ inline: !field.inline })}
         />

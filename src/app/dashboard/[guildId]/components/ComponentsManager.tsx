@@ -4,6 +4,9 @@ import { CommandAccordion } from "@/components/dashboard/CommandAccordion";
 import { ConfirmIconButton } from "@/components/dashboard/ConfirmIconButton";
 import { DiscordPreview } from "@/components/dashboard/discord/preview/DiscordPreview";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
+import { useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translator } from "@/i18n/translate";
 import { generateID } from "@/lib/db/generateID";
 import type {
   ButtonCustom,
@@ -29,7 +32,7 @@ import {
 } from "@once-ui-system/core";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ButtonEditor } from "./ButtonEditor";
+import { BUTTON_STYLE_LABEL_KEY, ButtonEditor } from "./ButtonEditor";
 import { EmbedEditor } from "./EmbedEditor";
 import { ModalEditor } from "./ModalEditor";
 import { SelectMenuEditor } from "./SelectMenuEditor";
@@ -43,18 +46,25 @@ import {
 
 type TabValue = ComponentsTab;
 
-const TAB_LABELS: Record<TabValue, string> = {
-  buttons: "Buttons",
-  modals: "Modals",
-  embed: "Embeds",
-  selectMenus: "Select Menus",
+const TAB_LABEL_KEYS: Record<TabValue, MessageKey> = {
+  buttons: "builder.components.tabs.buttons",
+  modals: "builder.components.tabs.modals",
+  embed: "builder.components.tabs.embed",
+  selectMenus: "builder.components.tabs.selectMenus",
 };
 
-const SINGULAR: Record<TabValue, string> = {
-  buttons: "button",
-  modals: "modal",
-  embed: "embed",
-  selectMenus: "select menu",
+const NEW_ITEM_KEYS: Record<TabValue, MessageKey> = {
+  buttons: "builder.components.newItem.buttons",
+  modals: "builder.components.newItem.modals",
+  embed: "builder.components.newItem.embed",
+  selectMenus: "builder.components.newItem.selectMenus",
+};
+
+const EMPTY_TEXT_KEYS: Record<TabValue, MessageKey> = {
+  buttons: "builder.components.emptyText.buttons",
+  modals: "builder.components.emptyText.modals",
+  embed: "builder.components.emptyText.embed",
+  selectMenus: "builder.components.emptyText.selectMenus",
 };
 
 export interface ComponentsManagerProps {
@@ -75,6 +85,7 @@ export function ComponentsManager({
   // roles/channels reserved for future restrictions UI on components (currently unused here).
   void roles;
   void channels;
+  const t = useT();
   const router = useRouter();
   const { addToast } = useToast();
   const { setIsDirty, setSaveAction, setCancelAction } = useUnsavedChanges();
@@ -138,11 +149,11 @@ export function ComponentsManager({
     if (result?.ok) {
       setBaseline(state);
       router.refresh();
-      addToast({ variant: "success", message: "Components saved" });
+      addToast({ variant: "success", message: t("builder.components.saved") });
     } else {
-      addToast({ variant: "danger", message: result?.error ?? "Failed to save components" });
+      addToast({ variant: "danger", message: result?.error ?? t("builder.components.saveFailed") });
     }
-  }, [guildId, state, router, addToast]);
+  }, [guildId, state, router, addToast, t]);
 
   const handleCancel = useCallback(() => {
     setState(baseline);
@@ -164,7 +175,7 @@ export function ComponentsManager({
 
   const startCreate = (kind: TabValue) => {
     const id = generateID(guildId, COMPONENT_ID_TYPE[kind]);
-    const item = DEFAULT_FACTORIES[kind](id);
+    const item = DEFAULT_FACTORIES[kind](id, t);
     // Seed the new item into state immediately so the editor + preview see it.
     setState(
       (prev) =>
@@ -214,14 +225,16 @@ export function ComponentsManager({
         // Stamp a friendly "copy" display name where the type has one.
         const o = original as { name?: string; label?: string; title?: string };
         const c = copy as { name?: string; label?: string; title?: string };
-        if (kind === "buttons") c.name = `${o.name || o.label || "Button"} copy`;
-        else if (kind === "modals") c.title = `${o.title || "Modal"} copy`;
-        else if (kind === "embed") c.name = `${o.name || "Embed"} copy`;
-        else if (kind === "selectMenus") c.name = `${o.name || "Select Menu"} copy`;
+        const copyName = (name: string) => t("builder.shared.copyName", { name });
+        if (kind === "buttons") c.name = copyName(o.name || o.label || t("builder.fallback.button"));
+        else if (kind === "modals") c.title = copyName(o.title || t("builder.fallback.modal"));
+        else if (kind === "embed") c.name = copyName(o.name || t("builder.fallback.embed"));
+        else if (kind === "selectMenus")
+          c.name = copyName(o.name || t("builder.fallback.selectMenu"));
         return { ...prev, [kind]: [...list, copy] } as ComponentsState;
       });
     },
-    [guildId],
+    [guildId, t],
   );
 
   // Resolve the live item currently being edited (by id), for editor + preview.
@@ -233,8 +246,8 @@ export function ComponentsManager({
 
   const previewMsg = useMemo(() => {
     if (!editing || !liveItem) return null;
-    return previewForItem(editing.kind, liveItem);
-  }, [editing, liveItem]);
+    return previewForItem(editing.kind, liveItem, t);
+  }, [editing, liveItem, t]);
 
   return (
     <Flex
@@ -261,30 +274,30 @@ export function ComponentsManager({
             value={tab}
             onChange={(val) => setTab(val as TabValue)}
             buttons={[
-              { label: TAB_LABELS.buttons, value: "buttons" },
-              { label: TAB_LABELS.modals, value: "modals" },
-              { label: TAB_LABELS.embed, value: "embed" },
-              { label: TAB_LABELS.selectMenus, value: "selectMenus" },
+              { label: t(TAB_LABEL_KEYS.buttons), value: "buttons" },
+              { label: t(TAB_LABEL_KEYS.modals), value: "modals" },
+              { label: t(TAB_LABEL_KEYS.embed), value: "embed" },
+              { label: t(TAB_LABEL_KEYS.selectMenus), value: "selectMenus" },
             ]}
           />
 
           <Row fillWidth horizontal="between" vertical="center" gap="16">
             <Row gap="12" center>
-              <Text variant="heading-strong-s">{TAB_LABELS[tab]}</Text>
+              <Text variant="heading-strong-s">{t(TAB_LABEL_KEYS[tab])}</Text>
               <Text variant="body-default-s" onBackground="neutral-weak">
                 {itemsByTab[tab].length}
               </Text>
             </Row>
             <Button prefixIcon="plus" onClick={() => startCreate(tab)}>
-              New {SINGULAR[tab]}
+              {t(NEW_ITEM_KEYS[tab])}
             </Button>
           </Row>
 
           {itemsByTab[tab].length === 0 ? (
             <Feedback
               variant="info"
-              title="No items yet"
-              description={`Create your first ${SINGULAR[tab]} to see it in the Discord preview.`}
+              title={t("builder.components.emptyTitle")}
+              description={t(EMPTY_TEXT_KEYS[tab])}
             />
           ) : (
             <Column gap="8" fillWidth>
@@ -293,8 +306,8 @@ export function ComponentsManager({
                   key={item.id}
                   tab={tab}
                   item={item}
-                  name={componentName(tab, item)}
-                  subtitle={componentSubtitle(tab, item)}
+                  name={componentName(tab, item, t)}
+                  subtitle={componentSubtitle(tab, item, t)}
                   usageNames={usageByComponentId.get(item.id)}
                   guildId={guildId}
                   open={editing?.kind === tab && editing.id === item.id}
@@ -354,30 +367,38 @@ function tabIcon(tab: TabValue) {
   }
 }
 
-function componentName(tab: TabValue, item: AnyComponent): string {
+function componentName(tab: TabValue, item: AnyComponent, t: Translator): string {
   const o = item as { name?: string; label?: string; title?: string; placeholder?: string };
-  if (tab === "buttons") return o.name || o.label || "Button";
-  if (tab === "modals") return o.title || "Modal";
-  if (tab === "embed") return o.name || o.title || "Embed";
-  if (tab === "selectMenus") return o.name || o.placeholder || "Select Menu";
-  return "Item";
+  if (tab === "buttons") return o.name || o.label || t("builder.fallback.button");
+  if (tab === "modals") return o.title || t("builder.fallback.modal");
+  if (tab === "embed") return o.name || o.title || t("builder.fallback.embed");
+  if (tab === "selectMenus") return o.name || o.placeholder || t("builder.fallback.selectMenu");
+  return t("builder.fallback.item");
 }
 
-function componentSubtitle(tab: TabValue, item: AnyComponent): string {
+function componentSubtitle(tab: TabValue, item: AnyComponent, t: Translator): string {
   const o = item as { style?: string; disabled?: boolean; fields?: unknown[]; options?: unknown[] };
-  if (tab === "buttons") return `${o.style ?? ""}${o.disabled ? " • disabled" : ""}`;
-  if (tab === "modals") return `${o.fields?.length ?? 0} field(s)`;
-  if (tab === "embed") return `${o.fields?.length ?? 0} field(s)`;
-  if (tab === "selectMenus") return `${o.options?.length ?? 0} option(s)`;
+  if (tab === "buttons") {
+    const style = o.style as ButtonCustom["style"] | undefined;
+    const styleLabel = style && style in BUTTON_STYLE_LABEL_KEY ? t(BUTTON_STYLE_LABEL_KEY[style]) : (o.style ?? "");
+    return o.disabled
+      ? t("builder.components.buttonDisabledSuffix", { style: styleLabel })
+      : styleLabel;
+  }
+  if (tab === "modals" || tab === "embed")
+    return t("builder.shared.fieldsCount", { count: o.fields?.length ?? 0 });
+  if (tab === "selectMenus")
+    return t("builder.shared.optionsCount", { count: o.options?.length ?? 0 });
   return "";
 }
 
 // No hardcoded author: the preview resolves the guild's real bot identity from
 // DiscordPreviewContext (provided by the guild layout).
-function previewForItem(tab: TabValue, item: AnyComponent) {
-  if (tab === "buttons") return { content: "Preview", buttons: [item as ButtonCustom] };
+function previewForItem(tab: TabValue, item: AnyComponent, t: Translator) {
+  const preview = t("builder.scenarios.preview");
+  if (tab === "buttons") return { content: preview, buttons: [item as ButtonCustom] };
   if (tab === "embed") return { content: undefined, embeds: [item as EmbedCustom] };
-  if (tab === "selectMenus") return { content: "Preview", selectMenus: [item as SelectMenuCustom] };
+  if (tab === "selectMenus") return { content: preview, selectMenus: [item as SelectMenuCustom] };
   if (tab === "modals") return { modal: item as ModalCustom };
   return null;
 }
@@ -409,6 +430,7 @@ function ComponentItem({
   onDuplicate: () => void;
   onMove: (direction: number) => void;
 }) {
+  const t = useT();
   const usage = usageNames && usageNames.length > 0 ? usageNames : undefined;
 
   return (
@@ -425,7 +447,7 @@ function ComponentItem({
           {subtitle && <Row>{subtitle}</Row>}
           {usage && (
             <Row onBackground="brand-medium">
-              Used in {usage.length} scenario{usage.length === 1 ? "" : "s"}
+              {t("builder.components.usedIn", { count: usage.length })}
             </Row>
           )}
         </Column>
@@ -439,22 +461,22 @@ function ComponentItem({
         <IconButton
           icon="copy"
           variant="secondary"
-          tooltip="Duplicate"
+          tooltip={t("builder.shared.duplicate")}
           onClick={() => onDuplicate()}
         />
         <IconButton
           icon="chevronUp"
           variant="secondary"
           onClick={() => onMove(-1)}
-          tooltip="Move up"
+          tooltip={t("builder.shared.moveUp")}
         />
         <IconButton
           icon="chevronDown"
           variant="secondary"
           onClick={() => onMove(1)}
-          tooltip="Move down"
+          tooltip={t("builder.shared.moveDown")}
         />
-        <IconButton icon="trash" variant="danger" tooltip="Delete component" onClick={onDelete} />
+        <IconButton icon="trash" variant="danger" tooltip={t("builder.components.deleteComponent")} onClick={onDelete} />
       </Row>
       {tab === "buttons" && (
         <ButtonEditor guildId={guildId} value={item as ButtonCustom} onChange={onChange} />

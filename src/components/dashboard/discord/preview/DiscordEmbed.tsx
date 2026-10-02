@@ -2,8 +2,10 @@
 "use client";
 
 import { useDiscordPreviewOptional } from "@/contexts/DiscordPreviewContext";
+import { useFormat } from "@/i18n/client";
 import type { EmbedCustom, EmbedField } from "@/lib/db/types";
 import { resolveDiscordColor } from "@/lib/discord/discord-style";
+import type { Formatters } from "@/i18n/format";
 import { replacePreviewTags } from "@/lib/discord/preview-tags";
 import { DiscordText } from "./DiscordText";
 
@@ -11,10 +13,9 @@ export interface DiscordEmbedProps {
   embed: EmbedCustom;
 }
 
-/** Matches real Discord's embed footer timestamp style, e.g. "7/18/2026 1:32 AM". */
-function formatEmbedTimestamp(): string {
-  const d = new Date();
-  return d.toLocaleString("en-US", {
+/** Matches real Discord's embed footer timestamp style, e.g. "7/18/2026 1:32 AM" (localised). */
+function formatEmbedTimestamp(format: Formatters): string {
+  return format.dateTime(new Date(), {
     month: "numeric",
     day: "numeric",
     year: "numeric",
@@ -46,6 +47,7 @@ function groupEmbedFields(fields: EmbedField[]): EmbedField[][] {
 
 export function DiscordEmbed({ embed }: DiscordEmbedProps) {
   const ctx = useDiscordPreviewOptional();
+  const format = useFormat();
   // URL fields may use bot placeholders like {user.avatar} / {guild.icon}.
   const resolveUrl = (url?: string) =>
     url ? replacePreviewTags(url.trim(), ctx ?? undefined) : "";
@@ -171,7 +173,7 @@ export function DiscordEmbed({ embed }: DiscordEmbedProps) {
             {showFooter && showTimestamp ? (
               <span className="mx-0.5 text-discord-interactive-muted">•</span>
             ) : null}
-            {showTimestamp ? <span>{formatEmbedTimestamp()}</span> : null}
+            {showTimestamp ? <span>{formatEmbedTimestamp(format)}</span> : null}
           </div>
         </div>
       )}

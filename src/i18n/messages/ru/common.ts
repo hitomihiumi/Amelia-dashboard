@@ -92,6 +92,10 @@ export const common: Dict<typeof en> = {
     loadFailed: "Не удалось загрузить эмодзи",
     networkError: "Ошибка сети",
   },
+  avatar: {
+    loading: "Загрузка аватара",
+    empty: "Аватар не задан",
+  },
   confirmDelete: {
     tooltip: "Удалить",
     question: "Удалить?",
