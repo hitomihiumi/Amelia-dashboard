@@ -2,6 +2,7 @@ import "server-only";
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getT } from "@/i18n/server";
 
 /**
  * Site administrators, configured through `ADMIN_USER_IDS` — a comma separated
@@ -33,7 +34,7 @@ export async function requireSiteAdmin(): Promise<
   { ok: true; admin: { id: string; name: string } } | { ok: false; error: string }
 > {
   const admin = await getSiteAdmin();
-  if (!admin) return { ok: false, error: "Administrator access required." };
+  if (!admin) return { ok: false, error: (await getT())("admin.errors.accessRequired") };
 
   return { ok: true, admin };
 }

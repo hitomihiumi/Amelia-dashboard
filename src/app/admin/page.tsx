@@ -1,11 +1,27 @@
 import React from "react";
 import { Column, Flex, Grid, Row, Tag, Text } from "@once-ui-system/core";
 import { prisma } from "@/lib/db/db";
-import { formatUptime, getStatusSnapshot } from "@/lib/status/status";
+import { getStatusSnapshot } from "@/lib/status/status";
+import { getFormatters, getT } from "@/i18n/server";
+import type { Translator } from "@/i18n/translate";
 
 export const dynamic = "force-dynamic";
 
+function uptimeLabel(t: Translator, uptimeMs: number | null): string {
+  if (!uptimeMs || uptimeMs < 0) return t("admin.overview.uptime.none");
+
+  const minutes = Math.floor(uptimeMs / 60_000) % 60;
+  const hours = Math.floor(uptimeMs / 3_600_000) % 24;
+  const days = Math.floor(uptimeMs / 86_400_000);
+
+  if (days > 0) return t("admin.overview.uptime.daysHours", { days, hours });
+  if (hours > 0) return t("admin.overview.uptime.hoursMinutes", { hours, minutes });
+  return t("admin.overview.uptime.minutes", { minutes });
+}
+
 export default async function AdminOverviewPage() {
+  const t = await getT();
+  const { number } = await getFormatters();
   const [snapshot, published, drafts, openIncidents] = await Promise.all([
     getStatusSnapshot(),
     prisma.newsPost.count({ where: { published: true } }),
@@ -13,16 +29,18 @@ export default async function AdminOverviewPage() {
     prisma.incident.count({ where: { resolvedAt: null } }),
   ]);
 
+  const overallLabel = t(`admin.serviceStatus.${snapshot.overall}`);
+
   const cards = [
-    { label: "Overall status", value: snapshot.overall },
-    { label: "Servers", value: snapshot.metrics.guilds.toLocaleString("en-US") },
-    { label: "Members", value: snapshot.metrics.members.toLocaleString("en-US") },
-    { label: "Uptime", value: formatUptime(snapshot.metrics.uptimeMs) },
-    { label: "Published posts", value: String(published) },
-    { label: "Drafts", value: String(drafts) },
-    { label: "Open incidents", value: String(openIncidents) },
+    { label: t("admin.overview.cards.overall"), value: overallLabel },
+    { label: t("admin.overview.cards.servers"), value: number(snapshot.metrics.guilds) },
+    { label: t("admin.overview.cards.members"), value: number(snapshot.metrics.members) },
+    { label: t("admin.overview.cards.uptime"), value: uptimeLabel(t, snapshot.metrics.uptimeMs) },
+    { label: t("admin.overview.cards.published"), value: number(published) },
+    { label: t("admin.overview.cards.drafts"), value: number(drafts) },
+    { label: t("admin.overview.cards.openIncidents"), value: number(openIncidents) },
     {
-      label: "Shards",
+      label: t("admin.overview.cards.shards"),
       value: `${snapshot.metrics.shards.ready}/${snapshot.metrics.shards.total || 1}`,
     },
   ];
@@ -30,9 +48,9 @@ export default async function AdminOverviewPage() {
   return (
     <Column fillWidth gap="16">
       <Row fillWidth horizontal="between" vertical="center">
-        <Text variant="heading-strong-m">Overview</Text>
+        <Text variant="heading-strong-m">{t("admin.overview.title")}</Text>
         <Tag scheme={snapshot.overall === "operational" ? "success" : "warning"}>
-          {snapshot.overall}
+          {overallLabel}
         </Tag>
       </Row>
 

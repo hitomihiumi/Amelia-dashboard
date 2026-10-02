@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db/db";
 import { requireSiteAdmin } from "@/lib/admin/access";
 import { NEWS_CATEGORIES, slugify } from "@/lib/news/categories";
+import { getT } from "@/i18n/server";
 
 export type AdminActionState = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -22,6 +23,7 @@ function revalidateNews(slug?: string) {
 
 /** Create or update a post. An empty `id` means "create". */
 export async function saveNewsPost(formData: FormData): Promise<AdminActionState> {
+  const t = await getT();
   try {
     const gate = await requireSiteAdmin();
     if (!gate.ok) return gate;
@@ -36,16 +38,16 @@ export async function saveNewsPost(formData: FormData): Promise<AdminActionState
     const slugInput = String(formData.get("slug") ?? "").trim();
 
     if (title.length < 3 || title.length > 200) {
-      return { ok: false, error: "The title must be between 3 and 200 characters." };
+      return { ok: false, error: t("admin.errors.titleLength") };
     }
-    if (!content) return { ok: false, error: "The post body cannot be empty." };
-    if (content.length > 50_000) return { ok: false, error: "The post body is too long." };
+    if (!content) return { ok: false, error: t("admin.errors.bodyEmpty") };
+    if (content.length > 50_000) return { ok: false, error: t("admin.errors.bodyTooLong") };
     if (!NEWS_CATEGORIES.includes(category as never)) {
-      return { ok: false, error: "Unknown category." };
+      return { ok: false, error: t("admin.errors.unknownCategory") };
     }
-    if (summary.length > 400) return { ok: false, error: "The summary is too long." };
+    if (summary.length > 400) return { ok: false, error: t("admin.errors.summaryTooLong") };
     if (coverUrl && !/^https?:\/\/\S+$/i.test(coverUrl)) {
-      return { ok: false, error: "The cover must be a link to an image." };
+      return { ok: false, error: t("admin.errors.coverInvalid") };
     }
 
     const slug = slugify(slugInput || title);
@@ -55,7 +57,7 @@ export async function saveNewsPost(formData: FormData): Promise<AdminActionState
       where: { slug, ...(id ? { NOT: { id } } : {}) },
       select: { id: true },
     });
-    if (clash) return { ok: false, error: `The slug "${slug}" is already taken.` };
+    if (clash) return { ok: false, error: t("admin.errors.slugTaken", { slug }) };
 
     const data = {
       slug,
@@ -69,7 +71,7 @@ export async function saveNewsPost(formData: FormData): Promise<AdminActionState
 
     if (id) {
       const existing = await prisma.newsPost.findUnique({ where: { id } });
-      if (!existing) return { ok: false, error: "Post not found." };
+      if (!existing) return { ok: false, error: t("admin.errors.postNotFound") };
 
       const post = await prisma.newsPost.update({
         where: { id },
@@ -97,11 +99,12 @@ export async function saveNewsPost(formData: FormData): Promise<AdminActionState
     return { ok: true, id: post.id };
   } catch (error) {
     console.error("[Admin News Error]:", error);
-    return { ok: false, error: "Internal server error occurred while saving." };
+    return { ok: false, error: t("admin.errors.saveFailed") };
   }
 }
 
 export async function deleteNewsPost(id: string): Promise<AdminActionState> {
+  const t = await getT();
   try {
     const gate = await requireSiteAdmin();
     if (!gate.ok) return gate;
@@ -112,12 +115,13 @@ export async function deleteNewsPost(id: string): Promise<AdminActionState> {
     return { ok: true };
   } catch (error) {
     console.error("[Admin News Delete Error]:", error);
-    return { ok: false, error: "Could not delete the post." };
+    return { ok: false, error: t("admin.errors.deletePostFailed") };
   }
 }
 
 /** Manually opened incident. */
 export async function createIncident(formData: FormData): Promise<AdminActionState> {
+  const t = await getT();
   try {
     const gate = await requireSiteAdmin();
     if (!gate.ok) return gate;
@@ -128,11 +132,11 @@ export async function createIncident(formData: FormData): Promise<AdminActionSta
     const component = String(formData.get("component") ?? "").trim();
 
     if (title.length < 3 || title.length > 200) {
-      return { ok: false, error: "The title must be between 3 and 200 characters." };
+      return { ok: false, error: t("admin.errors.titleLength") };
     }
-    if (!SEVERITIES.includes(severity)) return { ok: false, error: "Unknown severity." };
+    if (!SEVERITIES.includes(severity)) return { ok: false, error: t("admin.errors.unknownSeverity") };
     if (component && !SERVICE_KEYS.includes(component)) {
-      return { ok: false, error: "Unknown component." };
+      return { ok: false, error: t("admin.errors.unknownComponent") };
     }
 
     const incident = await prisma.incident.create({
@@ -151,12 +155,13 @@ export async function createIncident(formData: FormData): Promise<AdminActionSta
     return { ok: true, id: incident.id };
   } catch (error) {
     console.error("[Admin Incident Error]:", error);
-    return { ok: false, error: "Could not create the incident." };
+    return { ok: false, error: t("admin.errors.incidentCreateFailed") };
   }
 }
 
 /** Post an update on an incident, optionally resolving it. */
 export async function addIncidentUpdate(formData: FormData): Promise<AdminActionState> {
+  const t = await getT();
   try {
     const gate = await requireSiteAdmin();
     if (!gate.ok) return gate;
@@ -165,13 +170,13 @@ export async function addIncidentUpdate(formData: FormData): Promise<AdminAction
     const status = String(formData.get("status") ?? "monitoring");
     const body = String(formData.get("body") ?? "").trim();
 
-    if (!INCIDENT_STATUSES.includes(status)) return { ok: false, error: "Unknown status." };
+    if (!INCIDENT_STATUSES.includes(status)) return { ok: false, error: t("admin.errors.unknownStatus") };
     if (!body || body.length > 2000) {
-      return { ok: false, error: "The update must be between 1 and 2000 characters." };
+      return { ok: false, error: t("admin.errors.updateLength") };
     }
 
     const incident = await prisma.incident.findUnique({ where: { id: incidentId } });
-    if (!incident) return { ok: false, error: "Incident not found." };
+    if (!incident) return { ok: false, error: t("admin.errors.incidentNotFound") };
 
     await prisma.incident.update({
       where: { id: incidentId },
@@ -187,11 +192,12 @@ export async function addIncidentUpdate(formData: FormData): Promise<AdminAction
     return { ok: true };
   } catch (error) {
     console.error("[Admin Incident Update Error]:", error);
-    return { ok: false, error: "Could not update the incident." };
+    return { ok: false, error: t("admin.errors.incidentUpdateFailed") };
   }
 }
 
 export async function deleteIncident(id: string): Promise<AdminActionState> {
+  const t = await getT();
   try {
     const gate = await requireSiteAdmin();
     if (!gate.ok) return gate;
@@ -203,30 +209,31 @@ export async function deleteIncident(id: string): Promise<AdminActionState> {
     return { ok: true };
   } catch (error) {
     console.error("[Admin Incident Delete Error]:", error);
-    return { ok: false, error: "Could not delete the incident." };
+    return { ok: false, error: t("admin.errors.incidentDeleteFailed") };
   }
 }
 
 /** Site wide configuration: banner, links, landing copy and status overrides. */
 export async function updateGlobalConfig(formData: FormData): Promise<AdminActionState> {
+  const t = await getT();
   try {
     const gate = await requireSiteAdmin();
     if (!gate.ok) return gate;
 
     const raw = formData.get("config");
-    if (!raw) return { ok: false, error: "Required data is missing." };
+    if (!raw) return { ok: false, error: t("admin.errors.missingData") };
 
     const config = JSON.parse(raw as string) as Record<string, unknown>;
 
     const bannerVariant = String(config.bannerVariant ?? "warning");
     if (!BANNER_VARIANTS.includes(bannerVariant)) {
-      return { ok: false, error: "Unknown banner variant." };
+      return { ok: false, error: t("admin.errors.unknownBannerVariant") };
     }
 
     for (const key of ["inviteUrl", "supportUrl", "githubUrl"] as const) {
       const value = config[key];
       if (value && !/^https?:\/\/\S+$/i.test(String(value))) {
-        return { ok: false, error: `"${key}" must be a valid link.` };
+        return { ok: false, error: t("admin.errors.invalidLink", { field: key }) };
       }
     }
 
@@ -236,9 +243,9 @@ export async function updateGlobalConfig(formData: FormData): Promise<AdminActio
     >;
 
     for (const [key, override] of Object.entries(overrides)) {
-      if (!SERVICE_KEYS.includes(key)) return { ok: false, error: `Unknown service "${key}".` };
+      if (!SERVICE_KEYS.includes(key)) return { ok: false, error: t("admin.errors.unknownService", { service: key }) };
       if (override?.status && !SERVICE_STATUSES.includes(override.status)) {
-        return { ok: false, error: `Unknown status for "${key}".` };
+        return { ok: false, error: t("admin.errors.unknownServiceStatus", { service: key }) };
       }
     }
 
@@ -276,7 +283,7 @@ export async function updateGlobalConfig(formData: FormData): Promise<AdminActio
     return { ok: true };
   } catch (error) {
     console.error("[Admin Config Error]:", error);
-    if (error instanceof SyntaxError) return { ok: false, error: "Failed to parse data payload." };
-    return { ok: false, error: "Could not save the configuration." };
+    if (error instanceof SyntaxError) return { ok: false, error: t("admin.errors.parseFailed") };
+    return { ok: false, error: t("admin.errors.configSaveFailed") };
   }
 }

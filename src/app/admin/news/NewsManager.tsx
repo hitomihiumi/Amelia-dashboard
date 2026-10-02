@@ -18,7 +18,8 @@ import {
 } from "@once-ui-system/core";
 import { useRouter } from "next/navigation";
 import type { NewsPost } from "@prisma/client";
-import { NEWS_CATEGORIES, NEWS_CATEGORY_LABELS } from "@/lib/news/categories";
+import { NEWS_CATEGORIES } from "@/lib/news/categories";
+import { useT } from "@/i18n/client";
 import { deleteNewsPost, saveNewsPost } from "../actions";
 
 interface Draft {
@@ -59,6 +60,12 @@ function toDraft(post: NewsPost): Draft {
 export function NewsManager({ posts }: { posts: NewsPost[] }) {
   const router = useRouter();
   const { addToast } = useToast();
+  const t = useT();
+
+  const categoryLabel = (category: string) =>
+    (NEWS_CATEGORIES as readonly string[]).includes(category)
+      ? t(`admin.newsCategory.${category as (typeof NEWS_CATEGORIES)[number]}`)
+      : category;
 
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [pending, setPending] = useState(false);
@@ -77,7 +84,7 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
     setPending(false);
 
     if (result.ok) {
-      addToast({ message: draft.id ? "Post updated" : "Post created", variant: "success" });
+      addToast({ message: draft.id ? t("admin.news.toast.updated") : t("admin.news.toast.created"), variant: "success" });
       setDraft(EMPTY);
       router.refresh();
     } else {
@@ -89,7 +96,7 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
     const result = await deleteNewsPost(id);
 
     if (result.ok) {
-      addToast({ message: "Post deleted", variant: "success" });
+      addToast({ message: t("admin.news.toast.deleted"), variant: "success" });
       if (draft.id === id) setDraft(EMPTY);
       router.refresh();
     } else {
@@ -109,10 +116,10 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
         background="surface"
       >
         <Row fillWidth horizontal="between" vertical="center">
-          <Text variant="heading-strong-s">{draft.id ? "Edit post" : "New post"}</Text>
+          <Text variant="heading-strong-s">{draft.id ? t("admin.news.editPost") : t("admin.news.newPost")}</Text>
           {draft.id && (
             <Button size="s" variant="secondary" onClick={() => setDraft(EMPTY)}>
-              Cancel editing
+              {t("admin.news.cancelEditing")}
             </Button>
           )}
         </Row>
@@ -121,7 +128,7 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
 
         <Input
           id="news-title"
-          label="Title"
+          label={t("admin.news.fields.title")}
           value={draft.title}
           maxLength={200}
           onChange={(e) => update({ title: e.target.value })}
@@ -129,7 +136,7 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
 
         <Input
           id="news-slug"
-          label="Slug (optional — generated from the title)"
+          label={t("admin.news.fields.slug")}
           value={draft.slug}
           maxLength={80}
           onChange={(e) => update({ slug: e.target.value })}
@@ -139,7 +146,7 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
           fillWidth
           buttons={NEWS_CATEGORIES.map((category) => ({
             value: category,
-            label: NEWS_CATEGORY_LABELS[category],
+            label: categoryLabel(category),
           }))}
           value={draft.category}
           onChange={(value) => update({ category: value })}
@@ -147,7 +154,7 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
 
         <Textarea
           id="news-summary"
-          label="Summary"
+          label={t("admin.news.fields.summary")}
           lines={2}
           value={draft.summary}
           maxLength={400}
@@ -156,7 +163,7 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
 
         <Input
           id="news-cover"
-          label="Cover image URL"
+          label={t("admin.news.fields.coverUrl")}
           value={draft.coverUrl}
           maxLength={500}
           onChange={(e) => update({ coverUrl: e.target.value })}
@@ -164,7 +171,7 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
 
         <Textarea
           id="news-content"
-          label="Body (Markdown)"
+          label={t("admin.news.fields.content")}
           lines={12}
           value={draft.content}
           onChange={(e) => update({ content: e.target.value })}
@@ -175,22 +182,22 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
             checked={draft.published}
             onToggle={() => update({ published: !draft.published })}
           />
-          <Text variant="label-default-s">Published</Text>
+          <Text variant="label-default-s">{t("admin.news.fields.published")}</Text>
         </Row>
 
         <Row fillWidth horizontal="end">
           <Button onClick={save} loading={pending} disabled={pending}>
-            {draft.id ? "Save changes" : "Create post"}
+            {draft.id ? t("common.actions.saveChanges") : t("admin.news.createPost")}
           </Button>
         </Row>
       </Flex>
 
       <Column fillWidth gap="12">
-        <Text variant="heading-strong-s">All posts ({posts.length})</Text>
+        <Text variant="heading-strong-s">{t("admin.news.allPosts", { count: posts.length })}</Text>
 
         {posts.length === 0 && (
           <Text variant="body-default-s" onBackground="neutral-weak">
-            No posts yet.
+            {t("admin.news.empty")}
           </Text>
         )}
 
@@ -199,9 +206,9 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
             <Column fillWidth gap="12">
               <Row gap="8" vertical="center" wrap>
                 <Tag scheme={post.published ? "success" : "neutral"}>
-                  {post.published ? "published" : "draft"}
+                  {post.published ? t("admin.news.published") : t("admin.news.draft")}
                 </Tag>
-                <Tag scheme="neutral">{post.category}</Tag>
+                <Tag scheme="neutral">{categoryLabel(post.category)}</Tag>
                 <Text variant="body-default-xs" onBackground="neutral-weak">
                   /news/{post.slug}
                 </Text>
@@ -215,10 +222,10 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
 
               <Row gap="8" horizontal="end">
                 <Button size="s" variant="secondary" onClick={() => setDraft(toDraft(post))}>
-                  Edit
+                  {t("common.actions.edit")}
                 </Button>
                 <Button size="s" variant="danger" onClick={() => remove(post.id)}>
-                  Delete
+                  {t("common.actions.delete")}
                 </Button>
               </Row>
             </Column>

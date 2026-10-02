@@ -17,29 +17,10 @@ import {
 import { useRouter } from "next/navigation";
 import type { GlobalConfig } from "@prisma/client";
 import type { ServiceOverride } from "@/lib/admin/config";
+import { useT } from "@/i18n/client";
 import { updateGlobalConfig } from "../actions";
 
-const BANNER_VARIANTS = [
-  { value: "info", label: "Info" },
-  { value: "warning", label: "Warning" },
-  { value: "danger", label: "Danger" },
-  { value: "success", label: "Success" },
-];
-
-const SERVICE_STATUSES = [
-  { value: "", label: "Measured" },
-  { value: "operational", label: "Operational" },
-  { value: "degraded", label: "Degraded" },
-  { value: "down", label: "Down" },
-  { value: "maintenance", label: "Maintenance" },
-];
-
-const SERVICES = [
-  { key: "gateway", label: "Discord Gateway" },
-  { key: "database", label: "Database" },
-  { key: "website", label: "Website" },
-  { key: "shards", label: "Shards" },
-];
+const SERVICE_KEYS = ["gateway", "database", "website", "shards"] as const;
 
 interface FormState {
   bannerEnabled: boolean;
@@ -64,6 +45,24 @@ export function GlobalConfigForm({
 }) {
   const router = useRouter();
   const { addToast } = useToast();
+  const t = useT();
+
+  const bannerVariants = [
+    { value: "info", label: t("admin.config.banner.variant.info") },
+    { value: "warning", label: t("admin.config.banner.variant.warning") },
+    { value: "danger", label: t("admin.config.banner.variant.danger") },
+    { value: "success", label: t("admin.config.banner.variant.success") },
+  ];
+
+  const serviceStatuses = [
+    { value: "", label: t("admin.serviceStatus.measured") },
+    { value: "operational", label: t("admin.serviceStatus.operational") },
+    { value: "degraded", label: t("admin.serviceStatus.degraded") },
+    { value: "down", label: t("admin.serviceStatus.down") },
+    { value: "maintenance", label: t("admin.serviceStatus.maintenance") },
+  ];
+
+  const services = SERVICE_KEYS.map((key) => ({ key, label: t(`admin.components.${key}`) }));
 
   const [state, setState] = useState<FormState>({
     bannerEnabled: config.bannerEnabled,
@@ -104,7 +103,7 @@ export function GlobalConfigForm({
     setPending(false);
 
     if (result.ok) {
-      addToast({ message: "Configuration saved", variant: "success" });
+      addToast({ message: t("admin.config.saved"), variant: "success" });
       router.refresh();
     } else {
       addToast({ message: result.error, variant: "danger" });
@@ -113,18 +112,19 @@ export function GlobalConfigForm({
 
   return (
     <Column fillWidth gap="24">
-      <Section title="Site banner" description="Shown above the header on every public page.">
+      <Section title={t("admin.config.banner.title")}
+        description={t("admin.config.banner.description")}>
         <Row fillWidth gap="12" vertical="center">
           <Switch
             checked={state.bannerEnabled}
             onToggle={() => update({ bannerEnabled: !state.bannerEnabled })}
           />
-          <Text variant="label-default-s">Show the banner</Text>
+          <Text variant="label-default-s">{t("admin.config.banner.show")}</Text>
         </Row>
 
         <Textarea
           id="banner-text"
-          label="Banner text"
+          label={t("admin.config.banner.text")}
           lines={2}
           value={state.bannerText}
           maxLength={300}
@@ -133,47 +133,49 @@ export function GlobalConfigForm({
 
         <SegmentedControl
           fillWidth
-          buttons={BANNER_VARIANTS}
+          buttons={bannerVariants}
           value={state.bannerVariant}
           onChange={(value) => update({ bannerVariant: value })}
         />
       </Section>
 
-      <Section title="Links" description="Used by the landing page buttons and the footer.">
+      <Section title={t("admin.config.links.title")}
+        description={t("admin.config.links.description")}>
         <Input
           id="invite-url"
-          label="Bot invite URL"
+          label={t("admin.config.links.invite")}
           value={state.inviteUrl}
           maxLength={500}
           onChange={(e) => update({ inviteUrl: e.target.value })}
         />
         <Input
           id="support-url"
-          label="Support server URL"
+          label={t("admin.config.links.support")}
           value={state.supportUrl}
           maxLength={500}
           onChange={(e) => update({ supportUrl: e.target.value })}
         />
         <Input
           id="github-url"
-          label="GitHub URL"
+          label={t("admin.config.links.github")}
           value={state.githubUrl}
           maxLength={500}
           onChange={(e) => update({ githubUrl: e.target.value })}
         />
       </Section>
 
-      <Section title="Landing copy" description="Leave empty to keep the built-in wording.">
+      <Section title={t("admin.config.landing.title")}
+        description={t("admin.config.landing.description")}>
         <Input
           id="hero-tagline"
-          label="Tagline"
+          label={t("admin.config.landing.tagline")}
           value={state.heroTagline}
           maxLength={120}
           onChange={(e) => update({ heroTagline: e.target.value })}
         />
         <Textarea
           id="hero-text"
-          label="Hero text"
+          label={t("admin.config.landing.heroText")}
           lines={2}
           value={state.heroText}
           maxLength={400}
@@ -182,20 +184,20 @@ export function GlobalConfigForm({
       </Section>
 
       <Section
-        title="Status page"
-        description="Maintenance mode overrides every service; individual overrides win over the measurement."
+        title={t("admin.config.status.title")}
+        description={t("admin.config.status.description")}
       >
         <Row fillWidth gap="12" vertical="center">
           <Switch
             checked={state.maintenance}
             onToggle={() => update({ maintenance: !state.maintenance })}
           />
-          <Text variant="label-default-s">Maintenance mode</Text>
+          <Text variant="label-default-s">{t("admin.config.status.maintenance")}</Text>
         </Row>
 
         <Input
           id="maintenance-message"
-          label="Maintenance message"
+          label={t("admin.config.status.maintenanceMessage")}
           value={state.maintenanceMessage}
           maxLength={300}
           onChange={(e) => update({ maintenanceMessage: e.target.value })}
@@ -203,19 +205,19 @@ export function GlobalConfigForm({
 
         <Line />
 
-        {SERVICES.map((service) => (
+        {services.map((service) => (
           <Column key={service.key} fillWidth gap="8">
             <Text variant="label-default-s">{service.label}</Text>
             <SegmentedControl
               fillWidth
-              buttons={SERVICE_STATUSES}
+              buttons={serviceStatuses}
               value={state.serviceOverrides[service.key]?.status ?? ""}
               onChange={(value) => setOverride(service.key, { status: value })}
             />
             {state.serviceOverrides[service.key]?.status && (
               <Input
                 id={`override-note-${service.key}`}
-                label="Note"
+                label={t("admin.config.status.note")}
                 value={state.serviceOverrides[service.key]?.note ?? ""}
                 maxLength={200}
                 onChange={(e) => setOverride(service.key, { note: e.target.value })}
@@ -227,7 +229,7 @@ export function GlobalConfigForm({
 
       <Row fillWidth horizontal="end">
         <Button onClick={save} loading={pending} disabled={pending}>
-          Save configuration
+          {t("admin.config.save")}
         </Button>
       </Row>
     </Column>
