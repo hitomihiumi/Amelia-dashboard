@@ -224,6 +224,7 @@ export function AuditForm({
           description="Turn single events off, or send them to their own channel."
           num={idx + 2}
         >
+
           {AUDIT_EVENT_KEYS.filter((event) => AUDIT_EVENT_CATEGORY[event] === category).map(
             (event) => (
               <Accordion key={event} title={EVENT_LABELS[event]}>

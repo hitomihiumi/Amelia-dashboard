@@ -1,56 +1,41 @@
 import { prisma } from "@/lib/db/db";
 import { Guild } from "@prisma/client";
-import { Document } from "mongodb";
-import { TempCache } from "@/lib/db/wrappers/TempCache";
-import { GuildFieldMap, GuildPathMap } from "@/lib/db/mappings/GuildMapping";
+import { GuildPathMap, GuildFieldMap } from "@/lib/db/mappings/GuildMapping";
 
-export interface ComponentDocument extends Document {
-  _id: string;
-  guildId: string;
-}
-
-const MONGODB_DEFAULTS = {
-  components: {
-    modals: [],
-    embed: [],
-    buttons: [],
-    selectMenus: [],
-    scenarios: [],
-  },
-};
-
+/**
+ * Database Guild wrapper with type-safe access.
+ * All schema paths live in PostgreSQL; only temp.* paths are served by TempCache (Redis).
+ */
 export class DBGuild {
   public id: string;
   private data: Guild | null = null;
-  private mongoCache: TempCache<typeof GuildPathMap>;
 
   constructor(guildId: string) {
     this.id = guildId;
-    this.mongoCache = new TempCache("guild_data", guildId, GuildPathMap);
   }
 
-  async get(path: string) {
-    if (this.isMongoDBPath(path)) {
-      await this.ensureMongoDBData(path);
+  /**
+   * Initialize and ensure guild exists in database
+   */
+  private async ensureGuild(): Promise<Guild> {
+    if (this.data) return this.data;
 
-      // Check if this is the parent path "utils.components"
-      if (path === "utils.components") {
-        const result: any = {
-          modals: (await this.mongoCache.get("utils.components.modals")) || [],
-          embed: (await this.mongoCache.get("utils.components.embed")) || [],
-          buttons: (await this.mongoCache.get("utils.components.buttons")) || [],
-          selectMenus: (await this.mongoCache.get("utils.components.selectMenus")) || [],
-          scenarios: (await this.mongoCache.get("utils.components.scenarios")) || [],
-        };
-        return result;
-      }
+    this.data = await prisma.guild.upsert({
+      where: { id: this.id },
+      update: {},
+      create: {
+        id: this.id,
+      },
+    });
 
-      // Leaf path: get single value from MongoDB
-      const value = await this.mongoCache.get(path);
-      return value ?? [];
-    }
+    return this.data;
+  }
 
-    // PostgreSQL path
+  /**
+   * Get value by path with type inference
+   * Supports parent paths (e.g., "utils.components" returns all component arrays)
+   */
+  public async get(path: string): Promise<any> {
     await this.ensureGuild();
 
     const data = await prisma.guild.findUnique({
@@ -108,39 +93,8 @@ export class DBGuild {
 
   /**
    * Set value by path with type safety
-   * Automatically routes utils.components to MongoDB for better performance
    */
   public async set(path: string, value: any): Promise<void> {
-    // Route to MongoDB for components paths
-    if (this.isMongoDBPath(path)) {
-      await this.ensureMongoDBData(path);
-
-      // Check if this is the parent path "utils.components"
-      if (path === "utils.components" && typeof value === "object" && value !== null) {
-        const components = value as any;
-        if (components.modals !== undefined) {
-          await this.mongoCache.set("utils.components.modals", components.modals);
-        }
-        if (components.embed !== undefined) {
-          await this.mongoCache.set("utils.components.embed", components.embed);
-        }
-        if (components.buttons !== undefined) {
-          await this.mongoCache.set("utils.components.buttons", components.buttons);
-        }
-        if (components.selectMenus !== undefined) {
-          await this.mongoCache.set("utils.components.selectMenus", components.selectMenus);
-        }
-        if (components.scenarios !== undefined) {
-          await this.mongoCache.set("utils.components.scenarios", components.scenarios);
-        }
-        return;
-      }
-
-      await this.mongoCache.set(path, value);
-      return;
-    }
-
-    // PostgreSQL path
     await this.ensureGuild();
 
     // Check if this is a parent path (has children)
@@ -226,35 +180,73 @@ export class DBGuild {
   }
 
   /**
+   * Atomically increment a numeric column and return the new value.
+   * Used for counters that must never collide (e.g. moderation case numbers).
+   */
+  public async increment(path: string, by = 1): Promise<number> {
+    const field = GuildFieldMap[path];
+    if (!field) {
+      throw new Error(
+        `Unknown guild path: ${path}. Please regenerate mappings with 'npm run generate:schema'`,
+      );
+    }
+
+    await this.ensureGuild();
+
+    const row = await prisma.guild.update({
+      where: { id: this.id },
+      data: { [field]: { increment: by } } as any,
+      select: { [field]: true } as any,
+    });
+
+    this.data = null;
+    return (row as any)[field] as number;
+  }
+
+  /**
+   * Atomic add for direct numeric columns, returns false for composite paths
+   */
+  private async tryIncrement(path: string, value: number): Promise<boolean> {
+    const field = GuildFieldMap[path];
+    if (!field) return false;
+
+    await this.ensureGuild();
+    await prisma.guild.update({
+      where: { id: this.id },
+      data: { [field]: { increment: value } } as any,
+    });
+
+    this.data = null;
+    return true;
+  }
+
+  /**
    * Add to numeric value
    */
   public async add(path: string, value: number): Promise<void> {
-    const current = await this.get(path as any);
-    await this.set(path as any, (current as number) + value);
+    if (!(await this.tryIncrement(path, value))) {
+      const current = await this.get(path);
+      await this.set(path, (current as number) + value);
+    }
   }
 
   /**
    * Subtract from numeric value
    */
   public async sub(path: string, value: number): Promise<void> {
-    const current = await this.get(path as any);
-    await this.set(path as any, (current as number) - value);
+    if (!(await this.tryIncrement(path, -value))) {
+      const current = await this.get(path);
+      await this.set(path, (current as number) - value);
+    }
   }
 
   /**
    * Push to array
    */
   public async push(path: string, value: any): Promise<void> {
-    // Route to MongoDB for components paths
-    if (this.isMongoDBPath(path)) {
-      await this.ensureMongoDBData(path);
-      await this.mongoCache.push(path, value);
-      return;
-    }
-
-    const current = await this.get(path as any);
+    const current = await this.get(path);
     if (Array.isArray(current)) {
-      await this.set(path as any, [...current, value]);
+      await this.set(path, [...current, value]);
     }
   }
 
@@ -262,88 +254,22 @@ export class DBGuild {
    * Delete field
    */
   public async delete(path: string): Promise<void> {
-    // Route to MongoDB for components paths
-    if (this.isMongoDBPath(path)) {
-      await this.mongoCache.delete(path);
-      return;
-    }
-
-    await this.set(path as any, null as any);
+    await this.set(path, null as any);
   }
 
   /**
    * Check if path exists
    */
   public async has(path: string): Promise<boolean> {
-    // Route to MongoDB for components paths
-    if (this.isMongoDBPath(path)) {
-      return await this.mongoCache.has(path);
-    }
-
-    const value = await this.get(path as any);
+    const value = await this.get(path);
     return value !== null && value !== undefined;
   }
 
   /**
-   * Get all guild data (PostgreSQL + MongoDB components)
+   * Get all guild data
    */
-  public async all(): Promise<Guild & { components?: any }> {
-    const pgData = await this.ensureGuild();
-
-    // Get components from MongoDB
-    const components = await this.get("utils.components" as any);
-
-    return {
-      ...pgData,
-      components,
-    };
-  }
-
-  /**
-   * Check if a path should be stored in MongoDB (components)
-   */
-  private isMongoDBPath(path: string): boolean {
-    return path.startsWith("utils.components");
-  }
-
-  /**
-   * Initialize MongoDB data with defaults for components
-   */
-  private async ensureMongoDBData(path: string): Promise<void> {
-    if (!path.startsWith("utils.components")) return;
-
-    const hasComponents = await this.mongoCache.has("utils.components.modals");
-    if (!hasComponents) {
-      // Initialize all component fields
-      await this.mongoCache.set("utils.components.modals", MONGODB_DEFAULTS.components.modals);
-      await this.mongoCache.set("utils.components.embed", MONGODB_DEFAULTS.components.embed);
-      await this.mongoCache.set("utils.components.buttons", MONGODB_DEFAULTS.components.buttons);
-      await this.mongoCache.set(
-        "utils.components.selectMenus",
-        MONGODB_DEFAULTS.components.selectMenus,
-      );
-      await this.mongoCache.set(
-        "utils.components.scenarios",
-        MONGODB_DEFAULTS.components.scenarios,
-      );
-    }
-  }
-
-  /**
-   * Initialize and ensure guild exists in database
-   */
-  private async ensureGuild(): Promise<Guild> {
-    if (this.data) return this.data;
-
-    this.data = await prisma.guild.upsert({
-      where: { id: this.id },
-      update: {},
-      create: {
-        id: this.id,
-      },
-    });
-
-    return this.data;
+  public async all(): Promise<Guild> {
+    return await this.ensureGuild();
   }
 
   /**

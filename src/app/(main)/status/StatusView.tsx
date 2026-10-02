@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { Column, Flex, Grid, Icon, Line, Row, Text, RevealFx } from "@once-ui-system/core";
+import {Column, Flex, Grid, Icon, Line, Row, Text, RevealFx, CountFx} from "@once-ui-system/core";
 import type { ServiceStatus, StatusSnapshot } from "@/lib/status/status";
 
 const STATUS_COLOR: Record<ServiceStatus, string> = {
@@ -45,13 +45,12 @@ function relativeTime(iso: string | null): string {
 
 export function StatusView({
   initialSnapshot,
-  uptimeLabel,
 }: {
   initialSnapshot: StatusSnapshot;
-  uptimeLabel: string;
 }) {
   const [snapshot, setSnapshot] = useState(initialSnapshot);
-  const [uptime, setUptime] = useState(uptimeLabel);
+  const [uptime, setUptime] = useState(formatUptime(snapshot.metrics.uptimeMs));
+  const [ping , setPing] = useState(snapshot.metrics.ping);
   const [tick, setTick] = useState(0);
 
   const refresh = useCallback(async () => {
@@ -62,6 +61,7 @@ export function StatusView({
       const next = (await res.json()) as StatusSnapshot;
       setSnapshot(next);
       setUptime(formatUptime(next.metrics.uptimeMs));
+      setPing(next.metrics.ping);
     } catch {
       // A failed poll is not worth showing; the next one is 30 seconds away.
     }
@@ -81,7 +81,7 @@ export function StatusView({
   const overall = snapshot.overall;
 
   return (
-    <Column fillWidth gap="32" key={tick}>
+    <Column fillWidth gap="32">
       <RevealFx translateY={-0.5}>
         <Flex
           direction="column"
@@ -112,11 +112,20 @@ export function StatusView({
       </RevealFx>
 
       <RevealFx delay={0.3} translateY={-0.5}>
-        <Grid columns={3} m={{ columns: 3 }} s={{ columns: 1 }} gap="16" fillWidth>
+        <Grid columns={3} m={{ columns: 3 }} s={{ columns: 1 }} gap="16" fillWidth key={tick}>
           <MetricCard
             icon="target"
             label="Shard ping"
-            value={snapshot.metrics.ping === null ? "—" : `${snapshot.metrics.ping} ms`}
+            value={ping === null ? "—" : (
+                  <CountFx
+                      variant="display-strong-xs"
+                      value={ping}
+                      speed={5000}
+                      effect="wheel"
+                      easing="ease-out"
+                      children=" ms"
+                  />
+            )}
             description="Average WebSocket latency to the Discord gateway"
           />
           <MetricCard
@@ -128,7 +137,11 @@ export function StatusView({
           <MetricCard
             icon="boxes"
             label="Shards"
-            value={`${snapshot.metrics.shards.ready}/${snapshot.metrics.shards.total || 1}`}
+            value={
+              <Text variant="display-strong-xs">
+                {snapshot.metrics.shards.ready}/{snapshot.metrics.shards.total || 1}
+              </Text>
+            }
             description="Discord gateway processes reporting in"
           />
         </Grid>
@@ -189,7 +202,7 @@ function MetricCard({
 }: {
   icon: string;
   label: string;
-  value: string;
+  value: React.ReactNode;
   description: string;
 }) {
   return (
@@ -208,7 +221,7 @@ function MetricCard({
           {label.toUpperCase()}
         </Text>
       </Row>
-      <Text variant="display-strong-xs">{value}</Text>
+      {value}
       <Text variant="body-default-xs" onBackground="neutral-weak">
         {description}
       </Text>
@@ -217,14 +230,48 @@ function MetricCard({
 }
 
 /** Mirror of `formatUptime` on the server, used after a client refresh. */
-function formatUptime(uptimeMs: number | null): string {
+function formatUptime(uptimeMs: number | null): React.ReactNode {
   if (!uptimeMs || uptimeMs < 0) return "—";
 
   const minutes = Math.floor(uptimeMs / 60_000) % 60;
   const hours = Math.floor(uptimeMs / 3_600_000) % 24;
   const days = Math.floor(uptimeMs / 86_400_000);
 
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
+  if (days > 0) return <>
+    <CountFx
+        variant="display-strong-xs"
+        value={days}
+        speed={5000}
+        effect="wheel"
+        easing="ease-out"
+        children={'d'}
+    />
+    <CountFx
+        variant="display-strong-xs"
+        value={hours}
+        speed={5000}
+        effect="wheel"
+        easing="ease-out"
+        children={'h'}
+    />
+  </>;
+  if (hours > 0) return <>
+    <CountFx
+        variant="display-strong-xs"
+        value={hours}
+        speed={5000}
+        effect="wheel"
+        easing="ease-out"
+        children={'h'}
+    />
+    <CountFx
+        variant="display-strong-xs"
+        value={minutes}
+        speed={5000}
+        effect="wheel"
+        easing="ease-out"
+        children={'m'}
+    />
+  </>;
+  return <CountFx variant="display-strong-xs" value={minutes} speed={5000} effect="wheel" easing="ease-out" children={'m'} />;
 }

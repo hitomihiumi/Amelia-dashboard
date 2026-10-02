@@ -107,7 +107,7 @@ export function CasesClient({
       )}
 
       {items.map((item, idx) => (
-        <RevealFx delay={0.4 + idx * 0.1} translateY={-0.5}>
+        <RevealFx delay={0.4 + idx * 0.1} translateY={-0.5} key={idx}>
           <CaseCard key={item.id} guildId={guildId} item={item} />
         </RevealFx>
       ))}
@@ -184,6 +184,12 @@ function CaseCard({ guildId, item }: { guildId: string; item: CaseItem }) {
         User: {item.targetId} • Moderator:{" "}
         {item.moderatorId === "AUTOMOD" ? "Auto moderation" : item.moderatorId} • {item.source}
       </Text>
+
+      {["ban", "mute"].includes(item.type) && (
+          <Text variant="body-default-s" onBackground="neutral-weak">
+            Duration: {item.duration ? `${item.duration} seconds` : "Permanent"}
+          </Text>
+      )}
 
       <Text variant="body-default-s" onBackground="neutral-medium">
         {item.reason}

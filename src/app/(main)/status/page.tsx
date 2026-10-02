@@ -43,7 +43,6 @@ export default async function StatusPage() {
       <Column maxWidth="m" fillWidth gap="40">
         <StatusView
           initialSnapshot={snapshot}
-          uptimeLabel={formatUptime(snapshot.metrics.uptimeMs)}
         />
 
         <RevealFx delay={0.9} translateY={-0.5}>

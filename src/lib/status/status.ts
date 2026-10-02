@@ -1,13 +1,9 @@
 import "server-only";
 
 import type { Incident, IncidentUpdate } from "@prisma/client";
-import { prisma, mongoClient } from "@/lib/db/db";
+import { prisma } from "@/lib/db/db";
+import { RedisService } from "@/lib/db/redis";
 import { getGlobalConfig, serviceOverrides } from "@/lib/admin/config";
-
-/** A heartbeat older than this means the shard stopped reporting. */
-const HEARTBEAT_TTL_MS = 90_000;
-
-const STATUS_COLLECTION = "bot_status";
 
 export type ServiceStatus = "operational" | "degraded" | "down" | "maintenance";
 
@@ -57,11 +53,35 @@ const SERVICE_LABELS: Record<ServiceKey, string> = {
   shards: "Shards",
 };
 
-/** Heartbeats the bot writes every 30 seconds. */
+/** Redis key pattern the bot's heartbeat writer publishes under. */
+const STATUS_KEY_PREFIX = "bot_status:shard";
+
+/**
+ * Heartbeats the bot writes to Redis every 30 seconds.
+ * A key lives for 120s (TTL); a missing key means the shard is offline,
+ * so no staleness check on updatedAt is needed.
+ */
 async function readHeartbeats(): Promise<HeartbeatDocument[]> {
   try {
-    const db = mongoClient.db(process.env.MONGODB_DB_NAME || "amelia_cache");
-    return await db.collection<HeartbeatDocument>(STATUS_COLLECTION).find({}).toArray();
+    const client = RedisService.getClient();
+    const keys = await client.keys(`${STATUS_KEY_PREFIX}:*`);
+    if (keys.length === 0) return [];
+
+    const values = await client.mget(...keys);
+
+    return values
+      .filter((raw): raw is string => raw !== null)
+      .map((raw) => {
+        const document = JSON.parse(raw) as HeartbeatDocument & {
+          startedAt: string;
+          updatedAt: string;
+        };
+        return {
+          ...document,
+          startedAt: new Date(document.startedAt),
+          updatedAt: new Date(document.updatedAt),
+        };
+      });
   } catch (error) {
     console.error("[Status] Failed to read the heartbeats:", error);
     return [];
@@ -93,11 +113,8 @@ export async function getStatusSnapshot(): Promise<StatusSnapshot> {
     getGlobalConfig(),
   ]);
 
-  const now = Date.now();
-  const fresh = heartbeats.filter(
-    (beat) => now - new Date(beat.updatedAt).getTime() < HEARTBEAT_TTL_MS,
-  );
-  const ready = fresh.filter((beat) => beat.status === "online");
+  // A present key is at most 120s old (Redis TTL), so it counts as fresh.
+  const ready = heartbeats.filter((beat) => beat.status === "online");
 
   const total = heartbeats.length || 1;
   const lastHeartbeat = heartbeats
@@ -149,18 +166,22 @@ export async function getStatusSnapshot(): Promise<StatusSnapshot> {
       );
 
   const sum = (pick: (beat: HeartbeatDocument) => number) =>
-    fresh.reduce((acc, beat) => acc + (pick(beat) || 0), 0);
+    heartbeats.reduce((acc, beat) => acc + (pick(beat) || 0), 0);
 
   return {
     overall,
     services,
     metrics: {
-      ping: fresh.length ? Math.round(sum((beat) => beat.ping) / fresh.length) : null,
-      uptimeMs: fresh.length ? Math.max(...fresh.map((beat) => beat.uptimeMs || 0)) : null,
+      ping: heartbeats.length ? Math.round(sum((beat) => beat.ping) / heartbeats.length) : null,
+      uptimeMs: heartbeats.length
+        ? Math.max(...heartbeats.map((beat) => beat.uptimeMs || 0))
+        : null,
       shards: { total: heartbeats.length, ready: ready.length },
       guilds: sum((beat) => beat.guildCount),
       members: sum((beat) => beat.memberCount),
-      commands: fresh.length ? Math.max(...fresh.map((beat) => beat.commandCount || 0)) : 0,
+      commands: heartbeats.length
+        ? Math.max(...heartbeats.map((beat) => beat.commandCount || 0))
+        : 0,
       lastHeartbeat: lastHeartbeat ? new Date(lastHeartbeat).toISOString() : null,
     },
     checkedAt: new Date().toISOString(),
