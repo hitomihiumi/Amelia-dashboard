@@ -19,9 +19,12 @@ import { openDiscordOAuthPopup } from "@/lib/discord/popup-signin";
 
 import styles from "./Header.module.scss";
 import { AvatarWFrame } from "@/components/user/AvatarWFrame";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { useT } from "@/i18n/client";
 
 export function Header() {
   const pathname = usePathname();
+  const t = useT();
   const { data: session, status } = useSession();
 
   const handleLogin = () => {
@@ -58,20 +61,21 @@ export function Header() {
         <Line vert={true} />
         <Row marginBottom={"2"} gap={"16"}>
           <Text variant={"label-default-l"}>
-            <SmartLink href={"/docs/get-started"}>Docs</SmartLink>
+            <SmartLink href={"/docs/get-started"}>{t("common.nav.docs")}</SmartLink>
           </Text>
           <Text variant={"label-default-l"}>
-            <SmartLink href={"/news"}>News</SmartLink>
+            <SmartLink href={"/news"}>{t("common.nav.news")}</SmartLink>
           </Text>
           <Text variant={"label-default-l"}>
-            <SmartLink href={"/status"}>Status</SmartLink>
+            <SmartLink href={"/status"}>{t("common.nav.status")}</SmartLink>
           </Text>
         </Row>
       </Row>
-      <Row>
+      <Row gap="8" vertical="center">
+        <LanguageSwitcher />
         {status === "authenticated" ? (
           <UserMenu
-            name={session.user?.name || "User"}
+            name={session.user?.name || t("common.nav.user")}
             placement="bottom"
             avatarProps={{
               src: session.user?.image + "?size=64" || undefined,
@@ -92,14 +96,14 @@ export function Header() {
                   fillWidth
                   prefix={<Icon size="xs" onBackground="neutral-weak" name="gear" />}
                   href={"/dashboard"}
-                  label="Dashboard"
+                  label={t("common.nav.dashboard")}
                   value={"dashboard"}
                 />
                 <Option
                   fillWidth
                   prefix={<Icon size="xs" onBackground="neutral-weak" name="logout" />}
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  label="Log out"
+                  label={t("common.nav.logout")}
                   value={"logout"}
                 />
               </Column>
@@ -107,7 +111,7 @@ export function Header() {
           />
         ) : (
           <Button prefixIcon={"discord"} onClick={handleLogin}>
-            Login
+            {t("common.nav.login")}
           </Button>
         )}
       </Row>

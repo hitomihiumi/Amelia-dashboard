@@ -6,8 +6,10 @@ import { useEffect, useState } from "react";
 
 import styles from "./UnsavedBar.module.scss";
 import classNames from "classnames";
+import { useT } from "@/i18n/client";
 
 export function UnsavedBar() {
+  const t = useT();
   const { isDirty, isSaving, runSave, runCancel, blockedNavigationSignal } = useUnsavedChanges();
   const [attention, setAttention] = useState(false);
   const [isRendered, setIsRendered] = useState(isDirty);
@@ -72,15 +74,15 @@ export function UnsavedBar() {
         }}
       >
         <Text variant="body-strong-m" paddingX={"s"}>
-          You have unsaved changes
+          {t("common.unsaved.message")}
         </Text>
 
         <Flex gap="16" className={styles.buttonRow}>
           <Button variant="secondary" onClick={runCancel} disabled={isSaving} fillWidth>
-            Cancel
+            {t("common.actions.cancel")}
           </Button>
           <Button variant="primary" onClick={runSave} disabled={isSaving} fillWidth>
-            {isSaving ? "Saving..." : "Save changes"}
+            {isSaving ? t("common.actions.saving") : t("common.actions.saveChanges")}
           </Button>
         </Flex>
       </Flex>

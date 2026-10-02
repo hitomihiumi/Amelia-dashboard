@@ -20,11 +20,25 @@ import type { ChartMode, ChartVariant } from "@once-ui-system/core/data";
 import { style, dataStyle } from "../resources/once-ui.config";
 import { iconLibrary } from "../resources/icons";
 import { SessionProvider } from "next-auth/react";
+import { I18nProvider } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
+import type { Messages } from "@/i18n/messages";
 import { DiscordOAuthMessageBridge } from "@/components/auth/DiscordOAuthMessageBridge";
 
-export function Providers({ children, session }: { children: React.ReactNode; session: any }) {
+export function Providers({
+  children,
+  session,
+  locale,
+  messages,
+}: {
+  children: React.ReactNode;
+  session: any;
+  locale: Locale;
+  messages: Messages;
+}) {
   return (
     <SessionProvider session={session}>
+      <I18nProvider locale={locale} messages={messages}>
       <DiscordOAuthMessageBridge />
       <LayoutProvider>
         <ThemeProvider
@@ -58,6 +72,7 @@ export function Providers({ children, session }: { children: React.ReactNode; se
           </DataThemeProvider>
         </ThemeProvider>
       </LayoutProvider>
+      </I18nProvider>
     </SessionProvider>
   );
 }

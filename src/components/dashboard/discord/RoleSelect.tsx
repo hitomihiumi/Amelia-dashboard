@@ -3,6 +3,7 @@
 import React from "react";
 
 import { SelectReact, type SelectProps } from "@/components/user/SelectReact";
+import { useT } from "@/i18n/client";
 
 export interface RoleSelectProps extends SelectProps {
   selectedRole: string | string[];
@@ -20,9 +21,14 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({
   multiple = false,
   // Servers have dozens of channels and roles, so searching is the default.
   searchable = true,
-  placeholder = multiple ? "Select roles" : "Select a role",
+  placeholder,
   ...rest
 }) => {
+  const t = useT();
+  const fallbackPlaceholder = multiple
+    ? t("common.select.selectRoles")
+    : t("common.select.selectRole");
+
   return (
     <SelectReact
       id={id}
@@ -33,7 +39,7 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({
       options={options}
       multiple={multiple}
       searchable={searchable}
-      placeholder={placeholder}
+      placeholder={placeholder ?? fallbackPlaceholder}
       {...rest}
     />
   );

@@ -15,6 +15,8 @@ import { baseURL, meta, schema } from "@/resources";
 import { Metadata } from "next";
 
 import { Analytics } from "@vercel/analytics/next";
+import { LOCALE_META } from "@/i18n/config";
+import { getLocale, loadMessages } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   const baseMetadata = Meta.generate({
@@ -53,12 +55,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const session = await getServerSession(authOptions);
+  const locale = await getLocale();
 
   return (
     <Flex
       suppressHydrationWarning
       as="html"
-      lang="en"
+      lang={LOCALE_META[locale].tag}
       fillWidth
       className={classNames(
         fonts.heading.variable,
@@ -84,7 +87,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <Providers session={session}>
+      <Providers session={session} locale={locale} messages={loadMessages(locale)}>
         <Column
           as="body"
           background="page"

@@ -3,6 +3,7 @@
 import type { IconName } from "@/resources/icons";
 import { Button, IconButton, Row, Text } from "@once-ui-system/core";
 import type React from "react";
+import { useT } from "@/i18n/client";
 import { useState } from "react";
 
 export interface ConfirmIconButtonProps {
@@ -22,10 +23,11 @@ export function ConfirmIconButton({
   variant,
   onConfirm,
   icon = "trash",
-  tooltip = "Delete",
+  tooltip,
   confirmMessage,
   size = "s",
 }: ConfirmIconButtonProps) {
+  const t = useT();
   const [pending, setPending] = useState(false);
 
   const stop = (e: React.SyntheticEvent) => {
@@ -39,7 +41,7 @@ export function ConfirmIconButton({
         icon={icon}
         variant="ghost"
         size={size}
-        tooltip={tooltip}
+        tooltip={tooltip ?? t("common.confirmDelete.tooltip")}
         onClick={(e: React.SyntheticEvent) => {
           stop(e);
           if (variant === "immediate") onConfirm();
@@ -65,7 +67,7 @@ export function ConfirmIconButton({
         </Text>
       ) : (
         <Text variant="body-default-s" onBackground="danger-medium">
-          Delete?
+          {t("common.confirmDelete.question")}
         </Text>
       )}
       <Button
@@ -76,7 +78,7 @@ export function ConfirmIconButton({
           setPending(false);
         }}
       >
-        Cancel
+        {t("common.actions.cancel")}
       </Button>
       <Button
         size="s"
@@ -87,7 +89,7 @@ export function ConfirmIconButton({
           onConfirm();
         }}
       >
-        Confirm
+        {t("common.actions.confirm")}
       </Button>
     </Row>
   );

@@ -24,6 +24,7 @@ import {
   Media,
 } from "@once-ui-system/core";
 import { DiscordGuildEmoji, emojiCdnUrl } from "@/lib/discord/emojis-api";
+import { useT } from "@/i18n/client";
 
 import styles from "./EmojiPicker.module.scss";
 
@@ -80,6 +81,7 @@ const EmojiPicker = ({
   style,
   ...flex
 }: EmojiPickerProps) => {
+  const t = useT();
   const searchInputId = useId();
   const [inputValue, setInputValue] = useState("");
   const searchQuery = useDebounce(inputValue, 300);
@@ -184,12 +186,12 @@ const EmojiPicker = ({
     >
       <Input
         id={`emoji-search-${searchInputId}`}
-        placeholder="Search emojis"
+        placeholder={t("common.emoji.search")}
         value={inputValue}
         size="s"
         onChange={(e) => setInputValue(e.target.value)}
         prefix={<Icon size="s" onBackground="neutral-weak" name="search" />}
-        aria-label="Search emojis"
+        aria-label={t("common.emoji.search")}
       />
 
       <Column tabIndex={-1} fillHeight overflowY="auto" overflowX="hidden">
@@ -198,7 +200,11 @@ const EmojiPicker = ({
             gap="2"
             fillWidth
             columns={columns}
-            aria-label={searchQuery ? "Search results" : `${emojiData.length} emojis`}
+            aria-label={
+              searchQuery
+                ? t("common.emoji.searchResults")
+                : t("common.emoji.count", { count: emojiData.length })
+            }
             ref={gridRef}
             onKeyDown={handleKeyDown}
             tabIndex={-1}
@@ -220,7 +226,7 @@ const EmojiPicker = ({
           </Grid>
         ) : (
           <Row fill center align="center" onBackground="neutral-weak">
-            No results found
+            {t("common.emoji.noResults")}
           </Row>
         )}
       </Column>

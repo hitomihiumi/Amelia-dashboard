@@ -11,6 +11,7 @@ import {
 } from "@once-ui-system/core";
 import { EmojiPicker } from "./EmojiPicker";
 import { DiscordGuildEmoji } from "@/lib/discord/emojis-api";
+import { useT } from "@/i18n/client";
 
 export interface EmojiPickerDropdownProps {
   guildId: string;
@@ -29,6 +30,7 @@ const EmojiPickerDropdown: React.FC<EmojiPickerDropdownProps> = ({
   columns = "8",
   ...dropdownProps
 }) => {
+  const t = useT();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emojiData, setEmojiData] = useState<DiscordGuildEmoji[]>([]);
@@ -45,19 +47,19 @@ const EmojiPickerDropdown: React.FC<EmojiPickerDropdownProps> = ({
           error?: string;
         };
         if (!res.ok || !j.ok) {
-          setError(j.error ?? "Не удалось загрузить эмодзи");
+          setError(j.error ?? t("common.emoji.loadFailed"));
           setEmojiData([]);
           return;
         }
         setEmojiData(j.emojis ?? []);
       } catch {
-        setError("Ошибка сети");
+        setError(t("common.emoji.networkError"));
         setEmojiData([]);
       } finally {
         setLoading(false);
       }
     }
-  }, [guildId, emojiData]);
+  }, [guildId, emojiData, t]);
 
   const handleEmojiSelect = (emoji: DiscordGuildEmoji) => {
     onSelect(emoji);
@@ -69,7 +71,7 @@ const EmojiPickerDropdown: React.FC<EmojiPickerDropdownProps> = ({
   return (
     <DropdownWrapper
       {...dropdownProps}
-      trigger={<Button onClick={load}>Change Emoji</Button>}
+      trigger={<Button onClick={load}>{t("common.emoji.change")}</Button>}
       handleArrowNavigation={false}
       placement={"bottom"}
       dropdown={

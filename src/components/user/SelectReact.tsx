@@ -29,6 +29,8 @@ import {
 import inputStyles from "./DummyInput.module.scss";
 import styles from "./SelectReact.module.scss";
 import { SelectDisplayContext, nodeText } from "./selectDisplay";
+import { useT } from "@/i18n/client";
+import type { Translator } from "@/i18n/translate";
 
 import { DummyInput } from "./DummyInput";
 
@@ -44,8 +46,8 @@ const FOCUS_RESTORE_WINDOW_MS = 250;
 const MAX_VISIBLE_CHIPS = 10;
 
 /** Saved ids whose channel or role no longer exists should not render as blanks. */
-function unknownLabel(value: string): string {
-  return /^\d{15,}$/.test(value) ? `Unknown (…${value.slice(-4)})` : value;
+function unknownLabel(value: string, t: Translator): string {
+  return /^\d{15,}$/.test(value) ? t("common.select.unknownId", { id: value.slice(-4) }) : value;
 }
 
 export interface SelectProps
@@ -96,18 +98,19 @@ const SearchInput: React.FC<{
   handleBlur,
   selectRef,
 }) => {
+  const t = useT();
   const { handleKeyDown: navKeyDown } = useArrowNavigationContext();
 
   return (
     <Input
       data-scaling="90"
       id={`select-search-${searchInputId}`}
-      placeholder="Search"
+      placeholder={t("common.select.search")}
       size="s"
       suffix={
         searchQuery ? (
           <IconButton
-            tooltip="Clear"
+            tooltip={t("common.select.clearSearch")}
             tooltipPosition="left"
             icon="close"
             variant="ghost"
@@ -162,7 +165,7 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
       onSelect,
       searchable = false,
       placeholder,
-      emptyState = "No results",
+      emptyState,
       minHeight,
       minWidth,
       maxWidth,
@@ -176,6 +179,7 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
     },
     ref,
   ) => {
+    const t = useT();
     const [isFocused, setIsFocused] = useState(false);
     const [isFilled, setIsFilled] = useState(false);
 
@@ -297,7 +301,7 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
 
       const labelOf = (value: string): ReactNode => {
         const option = options.find((candidate) => candidate.value === value);
-        return option?.label ?? <Text onBackground="neutral-weak">{unknownLabel(value)}</Text>;
+        return option?.label ?? <Text onBackground="neutral-weak">{unknownLabel(value, t)}</Text>;
       };
 
       if (!multiple) {
@@ -319,7 +323,7 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
                 <span className={styles.chipLabel}>{labelOf(value)}</span>
                 <button
                   type="button"
-                  aria-label="Remove"
+                  aria-label={t("common.select.remove")}
                   className={styles.chipRemove}
                   // Keep focus where it is, otherwise removing a chip would reopen the list.
                   onMouseDown={(event) => event.preventDefault()}
@@ -335,7 +339,7 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
             {hidden > 0 && (
               <span className={`${styles.chip} ${styles.chipStatic}`}>
                 <Text variant="label-default-s" onBackground="neutral-weak">
-                  +{hidden} more
+                  {t("common.select.more", { count: hidden })}
                 </Text>
               </span>
             )}
@@ -500,7 +504,7 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
 
                   {filteredOptions.length === 0 && (
                     <Flex fillWidth center paddingX="16" paddingY="32">
-                      {emptyState}
+                      {emptyState ?? t("common.state.noResults")}
                     </Flex>
                   )}
                 </Column>
@@ -517,7 +521,7 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
                   className={styles.footer}
                 >
                   <Text variant="body-default-xs" onBackground="neutral-weak">
-                    {selectedValues.length} selected
+                    {t("common.select.selectedCount", { count: selectedValues.length })}
                   </Text>
                   <button
                     type="button"
@@ -525,7 +529,7 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
                     onMouseDown={(event) => event.preventDefault()}
                     onClick={clearAll}
                   >
-                    Clear
+                    {t("common.select.clearAll")}
                   </button>
                 </Row>
               )}

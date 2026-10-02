@@ -11,6 +11,7 @@ import {
   Slider,
 } from "@once-ui-system/core";
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import { useT } from "@/i18n/client";
 
 export interface ColorInputProps extends Omit<InputProps, "onChange" | "value" | "type"> {
   value: string;
@@ -64,6 +65,7 @@ function parseValue(value: string): { hex: string; alpha: number } {
 
 const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
   ({ label, id, value, onChange, supportAlpha = false, presets, ...props }, ref) => {
+    const t = useT();
     const nativeColorRef = useRef<HTMLInputElement>(null);
     const [alphaMenuOpen, setAlphaMenuOpen] = useState(false);
 
@@ -171,7 +173,7 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                       <IconButton
                         variant="secondary"
                         size="s"
-                        tooltip="Adjust opacity"
+                        tooltip={t("common.color.adjustOpacity")}
                         tooltipPosition="left"
                         icon="opacity"
                       />
@@ -184,7 +186,7 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                           min={0}
                           max={100}
                           step={1}
-                          label="Opacity"
+                          label={t("common.color.opacity")}
                           showValue
                         />
                       </Column>
@@ -195,7 +197,7 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                   onClick={() => applyHex("")}
                   variant="secondary"
                   size="s"
-                  tooltip="Remove"
+                  tooltip={t("common.color.remove")}
                   tooltipPosition={supportAlpha ? "bottom" : "left"}
                   icon="close"
                 />
@@ -212,7 +214,7 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
                 <button
                   key={preset}
                   type="button"
-                  aria-label={`Color ${preset}`}
+                  aria-label={t("common.color.presetLabel", { color: preset })}
                   onClick={() => applyHex(presetHex)}
                   style={{
                     width: 22,
