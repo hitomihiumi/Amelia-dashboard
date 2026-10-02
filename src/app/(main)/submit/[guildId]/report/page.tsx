@@ -6,12 +6,14 @@ import { getSubmissionAccess } from "@/lib/moderation/access";
 import { normalizeForm } from "@/lib/moderation/forms";
 import { SubmissionForm } from "@/components/moderation/SubmissionForm";
 import { SignInPrompt } from "@/components/moderation/SignInPrompt";
+import { getT } from "@/i18n/server";
 
 export default async function ReportPage({
   params,
 }: {
   params: Promise<{ guildId: string }>;
 }) {
+  const t = await getT();
   const { guildId } = await params;
   const guild = new Guild(guildId);
   const form = normalizeForm(await guild.get("moderation.forms.report"), "report");
@@ -20,8 +22,8 @@ export default async function ReportPage({
     return (
       <Feedback
         variant="info"
-        title="Reports are closed"
-        description="This server does not accept reports through the dashboard right now."
+        title={t("site.submit.report.closedTitle")}
+        description={t("site.submit.report.closedDescription")}
       />
     );
   }
@@ -30,7 +32,7 @@ export default async function ReportPage({
 
   if (!session?.user?.id) {
     return (
-      <SignInPrompt description="Sign in with Discord to send a report to the moderation team." />
+      <SignInPrompt description={t("site.submit.report.signIn")} />
     );
   }
 
@@ -40,8 +42,8 @@ export default async function ReportPage({
     return (
       <Feedback
         variant="danger"
-        title="Access denied"
-        description="Only members of this server can send reports."
+        title={t("site.submit.report.deniedTitle")}
+        description={t("site.submit.report.deniedDescription")}
       />
     );
   }
@@ -49,10 +51,9 @@ export default async function ReportPage({
   return (
     <Column fillWidth gap="20">
       <Column gap="8">
-        <Text variant="heading-strong-l">Report a member</Text>
+        <Text variant="heading-strong-l">{t("site.submit.report.title")}</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
-          Describe what happened as precisely as you can — links to the offending messages help the
-          moderators a lot.
+          {t("site.submit.report.intro")}
         </Text>
       </Column>
 

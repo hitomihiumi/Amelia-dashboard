@@ -15,10 +15,9 @@ import {
 } from "@once-ui-system/core";
 import type { Metadata } from "next";
 import { baseURL, schema } from "@/resources";
-import { formatDate } from "@/app/utils/formatDate";
+import { getFormatters, getT } from "@/i18n/server";
 import {
   NEWS_CATEGORIES,
-  NEWS_CATEGORY_LABELS,
   NEWS_PAGE_SIZE,
   getPublishedPosts,
   isNewsCategory,
@@ -27,9 +26,11 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+
   return Meta.generate({
-    title: `News – ${schema.name}`,
-    description: "Updates, new features and maintenance notices.",
+    title: `${t("site.news.title")} – ${schema.name}`,
+    description: t("site.news.metaDescription"),
     baseURL,
     path: "/news",
   });
@@ -40,6 +41,8 @@ export default async function NewsPage({
 }: {
   searchParams: Promise<{ category?: string; page?: string }>;
 }) {
+  const t = await getT();
+  const format = await getFormatters();
   const query = await searchParams;
   const category = isNewsCategory(query.category) ? query.category : null;
   const page = Math.max(1, Number(query.page) || 1);
@@ -61,9 +64,9 @@ export default async function NewsPage({
       <Column maxWidth="l" fillWidth gap="32">
         <RevealFx translateY={-0.5}>
           <Column gap="8">
-            <Text variant="display-strong-xs">News</Text>
+            <Text variant="display-strong-xs">{t("site.news.title")}</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
-              Releases, new features and everything else worth knowing about the bot.
+              {t("site.news.subtitle")}
             </Text>
           </Column>
         </RevealFx>
@@ -75,7 +78,7 @@ export default async function NewsPage({
               variant={category === null ? "primary" : "secondary"}
               href={href({ category: null, page: 1 })}
             >
-              All
+              {t("site.news.all")}
             </Button>
             {NEWS_CATEGORIES.map((item) => (
               <Button
@@ -84,7 +87,7 @@ export default async function NewsPage({
                 variant={category === item ? "primary" : "secondary"}
                 href={href({ category: item, page: 1 })}
               >
-                {NEWS_CATEGORY_LABELS[item]}
+                {t(`site.news.categories.${item}`)}
               </Button>
             ))}
           </Row>
@@ -93,14 +96,14 @@ export default async function NewsPage({
         <RevealFx delay={600} translateY={-0.5}>
           {posts.length === 0 && (
             <Text variant="body-default-m" onBackground="neutral-weak">
-              Nothing published here yet.
+              {t("site.news.empty")}
             </Text>
           )}
         </RevealFx>
 
         <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="16" fillWidth>
           {posts.map((post, idx) => (
-            <RevealFx delay={900 + 100 * idx} translateY={-0.5}>
+            <RevealFx key={post.id} delay={900 + 100 * idx} translateY={-0.5}>
               <Card
                 direction="column"
                 fillWidth
@@ -118,10 +121,12 @@ export default async function NewsPage({
                 )}
                 <Row gap="8" vertical="center" wrap>
                   <Tag scheme="neutral">
-                    {NEWS_CATEGORY_LABELS[post.category as never] ?? post.category}
+                    {isNewsCategory(post.category)
+                      ? t(`site.news.categories.${post.category}`)
+                      : post.category}
                   </Tag>
                   <Text variant="body-default-xs" onBackground="neutral-weak">
-                    {formatDate((post.publishedAt ?? post.createdAt).toISOString())}
+                    {format.date(post.publishedAt ?? post.createdAt, { dateStyle: "long" })}
                   </Text>
                 </Row>
                 <Text variant="heading-strong-s">{post.title}</Text>
@@ -144,10 +149,10 @@ export default async function NewsPage({
                 disabled={page <= 1}
                 href={href({ page: page - 1 })}
               >
-                Previous
+                {t("site.news.previous")}
               </Button>
               <Text variant="body-default-s" onBackground="neutral-weak">
-                Page {page} / {pages}
+                {t("site.news.page", { page, pages })}
               </Text>
               <Button
                 size="s"
@@ -155,7 +160,7 @@ export default async function NewsPage({
                 disabled={page >= pages}
                 href={href({ page: page + 1 })}
               >
-                Next
+                {t("site.news.next")}
               </Button>
             </Row>
           )}

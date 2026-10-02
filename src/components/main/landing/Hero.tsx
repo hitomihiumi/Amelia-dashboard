@@ -3,6 +3,7 @@
 import { Background, BlobFx, Button, Column, Media, Row, Text, TypeFx } from "@once-ui-system/core";
 import { signIn, useSession } from "next-auth/react";
 import { openDiscordOAuthPopup } from "@/lib/discord/popup-signin";
+import { useT } from "@/i18n/client";
 
 export function Hero({
   tagline,
@@ -13,6 +14,7 @@ export function Hero({
   text: string;
   inviteUrl: string;
 }) {
+  const t = useT();
   const { status } = useSession();
 
   const handleLogin = () => {
@@ -28,7 +30,11 @@ export function Hero({
   // A custom tagline is shown as is; the default one keeps cycling.
   const words = tagline.includes(",")
     ? tagline.split(",").map((word) => word.trim())
-    : [tagline, "Multipurpose", "Customizable"];
+    : [
+        tagline,
+        t("site.landing.hero.wordMultipurpose"),
+        t("site.landing.hero.wordCustomizable"),
+      ];
 
   return (
     <Row fillWidth gap="l" padding="l" center radius="l" overflow="hidden" border="neutral-medium">
@@ -59,15 +65,15 @@ export function Hero({
         <Row gap="16" paddingTop="8" wrap horizontal="center">
           {status === "authenticated" ? (
             <Button prefixIcon="gear" variant="primary" href="/dashboard">
-              Get Started
+              {t("site.landing.hero.getStarted")}
             </Button>
           ) : (
             <Button prefixIcon="discord" variant="primary" onClick={handleLogin}>
-              Login
+              {t("common.nav.login")}
             </Button>
           )}
           <Button prefixIcon="plus" variant="secondary" href={inviteUrl} target="_blank">
-            Invite Bot
+            {t("site.landing.hero.inviteBot")}
           </Button>
         </Row>
       </Column>

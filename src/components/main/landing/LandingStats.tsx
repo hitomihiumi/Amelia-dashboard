@@ -4,40 +4,53 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Flex, Grid, Icon, Text } from "@once-ui-system/core";
 import type { StatusSnapshot } from "@/lib/status/status";
 import type { IconName } from "@/resources/icons";
+import { useFormat, useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
 
 export interface LandingStat {
   icon: IconName;
   value: string;
-  label: string;
-}
-
-function format(value: number): string {
-  return value.toLocaleString("en-US");
-}
-
-/** Cards mirroring the live snapshot; uptime stays "24/7" while the bot is up. */
-function toStats(snapshot: StatusSnapshot): LandingStat[] {
-  return [
-    { icon: "boxes", value: format(snapshot.metrics.guilds), label: "servers" },
-    { icon: "user", value: format(snapshot.metrics.members), label: "members" },
-    { icon: "command", value: format(snapshot.metrics.commands), label: "commands" },
-    {
-      icon: "target",
-      value: snapshot.overall === "operational" ? "24/7" : snapshot.overall,
-      label: "bot status",
-    },
-  ];
+  label: MessageKey;
 }
 
 export function LandingStats({ initialSnapshot }: { initialSnapshot: StatusSnapshot }) {
-  const [stats, setStats] = useState(() => toStats(initialSnapshot));
+  const t = useT();
+  const format = useFormat();
+  const [snapshot, setSnapshot] = useState(initialSnapshot);
+
+  /** Cards mirroring the live snapshot; uptime stays "24/7" while the bot is up. */
+  const stats: LandingStat[] = [
+    {
+      icon: "boxes",
+      value: format.number(snapshot.metrics.guilds),
+      label: "site.landing.stats.servers",
+    },
+    {
+      icon: "user",
+      value: format.number(snapshot.metrics.members),
+      label: "site.landing.stats.members",
+    },
+    {
+      icon: "command",
+      value: format.number(snapshot.metrics.commands),
+      label: "site.landing.stats.commands",
+    },
+    {
+      icon: "target",
+      value:
+        snapshot.overall === "operational"
+          ? t("site.landing.stats.alwaysOn")
+          : t(`site.status.state.${snapshot.overall}`),
+      label: "site.landing.stats.botStatus",
+    },
+  ];
 
   const refresh = useCallback(async () => {
     try {
       const res = await fetch("/api/status", { cache: "no-store" });
       if (!res.ok) return;
 
-      setStats(toStats((await res.json()) as StatusSnapshot));
+      setSnapshot((await res.json()) as StatusSnapshot);
     } catch {
       // The numbers stay as rendered on the server.
     }
@@ -65,7 +78,7 @@ export function LandingStats({ initialSnapshot }: { initialSnapshot: StatusSnaps
           <Icon name={stat.icon} size="m" onBackground="brand-medium" />
           <Text variant="display-strong-xs">{stat.value}</Text>
           <Text variant="body-default-s" onBackground="neutral-weak">
-            {stat.label}
+            {t(stat.label)}
           </Text>
         </Flex>
       ))}

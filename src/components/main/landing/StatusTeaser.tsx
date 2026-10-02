@@ -2,13 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { Icon, Row, Text } from "@once-ui-system/core";
 import type { ServiceStatus } from "@/lib/status/status";
-
-const HEADLINE: Record<ServiceStatus, string> = {
-  operational: "All systems operational",
-  degraded: "Some systems are degraded",
-  down: "Major outage",
-  maintenance: "Scheduled maintenance",
-};
+import { getT } from "@/i18n/server";
 
 const COLOR: Record<ServiceStatus, string> = {
   operational: "var(--success-solid-strong)",
@@ -17,7 +11,9 @@ const COLOR: Record<ServiceStatus, string> = {
   maintenance: "var(--info-solid-strong)",
 };
 
-export function StatusTeaser({ status }: { status: ServiceStatus }) {
+export async function StatusTeaser({ status }: { status: ServiceStatus }) {
+  const t = await getT();
+
   return (
     <Link href="/status" style={{ textDecoration: "none" }}>
       <Row
@@ -40,11 +36,11 @@ export function StatusTeaser({ status }: { status: ServiceStatus }) {
               background: COLOR[status],
             }}
           />
-          <Text variant="body-default-m">{HEADLINE[status]}</Text>
+          <Text variant="body-default-m">{t(`site.status.headline.${status}`)}</Text>
         </Row>
         <Row gap="4" vertical="center">
           <Text variant="body-default-s" onBackground="neutral-weak">
-            Status page
+            {t("site.landing.statusTeaser.statusPage")}
           </Text>
           <Icon name="chevronRight" size="xs" onBackground="neutral-weak" />
         </Row>

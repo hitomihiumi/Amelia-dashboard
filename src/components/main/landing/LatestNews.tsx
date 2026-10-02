@@ -2,18 +2,21 @@ import React from "react";
 import Link from "next/link";
 import { Button, Column, Flex, Grid, Row, Tag, Text } from "@once-ui-system/core";
 import type { NewsPost } from "@prisma/client";
-import { NEWS_CATEGORY_LABELS } from "@/lib/news/categories";
-import { formatDate } from "@/app/utils/formatDate";
+import { isNewsCategory } from "@/lib/news/categories";
+import { getFormatters, getT } from "@/i18n/server";
 
-export function LatestNews({ posts }: { posts: NewsPost[] }) {
+export async function LatestNews({ posts }: { posts: NewsPost[] }) {
   if (posts.length === 0) return null;
+
+  const t = await getT();
+  const format = await getFormatters();
 
   return (
     <Column fillWidth gap="16">
       <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
-        <Text variant="heading-strong-l">Latest news</Text>
+        <Text variant="heading-strong-l">{t("site.landing.latestNews.title")}</Text>
         <Button size="s" variant="secondary" href="/news">
-          All news
+          {t("site.landing.latestNews.all")}
         </Button>
       </Row>
 
@@ -32,10 +35,12 @@ export function LatestNews({ posts }: { posts: NewsPost[] }) {
             >
               <Row gap="8" vertical="center" wrap>
                 <Tag scheme="neutral">
-                  {NEWS_CATEGORY_LABELS[post.category as never] ?? post.category}
+                  {isNewsCategory(post.category)
+                    ? t(`site.news.categories.${post.category}`)
+                    : post.category}
                 </Tag>
                 <Text variant="body-default-xs" onBackground="neutral-weak">
-                  {formatDate((post.publishedAt ?? post.createdAt).toISOString())}
+                  {format.date(post.publishedAt ?? post.createdAt, { dateStyle: "long" })}
                 </Text>
               </Row>
               <Text variant="heading-strong-s">{post.title}</Text>

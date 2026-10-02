@@ -2,8 +2,9 @@ import { getServerSession } from "next-auth";
 import { Column, Feedback, Row, Tag, Text } from "@once-ui-system/core";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db/db";
-import { SUBMISSION_STATUS_LABELS } from "@/lib/moderation/embeds";
 import { SignInPrompt } from "@/components/moderation/SignInPrompt";
+import { getFormatters, getT } from "@/i18n/server";
+import type { MessageKey } from "@/i18n/messages";
 
 const STATUS_VARIANT: Record<string, "neutral" | "info" | "success" | "danger"> = {
   pending: "neutral",
@@ -12,16 +13,25 @@ const STATUS_VARIANT: Record<string, "neutral" | "info" | "success" | "danger"> 
   rejected: "danger",
 };
 
+const STATUS_LABEL_KEYS: Record<string, MessageKey> = {
+  pending: "site.submit.statuses.pending",
+  in_review: "site.submit.statuses.in_review",
+  approved: "site.submit.statuses.approved",
+  rejected: "site.submit.statuses.rejected",
+};
+
 export default async function StatusPage({
   params,
 }: {
   params: Promise<{ guildId: string }>;
 }) {
+  const t = await getT();
+  const format = await getFormatters();
   const { guildId } = await params;
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
-    return <SignInPrompt description="Sign in with Discord to see your submissions." />;
+    return <SignInPrompt description={t("site.submit.status.signIn")} />;
   }
 
   // Scoped to the visitor: submissions are never addressable by id from the URL.
@@ -33,13 +43,13 @@ export default async function StatusPage({
 
   return (
     <Column fillWidth gap="16">
-      <Text variant="heading-strong-l">My submissions</Text>
+      <Text variant="heading-strong-l">{t("site.submit.status.title")}</Text>
 
       {submissions.length === 0 && (
         <Feedback
           variant="info"
-          title="Nothing here yet"
-          description="You have not sent any reports or appeals to this server."
+          title={t("site.submit.status.emptyTitle")}
+          description={t("site.submit.status.emptyDescription")}
         />
       )}
 
@@ -55,20 +65,23 @@ export default async function StatusPage({
         >
           <Row fillWidth horizontal="between" vertical="center" gap="8">
             <Text variant="label-default-m">
-              {submission.kind === "appeal" ? "Appeal" : "Report"} #{submission.number}
+              {submission.kind === "appeal" ? t("site.submit.kinds.appeal") : t("site.submit.kinds.report")}{" "}
+              #{submission.number}
             </Text>
             <Tag scheme={STATUS_VARIANT[submission.status] ?? "neutral"}>
-              {SUBMISSION_STATUS_LABELS[submission.status] ?? submission.status}
+              {STATUS_LABEL_KEYS[submission.status]
+                ? t(STATUS_LABEL_KEYS[submission.status])
+                : submission.status}
             </Tag>
           </Row>
 
           <Text variant="body-default-s" onBackground="neutral-weak">
-            Sent {submission.createdAt.toLocaleString()}
+            {t("site.submit.status.sent", { date: format.dateTime(submission.createdAt) })}
           </Text>
 
           {submission.response && (
             <Column gap="4">
-              <Text variant="label-default-s">Moderator response</Text>
+              <Text variant="label-default-s">{t("site.submit.status.response")}</Text>
               <Text variant="body-default-s" onBackground="neutral-medium">
                 {submission.response}
               </Text>

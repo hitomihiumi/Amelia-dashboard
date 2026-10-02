@@ -16,6 +16,9 @@ import {
 import { SelectReact } from "@/components/user/SelectReact";
 import type { ModerationFormField, ModerationSubmissionKind } from "@/lib/db/types";
 import { submitForm } from "@/app/(main)/submit/[guildId]/actions";
+import { useFormat, useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
+import type { Translator } from "@/i18n/translate";
 
 export interface AppealableCase {
   id: string;
@@ -36,6 +39,18 @@ export interface SubmissionFormProps {
 
 type FieldValue = string | number | boolean | null;
 
+const CASE_TYPE_KEYS: Record<string, MessageKey> = {
+  warn: "site.submit.caseTypes.warn",
+  mute: "site.submit.caseTypes.mute",
+  kick: "site.submit.caseTypes.kick",
+  ban: "site.submit.caseTypes.ban",
+  note: "site.submit.caseTypes.note",
+  unwarn: "site.submit.caseTypes.unwarn",
+  unmute: "site.submit.caseTypes.unmute",
+  unban: "site.submit.caseTypes.unban",
+  purge: "site.submit.caseTypes.purge",
+};
+
 /**
  * Renders the fields an administrator configured in the dashboard and submits
  * them. All values are validated again on the server.
@@ -48,6 +63,8 @@ export function SubmissionForm({
   anonymous,
   cases = [],
 }: SubmissionFormProps) {
+  const t = useT();
+  const format = useFormat();
   const { addToast } = useToast();
 
   const [values, setValues] = useState<Record<string, FieldValue>>(() =>
@@ -62,11 +79,11 @@ export function SubmissionForm({
     () =>
       cases.map((entry) => ({
         value: entry.id,
-        label: `#${entry.caseNumber} • ${entry.type} • ${new Date(
-          entry.createdAt,
-        ).toLocaleDateString()}`,
+        label: `#${entry.caseNumber} • ${
+          CASE_TYPE_KEYS[entry.type] ? t(CASE_TYPE_KEYS[entry.type]) : entry.type
+        } • ${format.date(entry.createdAt)}`,
       })),
-    [cases],
+    [cases, t, format],
   );
 
   const update = (id: string, value: FieldValue) => setValues((prev) => ({ ...prev, [id]: value }));
@@ -91,7 +108,7 @@ export function SubmissionForm({
   };
 
   if (done) {
-    return <Feedback variant="success" title="Submitted" description={done} />;
+    return <Feedback variant="success" title={t("site.submit.form.submittedTitle")} description={done} />;
   }
 
   return (
@@ -99,15 +116,15 @@ export function SubmissionForm({
       {anonymous && (
         <Feedback
           variant="info"
-          title="Anonymous submission"
-          description="Your name is hidden from the moderation channel. Moderators can still contact you about this submission."
+          title={t("site.submit.form.anonymousTitle")}
+          description={t("site.submit.form.anonymousDescription")}
         />
       )}
 
       {kind === "appeal" && cases.length > 0 && (
         <SelectReact
           id="appeal-case"
-          label="Punishment you are appealing"
+          label={t("site.submit.form.caseLabel")}
           options={caseOptions}
           value={caseId}
           onSelect={(value: string) => setCaseId(value)}
@@ -117,10 +134,10 @@ export function SubmissionForm({
       {kind === "report" && requireTarget && (
         <Input
           id="report-target"
-          label="Discord ID of the reported user"
+          label={t("site.submit.form.targetLabel")}
           value={targetId}
           onChange={(e) => setTargetId(e.target.value)}
-          description="Enable developer mode in Discord, right click the user and choose “Copy User ID”."
+          description={t("site.submit.form.targetDescription")}
         />
       )}
 
@@ -136,14 +153,14 @@ export function SubmissionForm({
       {fields.length === 0 && (
         <Feedback
           variant="warning"
-          title="Nothing to fill in"
-          description="This form has no fields configured yet. Please contact the server staff."
+          title={t("site.submit.form.noFieldsTitle")}
+          description={t("site.submit.form.noFieldsDescription")}
         />
       )}
 
       <Row fillWidth horizontal="end">
         <Button onClick={handleSubmit} loading={pending} disabled={pending}>
-          Send
+          {t("site.submit.form.send")}
         </Button>
       </Row>
     </Column>
@@ -159,6 +176,7 @@ function FormField({
   value: FieldValue;
   onChange: (value: FieldValue) => void;
 }) {
+  const t = useT();
   const label = field.required ? `${field.label} *` : field.label;
 
   switch (field.type) {
@@ -230,9 +248,9 @@ function FormField({
           onChange={(e) => onChange(e.target.value)}
           validate={
             field.type === "url"
-              ? validateLink
+              ? (value: React.ReactNode) => validateLink(t, value)
               : field.type === "message_link"
-                ? validateMessageLink
+                ? (value: React.ReactNode) => validateMessageLink(t, value)
                 : undefined
           }
         />
@@ -240,23 +258,23 @@ function FormField({
   }
 }
 
-const validateLink = (url: any) => {
+const validateLink = (t: Translator, url: React.ReactNode) => {
   if (!url) return null;
 
   const urlRegex = /^https?:\/\/[^\s]+$/;
-  if (!urlRegex.test(url)) {
-    return "Please enter a valid URL";
+  if (typeof url !== "string" || !urlRegex.test(url)) {
+    return t("site.submit.form.invalidUrl");
   }
 
   return null;
 };
 
-const validateMessageLink = (url: any) => {
+const validateMessageLink = (t: Translator, url: React.ReactNode) => {
   if (!url) return null;
 
   const urlRegex = /^https?:\/\/(canary|ptb)?\.?discord\.com\/channels\/\d+\/\d+\/\d+$/;
-  if (!urlRegex.test(url)) {
-    return "Please enter a valid message link";
+  if (typeof url !== "string" || !urlRegex.test(url)) {
+    return t("site.submit.form.invalidMessageLink");
   }
 
   return null;

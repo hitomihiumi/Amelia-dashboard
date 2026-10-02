@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { Avatar, Column, Flex, Row, Text } from "@once-ui-system/core";
 import { fetchGuildBrief } from "@/lib/discord/rest";
+import { getT } from "@/i18n/server";
 
 export default async function SubmitLayout({
   children,
@@ -10,6 +11,7 @@ export default async function SubmitLayout({
   children: ReactNode;
   params: Promise<{ guildId: string }>;
 }) {
+  const t = await getT();
   const { guildId } = await params;
 
   if (!/^\d{17,20}$/.test(guildId)) notFound();
@@ -27,7 +29,7 @@ export default async function SubmitLayout({
           <Column gap="2" style={{ minWidth: 0 }}>
             <Text variant="heading-strong-m">{guild.name}</Text>
             <Text variant="body-default-s" onBackground="neutral-weak">
-              Moderation requests
+              {t("site.submit.layout.subtitle")}
             </Text>
           </Column>
         </Row>

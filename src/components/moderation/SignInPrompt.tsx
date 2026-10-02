@@ -3,9 +3,11 @@
 import { Button, Column, Text } from "@once-ui-system/core";
 import { signIn } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import { useT } from "@/i18n/client";
 
 /** Sign in gate for the public submission pages. */
 export function SignInPrompt({ description }: { description: string }) {
+  const t = useT();
   const pathname = usePathname();
 
   return (
@@ -22,7 +24,7 @@ export function SignInPrompt({ description }: { description: string }) {
         {description}
       </Text>
       <Button prefixIcon="discord" onClick={() => signIn("discord", { callbackUrl: pathname })}>
-        Sign in with Discord
+        {t("site.submit.signIn.button")}
       </Button>
     </Column>
   );

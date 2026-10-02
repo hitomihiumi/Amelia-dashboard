@@ -1,54 +1,64 @@
 import React from "react";
 import { Column, Flex, Grid, Icon, Text } from "@once-ui-system/core";
 import type { IconName } from "@/resources/icons";
+import type { MessageKey } from "@/i18n/messages";
+import { getT } from "@/i18n/server";
 
-const FEATURES: { icon: IconName; title: string; text: string }[] = [
+const FEATURES: { id: string; icon: IconName; title: MessageKey; text: MessageKey }[] = [
   {
+    id: "moderation",
     icon: "security",
-    title: "Moderation",
-    text: "Numbered cases, warn escalation, temporary bans and auto moderation for invites and links.",
+    title: "site.landing.features.items.moderation.title",
+    text: "site.landing.features.items.moderation.text",
   },
   {
+    id: "reports",
     icon: "clipboard",
-    title: "Reports & appeals",
-    text: "Members file reports and appeal punishments through forms you build yourself.",
+    title: "site.landing.features.items.reports.title",
+    text: "site.landing.features.items.reports.text",
   },
   {
+    id: "audit",
     icon: "documentattach",
-    title: "Audit log",
-    text: "Joins, bans, edited messages and voice activity, delivered to a channel through a webhook.",
+    title: "site.landing.features.items.audit.title",
+    text: "site.landing.features.items.audit.text",
   },
   {
+    id: "economy",
     icon: "money",
-    title: "Economy",
-    text: "Currency, shop roles, daily rewards and a balance card members can customize.",
+    title: "site.landing.features.items.economy.title",
+    text: "site.landing.features.items.economy.text",
   },
   {
+    id: "leveling",
     icon: "ribbon",
-    title: "Leveling",
-    text: "Experience from chat and voice, role rewards and level-up cards.",
+    title: "site.landing.features.items.leveling.title",
+    text: "site.landing.features.items.leveling.text",
   },
   {
+    id: "scenarios",
     icon: "gitnet",
-    title: "Scenarios",
-    text: "Buttons, menus and modals wired together in a visual editor — no code required.",
+    title: "site.landing.features.items.scenarios.title",
+    text: "site.landing.features.items.scenarios.text",
   },
 ];
 
-export function Features() {
+export async function Features() {
+  const t = await getT();
+
   return (
     <Column fillWidth gap="16">
       <Column gap="8">
-        <Text variant="heading-strong-l">Everything a community needs</Text>
+        <Text variant="heading-strong-l">{t("site.landing.features.title")}</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
-          One bot instead of five, configured from the dashboard.
+          {t("site.landing.features.subtitle")}
         </Text>
       </Column>
 
       <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="16" fillWidth>
         {FEATURES.map((feature) => (
           <Flex
-            key={feature.title}
+            key={feature.id}
             direction="column"
             fillWidth
             fillHeight
@@ -59,9 +69,9 @@ export function Features() {
             background="surface"
           >
             <Icon name={feature.icon} size="m" onBackground="brand-medium" />
-            <Text variant="heading-strong-s">{feature.title}</Text>
+            <Text variant="heading-strong-s">{t(feature.title)}</Text>
             <Text variant="body-default-s" onBackground="neutral-weak">
-              {feature.text}
+              {t(feature.text)}
             </Text>
           </Flex>
         ))}

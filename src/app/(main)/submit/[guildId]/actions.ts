@@ -8,6 +8,7 @@ import { getSubmissionAccess } from "@/lib/moderation/access";
 import { normalizeForm, validateAnswers } from "@/lib/moderation/forms";
 import { createSubmission } from "@/lib/moderation/service";
 import type { ModerationSubmissionKind } from "@/lib/db/types";
+import { getT } from "@/i18n/server";
 
 export type SubmitResult = { ok: true; message: string } | { ok: false; error: string };
 
@@ -30,33 +31,35 @@ export async function submitForm(
   kind: ModerationSubmissionKind,
   payload: SubmitPayload,
 ): Promise<SubmitResult> {
+  const t = await getT();
+
   try {
     if (kind !== "report" && kind !== "appeal") {
-      return { ok: false, error: "Unknown form." };
+      return { ok: false, error: t("site.submit.actions.unknownForm") };
     }
     if (!SNOWFLAKE.test(guildId)) {
-      return { ok: false, error: "Unknown server." };
+      return { ok: false, error: t("site.submit.actions.unknownServer") };
     }
 
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return { ok: false, error: "Please sign in with Discord first." };
+      return { ok: false, error: t("site.submit.actions.signInFirst") };
     }
 
     const access = await getSubmissionAccess(guildId, session.user.id, kind);
     if (!access.allowed) {
-      return { ok: false, error: "You are not allowed to use this form." };
+      return { ok: false, error: t("site.submit.actions.notAllowed") };
     }
 
     const guild = new Guild(guildId);
     const form = normalizeForm(await guild.get(`moderation.forms.${kind}`), kind);
 
     if (!form.enabled) {
-      return { ok: false, error: "This form is currently disabled." };
+      return { ok: false, error: t("site.submit.actions.formDisabled") };
     }
 
     if (!payload.answers || typeof payload.answers !== "object") {
-      return { ok: false, error: "Invalid form data." };
+      return { ok: false, error: t("site.submit.actions.invalidData") };
     }
 
     const validated = validateAnswers(form, payload.answers as Record<string, unknown>);
@@ -70,10 +73,10 @@ export async function submitForm(
 
       if (form.require_target) {
         if (!SNOWFLAKE.test(raw)) {
-          return { ok: false, error: "Enter a valid Discord ID of the reported user." };
+          return { ok: false, error: t("site.submit.actions.invalidTarget") };
         }
         if (raw === session.user.id) {
-          return { ok: false, error: "You cannot report yourself." };
+          return { ok: false, error: t("site.submit.actions.selfReport") };
         }
         targetId = raw;
       } else if (raw) {
@@ -90,7 +93,7 @@ export async function submitForm(
       });
 
       if (!related) {
-        return { ok: false, error: "That punishment does not belong to you." };
+        return { ok: false, error: t("site.submit.actions.notYourCase") };
       }
 
       caseId = related.id;
@@ -112,10 +115,12 @@ export async function submitForm(
       ok: true,
       message:
         form.success_message?.trim() ||
-        `Your ${kind} #${result.submission.number} has been sent to the moderation team. You will receive a direct message once it is handled.`,
+        t(kind === "appeal" ? "site.submit.actions.successAppeal" : "site.submit.actions.successReport", {
+          number: result.submission.number,
+        }),
     };
   } catch (error) {
     console.error("[Submission Action Error]:", error);
-    return { ok: false, error: "Internal server error. Please try again later." };
+    return { ok: false, error: t("site.submit.actions.internalError") };
   }
 }

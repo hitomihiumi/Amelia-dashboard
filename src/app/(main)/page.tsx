@@ -8,10 +8,12 @@ import { LandingStats } from "@/components/main/landing/LandingStats";
 import { Features } from "@/components/main/landing/Features";
 import { LatestNews } from "@/components/main/landing/LatestNews";
 import { StatusTeaser } from "@/components/main/landing/StatusTeaser";
+import { getT } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const t = await getT();
   const [config, snapshot, news] = await Promise.all([
     getGlobalConfig(),
     getStatusSnapshot(),
@@ -20,6 +22,14 @@ export default async function Home() {
 
   const inviteUrl = config.inviteUrl || CONFIG_DEFAULTS.inviteUrl;
 
+  // Texts an admin has customised are shown as written; the untouched defaults are translated.
+  const customTagline =
+    config.heroTagline && config.heroTagline !== CONFIG_DEFAULTS.heroTagline
+      ? config.heroTagline
+      : null;
+  const customText =
+    config.heroText && config.heroText !== CONFIG_DEFAULTS.heroText ? config.heroText : null;
+
   return (
     <Flex fill horizontal="center" paddingY="32" paddingX="16">
       <Column maxWidth="l" fill gap="xl">
@@ -27,8 +37,8 @@ export default async function Home() {
           <Row fill center>
             <Row fillWidth fitHeight>
               <Hero
-                tagline={config.heroTagline || CONFIG_DEFAULTS.heroTagline}
-                text={config.heroText || CONFIG_DEFAULTS.heroText}
+                tagline={customTagline ?? t("site.landing.hero.tagline")}
+                text={customText ?? t("site.landing.hero.text")}
                 inviteUrl={inviteUrl}
               />
             </Row>
@@ -43,10 +53,10 @@ export default async function Home() {
           <Column fill gap="16">
             <Column gap="4" horizontal="center">
               <Text variant="label-default-s" onBackground="brand-medium">
-                ALREADY RUNNING
+                {t("site.landing.stats.eyebrow")}
               </Text>
               <Text variant="heading-strong-l" align="center">
-                Amelia is live on Discord servers
+                {t("site.landing.stats.title")}
               </Text>
             </Column>
             <LandingStats initialSnapshot={snapshot} />

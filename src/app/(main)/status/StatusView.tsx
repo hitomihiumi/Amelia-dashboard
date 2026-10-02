@@ -4,26 +4,14 @@ import React, { useCallback, useEffect, useState } from "react";
 import {Column, Flex, Grid, Icon, Line, Row, Text, RevealFx, CountFx} from "@once-ui-system/core";
 import type { ServiceStatus, StatusSnapshot } from "@/lib/status/status";
 import type { IconName } from "@/resources/icons";
+import { useFormat, useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
 
 const STATUS_COLOR: Record<ServiceStatus, string> = {
   operational: "var(--success-solid-strong)",
   degraded: "var(--warning-solid-strong)",
   down: "var(--danger-solid-strong)",
   maintenance: "var(--info-solid-strong)",
-};
-
-const STATUS_LABEL: Record<ServiceStatus, string> = {
-  operational: "Operational",
-  degraded: "Degraded",
-  down: "Down",
-  maintenance: "Maintenance",
-};
-
-const HEADLINE: Record<ServiceStatus, string> = {
-  operational: "All systems operational",
-  degraded: "Some systems are degraded",
-  down: "Major outage",
-  maintenance: "Scheduled maintenance",
 };
 
 const HEADLINE_ICON: Record<ServiceStatus, IconName> = {
@@ -33,24 +21,22 @@ const HEADLINE_ICON: Record<ServiceStatus, IconName> = {
   maintenance: "gear",
 };
 
-/** "just now", "2 min ago" — the freshness line under the headline. */
-function relativeTime(iso: string | null): string {
-  if (!iso) return "never";
-
-  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)} h ago`;
-  return `${Math.floor(seconds / 86400)} d ago`;
-}
+const SERVICE_LABEL_KEYS: Record<string, MessageKey> = {
+  gateway: "site.status.services.gateway",
+  database: "site.status.services.database",
+  website: "site.status.services.website",
+  shards: "site.status.services.shards",
+};
 
 export function StatusView({
   initialSnapshot,
 }: {
   initialSnapshot: StatusSnapshot;
 }) {
+  const t = useT();
+  const format = useFormat();
   const [snapshot, setSnapshot] = useState(initialSnapshot);
-  const [uptime, setUptime] = useState(formatUptime(snapshot.metrics.uptimeMs));
+  const [uptimeMs, setUptimeMs] = useState(snapshot.metrics.uptimeMs);
   const [ping , setPing] = useState(snapshot.metrics.ping);
   const [tick, setTick] = useState(0);
 
@@ -61,7 +47,7 @@ export function StatusView({
 
       const next = (await res.json()) as StatusSnapshot;
       setSnapshot(next);
-      setUptime(formatUptime(next.metrics.uptimeMs));
+      setUptimeMs(next.metrics.uptimeMs);
       setPing(next.metrics.ping);
     } catch {
       // A failed poll is not worth showing; the next one is 30 seconds away.
@@ -80,6 +66,21 @@ export function StatusView({
   }, [refresh]);
 
   const overall = snapshot.overall;
+
+  /** "just now", "2 minutes ago" — the freshness line under the headline. */
+  const relativeTime = (iso: string | null): string => {
+    if (!iso) return t("site.status.never");
+
+    const elapsed = Date.now() - new Date(iso).getTime();
+    if (elapsed < 60_000) return t("site.status.justNow");
+    return format.relative(iso);
+  };
+
+  const unit = {
+    day: t("site.status.units.day"),
+    hour: t("site.status.units.hour"),
+    minute: t("site.status.units.minute"),
+  };
 
   return (
     <Column fillWidth gap="32">
@@ -104,10 +105,10 @@ export function StatusView({
             <Icon name={HEADLINE_ICON[overall]} size="l" />
           </Flex>
           <Text variant="display-strong-xs" align="center">
-            {HEADLINE[overall]}
+            {t(`site.status.headline.${overall}`)}
           </Text>
           <Text variant="body-default-m" onBackground="neutral-weak" align="center">
-            Last updated: {relativeTime(snapshot.checkedAt)}
+            {t("site.status.lastUpdated", { time: relativeTime(snapshot.checkedAt) })}
           </Text>
         </Flex>
       </RevealFx>
@@ -116,7 +117,7 @@ export function StatusView({
         <Grid columns={3} m={{ columns: 3 }} s={{ columns: 1 }} gap="16" fillWidth key={tick}>
           <MetricCard
             icon="target"
-            label="Shard ping"
+            label={t("site.status.metrics.ping.label")}
             value={ping === null ? "—" : (
                   <CountFx
                       variant="display-strong-xs"
@@ -124,33 +125,33 @@ export function StatusView({
                       speed={5000}
                       effect="wheel"
                       easing="ease-out"
-                      children=" ms"
+                      children={` ${t("site.status.units.ms")}`}
                   />
             )}
-            description="Average WebSocket latency to the Discord gateway"
+            description={t("site.status.metrics.ping.description")}
           />
           <MetricCard
             icon="play"
-            label="Bot uptime"
-            value={uptime}
-            description="Time since the bot process last restarted"
+            label={t("site.status.metrics.uptime.label")}
+            value={formatUptime(uptimeMs, unit)}
+            description={t("site.status.metrics.uptime.description")}
           />
           <MetricCard
             icon="boxes"
-            label="Shards"
+            label={t("site.status.metrics.shards.label")}
             value={
               <Text variant="display-strong-xs">
                 {snapshot.metrics.shards.ready}/{snapshot.metrics.shards.total || 1}
               </Text>
             }
-            description="Discord gateway processes reporting in"
+            description={t("site.status.metrics.shards.description")}
           />
         </Grid>
       </RevealFx>
 
       <RevealFx delay={600} translateY={-0.5}>
         <Column fillWidth gap="12">
-          <Text variant="heading-strong-m">Services</Text>
+          <Text variant="heading-strong-m">{t("site.status.servicesTitle")}</Text>
           <Flex
             direction="column"
             fillWidth
@@ -164,10 +165,18 @@ export function StatusView({
                 {index > 0 && <Line />}
                 <Row fillWidth horizontal="between" vertical="center" padding="16" gap="12">
                   <Column gap="2">
-                    <Text variant="body-default-m">{service.label}</Text>
-                    {service.note && (
+                    <Text variant="body-default-m">
+                      {SERVICE_LABEL_KEYS[service.key]
+                        ? t(SERVICE_LABEL_KEYS[service.key])
+                        : service.label}
+                    </Text>
+                    {(service.note || (service.key === "shards" && snapshot.metrics.shards.total > 0)) && (
                       <Text variant="body-default-xs" onBackground="neutral-weak">
-                        {service.note}
+                        {service.note ??
+                          t("site.status.shardsReady", {
+                            ready: snapshot.metrics.shards.ready,
+                            total: snapshot.metrics.shards.total,
+                          })}
                       </Text>
                     )}
                   </Column>
@@ -182,7 +191,7 @@ export function StatusView({
                       }}
                     />
                     <Text variant="body-default-s" onBackground="neutral-medium">
-                      {STATUS_LABEL[service.status]}
+                      {t(`site.status.state.${service.status}`)}
                     </Text>
                   </Row>
                 </Row>
@@ -218,8 +227,12 @@ function MetricCard({
     >
       <Row gap="8" vertical="center">
         <Icon name={icon} size="s" onBackground="brand-medium" />
-        <Text variant="label-default-s" onBackground="neutral-weak">
-          {label.toUpperCase()}
+        <Text
+          variant="label-default-s"
+          onBackground="neutral-weak"
+          style={{ textTransform: "uppercase" }}
+        >
+          {label}
         </Text>
       </Row>
       {value}
@@ -231,7 +244,10 @@ function MetricCard({
 }
 
 /** Mirror of `formatUptime` on the server, used after a client refresh. */
-function formatUptime(uptimeMs: number | null): React.ReactNode {
+function formatUptime(
+  uptimeMs: number | null,
+  unit: { day: string; hour: string; minute: string },
+): React.ReactNode {
   if (!uptimeMs || uptimeMs < 0) return "—";
 
   const minutes = Math.floor(uptimeMs / 60_000) % 60;
@@ -245,7 +261,7 @@ function formatUptime(uptimeMs: number | null): React.ReactNode {
         speed={5000}
         effect="wheel"
         easing="ease-out"
-        children={'d'}
+        children={unit.day}
     />
     <CountFx
         variant="display-strong-xs"
@@ -253,7 +269,7 @@ function formatUptime(uptimeMs: number | null): React.ReactNode {
         speed={5000}
         effect="wheel"
         easing="ease-out"
-        children={'h'}
+        children={unit.hour}
     />
   </Row>;
   if (hours > 0) return <Row gap="8" vertical="end">
@@ -263,7 +279,7 @@ function formatUptime(uptimeMs: number | null): React.ReactNode {
         speed={5000}
         effect="wheel"
         easing="ease-out"
-        children={'h'}
+        children={unit.hour}
     />
     <CountFx
         variant="display-strong-xs"
@@ -271,8 +287,8 @@ function formatUptime(uptimeMs: number | null): React.ReactNode {
         speed={5000}
         effect="wheel"
         easing="ease-out"
-        children={'m'}
+        children={unit.minute}
     />
   </Row>;
-  return <CountFx variant="display-strong-xs" value={minutes} speed={5000} effect="wheel" easing="ease-out" children={'m'} />;
+  return <CountFx variant="display-strong-xs" value={minutes} speed={5000} effect="wheel" easing="ease-out" children={unit.minute} />;
 }

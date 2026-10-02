@@ -1,17 +1,20 @@
-"use client";
-
 import { Flex, Text, Column, Line, List, ListItem, RevealFx } from "@once-ui-system/core";
-import { formatDate } from "@/app/utils/formatDate";
+import { getFormatters, getT } from "@/i18n/server";
 
-export default function TermsOfServicePage() {
+export default async function TermsOfServicePage() {
+  const t = await getT();
+  const format = await getFormatters();
+
   return (
     <Flex fill center paddingX="l" paddingBottom="l">
       <Column maxWidth="m" gap="24" fillWidth>
         <RevealFx translateY={-0.5}>
           <Column gap="8">
-            <Text variant="heading-strong-xl">Terms of Service</Text>
+            <Text variant="heading-strong-xl">{t("common.nav.terms")}</Text>
             <Text variant="body-default-m" onBackground="neutral-weak">
-              Last updated: {formatDate("2026-05-09")}
+              {t("site.legal.lastUpdated", {
+                date: format.date("2026-05-09", { dateStyle: "long", timeZone: "UTC" }),
+              })}
             </Text>
           </Column>
         </RevealFx>
@@ -22,68 +25,52 @@ export default function TermsOfServicePage() {
 
         <RevealFx delay={400} translateY={-0.5}>
           <Column gap="16">
-            <Text variant="heading-strong-m">1. Acceptance of Terms</Text>
+            <Text variant="heading-strong-m">{t("site.legal.terms.s1.title")}</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
-              By inviting Amelia (the "Bot") to your Discord server or logging into our Dashboard,
-              you agree to comply with and be bound by these Terms of Service. If you do not agree
-              with these terms, you must remove the Bot from your server and cease using the
-              Dashboard.
+              {t("site.legal.terms.s1.text")}
             </Text>
           </Column>
         </RevealFx>
 
         <RevealFx delay={700} translateY={-0.5}>
           <Column gap="16">
-            <Text variant="heading-strong-m">2. Description of Service</Text>
+            <Text variant="heading-strong-m">{t("site.legal.terms.s2.title")}</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
-              Amelia is a multi-purpose Discord bot providing moderation, economy, leveling, and
-              utility tools. The service is provided "as is" and we reserve the right to modify,
-              suspend, or discontinue any part of the service at any time without notice.
+              {t("site.legal.terms.s2.text")}
             </Text>
           </Column>
         </RevealFx>
 
         <RevealFx delay={1000} translateY={-0.5}>
           <Column gap="16">
-            <Text variant="heading-strong-m">3. User Conduct and Restrictions</Text>
+            <Text variant="heading-strong-m">{t("site.legal.terms.s3.title")}</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
-              When using the Bot or Dashboard, you agree <strong>not</strong> to:
+              {t("site.legal.terms.s3.introBefore")}{" "}
+              <strong>{t("site.legal.terms.s3.introEmphasis")}</strong>{" "}
+              {t("site.legal.terms.s3.introAfter")}
             </Text>
             <List as={"ul"} textVariant="body-default-m" gap="4">
-              <ListItem>
-                Use the service to violate Discord's Terms of Service or Community Guidelines.
-              </ListItem>
-              <ListItem>
-                Attempt to exploit, bypass, or abuse any of the Bot's systems (e.g., economy
-                exploits, API rate limit abuse).
-              </ListItem>
-              <ListItem>
-                Use the Bot to generate or distribute malicious, illegal, or highly offensive
-                content.
-              </ListItem>
+              <ListItem>{t("site.legal.terms.s3.items.i1")}</ListItem>
+              <ListItem>{t("site.legal.terms.s3.items.i2")}</ListItem>
+              <ListItem>{t("site.legal.terms.s3.items.i3")}</ListItem>
             </List>
           </Column>
         </RevealFx>
 
         <RevealFx delay={1300} translateY={-0.5}>
           <Column gap="16">
-            <Text variant="heading-strong-m">4. Termination of Access</Text>
+            <Text variant="heading-strong-m">{t("site.legal.terms.s4.title")}</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
-              We reserve the right to permanently blacklist users or entire servers from using the
-              Bot and Dashboard at our sole discretion, without prior notice, if we determine that
-              these Terms have been violated.
+              {t("site.legal.terms.s4.text")}
             </Text>
           </Column>
         </RevealFx>
 
         <RevealFx delay={1600} translateY={-0.5}>
           <Column gap="16">
-            <Text variant="heading-strong-m">5. Limitation of Liability</Text>
+            <Text variant="heading-strong-m">{t("site.legal.terms.s5.title")}</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
-              Under no circumstances shall the developers of Amelia be held liable for any direct,
-              indirect, incidental, or consequential damages resulting from the use or inability to
-              use the Bot. We are not responsible for any actions taken by server administrators
-              using our moderation tools.
+              {t("site.legal.terms.s5.text")}
             </Text>
           </Column>
         </RevealFx>

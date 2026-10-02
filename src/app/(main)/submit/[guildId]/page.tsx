@@ -3,12 +3,14 @@ import { Column, Feedback, Icon, Row, Text } from "@once-ui-system/core";
 import { Guild } from "@/lib/db/Guild";
 import { normalizeForm } from "@/lib/moderation/forms";
 import type { IconName } from "@/resources/icons";
+import { getT } from "@/i18n/server";
 
 export default async function SubmitIndexPage({
   params,
 }: {
   params: Promise<{ guildId: string }>;
 }) {
+  const t = await getT();
   const { guildId } = await params;
   const guild = new Guild(guildId);
 
@@ -20,8 +22,8 @@ export default async function SubmitIndexPage({
       {!report.enabled && !appeal.enabled && (
         <Feedback
           variant="info"
-          title="Nothing to submit"
-          description="This server has not enabled any moderation forms yet."
+          title={t("site.submit.index.emptyTitle")}
+          description={t("site.submit.index.emptyDescription")}
         />
       )}
 
@@ -29,8 +31,8 @@ export default async function SubmitIndexPage({
         <FormCard
           href={`/submit/${guildId}/report`}
           icon="warning"
-          title="Report a member"
-          description="Tell the moderation team about a rule violation. Members of the server only."
+          title={t("site.submit.index.reportTitle")}
+          description={t("site.submit.index.reportDescription")}
         />
       )}
 
@@ -38,16 +40,16 @@ export default async function SubmitIndexPage({
         <FormCard
           href={`/submit/${guildId}/appeal`}
           icon="refresh"
-          title="Appeal a punishment"
-          description="Ask the moderation team to review a warn, mute or ban you received. Available even if you are banned."
+          title={t("site.submit.index.appealTitle")}
+          description={t("site.submit.index.appealDescription")}
         />
       )}
 
       <FormCard
         href={`/submit/${guildId}/status`}
         icon="check"
-        title="My submissions"
-        description="See the status of everything you have sent to this server."
+        title={t("site.submit.index.statusTitle")}
+        description={t("site.submit.index.statusDescription")}
       />
     </Column>
   );

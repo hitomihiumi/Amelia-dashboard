@@ -4,8 +4,8 @@ import { Button, Column, Flex, Media, Row, Tag, Text, Meta } from "@once-ui-syst
 import type { Metadata } from "next";
 import { baseURL, schema } from "@/resources";
 import { CustomMDX } from "@/components/docs/mdx";
-import { formatDate } from "@/app/utils/formatDate";
-import { NEWS_CATEGORY_LABELS, getPostBySlug } from "@/lib/news/news";
+import { getFormatters, getT } from "@/i18n/server";
+import { getPostBySlug, isNewsCategory } from "@/lib/news/news";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +35,8 @@ export async function generateMetadata({
 }
 
 export default async function NewsPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const t = await getT();
+  const format = await getFormatters();
   const { slug } = await params;
   const post = await getPostBySlug(slug);
 
@@ -44,16 +46,18 @@ export default async function NewsPostPage({ params }: { params: Promise<{ slug:
     <Flex fillWidth horizontal="center" paddingY="40" paddingX="16">
       <Column maxWidth="s" fillWidth gap="24">
         <Button size="s" variant="secondary" prefixIcon="back" href="/news">
-          All news
+          {t("site.news.allNews")}
         </Button>
 
         <Column gap="12">
           <Row gap="8" vertical="center" wrap>
             <Tag scheme="neutral">
-              {NEWS_CATEGORY_LABELS[post.category as never] ?? post.category}
+              {isNewsCategory(post.category)
+                ? t(`site.news.categories.${post.category}`)
+                : post.category}
             </Tag>
             <Text variant="body-default-xs" onBackground="neutral-weak">
-              {formatDate((post.publishedAt ?? post.createdAt).toISOString())}
+              {format.date(post.publishedAt ?? post.createdAt, { dateStyle: "long" })}
             </Text>
           </Row>
           <Text variant="display-strong-xs">{post.title}</Text>

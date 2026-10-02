@@ -138,7 +138,8 @@ export async function getStatusSnapshot(): Promise<StatusSnapshot> {
       key: "shards",
       label: SERVICE_LABELS.shards,
       status: gateway,
-      note: heartbeats.length ? `${ready.length}/${total} ready` : null,
+      // The "x/y ready" line is built by the UI from `metrics.shards`, so it can be translated.
+      note: null,
     },
   ];
 
