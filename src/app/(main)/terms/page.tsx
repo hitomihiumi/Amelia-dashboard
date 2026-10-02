@@ -16,11 +16,11 @@ export default function TermsOfServicePage() {
           </Column>
         </RevealFx>
 
-        <RevealFx delay={0.1} translateY={-0.5}>
+        <RevealFx delay={100} translateY={-0.5}>
           <Line />
         </RevealFx>
 
-        <RevealFx delay={0.4} translateY={-0.5}>
+        <RevealFx delay={400} translateY={-0.5}>
           <Column gap="16">
             <Text variant="heading-strong-m">1. Acceptance of Terms</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
@@ -32,7 +32,7 @@ export default function TermsOfServicePage() {
           </Column>
         </RevealFx>
 
-        <RevealFx delay={0.7} translateY={-0.5}>
+        <RevealFx delay={700} translateY={-0.5}>
           <Column gap="16">
             <Text variant="heading-strong-m">2. Description of Service</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
@@ -43,7 +43,7 @@ export default function TermsOfServicePage() {
           </Column>
         </RevealFx>
 
-        <RevealFx delay={1.0} translateY={-0.5}>
+        <RevealFx delay={1000} translateY={-0.5}>
           <Column gap="16">
             <Text variant="heading-strong-m">3. User Conduct and Restrictions</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
@@ -65,7 +65,7 @@ export default function TermsOfServicePage() {
           </Column>
         </RevealFx>
 
-        <RevealFx delay={1.3} translateY={-0.5}>
+        <RevealFx delay={1300} translateY={-0.5}>
           <Column gap="16">
             <Text variant="heading-strong-m">4. Termination of Access</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
@@ -76,7 +76,7 @@ export default function TermsOfServicePage() {
           </Column>
         </RevealFx>
 
-        <RevealFx delay={1.6} translateY={-0.5}>
+        <RevealFx delay={1600} translateY={-0.5}>
           <Column gap="16">
             <Text variant="heading-strong-m">5. Limitation of Liability</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">

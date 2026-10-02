@@ -68,7 +68,7 @@ export default async function NewsPage({
           </Column>
         </RevealFx>
 
-        <RevealFx delay={0.3} translateY={-0.5}>
+        <RevealFx delay={300} translateY={-0.5}>
           <Row gap="8" wrap>
             <Button
               size="s"
@@ -90,7 +90,7 @@ export default async function NewsPage({
           </Row>
         </RevealFx>
 
-        <RevealFx delay={0.6} translateY={-0.5}>
+        <RevealFx delay={600} translateY={-0.5}>
           {posts.length === 0 && (
             <Text variant="body-default-m" onBackground="neutral-weak">
               Nothing published here yet.
@@ -100,7 +100,7 @@ export default async function NewsPage({
 
         <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="16" fillWidth>
           {posts.map((post, idx) => (
-            <RevealFx delay={0.9 + 0.1 * idx} translateY={-0.5}>
+            <RevealFx delay={900 + 100 * idx} translateY={-0.5}>
               <Card
                 direction="column"
                 fillWidth
@@ -117,7 +117,7 @@ export default async function NewsPage({
                   <Media src={post.coverUrl} radius="m" aspectRatio="16 / 9" alt={post.title} />
                 )}
                 <Row gap="8" vertical="center" wrap>
-                  <Tag variant="neutral">
+                  <Tag scheme="neutral">
                     {NEWS_CATEGORY_LABELS[post.category as never] ?? post.category}
                   </Tag>
                   <Text variant="body-default-xs" onBackground="neutral-weak">
@@ -135,7 +135,7 @@ export default async function NewsPage({
           ))}
         </Grid>
 
-        <RevealFx delay={1.2} translateY={-0.5}>
+        <RevealFx delay={1200} translateY={-0.5}>
           {pages > 1 && (
             <Row fillWidth horizontal="center" gap="8" vertical="center">
               <Button

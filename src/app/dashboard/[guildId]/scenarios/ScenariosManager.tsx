@@ -144,7 +144,7 @@ export function ScenariosManager({
 
   return (
     <Flex direction="column" gap="16" fillWidth>
-      <RevealFx delay={0.3} translateY={-0.5}>
+      <RevealFx delay={300} translateY={-0.5}>
         <Row fillWidth horizontal="between" vertical="center">
           <Row gap="12" center>
             <DashIcon name="gitnet" />
@@ -164,7 +164,7 @@ export function ScenariosManager({
       </RevealFx>
 
       {scenarios.length === 0 ? (
-        <RevealFx delay={0.6} translateY={-0.5}>
+        <RevealFx delay={600} translateY={-0.5}>
           <Feedback
             variant="info"
             title="No scenarios"
@@ -174,7 +174,7 @@ export function ScenariosManager({
       ) : (
         <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fill>
           {scenarios.map((scenario, idx) => (
-            <RevealFx delay={0.4 + idx * 0.1} translateY={-0.5} key={scenario.id}>
+            <RevealFx delay={400 + idx * 100} translateY={-0.5} key={scenario.id}>
               <ScenarioCard
                 scenario={scenario}
                 guildId={guildId}
@@ -250,23 +250,23 @@ function ScenarioCard({
       )}
       <Row gap="8" wrap>
         {triggerMissing ? (
-          <Tag label="No trigger" variant="warning" />
+          <Tag label="No trigger" scheme="warning" />
         ) : (
           <Tag
             label={TRIGGER_TYPE_LABEL[scenario.trigger!.type] ?? scenario.trigger!.type}
-            variant="accent"
+            scheme="accent"
           />
         )}
-        <Tag label={`${scenario.steps.length} step(s)`} variant="brand" />
+        <Tag label={`${scenario.steps.length} step(s)`} scheme="brand" />
         {(scenario.cooldown ?? 0) > 0 && (
-          <Tag label={`cooldown ${scenario.cooldown}s`} variant="neutral" />
+          <Tag label={`cooldown ${scenario.cooldown}s`} scheme="neutral" />
         )}
         {(scenario.allowedRoles?.length ?? 0) > 0 && (
-          <Tag label={`roles ${scenario.allowedRoles!.length}`} variant="neutral" />
+          <Tag label={`roles ${scenario.allowedRoles!.length}`} scheme="neutral" />
         )}
         <Tag
           label={scenario.enabled ? "enabled" : "disabled"}
-          variant={scenario.enabled ? "success" : "danger"}
+          scheme={scenario.enabled ? "success" : "danger"}
         />
       </Row>
     </Card>

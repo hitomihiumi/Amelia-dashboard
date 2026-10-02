@@ -45,7 +45,7 @@ export default async function StatusPage() {
           initialSnapshot={snapshot}
         />
 
-        <RevealFx delay={0.9} translateY={-0.5}>
+        <RevealFx delay={900} translateY={-0.5}>
           <Column fillWidth gap="16">
             <Text variant="heading-strong-m">Incident history</Text>
 
@@ -69,10 +69,10 @@ export default async function StatusPage() {
                 <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
                   <Text variant="heading-strong-s">{incident.title}</Text>
                   <Row gap="8" vertical="center">
-                    <Tag variant={SEVERITY_VARIANT[incident.severity] ?? "neutral"}>
+                    <Tag scheme={SEVERITY_VARIANT[incident.severity] ?? "neutral"}>
                       {incident.severity}
                     </Tag>
-                    <Tag variant={incident.resolvedAt ? "success" : "warning"}>
+                    <Tag scheme={incident.resolvedAt ? "success" : "warning"}>
                       {incident.resolvedAt ? "resolved" : incident.status}
                     </Tag>
                   </Row>

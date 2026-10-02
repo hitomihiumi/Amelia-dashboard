@@ -141,8 +141,8 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
             value: category,
             label: NEWS_CATEGORY_LABELS[category],
           }))}
-          selected={draft.category}
-          onToggle={(value) => update({ category: value })}
+          value={draft.category}
+          onChange={(value) => update({ category: value })}
         />
 
         <Textarea
@@ -172,7 +172,7 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
 
         <Row fillWidth gap="12" vertical="center">
           <Switch
-            isChecked={draft.published}
+            checked={draft.published}
             onToggle={() => update({ published: !draft.published })}
           />
           <Text variant="label-default-s">Published</Text>
@@ -198,10 +198,10 @@ export function NewsManager({ posts }: { posts: NewsPost[] }) {
           <Accordion key={post.id} title={post.title}>
             <Column fillWidth gap="12">
               <Row gap="8" vertical="center" wrap>
-                <Tag variant={post.published ? "success" : "neutral"}>
+                <Tag scheme={post.published ? "success" : "neutral"}>
                   {post.published ? "published" : "draft"}
                 </Tag>
-                <Tag variant="neutral">{post.category}</Tag>
+                <Tag scheme="neutral">{post.category}</Tag>
                 <Text variant="body-default-xs" onBackground="neutral-weak">
                   /news/{post.slug}
                 </Text>

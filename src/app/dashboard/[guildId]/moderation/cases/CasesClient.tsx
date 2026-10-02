@@ -73,19 +73,19 @@ export function CasesClient({
 
   return (
     <Column fillWidth gap="16">
-      <RevealFx delay={0.3} translateY={-0.5}>
+      <RevealFx delay={300} translateY={-0.5}>
         <Row fillWidth gap="12" vertical="center" wrap>
           <SegmentedControl
             buttons={TYPE_FILTERS}
-            selected={type}
-            onToggle={(value) => navigate({ type: value, page: 1 })}
+            value={type}
+            onChange={(value) => navigate({ type: value, page: 1 })}
           />
           <Input
             id="case-user"
             label="Filter by user ID"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            hasPrefix={
+            prefix={
               <IconButton
                 icon="search"
                 variant="ghost"
@@ -97,7 +97,7 @@ export function CasesClient({
       </RevealFx>
 
       {items.length === 0 && (
-        <RevealFx delay={0.6} translateY={-0.5}>
+        <RevealFx delay={600} translateY={-0.5}>
           <Feedback
             variant="info"
             title="No cases"
@@ -107,13 +107,13 @@ export function CasesClient({
       )}
 
       {items.map((item, idx) => (
-        <RevealFx delay={0.4 + idx * 0.1} translateY={-0.5} key={idx}>
+        <RevealFx delay={400 + idx * 100} translateY={-0.5} key={idx}>
           <CaseCard key={item.id} guildId={guildId} item={item} />
         </RevealFx>
       ))}
 
       {pages > 1 && (
-        <RevealFx delay={0.6} translateY={-0.5}>
+        <RevealFx delay={600} translateY={-0.5}>
           <Row fillWidth gap="8" horizontal="center" vertical="center">
             <Button
               variant="secondary"
@@ -177,7 +177,7 @@ function CaseCard({ guildId, item }: { guildId: string; item: CaseItem }) {
         <Text variant="heading-strong-s">
           #{item.caseNumber} • {item.typeLabel}
         </Text>
-        <Tag variant={item.active ? "danger" : "neutral"}>{item.active ? "Active" : "Closed"}</Tag>
+        <Tag scheme={item.active ? "danger" : "neutral"}>{item.active ? "Active" : "Closed"}</Tag>
       </Row>
 
       <Text variant="body-default-s" onBackground="neutral-weak">

@@ -90,14 +90,14 @@ export function Header() {
                 <Line />
                 <Option
                   fillWidth
-                  hasPrefix={<Icon size="xs" onBackground="neutral-weak" name="gear" />}
+                  prefix={<Icon size="xs" onBackground="neutral-weak" name="gear" />}
                   href={"/dashboard"}
                   label="Dashboard"
                   value={"dashboard"}
                 />
                 <Option
                   fillWidth
-                  hasPrefix={<Icon size="xs" onBackground="neutral-weak" name="logout" />}
+                  prefix={<Icon size="xs" onBackground="neutral-weak" name="logout" />}
                   onClick={() => signOut({ callbackUrl: "/" })}
                   label="Log out"
                   value={"logout"}

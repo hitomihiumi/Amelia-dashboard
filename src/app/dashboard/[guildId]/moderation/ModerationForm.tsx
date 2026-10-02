@@ -195,7 +195,7 @@ export function ModerationForm({
 
         <Row fillWidth gap="12" vertical="center">
           <Switch
-            isChecked={settings.dm_notify}
+            checked={settings.dm_notify}
             onToggle={() => setSettings((prev) => ({ ...prev, dm_notify: !prev.dm_notify }))}
           />
           <Column gap="4">
@@ -258,8 +258,8 @@ export function ModerationForm({
                     value: option.value,
                     label: option.label,
                   }))}
-                  selected={rule.punishment.type}
-                  onToggle={(value) =>
+                  value={rule.punishment.type}
+                  onChange={(value) =>
                     updateThreshold(index, {
                       punishment: { ...rule.punishment, type: value as PunishmentType },
                     })
@@ -360,12 +360,12 @@ function AutoModerationSection({
       num={num}
       icon={icon}
       switcher={
-        <Switch isChecked={rule.enabled} onToggle={() => update({ enabled: !rule.enabled })} />
+        <Switch checked={rule.enabled} onToggle={() => update({ enabled: !rule.enabled })} />
       }
     >
       <Row fillWidth gap="12" vertical="center">
         <Switch
-          isChecked={rule.delete_message}
+          checked={rule.delete_message}
           onToggle={() => update({ delete_message: !rule.delete_message })}
         />
         <Text variant="label-default-s">Delete the offending message</Text>
@@ -373,7 +373,7 @@ function AutoModerationSection({
 
       <Row fillWidth gap="12" vertical="center">
         <Switch
-          isChecked={rule.moderation_immune}
+          checked={rule.moderation_immune}
           onToggle={() => update({ moderation_immune: !rule.moderation_immune })}
         />
         <Text variant="label-default-s">Moderators are exempt</Text>
@@ -416,8 +416,8 @@ function AutoModerationSection({
             value: option.value,
             label: option.label,
           }))}
-          selected={rule.punishment.type}
-          onToggle={(value) =>
+          value={rule.punishment.type}
+          onChange={(value) =>
             update({ punishment: { ...rule.punishment, type: value as PunishmentType } })
           }
         />

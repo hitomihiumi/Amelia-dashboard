@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Column, Feedback, Icon, Row, Text } from "@once-ui-system/core";
 import { Guild } from "@/lib/db/Guild";
 import { normalizeForm } from "@/lib/moderation/forms";
+import type { IconName } from "@/resources/icons";
 
 export default async function SubmitIndexPage({
   params,
@@ -59,7 +60,7 @@ function FormCard({
   description,
 }: {
   href: string;
-  icon: string;
+  icon: IconName;
   title: string;
   description: string;
 }) {

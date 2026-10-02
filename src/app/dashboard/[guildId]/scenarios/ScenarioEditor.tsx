@@ -213,7 +213,7 @@ export function ScenarioEditor({
         <Switch
           label="Use trigger"
           description="When off, this scenario never fires automatically (acts as a manual/draft)."
-          isChecked={useTrigger}
+          checked={useTrigger}
           onToggle={() =>
             updateMeta(
               useTrigger ? { trigger: null } : { trigger: { type: "button", componentId: "" } },
@@ -226,8 +226,8 @@ export function ScenarioEditor({
             <Text variant="label-default-s">Trigger type</Text>
             <SegmentedControl
               fillWidth
-              selected={triggerType}
-              onToggle={(v) =>
+              value={triggerType}
+              onChange={(v) =>
                 updateMeta({ trigger: { type: v as ScenarioTriggerType, componentId: "" } })
               }
               buttons={TRIGGER_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
@@ -249,7 +249,7 @@ export function ScenarioEditor({
         <Switch
           label="Enabled"
           description="Whether this scenario responds when its trigger fires."
-          isChecked={scenario.enabled}
+          checked={scenario.enabled}
           onToggle={() => updateMeta({ enabled: !scenario.enabled })}
         />
       </Column>
@@ -334,7 +334,7 @@ export function ScenarioEditor({
       style={{ alignItems: "flex-start" }}
     >
       {/* Canvas — scenario settings and add-step live inside it as collapsible overlays */}
-      <RevealFx delay={0.6} translateY={-0.5}>
+      <RevealFx delay={600} translateY={-0.5}>
         <Column
           gap="12"
           fillWidth
@@ -366,7 +366,7 @@ export function ScenarioEditor({
         </Column>
       </RevealFx>
 
-      <RevealFx delay={0.9} translateY={-0.5}>
+      <RevealFx delay={900} translateY={-0.5}>
         <Column
           gap="12"
           fillWidth

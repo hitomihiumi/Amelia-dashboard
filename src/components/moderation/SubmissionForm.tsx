@@ -191,7 +191,7 @@ function FormField({
     case "boolean":
       return (
         <Row fillWidth gap="12" vertical="center">
-          <Switch isChecked={value === true} onToggle={() => onChange(!(value === true))} />
+          <Switch checked={value === true} onToggle={() => onChange(!(value === true))} />
           <Column gap="4">
             <Text variant="label-default-s">{label}</Text>
             {field.description && (

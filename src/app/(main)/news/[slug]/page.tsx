@@ -49,7 +49,7 @@ export default async function NewsPostPage({ params }: { params: Promise<{ slug:
 
         <Column gap="12">
           <Row gap="8" vertical="center" wrap>
-            <Tag variant="neutral">
+            <Tag scheme="neutral">
               {NEWS_CATEGORY_LABELS[post.category as never] ?? post.category}
             </Tag>
             <Text variant="body-default-xs" onBackground="neutral-weak">

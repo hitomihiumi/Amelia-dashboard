@@ -16,11 +16,11 @@ export default function PrivacyPolicyPage() {
           </Column>
         </RevealFx>
 
-        <RevealFx delay={0.1} translateY={-0.5}>
+        <RevealFx delay={100} translateY={-0.5}>
           <Line />
         </RevealFx>
 
-        <RevealFx delay={0.4} translateY={-0.5}>
+        <RevealFx delay={400} translateY={-0.5}>
           <Column gap="16">
             <Text variant="heading-strong-m">1. Information We Collect</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
@@ -48,7 +48,7 @@ export default function PrivacyPolicyPage() {
           </Column>
         </RevealFx>
 
-        <RevealFx delay={0.7} translateY={-0.5}>
+        <RevealFx delay={700} translateY={-0.5}>
           <Column gap="16">
             <Text variant="heading-strong-m">2. How We Use Your Data</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
@@ -70,7 +70,7 @@ export default function PrivacyPolicyPage() {
           </Column>
         </RevealFx>
 
-        <RevealFx delay={1.0} translateY={-0.5}>
+        <RevealFx delay={1000} translateY={-0.5}>
           <Column gap="16">
             <Text variant="heading-strong-m">3. Data Sharing and Third Parties</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
@@ -81,7 +81,7 @@ export default function PrivacyPolicyPage() {
           </Column>
         </RevealFx>
 
-        <RevealFx delay={1.3} translateY={-0.5}>
+        <RevealFx delay={1300} translateY={-0.5}>
           <Column gap="16">
             <Text variant="heading-strong-m">4. Data Retention and Deletion</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
@@ -93,7 +93,7 @@ export default function PrivacyPolicyPage() {
           </Column>
         </RevealFx>
 
-        <RevealFx delay={1.6} translateY={-0.5}>
+        <RevealFx delay={1600} translateY={-0.5}>
           <Column gap="16">
             <Text variant="heading-strong-m">5. Contact Us</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">

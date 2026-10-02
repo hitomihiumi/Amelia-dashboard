@@ -206,7 +206,7 @@ function FormEditor({
       num={num}
       icon={icon}
       switcher={
-        <Switch isChecked={form.enabled} onToggle={() => update({ enabled: !form.enabled })} />
+        <Switch checked={form.enabled} onToggle={() => update({ enabled: !form.enabled })} />
       }
     >
       <Text variant="body-default-s" onBackground="neutral-weak">
@@ -245,14 +245,14 @@ function FormEditor({
         <>
           <Row fillWidth gap="12" vertical="center">
             <Switch
-              isChecked={form.require_target}
+              checked={form.require_target}
               onToggle={() => update({ require_target: !form.require_target })}
             />
             <Text variant="label-default-s">Require the reported user's ID</Text>
           </Row>
           <Row fillWidth gap="12" vertical="center">
             <Switch
-              isChecked={form.allow_anonymous}
+              checked={form.allow_anonymous}
               onToggle={() => update({ allow_anonymous: !form.allow_anonymous })}
             />
             <Column gap="4">
@@ -268,7 +268,7 @@ function FormEditor({
       {kind === "appeal" && (
         <Row fillWidth gap="12" vertical="center">
           <Switch
-            isChecked={form.allow_banned}
+            checked={form.allow_banned}
             onToggle={() => update({ allow_banned: !form.allow_banned })}
           />
           <Text variant="label-default-s">Banned users may appeal</Text>
@@ -375,8 +375,8 @@ function FieldEditor({
       <SegmentedControl
         fillWidth
         buttons={FIELD_TYPES.map((type) => ({ value: type.value, label: type.label }))}
-        selected={field.type}
-        onToggle={(value) => onChange({ type: value as ModerationFormFieldType })}
+        value={field.type}
+        onChange={(value) => onChange({ type: value as ModerationFormFieldType })}
       />
 
       {(field.type === "short" || field.type === "paragraph" || field.type === "number") && (
@@ -466,7 +466,7 @@ function FieldEditor({
       <Row fillWidth gap="8" horizontal="between" vertical="center">
         <Switch
           label="Required"
-          isChecked={field.required}
+          checked={field.required}
           onToggle={() => onChange({ required: !field.required })}
         />
         <Row gap="8" vertical="center">

@@ -2,13 +2,14 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import { Schemes } from "@once-ui-system/core";
+import type { IconName } from "@/resources/icons";
 
 interface Post {
   slug: string;
   content: string;
   navTag?: string;
   navLabel?: string;
-  navIcon?: string;
+  navIcon?: IconName;
   navTagVariant?: Schemes;
   metadata: {
     title: string;
@@ -74,7 +75,7 @@ export function getPages(customPath = ["src", "content"]): Post[] {
           content,
           navTag: data.tag,
           navLabel: data.tagLabel,
-          navIcon: data.navIcon,
+          navIcon: data.navIcon as IconName | undefined,
           navTagVariant: data.navTagVariant,
           metadata: {
             title: data.title || "",

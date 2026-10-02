@@ -155,7 +155,7 @@ export function Header() {
                   hide
                   m={{ hide: false }}
                   onClick={toggleSidebar}
-                  isActive={sidebarVisible}
+                  active={sidebarVisible}
                 />
               }
             >

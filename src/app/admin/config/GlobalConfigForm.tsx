@@ -116,7 +116,7 @@ export function GlobalConfigForm({
       <Section title="Site banner" description="Shown above the header on every public page.">
         <Row fillWidth gap="12" vertical="center">
           <Switch
-            isChecked={state.bannerEnabled}
+            checked={state.bannerEnabled}
             onToggle={() => update({ bannerEnabled: !state.bannerEnabled })}
           />
           <Text variant="label-default-s">Show the banner</Text>
@@ -134,8 +134,8 @@ export function GlobalConfigForm({
         <SegmentedControl
           fillWidth
           buttons={BANNER_VARIANTS}
-          selected={state.bannerVariant}
-          onToggle={(value) => update({ bannerVariant: value })}
+          value={state.bannerVariant}
+          onChange={(value) => update({ bannerVariant: value })}
         />
       </Section>
 
@@ -187,7 +187,7 @@ export function GlobalConfigForm({
       >
         <Row fillWidth gap="12" vertical="center">
           <Switch
-            isChecked={state.maintenance}
+            checked={state.maintenance}
             onToggle={() => update({ maintenance: !state.maintenance })}
           />
           <Text variant="label-default-s">Maintenance mode</Text>
@@ -209,8 +209,8 @@ export function GlobalConfigForm({
             <SegmentedControl
               fillWidth
               buttons={SERVICE_STATUSES}
-              selected={state.serviceOverrides[service.key]?.status ?? ""}
-              onToggle={(value) => setOverride(service.key, { status: value })}
+              value={state.serviceOverrides[service.key]?.status ?? ""}
+              onChange={(value) => setOverride(service.key, { status: value })}
             />
             {state.serviceOverrides[service.key]?.status && (
               <Input

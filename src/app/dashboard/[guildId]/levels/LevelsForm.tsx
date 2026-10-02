@@ -145,7 +145,7 @@ export function LevelsForm({
 
   return (
     <Flex direction="column" gap="24">
-      <RevealFx delay={0.3} translateY={-0.5}>
+      <RevealFx delay={300} translateY={-0.5}>
         <Flex
           direction="column"
           gap="16"
@@ -166,7 +166,7 @@ export function LevelsForm({
               </Column>
             </Flex>
             <Switch
-              isChecked={levels.enabled}
+              checked={levels.enabled}
               onToggle={() => setLevels((p) => ({ ...p, enabled: !p.enabled }))}
             />
           </Row>
@@ -252,7 +252,7 @@ export function LevelsForm({
         icon="send"
         switcher={
           <Switch
-            isChecked={levels.message.enabled}
+            checked={levels.message.enabled}
             onToggle={() =>
               setLevels((p) => ({
                 ...p,
@@ -326,7 +326,7 @@ export function LevelsForm({
         icon={"money"}
         switcher={
           <Switch
-            isChecked={economy.enabled}
+            checked={economy.enabled}
             onToggle={() => setEconomy((p) => ({ ...p, enabled: !p.enabled }))}
           />
         }

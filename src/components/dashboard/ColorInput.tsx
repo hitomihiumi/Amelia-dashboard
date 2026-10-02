@@ -143,7 +143,7 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
             }
           }}
           {...props}
-          hasPrefix={
+          prefix={
             <Flex
               cursor="interactive"
               onClick={() => nativeColorRef.current?.click()}
@@ -159,12 +159,12 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
               {!hexValue && <Icon size="xs" name="eyeDropper" onBackground="neutral-medium" />}
             </Flex>
           }
-          hasSuffix={
+          suffix={
             hexValue ? (
               <Flex gap="4" vertical="center">
                 {supportAlpha && (
                   <DropdownWrapper
-                    isOpen={alphaMenuOpen}
+                    open={alphaMenuOpen}
                     onOpenChange={setAlphaMenuOpen}
                     placement="top-end"
                     trigger={

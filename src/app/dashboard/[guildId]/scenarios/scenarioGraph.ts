@@ -6,6 +6,7 @@ import type {
 } from "@/lib/db/types";
 import { MarkerType } from "@xyflow/react";
 import type { Edge, Node } from "@xyflow/react";
+import type { IconName } from "@/resources/icons";
 
 /** Node id reserved for the trigger source (always rendered as a visual entry point). */
 export const TRIGGER_NODE_ID = "__trigger__";
@@ -277,7 +278,7 @@ export const ACTION_LABELS: Record<ScenarioActionType, string> = {
   delete_message: "Delete Message",
 };
 
-export const ACTION_icons: Record<ScenarioActionType, string> = {
+export const ACTION_icons: Record<ScenarioActionType, IconName> = {
   show_modal: "actionModal",
   send_message: "actionMessage",
   send_embed: "actionEmbed",

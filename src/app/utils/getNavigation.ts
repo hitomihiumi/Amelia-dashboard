@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import { Schemes } from "@once-ui-system/core";
+import type { IconName } from "@/resources/icons";
 
 interface NavigationItem {
   slug: string;
@@ -9,7 +10,7 @@ interface NavigationItem {
   label?: string;
   navTag?: string;
   navLabel?: string;
-  navIcon?: string;
+  navIcon?: IconName;
   navTagVariant?: Schemes;
   keywords?: string;
   children?: NavigationItem[];
@@ -132,7 +133,7 @@ export default function getNavigation(
           title: data.title || entry.name.replace(/\.mdx?$/, ""),
           navTag: data.navTag,
           navLabel: data.navLabel,
-          navIcon: data.navIcon,
+          navIcon: data.navIcon as IconName | undefined,
           navTagVariant: data.navTagVariant,
           keywords: data.keywords,
           order: pageOrder !== undefined ? pageOrder : data.order,

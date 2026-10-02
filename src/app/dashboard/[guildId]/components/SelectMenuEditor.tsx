@@ -94,7 +94,7 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
 
       <Switch
         label="Disabled"
-        isChecked={!!value.disabled}
+        checked={!!value.disabled}
         onToggle={() => update({ disabled: !value.disabled })}
       />
 
@@ -178,7 +178,7 @@ function OptionEditor({
         />
         <Switch
           label="Default selected"
-          isChecked={!!option.default}
+          checked={!!option.default}
           onToggle={() => onChange({ default: !option.default })}
         />
       </Column>

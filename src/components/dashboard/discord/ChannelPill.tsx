@@ -11,6 +11,7 @@ import {
   type ChannelPickOption,
 } from "@/lib/discord/channel-type";
 import { useSelectDisplay } from "@/components/user/selectDisplay";
+import type { IconName } from "@/resources/icons";
 
 interface ChannelPillProps extends React.ComponentProps<typeof Flex> {
   channel: ChannelPickOption;
@@ -19,7 +20,7 @@ interface ChannelPillProps extends React.ComponentProps<typeof Flex> {
 }
 
 /** The icon Discord itself uses for each kind of channel. */
-function channelIcon(type: number): string {
+function channelIcon(type: number): IconName {
   if (isCategoryChannel(type)) return "folder";
   if (isStageChannel(type)) return "stage";
   if (isVoiceLikeChannel(type)) return "speaker";

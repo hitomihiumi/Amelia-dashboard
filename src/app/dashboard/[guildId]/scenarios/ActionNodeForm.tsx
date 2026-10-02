@@ -103,7 +103,7 @@ export function ActionNodeForm({
       <Switch
         label="Stop if this step fails"
         description="Prevent the scenario from continuing"
-        isChecked={!!step.stopOnFailure}
+        checked={!!step.stopOnFailure}
         onToggle={() => onUpdateMeta({ stopOnFailure: !step.stopOnFailure })}
       />
     </Column>
@@ -146,7 +146,7 @@ function ActionBody({
           <Switch
             label="Ephemeral"
             description="Reply is visible only to the user"
-            isChecked={!!action.ephemeral}
+            checked={!!action.ephemeral}
             onToggle={() => update({ ephemeral: !action.ephemeral })}
           />
         </>
@@ -173,7 +173,7 @@ function ActionBody({
           <Switch
             label="Ephemeral"
             description="Should only be set for edit_message on interactions"
-            isChecked={!!action.ephemeral}
+            checked={!!action.ephemeral}
             onToggle={() => update({ ephemeral: !action.ephemeral })}
           />
           <MultiReferences
@@ -306,8 +306,8 @@ function ActionBody({
           />
           <SegmentedControl
             fillWidth
-            selected={String(action.autoArchiveDuration ?? 1440)}
-            onToggle={(v) => update({ autoArchiveDuration: Number(v) as any })}
+            value={String(action.autoArchiveDuration ?? 1440)}
+            onChange={(v) => update({ autoArchiveDuration: Number(v) as any })}
             buttons={[
               { label: "1h", value: "60" },
               { label: "24h", value: "1440" },
@@ -344,7 +344,7 @@ function ActionBody({
         <>
           <Switch
             label="Delete the original (trigger) message"
-            isChecked={!!action.deleteOriginal}
+            checked={!!action.deleteOriginal}
             onToggle={() => update({ deleteOriginal: !action.deleteOriginal })}
           />
           <NumberInput
@@ -480,8 +480,8 @@ function ConditionsEditor({
       {conditions.length > 0 && (
         <SegmentedControl
           fillWidth
-          selected={logic}
-          onToggle={(v) => onUpdate({ conditionLogic: v as "and" | "or" })}
+          value={logic}
+          onChange={(v) => onUpdate({ conditionLogic: v as "and" | "or" })}
           buttons={[
             { label: "ALL (and)", value: "and" },
             { label: "ANY (or)", value: "or" },

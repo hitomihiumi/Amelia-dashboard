@@ -172,7 +172,7 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
           <Switch
             label="Show timestamp"
             description="Append the current time to the footer"
-            isChecked={!!value.timestamp}
+            checked={!!value.timestamp}
             onToggle={() => update({ timestamp: !value.timestamp })}
           />
         </Column>
@@ -254,7 +254,7 @@ function FieldEditor({
         />
         <Switch
           label="Inline"
-          isChecked={!!field.inline}
+          checked={!!field.inline}
           onToggle={() => onChange({ inline: !field.inline })}
         />
       </Column>

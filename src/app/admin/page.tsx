@@ -31,7 +31,7 @@ export default async function AdminOverviewPage() {
     <Column fillWidth gap="16">
       <Row fillWidth horizontal="between" vertical="center">
         <Text variant="heading-strong-m">Overview</Text>
-        <Tag variant={snapshot.overall === "operational" ? "success" : "warning"}>
+        <Tag scheme={snapshot.overall === "operational" ? "success" : "warning"}>
           {snapshot.overall}
         </Tag>
       </Row>

@@ -20,7 +20,7 @@ import {
   Row,
   useDebounce,
   StyleProps,
-  gridSize,
+  GridSize,
   Media,
 } from "@once-ui-system/core";
 import { DiscordGuildEmoji, emojiCdnUrl } from "@/lib/discord/emojis-api";
@@ -34,7 +34,7 @@ export interface EmojiPickerProps extends Omit<React.ComponentProps<typeof Flex>
   onClose?: () => void;
   className?: string;
   background?: StyleProps["background"];
-  columns?: gridSize;
+  columns?: GridSize;
   style?: React.CSSProperties;
 }
 
@@ -60,7 +60,6 @@ const EmojiButton = memo(({ emoji, index, isFocused, onSelect, onFocus }: EmojiB
       className={styles.emojiButton}
       onFocus={() => onFocus(index)}
       role="gridcell"
-      radius={"none"}
       ref={isFocused ? (el) => el?.focus() : undefined}
     >
       <Media src={emojiCdnUrl(emoji, 32)} maxWidth={"32"} maxHeight={"32"} />
@@ -187,9 +186,9 @@ const EmojiPicker = ({
         id={`emoji-search-${searchInputId}`}
         placeholder="Search emojis"
         value={inputValue}
-        height="s"
+        size="s"
         onChange={(e) => setInputValue(e.target.value)}
-        hasPrefix={<Icon size="s" onBackground="neutral-weak" name="search" />}
+        prefix={<Icon size="s" onBackground="neutral-weak" name="search" />}
         aria-label="Search emojis"
       />
 

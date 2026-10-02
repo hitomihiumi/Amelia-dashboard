@@ -146,8 +146,8 @@ function FieldRow({
         />
         <SegmentedControl
           fillWidth
-          selected={field.type}
-          onToggle={(v) => onChange({ type: v as "short" | "long" })}
+          value={field.type}
+          onChange={(v) => onChange({ type: v as "short" | "long" })}
           buttons={[
             { label: "Short", value: "short" },
             { label: "Paragraph", value: "long" },
@@ -175,7 +175,7 @@ function FieldRow({
         </Row>
         <Switch
           label="Required"
-          isChecked={field.required}
+          checked={field.required}
           onToggle={() => onChange({ required: !field.required })}
         />
       </Column>

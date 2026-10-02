@@ -35,11 +35,11 @@ export default async function Home() {
           </Row>
         </RevealFx>
 
-        <RevealFx delay={0.1} translateY={-0.5}>
+        <RevealFx delay={100} translateY={-0.5}>
           <Line vert={false} />
         </RevealFx>
 
-        <RevealFx delay={0.4} translateY={-0.5}>
+        <RevealFx delay={400} translateY={-0.5}>
           <Column fill gap="16">
             <Column gap="4" horizontal="center">
               <Text variant="label-default-s" onBackground="brand-medium">
@@ -54,19 +54,19 @@ export default async function Home() {
           </Column>
         </RevealFx>
 
-        <RevealFx delay={0.5} translateY={-0.5}>
+        <RevealFx delay={500} translateY={-0.5}>
           <Line vert={false} />
         </RevealFx>
 
-        <RevealFx delay={0.8} translateY={-0.5}>
+        <RevealFx delay={800} translateY={-0.5}>
           <Features />
         </RevealFx>
 
-        <RevealFx delay={0.9} translateY={-0.5}>
+        <RevealFx delay={900} translateY={-0.5}>
           <Line vert={false} />
         </RevealFx>
 
-        <RevealFx delay={1.2} translateY={-0.5}>
+        <RevealFx delay={1200} translateY={-0.5}>
           <LatestNews posts={news.posts} />
         </RevealFx>
       </Column>

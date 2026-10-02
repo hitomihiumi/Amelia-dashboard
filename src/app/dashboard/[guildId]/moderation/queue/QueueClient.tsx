@@ -69,7 +69,7 @@ export function QueueClient({
 
   return (
     <Column fillWidth gap="16">
-      <RevealFx delay={0.3} translateY={-0.5}>
+      <RevealFx delay={300} translateY={-0.5}>
         <Row fillWidth gap="12" wrap>
           <SegmentedControl
             buttons={[
@@ -79,8 +79,8 @@ export function QueueClient({
               { value: "approved", label: "Approved" },
               { value: "rejected", label: "Rejected" },
             ]}
-            selected={status}
-            onToggle={(value) => setFilter({ status: value })}
+            value={status}
+            onChange={(value) => setFilter({ status: value })}
           />
           <SegmentedControl
             buttons={[
@@ -88,14 +88,14 @@ export function QueueClient({
               { value: "report", label: "Reports" },
               { value: "appeal", label: "Appeals" },
             ]}
-            selected={kind}
-            onToggle={(value) => setFilter({ kind: value })}
+            value={kind}
+            onChange={(value) => setFilter({ kind: value })}
           />
         </Row>
       </RevealFx>
 
       {items.length === 0 && (
-        <RevealFx delay={0.4} translateY={-0.5}>
+        <RevealFx delay={400} translateY={-0.5}>
           <Feedback
             variant="info"
             title="Nothing here"
@@ -105,7 +105,7 @@ export function QueueClient({
       )}
 
       {items.map((item, idx) => (
-        <RevealFx delay={0.4 + idx * 0.1} translateY={-0.5}>
+        <RevealFx delay={400 + idx * 100} translateY={-0.5}>
           <SubmissionCard key={item.id} guildId={guildId} item={item} />
         </RevealFx>
       ))}
@@ -156,7 +156,7 @@ function SubmissionCard({ guildId, item }: { guildId: string; item: QueueItem })
         <Text variant="heading-strong-s">
           {item.kind === "appeal" ? "Appeal" : "Report"} #{item.number}
         </Text>
-        <Tag variant={STATUS_VARIANT[item.status] ?? "neutral"}>
+        <Tag scheme={STATUS_VARIANT[item.status] ?? "neutral"}>
           {STATUS_LABEL[item.status] ?? item.status}
         </Tag>
       </Row>

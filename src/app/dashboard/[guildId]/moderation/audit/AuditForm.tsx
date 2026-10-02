@@ -157,7 +157,7 @@ export function AuditForm({
         num={1}
         icon="clipboard"
         switcher={
-          <Switch isChecked={audit.enabled} onToggle={() => update({ enabled: !audit.enabled })} />
+          <Switch checked={audit.enabled} onToggle={() => update({ enabled: !audit.enabled })} />
         }
       >
         <ChannelSelect
@@ -192,7 +192,7 @@ export function AuditForm({
 
         <Row fillWidth gap="12" vertical="center">
           <Switch
-            isChecked={audit.ignore_bots}
+            checked={audit.ignore_bots}
             onToggle={() => update({ ignore_bots: !audit.ignore_bots })}
           />
           <Text variant="label-default-s">Skip actions made by bots</Text>
@@ -247,7 +247,7 @@ export function AuditForm({
                 <Column fillWidth gap="12">
                   <Row fillWidth gap="12" vertical="center">
                     <Switch
-                      isChecked={eventConfig(event).enabled}
+                      checked={eventConfig(event).enabled}
                       onToggle={() => updateEvent(event, { enabled: !eventConfig(event).enabled })}
                     />
                     <Text variant="label-default-s">Log this event</Text>

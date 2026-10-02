@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import {Column, Flex, Grid, Icon, Line, Row, Text, RevealFx, CountFx} from "@once-ui-system/core";
 import type { ServiceStatus, StatusSnapshot } from "@/lib/status/status";
+import type { IconName } from "@/resources/icons";
 
 const STATUS_COLOR: Record<ServiceStatus, string> = {
   operational: "var(--success-solid-strong)",
@@ -25,7 +26,7 @@ const HEADLINE: Record<ServiceStatus, string> = {
   maintenance: "Scheduled maintenance",
 };
 
-const HEADLINE_ICON: Record<ServiceStatus, string> = {
+const HEADLINE_ICON: Record<ServiceStatus, IconName> = {
   operational: "check",
   degraded: "warning",
   down: "danger",
@@ -111,7 +112,7 @@ export function StatusView({
         </Flex>
       </RevealFx>
 
-      <RevealFx delay={0.3} translateY={-0.5}>
+      <RevealFx delay={300} translateY={-0.5}>
         <Grid columns={3} m={{ columns: 3 }} s={{ columns: 1 }} gap="16" fillWidth key={tick}>
           <MetricCard
             icon="target"
@@ -147,7 +148,7 @@ export function StatusView({
         </Grid>
       </RevealFx>
 
-      <RevealFx delay={0.6} translateY={-0.5}>
+      <RevealFx delay={600} translateY={-0.5}>
         <Column fillWidth gap="12">
           <Text variant="heading-strong-m">Services</Text>
           <Flex
@@ -200,7 +201,7 @@ function MetricCard({
   value,
   description,
 }: {
-  icon: string;
+  icon: IconName;
   label: string;
   value: React.ReactNode;
   description: string;
@@ -237,7 +238,7 @@ function formatUptime(uptimeMs: number | null): React.ReactNode {
   const hours = Math.floor(uptimeMs / 3_600_000) % 24;
   const days = Math.floor(uptimeMs / 86_400_000);
 
-  if (days > 0) return <>
+  if (days > 0) return <Row gap="8" vertical="end">
     <CountFx
         variant="display-strong-xs"
         value={days}
@@ -254,8 +255,8 @@ function formatUptime(uptimeMs: number | null): React.ReactNode {
         easing="ease-out"
         children={'h'}
     />
-  </>;
-  if (hours > 0) return <>
+  </Row>;
+  if (hours > 0) return <Row gap="8" vertical="end">
     <CountFx
         variant="display-strong-xs"
         value={hours}
@@ -272,6 +273,6 @@ function formatUptime(uptimeMs: number | null): React.ReactNode {
         easing="ease-out"
         children={'m'}
     />
-  </>;
+  </Row>;
   return <CountFx variant="display-strong-xs" value={minutes} speed={5000} effect="wheel" easing="ease-out" children={'m'} />;
 }

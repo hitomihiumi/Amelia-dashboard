@@ -18,8 +18,8 @@ importers:
         specifier: ^15.5.9
         version: 15.5.23(@mdx-js/loader@3.1.1)(@mdx-js/react@3.1.1(@types/react@19.0.1)(react@19.2.8))
       '@once-ui-system/core':
-        specifier: ^1.8.2
-        version: 1.8.2(@types/react@19.0.1)(next@16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1)(sass@1.102.0)(sharp@0.33.5)
+        specifier: ^2.0.0
+        version: 2.0.0(compressorjs@1.3.0)(next@16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(prismjs@1.30.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(recharts@3.10.1(@types/react@19.0.1)(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1))(sass@1.102.0)(sharp@0.33.5)
       '@prisma/adapter-pg':
         specifier: ^7.7.0
         version: 7.9.1
@@ -754,16 +754,29 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@once-ui-system/core@1.8.2':
-    resolution: {integrity: sha512-Cx8N+EKEWE3ZJk9PIssWSGQWnyea7QSpmQLzV4tgMTXLastMhOV2bocZnksU/urc91zMmeUny1bgaWbKST8g9A==}
+  '@once-ui-system/core@2.0.0':
+    resolution: {integrity: sha512-pHaT1zUrD8EbwV630PAhj6i1Q2A8wtWMNiixWJg1fSRHFL31Y4R8XosPWl62hYZlOVLDBo1X+p0vJH6Me5wt6A==}
     hasBin: true
     peerDependencies:
+      compressorjs: ^1.3.0
       next: '>=15.5'
+      prismjs: ^1.30.0
       react: '>=18'
       react-dom: '>=18'
+      recharts: ^3.10.1
       sass: ^1.77.6
       sharp: ^0.33.4 || ^0.34 || ^0.35
     peerDependenciesMeta:
+      compressorjs:
+        optional: true
+      next:
+        optional: true
+      prismjs:
+        optional: true
+      recharts:
+        optional: true
+      sass:
+        optional: true
       sharp:
         optional: true
 
@@ -3058,25 +3071,20 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.3.1':
     optional: true
 
-  '@once-ui-system/core@1.8.2(@types/react@19.0.1)(next@16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1)(sass@1.102.0)(sharp@0.33.5)':
+  '@once-ui-system/core@2.0.0(compressorjs@1.3.0)(next@16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(prismjs@1.30.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(recharts@3.10.1(@types/react@19.0.1)(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1))(sass@1.102.0)(sharp@0.33.5)':
     dependencies:
       '@floating-ui/react-dom': 2.1.9(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       clsx: 2.1.1
-      compressorjs: 1.3.0
       date-fns: 4.4.0
-      next: 16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
-      prismjs: 1.30.0
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
-      react-icons: 5.7.0(react@19.2.8)
+    optionalDependencies:
+      compressorjs: 1.3.0
+      next: 16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0)
+      prismjs: 1.30.0
       recharts: 3.10.1(@types/react@19.0.1)(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1)
       sass: 1.102.0
-    optionalDependencies:
       sharp: 0.33.5
-    transitivePeerDependencies:
-      - '@types/react'
-      - react-is
-      - redux
 
   '@panva/hkdf@1.2.1': {}
 

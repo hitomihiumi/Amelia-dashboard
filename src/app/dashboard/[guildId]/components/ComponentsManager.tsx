@@ -245,7 +245,7 @@ export function ComponentsManager({
       style={{ alignItems: "flex-start" }}
     >
       {/* Workspace */}
-      <RevealFx delay={0.3} translateY={-0.5}>
+      <RevealFx delay={300} translateY={-0.5}>
         <Flex
           direction="column"
           fillWidth
@@ -258,8 +258,8 @@ export function ComponentsManager({
         >
           <SegmentedControl
             fillWidth
-            selected={tab}
-            onToggle={(val) => setTab(val as TabValue)}
+            value={tab}
+            onChange={(val) => setTab(val as TabValue)}
             buttons={[
               { label: TAB_LABELS.buttons, value: "buttons" },
               { label: TAB_LABELS.modals, value: "modals" },
@@ -321,7 +321,7 @@ export function ComponentsManager({
       </RevealFx>
 
       {/* Preview */}
-      <RevealFx delay={0.6} translateY={-0.5}>
+      <RevealFx delay={600} translateY={-0.5}>
         <Flex direction="column" fill>
           <Flex fillHeight fillWidth>
             <DiscordPreview message={previewMsg} />

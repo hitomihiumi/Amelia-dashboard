@@ -23,7 +23,7 @@ export const Section: React.FC<SectionProps> = ({
   switcher,
 }) => {
   return (
-    <RevealFx delay={0.3 * num} translateY={-0.5}>
+    <RevealFx delay={300 * num} translateY={-0.5}>
       <Flex
         direction="column"
         fillWidth

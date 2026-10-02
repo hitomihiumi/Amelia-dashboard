@@ -222,7 +222,7 @@ export function CommandsFrom({
               options={permissionOptions}
               value={cmd.permission?.toString() || "null"}
               onSelect={(val) =>
-                updateCmd(name, { permission: val === "null" ? null : BigInt(val) })
+                updateCmd(name, { permission: val === "null" ? null : BigInt(String(val)) })
               }
             />
           </Column>
@@ -273,7 +273,7 @@ export function CommandsFrom({
     <Flex direction="column" gap="24">
       <Column gap="12">
         {commandList.map((cmd, idx) => (
-          <RevealFx key={cmd.name} delay={0.1 * idx} translateY={-0.5}>
+          <RevealFx key={cmd.name} delay={100 * idx} translateY={-0.5}>
             {renderCommandSettings(cmd.name, cmd.label, cmd.description, cmd.icon)}
           </RevealFx>
         ))}

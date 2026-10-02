@@ -102,7 +102,7 @@ export function ShopFrom({
 
   return (
     <>
-      <RevealFx delay={0.3} translateY={-0.5}>
+      <RevealFx delay={300} translateY={-0.5}>
         <Flex
           direction="row"
           gap="24"
@@ -143,7 +143,7 @@ export function ShopFrom({
           {roles.map((item, id) => {
             const discordRole = guildRoles.find((r) => r.id === item.role) as DiscordRole;
             return (
-              <RevealFx delay={0.4 + 0.1 * id} translateY={-0.5} key={id}>
+              <RevealFx delay={400 + 100 * id} translateY={-0.5} key={id}>
                 <RoleCard
                   setRoles={setRoles}
                   setOpenModal={setOpenModal}

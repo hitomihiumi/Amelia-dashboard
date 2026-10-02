@@ -1,3 +1,4 @@
+import type { IconName as CoreIconName } from "@once-ui-system/core";
 import { IconType } from "react-icons";
 
 import {
@@ -56,10 +57,11 @@ import {
   IoRadio,
 } from "react-icons/io5";
 
-import { FaDiscord, FaHashtag } from "react-icons/fa";
+import { FaDiscord, FaGithub, FaHashtag } from "react-icons/fa";
 
-export const iconLibrary: Record<string, IconType> = {
+export const iconLibrary = {
   discord: FaDiscord,
+  github: FaGithub,
   hash: FaHashtag,
   speaker: IoVolumeHigh,
   megaphone: IoMegaphone,
@@ -118,7 +120,73 @@ export const iconLibrary: Record<string, IconType> = {
   shield: IoShieldOutline,
   invite: IoPersonAddOutline,
   clipboard: IoClipboardOutline,
-};
+} satisfies Record<string, IconType>;
+
+declare module "@once-ui-system/core" {
+  interface IconLibraryOverrides {
+    discord: true;
+    github: true;
+    hash: true;
+    speaker: true;
+    megaphone: true;
+    stage: true;
+    gear: true;
+    logout: true;
+    plus: true;
+    back: true;
+    boxes: true;
+    command: true;
+    cart: true;
+    money: true;
+    microphone: true;
+    mail: true;
+    folder: true;
+    plane: true;
+    diamond: true;
+    sign: true;
+    ticket: true;
+    rocket: true;
+    ribbon: true;
+    gitnet: true;
+    palette: true;
+    user: true;
+    bonfire: true;
+    send: true;
+    trophy: true;
+    eyeoff: true;
+    link: true;
+    documentattach: true;
+    list: true;
+    minus: true;
+    text: true;
+    trash: true;
+    target: true;
+    cube: true;
+    buttonIcon: true;
+    modalIcon: true;
+    embedIcon: true;
+    selectIcon: true;
+    actionModal: true;
+    actionMessage: true;
+    actionEmbed: true;
+    actionRoleAdd: true;
+    actionRoleRemove: true;
+    actionThread: true;
+    actionDm: true;
+    actionVar: true;
+    actionEdit: true;
+    actionDelete: true;
+    actionReply: true;
+    actionBroadcast: true;
+    trigger: true;
+    play: true;
+    redo: true;
+    shield: true;
+    invite: true;
+    clipboard: true;
+  }
+}
 
 export type IconLibrary = typeof iconLibrary;
-export type IconName = keyof IconLibrary;
+/** Every icon the site can render: the built-ins plus the registered ones above. */
+export type IconName = CoreIconName;

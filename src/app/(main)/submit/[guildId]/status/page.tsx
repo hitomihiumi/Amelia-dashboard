@@ -57,7 +57,7 @@ export default async function StatusPage({
             <Text variant="label-default-m">
               {submission.kind === "appeal" ? "Appeal" : "Report"} #{submission.number}
             </Text>
-            <Tag variant={STATUS_VARIANT[submission.status] ?? "neutral"}>
+            <Tag scheme={STATUS_VARIANT[submission.status] ?? "neutral"}>
               {SUBMISSION_STATUS_LABELS[submission.status] ?? submission.status}
             </Tag>
           </Row>

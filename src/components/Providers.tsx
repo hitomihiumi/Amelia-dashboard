@@ -2,11 +2,8 @@
 
 import {
   BorderStyle,
-  ChartMode,
-  ChartVariant,
   DataThemeProvider,
   IconProvider,
-  LayoutProvider,
   NeutralColor,
   ScalingSize,
   Schemes,
@@ -18,6 +15,8 @@ import {
   ToastProvider,
   TransitionStyle,
 } from "@once-ui-system/core";
+import { LayoutProvider } from "@once-ui-system/core/next";
+import type { ChartMode, ChartVariant } from "@once-ui-system/core/data";
 import { style, dataStyle } from "../resources/once-ui.config";
 import { iconLibrary } from "../resources/icons";
 import { SessionProvider } from "next-auth/react";

@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DropdownWrapper,
   StyleProps,
-  gridSize,
+  GridSize,
   Button,
   Spinner,
   Column,
@@ -17,7 +17,7 @@ export interface EmojiPickerDropdownProps {
   onSelect: (emoji: DiscordGuildEmoji) => void;
   onOpenChange?: (isOpen: boolean) => void;
   background?: StyleProps["background"];
-  columns?: gridSize;
+  columns?: GridSize;
   closeAfterClick?: boolean;
 }
 

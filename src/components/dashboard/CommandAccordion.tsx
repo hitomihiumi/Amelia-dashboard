@@ -16,7 +16,7 @@ interface CommandAccordionProps extends Omit<React.ComponentProps<typeof Flex>, 
   title: React.ReactNode;
   subline: React.ReactNode;
   children: React.ReactNode;
-  icon?: string;
+  icon?: IconName;
   iconName?: IconName;
   iconRotation?: number;
   size?: "s" | "m" | "l";

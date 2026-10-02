@@ -141,7 +141,7 @@ export function PrivateForm({
       num={1}
       switcher={
         <Switch
-          isChecked={joinToCreate.enabled}
+          checked={joinToCreate.enabled}
           onToggle={() => setJoinToCreate((prev) => ({ ...prev, enabled: !prev.enabled }))}
         />
       }

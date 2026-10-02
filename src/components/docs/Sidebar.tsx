@@ -16,6 +16,7 @@ import { usePathname } from "next/navigation";
 import { layout } from "@/resources";
 
 import styles from "./Sidebar.module.scss";
+import type { IconName } from "@/resources/icons";
 
 // Global navigation cache to prevent refetching
 let globalNavigationCache: any = null;
@@ -29,7 +30,7 @@ export interface NavigationItem
   children?: NavigationItem[];
   schemes?: Schemes;
   keywords?: string;
-  navIcon?: string;
+  navIcon?: IconName;
   navTag?: string;
   navLabel?: string;
   navTagVariant?: Schemes;
@@ -182,7 +183,7 @@ const NavigationItemComponent: React.FC<{
               transform: "scale(0.8)",
               transformOrigin: "right center",
             }}
-            variant="brand"
+            scheme="brand"
             size="s"
           >
             {item.navTag}
@@ -209,7 +210,7 @@ NavigationItem.displayName = "NavigationItem";
 // Memoized resource link component
 const ResourceLinkComponent: React.FC<{
   href: string;
-  icon: string;
+  icon: IconName;
   label: string;
   pathname: string;
 }> = ({ href, icon, label, pathname }) => {

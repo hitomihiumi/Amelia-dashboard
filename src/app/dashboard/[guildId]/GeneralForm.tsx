@@ -118,7 +118,7 @@ export function GeneralForm({
             { label: "🇷🇺 Russian", value: "ru" },
           ]}
           label="Choose a language"
-          onSelect={(value) => setLanguage(value)}
+          onSelect={(value) => setLanguage(String(value))}
           maxLength={5}
         />
       </Section>

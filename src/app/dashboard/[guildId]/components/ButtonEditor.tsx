@@ -57,8 +57,8 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
         <Text variant="label-default-s">Style</Text>
         <SegmentedControl
           fillWidth
-          selected={value.style}
-          onToggle={(v) => update({ style: v as ButtonCustom["style"] })}
+          value={value.style}
+          onChange={(v) => update({ style: v as ButtonCustom["style"] })}
           buttons={STYLES.map((s) => ({ label: STYLE_LABEL[s], value: s }))}
         />
       </Column>
@@ -89,7 +89,7 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
         <Switch
           label="Disabled"
           description="Render the button as disabled"
-          isChecked={!!value.disabled}
+          checked={!!value.disabled}
           onToggle={() => update({ disabled: !value.disabled })}
         />
       </Row>

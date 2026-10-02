@@ -124,8 +124,8 @@ export function IncidentsManager({
           <SegmentedControl
             fillWidth
             buttons={SEVERITIES}
-            selected={severity}
-            onToggle={(value) => setSeverity(value)}
+            value={severity}
+            onChange={(value) => setSeverity(value)}
           />
         </Column>
 
@@ -134,8 +134,8 @@ export function IncidentsManager({
           <SegmentedControl
             fillWidth
             buttons={COMPONENTS}
-            selected={component}
-            onToggle={(value) => setComponent(value)}
+            value={component}
+            onChange={(value) => setComponent(value)}
           />
         </Column>
 
@@ -202,12 +202,12 @@ function IncidentCard({
   return (
     <Column fillWidth gap="12">
       <Row gap="8" vertical="center" wrap>
-        <Tag variant={incident.resolvedAt ? "success" : "warning"}>
+        <Tag scheme={incident.resolvedAt ? "success" : "warning"}>
           {incident.resolvedAt ? "resolved" : incident.status}
         </Tag>
-        <Tag variant="neutral">{incident.severity}</Tag>
-        {incident.component && <Tag variant="neutral">{incident.component}</Tag>}
-        {incident.auto && <Tag variant="info">automatic</Tag>}
+        <Tag scheme="neutral">{incident.severity}</Tag>
+        {incident.component && <Tag scheme="neutral">{incident.component}</Tag>}
+        {incident.auto && <Tag scheme="info">automatic</Tag>}
       </Row>
 
       {incident.updates.map((update) => (
@@ -224,8 +224,8 @@ function IncidentCard({
       <SegmentedControl
         fillWidth
         buttons={STATUSES}
-        selected={status}
-        onToggle={(value) => setStatus(value)}
+        value={status}
+        onChange={(value) => setStatus(value)}
       />
 
       <Textarea

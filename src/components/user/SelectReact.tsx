@@ -37,6 +37,9 @@ type SelectOptionType = Omit<OptionProps, "selected">;
 // Derived from once-ui so this file does not depend on @floating-ui directly.
 type Placement = NonNullable<DropdownWrapperProps["placement"]>;
 
+/** A focus this soon after the list closed is the dropdown restoring focus, not a click. */
+const FOCUS_RESTORE_WINDOW_MS = 250;
+
 /** Chips shown inside the closed field before the rest collapses into "+N more". */
 const MAX_VISIBLE_CHIPS = 10;
 
@@ -46,7 +49,22 @@ function unknownLabel(value: string): string {
 }
 
 export interface SelectProps
-  extends Omit<InputProps, "onSelect" | "value">,
+  extends Pick<
+      InputProps,
+      | "id"
+      | "label"
+      | "size"
+      | "error"
+      | "errorMessage"
+      | "description"
+      | "corners"
+      | "prefix"
+      | "suffix"
+      | "validate"
+      | "characterCount"
+      | "placeholder"
+    >,
+    Omit<React.HTMLAttributes<HTMLDivElement>, "onSelect" | "prefix" | "placeholder" | "content" | "id">,
     Pick<DropdownWrapperProps, "minHeight" | "minWidth" | "maxWidth"> {
   options: SelectOptionType[];
   value?: string | string[];
@@ -85,8 +103,8 @@ const SearchInput: React.FC<{
       data-scaling="90"
       id={`select-search-${searchInputId}`}
       placeholder="Search"
-      height="s"
-      hasSuffix={
+      size="s"
+      suffix={
         searchQuery ? (
           <IconButton
             tooltip="Clear"
@@ -98,7 +116,7 @@ const SearchInput: React.FC<{
           />
         ) : undefined
       }
-      hasPrefix={<Icon name="search" size="xs" />}
+      prefix={<Icon name="search" size="xs" />}
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
       onClick={(e) => {
@@ -122,10 +140,7 @@ const SearchInput: React.FC<{
           e.stopPropagation();
           setIsDropdownOpen(false);
           setSearchQuery("");
-          const mainInput = selectRef.current?.querySelector("input:not([id^='select-search'])");
-          if (mainInput instanceof HTMLInputElement) {
-            mainInput.focus();
-          }
+          // The dropdown hands focus back to the field when it closes.
         }
       }}
       onBlur={(e) => {
@@ -171,7 +186,19 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
         setInternalValue(value);
       }
     }, [value]);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpenRaw] = useState(false);
+    // The dropdown traps focus while it is open and hands it back to the field when it closes.
+    // That returning focus would hit handleFocus and open the list again, so closings are
+    // timestamped and a focus right after one is not read as the user asking to open it.
+    const closedAtRef = useRef(0);
+    const setIsDropdownOpen = (open: boolean) => {
+      if (!open) {
+        closedAtRef.current = Date.now();
+        // A stale filter would reopen the list already narrowed down.
+        setSearchQuery("");
+      }
+      setIsDropdownOpenRaw(open);
+    };
     const [triggerWidth, setTriggerWidth] = useState(0);
     const searchInputId = useId();
     const [searchQuery, setSearchQuery] = useState("");
@@ -184,6 +211,10 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
     const justSelectedRef = useRef(false);
 
     const handleFocus = () => {
+      if (Date.now() - closedAtRef.current < FOCUS_RESTORE_WINDOW_MS) {
+        setIsFocused(true);
+        return;
+      }
       // Allow reopening the dropdown even after selection
       setIsFocused(true);
       setIsDropdownOpen(true);
@@ -229,10 +260,7 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
       e.preventDefault();
       e.stopPropagation();
       setSearchQuery("");
-      const input = selectRef.current?.querySelector("input");
-      if (input) {
-        input.focus();
-      }
+      document.getElementById(`select-search-${searchInputId}`)?.focus();
     };
 
     const currentValue = value !== undefined ? value : internalValue;
@@ -329,16 +357,28 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
         // Reset skip flag when dropdown opens
         skipNextFocusRef.current = false;
 
-        // If searchable is true, focus the search input
+        // If searchable is true, focus the search input. The list renders in a portal and is
+        // only mounted and positioned a frame or two after opening, so wait for it.
         if (searchable) {
-          setTimeout(() => {
-            const searchInput = selectRef.current?.querySelector(
-              `#select-search-${searchInputId}`,
-            ) as HTMLInputElement;
-            if (searchInput) {
-              searchInput.focus();
+          let frames = 0;
+          let steady = 0;
+          let raf = 0;
+          const focusSearch = () => {
+            const searchInput = document.getElementById(
+              `select-search-${searchInputId}`,
+            ) as HTMLInputElement | null;
+            if (searchInput && document.activeElement !== searchInput) {
+              searchInput.focus({ preventScroll: true });
+              steady = 0;
+            } else if (searchInput) {
+              steady++;
             }
-          }, 0);
+            // Keep going until focus has held for a few frames: the dropdown's own focus
+            // handling runs once it is positioned and can move focus away again.
+            if (steady < 3 && frames++ < 30) raf = requestAnimationFrame(focusSearch);
+          };
+          raf = requestAnimationFrame(focusSearch);
+          return () => cancelAnimationFrame(raf);
         }
       }
     }, [isDropdownOpen, searchable, searchInputId]);
@@ -359,10 +399,13 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
           if (typeof ref === "function") ref(node);
           else if (ref) ref.current = node;
         }}
-        isOpen={isDropdownOpen}
+        open={isDropdownOpen}
         onOpenChange={setIsDropdownOpen}
         placement={placement}
         closeAfterClick={false}
+        // The list below runs its own ArrowNavigation; a second one from the wrapper
+        // would steal focus from the search field once the panel is positioned.
+        handleArrowNavigation={false}
         disableTriggerClick={true}
         style={{
           ...style,
@@ -378,9 +421,12 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
             content={renderContent()}
             placeholder={placeholder}
             onFocus={handleFocus}
+            // Focus is handed back to the field when the list closes, so a second click lands on
+            // a field that is already focused and never raises a focus event of its own.
+            onClick={() => {
+              if (!isDropdownOpen) setIsDropdownOpen(true);
+            }}
             className={classNames("fill-width", {
-              [inputStyles.filled]: isFilled,
-              [inputStyles.focused]: isFocused,
               className,
             })}
             aria-haspopup="listbox"
@@ -438,7 +484,7 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
                         // needs its own reliable hook to tell a chosen option from a hovered one.
                         data-selected={isSelected ? "true" : undefined}
                         tabIndex={-1}
-                        hasPrefix={
+                        prefix={
                           multiple ? (
                             // A fixed slot, so the labels do not shift once something is selected.
                             <span className={styles.checkSlot}>

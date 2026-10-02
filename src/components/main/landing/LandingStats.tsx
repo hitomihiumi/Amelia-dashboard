@@ -3,9 +3,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Flex, Grid, Icon, Text } from "@once-ui-system/core";
 import type { StatusSnapshot } from "@/lib/status/status";
+import type { IconName } from "@/resources/icons";
 
 export interface LandingStat {
-  icon: string;
+  icon: IconName;
   value: string;
   label: string;
 }

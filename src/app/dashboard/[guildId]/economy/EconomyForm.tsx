@@ -156,7 +156,7 @@ export function EconomyForm({
               </Text>
             </Column>
             <Switch
-              isChecked={income.work.enabled}
+              checked={income.work.enabled}
               onToggle={() =>
                 setIncome((prev) => ({
                   ...prev,
@@ -228,7 +228,7 @@ export function EconomyForm({
               </Text>
             </Column>
             <Switch
-              isChecked={income.rob.enabled}
+              checked={income.rob.enabled}
               onToggle={() =>
                 setIncome((prev) => ({
                   ...prev,
@@ -243,7 +243,7 @@ export function EconomyForm({
                 { value: "fixed", label: "Fixed (0)" },
                 { value: "percentage", label: "Percentage (%)" },
               ]}
-              onToggle={(value) =>
+              onChange={(value) =>
                 setIncome((prev) => ({
                   ...prev,
                   rob: {
@@ -310,7 +310,7 @@ export function EconomyForm({
                 { value: "fixed", label: "Fixed (0)" },
                 { value: "percentage", label: "Percentage (%)" },
               ]}
-              onToggle={(value) =>
+              onChange={(value) =>
                 setIncome((prev) => ({
                   ...prev,
                   rob: {
@@ -411,7 +411,7 @@ export function EconomyForm({
               </Text>
             </Column>
             <Switch
-              isChecked={income.timely.enabled}
+              checked={income.timely.enabled}
               onToggle={() =>
                 setIncome((prev) => ({
                   ...prev,
@@ -451,7 +451,7 @@ export function EconomyForm({
               </Text>
             </Column>
             <Switch
-              isChecked={income.daily.enabled}
+              checked={income.daily.enabled}
               onToggle={() =>
                 setIncome((prev) => ({
                   ...prev,
@@ -491,7 +491,7 @@ export function EconomyForm({
               </Text>
             </Column>
             <Switch
-              isChecked={income.weekly.enabled}
+              checked={income.weekly.enabled}
               onToggle={() =>
                 setIncome((prev) => ({
                   ...prev,

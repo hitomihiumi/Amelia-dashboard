@@ -65,7 +65,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({
 
   return (
     <Dialog
-      isOpen={open}
+      open={open}
       onClose={() => handleClose()}
       title="Shop Modal"
       description="This is a modal for the shop. You can put any content you want here."
@@ -87,7 +87,6 @@ export const ShopModal: React.FC<ShopModalProps> = ({
               label: <RolePill roleColor={role.color} label={role.name} />,
               value: role.id,
             }))}
-            max={1}
             selectedRole={role}
             setSelectedRole={(role) => setRole(role as string)}
           />

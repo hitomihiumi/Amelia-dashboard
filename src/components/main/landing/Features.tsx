@@ -1,7 +1,8 @@
 import React from "react";
 import { Column, Flex, Grid, Icon, Text } from "@once-ui-system/core";
+import type { IconName } from "@/resources/icons";
 
-const FEATURES = [
+const FEATURES: { icon: IconName; title: string; text: string }[] = [
   {
     icon: "security",
     title: "Moderation",

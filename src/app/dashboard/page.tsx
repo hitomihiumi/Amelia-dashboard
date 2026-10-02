@@ -103,7 +103,7 @@ export default function Page() {
               Back to Home
             </Button>
           </RevealFx>
-          <RevealFx delay={0.3} translateY={-0.5} center>
+          <RevealFx delay={300} translateY={-0.5} center>
             <Column center gap={"16"} fill>
               <Heading variant={"display-strong-l"}>Login Required</Heading>
               <Row maxWidth={"s"}>
@@ -146,7 +146,7 @@ export default function Page() {
               Back to Home
             </Button>
           </RevealFx>
-          <RevealFx delay={0.3} translateY={-0.5} center>
+          <RevealFx delay={300} translateY={-0.5} center>
             <Column center gap={"16"}>
               <Heading variant={"display-strong-l"}>Your Guilds</Heading>
               <Row maxWidth={"s"}>
@@ -160,7 +160,7 @@ export default function Page() {
           </RevealFx>
           <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fillWidth>
             {[...Array(6)].map((_, idx) => (
-              <RevealFx delay={0.4 + idx * 0.1} translateY={-0.5} key={idx}>
+              <RevealFx delay={400 + idx * 100} translateY={-0.5} key={idx}>
                 <SkeletonGuildCard />
               </RevealFx>
             ))}
@@ -196,7 +196,7 @@ export default function Page() {
             Back to Home
           </Button>
         </RevealFx>
-        <RevealFx delay={0.3} translateY={-0.5} center>
+        <RevealFx delay={300} translateY={-0.5} center>
           <Column center gap={"16"}>
             <Heading variant={"display-strong-l"}>Your Guilds</Heading>
             <Row maxWidth={"s"}>
@@ -228,7 +228,7 @@ export default function Page() {
             </RevealFx>
             <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fillWidth>
               {guildsWithBot.map((g: UserGuildCard, idx) => (
-                <RevealFx delay={0.1 + idx * 0.1} translateY={-0.5} key={`${g.id}`}>
+                <RevealFx delay={100 + idx * 100} translateY={-0.5} key={`${g.id}`}>
                   <GuildCard
                     name={g.name}
                     id={g.id}
@@ -243,7 +243,7 @@ export default function Page() {
         )}
         {guildsWithoutBot.length > 0 && (
           <Column gap={"m"} fillWidth maxWidth={"l"}>
-            <RevealFx delay={0.3} translateY={-0.5} direction="column" gap="m">
+            <RevealFx delay={300} translateY={-0.5} direction="column" gap="m">
               <Heading variant={"heading-strong-xl"}>Without Amelia</Heading>
               <Text onBackground={"neutral-weak"}>
                 Servers where you have permission to invite the bot but it's not present yet.
@@ -251,7 +251,7 @@ export default function Page() {
             </RevealFx>
             <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fillWidth>
               {guildsWithoutBot.map((g: UserGuildCard, idx) => (
-                <RevealFx delay={0.4 + idx * 0.1} translateY={-0.5} key={`${g.id}`}>
+                <RevealFx delay={400 + idx * 100} translateY={-0.5} key={`${g.id}`}>
                   <GuildCard
                     name={g.name}
                     id={g.id}
