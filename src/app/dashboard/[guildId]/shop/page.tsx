@@ -7,6 +7,7 @@ import { fetchGuildRoles } from "@/lib/discord/roles-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import { ShopRole } from "@/lib/db/types";
+import { getT } from "@/i18n/server";
 
 const shopRolesProcesse = (roles: ShopRole[]): ShopRole[] => {
   const now = new Date().getTime();
@@ -33,6 +34,7 @@ export default async function GeneralSettingsPage({
 }: {
   params: Promise<{ guildId: string }>;
 }) {
+  const t = await getT();
   const resolvedParams = await params;
   const session = await getServerSession(authOptions);
 
@@ -44,7 +46,7 @@ export default async function GeneralSettingsPage({
       const list = await fetchGuildRoles(session.accessToken, resolvedParams.guildId);
       roles = list.map(({ id, name, color }) => ({ id, name, color }));
     } catch (e) {
-      loadError = e instanceof Error ? e.message : "An unknown error occurred while loading roles.";
+      loadError = e instanceof Error ? e.message : t("settings.shared.loadRolesFailed");
     }
   }
 
@@ -60,10 +62,9 @@ export default async function GeneralSettingsPage({
   return (
     <Flex direction="column" gap="24">
       <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">Roles shop</Text>
+        <Text variant="heading-strong-l">{t("settings.shop.title")}</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
-          Configure the roles that users can buy in the shop. You can set the price and the role for
-          each item.
+          {t("settings.shop.description")}
         </Text>
       </RevealFx>
 
@@ -71,11 +72,15 @@ export default async function GeneralSettingsPage({
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (
           <Feedback
             variant="danger"
-            title="Session expired"
-            description="Your Discord session has expired. Please log in again."
+            title={t("settings.shared.sessionExpiredTitle")}
+            description={t("settings.shared.sessionExpiredText")}
           />
         ) : (
-          <Feedback variant="danger" title="Error" description={loadError} />
+          <Feedback
+            variant="danger"
+            title={t("settings.shared.errorTitle")}
+            description={loadError}
+          />
         ))}
 
       <ShopFrom

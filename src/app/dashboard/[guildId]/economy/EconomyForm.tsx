@@ -24,6 +24,7 @@ import { EmojiPickerDropdown } from "@/components/dashboard/discord/EmojiPickerD
 import { emojiFromString, formatCustomEmojiString, isUnicodeEmoji } from "@/lib/discord/emojis-api";
 import { DashIcon } from "@/components/dashboard/DashIcon";
 import { Section } from "@/components/dashboard/Section";
+import { useT } from "@/i18n/client";
 
 type Form = Pick<GuildSchema["economy"], "income" | "currency">;
 
@@ -32,6 +33,7 @@ export function EconomyForm({
   defaultIncome,
   defaultCurrency,
 }: { guildId: string; defaultIncome: Form["income"]; defaultCurrency: Form["currency"] }) {
+  const t = useT();
   const router = useRouter();
   const { setIsDirty, setSaveAction, setCancelAction } = useUnsavedChanges();
   const { addToast } = useToast();
@@ -61,7 +63,7 @@ export function EconomyForm({
 
     const result: GuildActionState = await updateEconomySettings(guildId, fd);
     if (!result) {
-      addToast({ variant: "danger", message: "No response from server" });
+      addToast({ variant: "danger", message: t("settings.shared.noResponse") });
       return;
     }
     if (result.ok) {
@@ -72,11 +74,11 @@ export function EconomyForm({
         currency,
       });
       router.refresh();
-      addToast({ variant: "success", message: "Successfully updated settings" });
+      addToast({ variant: "success", message: t("settings.shared.saveSuccess") });
       return;
     }
-    addToast({ variant: "danger", message: result.error ?? "Cannot save settings" });
-  }, [guildId, income, currency, router]);
+    addToast({ variant: "danger", message: result.error ?? t("settings.shared.saveFailed") });
+  }, [guildId, income, currency, router, addToast, t]);
 
   const handleCancel = useCallback(() => {
     setIncome(baseline.income);
@@ -101,8 +103,8 @@ export function EconomyForm({
   return (
     <>
       <Section
-        title="Currency emoji"
-        description="This emoji will be used to represent your currency across the bot, such as in the balance command and shop listings."
+        title={t("settings.economy.currencyTitle")}
+        description={t("settings.economy.currencyDescription")}
         num={1}
         icon="money"
       >
@@ -110,7 +112,7 @@ export function EconomyForm({
           <Row gap={"12"} vertical={"center"} horizontal={"between"}>
             <Input
               id={"currency-emoji"}
-              label={"Currency emoji"}
+              label={t("settings.economy.currencyLabel")}
               value={currency?.emoji || ""}
               onChange={(e) => {
                 const val = e.currentTarget.value;
@@ -130,14 +132,14 @@ export function EconomyForm({
             />
           </Row>
           <Text variant="body-default-s" onBackground="neutral-weak">
-            You can use either a custom emoji from your server or a standard Unicode emoji.
+            {t("settings.economy.currencyHint")}
           </Text>
         </Flex>
       </Section>
 
       <Section
-        title={"Income"}
-        description={"Configure how much currency users will earn."}
+        title={t("settings.economy.incomeTitle")}
+        description={t("settings.economy.incomeDescription")}
         num={2}
         icon="diamond"
       >
@@ -150,9 +152,9 @@ export function EconomyForm({
         >
           <Row horizontal={"between"} vertical={"center"}>
             <Column>
-              <Text variant="body-strong-m">Regular work</Text>
+              <Text variant="body-strong-m">{t("settings.economy.workTitle")}</Text>
               <Text variant="body-default-xs" onBackground="neutral-weak">
-                The amount of currency users will earn each time they use the work command.
+                {t("settings.economy.workDescription")}
               </Text>
             </Column>
             <Switch
@@ -169,7 +171,7 @@ export function EconomyForm({
             <Row gap={"8"}>
               <NumberInput
                 id={"work-min-income"}
-                label={"Min Income"}
+                label={t("settings.economy.minIncome")}
                 value={income.work.min}
                 onChange={(value) =>
                   setIncome((prev) => ({
@@ -183,7 +185,7 @@ export function EconomyForm({
               />
               <NumberInput
                 id={"work-max-income"}
-                label={"Max Income"}
+                label={t("settings.economy.maxIncome")}
                 value={income.work.max}
                 onChange={(value) =>
                   setIncome((prev) => ({
@@ -198,7 +200,7 @@ export function EconomyForm({
             </Row>
             <NumberInput
               id={"work-cooldown-income"}
-              label={"Cooldown (s)"}
+              label={t("settings.economy.cooldown")}
               value={income.work.cooldown}
               onChange={(value) =>
                 setIncome((prev) => ({
@@ -222,9 +224,9 @@ export function EconomyForm({
         >
           <Row horizontal={"between"} vertical={"center"}>
             <Column>
-              <Text variant="body-strong-m">Robbing</Text>
+              <Text variant="body-strong-m">{t("settings.economy.robTitle")}</Text>
               <Text variant="body-default-xs" onBackground="neutral-weak">
-                The amount of currency users will earn each time they use the rob command.
+                {t("settings.economy.robDescription")}
               </Text>
             </Column>
             <Switch
@@ -240,8 +242,8 @@ export function EconomyForm({
           <Column gap={"12"}>
             <SegmentedControl
               buttons={[
-                { value: "fixed", label: "Fixed (0)" },
-                { value: "percentage", label: "Percentage (%)" },
+                { value: "fixed", label: t("settings.economy.fixed") },
+                { value: "percentage", label: t("settings.economy.percentage") },
               ]}
               onChange={(value) =>
                 setIncome((prev) => ({
@@ -257,7 +259,7 @@ export function EconomyForm({
               <Row gap={"8"}>
                 <NumberInput
                   id={"rob-min-income"}
-                  label={"Min Income"}
+                  label={t("settings.economy.minIncome")}
                   value={income.rob.income.min}
                   onChange={(value) =>
                     setIncome((prev) => ({
@@ -274,7 +276,7 @@ export function EconomyForm({
                 />
                 <NumberInput
                   id={"rob-max-income"}
-                  label={"Max Income"}
+                  label={t("settings.economy.maxIncome")}
                   value={income.rob.income.max}
                   onChange={(value) =>
                     setIncome((prev) => ({
@@ -292,7 +294,7 @@ export function EconomyForm({
               </Row>
               <NumberInput
                 id={"rob-cooldown-income"}
-                label={"Cooldown (s)"}
+                label={t("settings.economy.cooldown")}
                 value={income.rob.cooldown}
                 onChange={(value) =>
                   setIncome((prev) => ({
@@ -307,8 +309,8 @@ export function EconomyForm({
             </Column>
             <SegmentedControl
               buttons={[
-                { value: "fixed", label: "Fixed (0)" },
-                { value: "percentage", label: "Percentage (%)" },
+                { value: "fixed", label: t("settings.economy.fixed") },
+                { value: "percentage", label: t("settings.economy.percentage") },
               ]}
               onChange={(value) =>
                 setIncome((prev) => ({
@@ -324,7 +326,7 @@ export function EconomyForm({
               <Row gap={"8"}>
                 <NumberInput
                   id={"rob-min-punishment"}
-                  label={"Min Punishment"}
+                  label={t("settings.economy.minPunishment")}
                   value={income.rob.punishment.min}
                   onChange={(value) =>
                     setIncome((prev) => ({
@@ -341,7 +343,7 @@ export function EconomyForm({
                 />
                 <NumberInput
                   id={"rob-max-punishment"}
-                  label={"Max Punishment"}
+                  label={t("settings.economy.maxPunishment")}
                   value={income.rob.punishment.max}
                   onChange={(value) =>
                     setIncome((prev) => ({
@@ -364,7 +366,7 @@ export function EconomyForm({
                       {income.rob.punishment.fail_chance}%
                     </Text>
                     <Text variant="body-default-xs" onBackground="neutral-weak">
-                      Chance of failure
+                      {t("settings.economy.failChance")}
                     </Text>
                   </Column>
                   <Column center>
@@ -372,7 +374,7 @@ export function EconomyForm({
                       {100 - income.rob.punishment.fail_chance}%
                     </Text>
                     <Text variant="body-default-xs" onBackground="neutral-weak">
-                      Chance of win
+                      {t("settings.economy.winChance")}
                     </Text>
                   </Column>
                 </Row>
@@ -405,9 +407,9 @@ export function EconomyForm({
         >
           <Row horizontal={"between"} vertical={"center"}>
             <Column>
-              <Text variant="body-strong-m">Timely</Text>
+              <Text variant="body-strong-m">{t("settings.economy.timelyTitle")}</Text>
               <Text variant="body-default-xs" onBackground="neutral-weak">
-                The amount of currency users will earn each time they use the timely command.
+                {t("settings.economy.timelyDescription")}
               </Text>
             </Column>
             <Switch
@@ -422,7 +424,7 @@ export function EconomyForm({
           </Row>
           <NumberInput
             id={"timely-income"}
-            label={"Income"}
+            label={t("settings.economy.income")}
             value={income.timely.amount}
             onChange={(value) =>
               setIncome((prev) => ({
@@ -445,9 +447,9 @@ export function EconomyForm({
         >
           <Row horizontal={"between"} vertical={"center"}>
             <Column>
-              <Text variant="body-strong-m">Daily</Text>
+              <Text variant="body-strong-m">{t("settings.economy.dailyTitle")}</Text>
               <Text variant="body-default-xs" onBackground="neutral-weak">
-                The amount of currency users will earn each time they use the daily command.
+                {t("settings.economy.dailyDescription")}
               </Text>
             </Column>
             <Switch
@@ -462,7 +464,7 @@ export function EconomyForm({
           </Row>
           <NumberInput
             id={"daily-income"}
-            label={"Income"}
+            label={t("settings.economy.income")}
             value={income.daily.amount}
             onChange={(value) =>
               setIncome((prev) => ({
@@ -485,9 +487,9 @@ export function EconomyForm({
         >
           <Row horizontal={"between"} vertical={"center"}>
             <Column>
-              <Text variant="body-strong-m">Weekly</Text>
+              <Text variant="body-strong-m">{t("settings.economy.weeklyTitle")}</Text>
               <Text variant="body-default-xs" onBackground="neutral-weak">
-                The amount of currency users will earn each time they use the weekly command.
+                {t("settings.economy.weeklyDescription")}
               </Text>
             </Column>
             <Switch
@@ -502,7 +504,7 @@ export function EconomyForm({
           </Row>
           <NumberInput
             id={"weekly-income"}
-            label={"Income"}
+            label={t("settings.economy.income")}
             value={income.weekly.amount}
             onChange={(value) =>
               setIncome((prev) => ({

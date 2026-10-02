@@ -13,6 +13,7 @@ import { updateShop } from "@/app/dashboard/[guildId]/shop/actions";
 import { GuildActionState } from "@/types/dashboard";
 import { RoleCard } from "@/components/dashboard/RoleCard";
 import { DashIcon } from "@/components/dashboard/DashIcon";
+import { useT } from "@/i18n/client";
 
 type Form = GuildSchema["economy"]["shop"];
 
@@ -21,6 +22,7 @@ export function ShopFrom({
   defaultShop,
   guildRoles,
 }: { guildId: string; defaultShop: Form; guildRoles: DiscordRole[] }) {
+  const t = useT();
   const router = useRouter();
   const { setIsDirty, setSaveAction, setCancelAction } = useUnsavedChanges();
   const { addToast } = useToast();
@@ -63,7 +65,7 @@ export function ShopFrom({
 
     const result: GuildActionState = await updateShop(guildId, fd);
     if (!result) {
-      addToast({ variant: "danger", message: "No response from server" });
+      addToast({ variant: "danger", message: t("settings.shared.noResponse") });
       return;
     }
     if (result.ok) {
@@ -71,11 +73,11 @@ export function ShopFrom({
         roles,
       });
       router.refresh();
-      addToast({ variant: "success", message: "Successfully updated shop" });
+      addToast({ variant: "success", message: t("settings.shop.saved") });
       return;
     }
-    addToast({ variant: "danger", message: result.error ?? "Cannot save settings" });
-  }, [guildId, roles, router]);
+    addToast({ variant: "danger", message: result.error ?? t("settings.shared.saveFailed") });
+  }, [guildId, roles, router, addToast, t]);
 
   const handleCancel = useCallback(() => {
     setRoles(baseline.roles);
@@ -116,7 +118,7 @@ export function ShopFrom({
         >
           <Row gap="16" center>
             <DashIcon name={"cart"} />
-            <Text variant="body-strong-l">Add role to shop</Text>
+            <Text variant="body-strong-l">{t("settings.shop.addTitle")}</Text>
           </Row>
           <Button
             prefixIcon={"plus"}
@@ -133,7 +135,7 @@ export function ShopFrom({
               setOpenModal(true);
             }}
           >
-            Add role
+            {t("settings.shop.addButton")}
           </Button>
         </Flex>
       </RevealFx>
@@ -169,7 +171,7 @@ export function ShopFrom({
           setRoles((prev) => {
             const existingId = prev.findIndex((r) => r.role === newRole.role);
             if (existingId >= 0) {
-              addToast({ variant: "danger", message: "Role already exists in the shop" });
+              addToast({ variant: "danger", message: t("settings.shop.alreadyExists") });
               return prev;
             }
             return [...prev, newRole];

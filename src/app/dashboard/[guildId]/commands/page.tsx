@@ -7,12 +7,14 @@ import { fetchGuildRoles } from "@/lib/discord/roles-api";
 import { DiscordRole } from "@/lib/discord/role-style";
 import { CommandsFrom } from "@/app/dashboard/[guildId]/commands/CommandsFrom";
 import React from "react";
+import { getT } from "@/i18n/server";
 
 export default async function GeneralSettingsPage({
   params,
 }: {
   params: Promise<{ guildId: string }>;
 }) {
+  const t = await getT();
   const resolvedParams = await params;
   const session = await getServerSession(authOptions);
 
@@ -24,7 +26,7 @@ export default async function GeneralSettingsPage({
       const list = await fetchGuildRoles(session.accessToken, resolvedParams.guildId);
       roles = list.map(({ id, name, color }) => ({ id, name, color }));
     } catch (e) {
-      loadError = e instanceof Error ? e.message : "An unknown error occurred while loading roles.";
+      loadError = e instanceof Error ? e.message : t("settings.shared.loadRolesFailed");
     }
   }
 
@@ -34,9 +36,9 @@ export default async function GeneralSettingsPage({
   return (
     <Flex direction="column" gap="24">
       <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">Command Permissions</Text>
+        <Text variant="heading-strong-l">{t("settings.commands.title")}</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
-          Define who can use specific bot features by roles or server permissions.
+          {t("settings.commands.description")}
         </Text>
       </RevealFx>
 
@@ -44,11 +46,15 @@ export default async function GeneralSettingsPage({
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (
           <Feedback
             variant="danger"
-            title="Session expired"
-            description="Your Discord session has expired. Please log in again."
+            title={t("settings.shared.sessionExpiredTitle")}
+            description={t("settings.shared.sessionExpiredText")}
           />
         ) : (
-          <Feedback variant="danger" title="Error" description={loadError} />
+          <Feedback
+            variant="danger"
+            title={t("settings.shared.errorTitle")}
+            description={loadError}
+          />
         ))}
 
       <CommandsFrom guildId={resolvedParams.guildId} permissions={settings} guildRoles={roles} />

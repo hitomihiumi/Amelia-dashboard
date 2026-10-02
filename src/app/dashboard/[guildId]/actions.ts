@@ -6,11 +6,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { verifyUserIsGuildAdministrator } from "@/lib/discord/guilds-api";
 import { GuildActionState } from "@/types/dashboard";
+import { getT } from "@/i18n/server";
 
 export async function updateGeneralSettings(
   guildId: string,
   formData: FormData,
 ): Promise<GuildActionState> {
+  const t = await getT();
   const session = await getServerSession(authOptions);
   if (!session) throw new Error("Not authorized");
 
@@ -30,7 +32,7 @@ export async function updateGeneralSettings(
   } else {
     return {
       ok: false,
-      error: "You need to specify a valid prefix setting",
+      error: t("settings.general.invalidPrefix"),
     };
   }
 
@@ -41,7 +43,7 @@ export async function updateGeneralSettings(
   } else {
     return {
       ok: false,
-      error: "You need to specify a valid language setting",
+      error: t("settings.general.invalidLanguage"),
     };
   }
 
@@ -53,20 +55,21 @@ export async function updateGeneralSettings(
 export async function requireGuildAdmin(
   guildId: string,
 ): Promise<{ error: string } | { error: null }> {
+  const t = await getT();
   const session = await getServerSession(authOptions);
   if (!session?.accessToken) {
-    return { error: "Auth required" };
+    return { error: t("settings.errors.authRequired") };
   }
   try {
     const allowed = await verifyUserIsGuildAdministrator(session.accessToken, guildId);
     if (!allowed) {
       return {
-        error: "Access denied. You must be a server administrator to access this page.",
+        error: t("settings.errors.accessDenied"),
       };
     }
   } catch {
     return {
-      error: "Failed to verify permissions. Please try again later.",
+      error: t("settings.errors.verifyFailed"),
     };
   }
   return { error: null };

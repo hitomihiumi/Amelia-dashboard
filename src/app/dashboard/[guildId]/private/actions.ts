@@ -8,14 +8,16 @@ import { requireGuildAdmin } from "@/app/dashboard/[guildId]/actions";
 import { GuildActionState } from "@/types/dashboard";
 import { GuildSchema } from "@/lib/db/types";
 import { discordAutoSetupTempVoice } from "@/lib/discord/temp-voice";
+import { getT } from "@/i18n/server";
 
 export async function updatePrivateRoomSettings(
   guildId: string,
   formData: FormData,
 ): Promise<GuildActionState> {
+  const t = await getT();
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return { ok: false, error: "Not authorized." };
+    if (!session) return { ok: false, error: t("settings.errors.notAuthorized") };
 
     const gate = await requireGuildAdmin(guildId);
     if (gate.error) return { ok: false, error: gate.error };
@@ -23,7 +25,7 @@ export async function updatePrivateRoomSettings(
     const joinToCreateRaw = formData.get("join_to_create");
 
     if (!joinToCreateRaw) {
-      return { ok: false, error: "Missing required data to save." };
+      return { ok: false, error: t("settings.errors.missingData") };
     }
 
     let joinToCreate: GuildSchema["utils"]["join_to_create"];
@@ -32,25 +34,25 @@ export async function updatePrivateRoomSettings(
         joinToCreateRaw as string,
       ) as GuildSchema["utils"]["join_to_create"];
     } catch {
-      return { ok: false, error: "Data format error." };
+      return { ok: false, error: t("settings.errors.dataFormat") };
     }
 
     // Validate required fields
     if (!joinToCreate.default_name || joinToCreate.default_name.trim().length === 0) {
-      return { ok: false, error: "Default room name cannot be empty." };
+      return { ok: false, error: t("settings.private.errors.nameEmpty") };
     }
 
     if (joinToCreate.default_name.length > 100) {
-      return { ok: false, error: "Default room name is too long (max 100 characters)." };
+      return { ok: false, error: t("settings.private.errors.nameTooLong") };
     }
 
     // If enabled, channel and category must be selected
     if (joinToCreate.enabled) {
       if (!joinToCreate.channel) {
-        return { ok: false, error: "Please select a trigger channel." };
+        return { ok: false, error: t("settings.private.errors.triggerRequired") };
       }
       if (!joinToCreate.category) {
-        return { ok: false, error: "Please select a category for new rooms." };
+        return { ok: false, error: t("settings.private.errors.categoryRequired") };
       }
     }
 
@@ -63,7 +65,7 @@ export async function updatePrivateRoomSettings(
   } catch (error) {
     console.error("[Private Rooms Update Error]:", error);
 
-    return { ok: false, error: "Internal server error while saving settings." };
+    return { ok: false, error: t("settings.errors.internalSave") };
   }
 }
 
@@ -71,10 +73,11 @@ export async function autoSetupTempVoiceSettings(
   _prev: GuildActionState,
   formData: FormData,
 ): Promise<GuildActionState> {
+  const t = await getT();
   try {
     const guildId = String(formData.get("guildId") ?? "");
     if (!guildId || guildId.trim().length === 0) {
-      return { ok: false, error: "Missing guild ID." };
+      return { ok: false, error: t("settings.private.errors.missingGuild") };
     }
 
     const gate = await requireGuildAdmin(guildId);
@@ -86,7 +89,7 @@ export async function autoSetupTempVoiceSettings(
     }
 
     if (!result.categoryId || !result.triggerChannelId) {
-      return { ok: false, error: "Auto-setup created channels but returned invalid IDs." };
+      return { ok: false, error: t("settings.private.errors.invalidIds") };
     }
 
     const guild = new Guild(guildId);
@@ -106,6 +109,6 @@ export async function autoSetupTempVoiceSettings(
     return { ok: true };
   } catch (error) {
     console.error("[Auto Setup Temp Voice Error]:", error);
-    return { ok: false, error: "Internal server error during auto-setup." };
+    return { ok: false, error: t("settings.private.errors.autoSetupInternal") };
   }
 }

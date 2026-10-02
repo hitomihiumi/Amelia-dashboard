@@ -11,6 +11,7 @@ import {
   Animation,
   Skeleton,
 } from "@once-ui-system/core";
+import { useT } from "@/i18n/client";
 import { AvatarWFrame } from "@/components/user/AvatarWFrame";
 
 import styles from "./GuildCard.module.scss";
@@ -24,6 +25,7 @@ interface GuildCardProps {
 }
 
 export const GuildCard: React.FC<GuildCardProps> = ({ name, id, icon, hasBot, inviteURL }) => {
+  const t = useT();
   return (
     <Flex
       padding={"24"}
@@ -43,14 +45,14 @@ export const GuildCard: React.FC<GuildCardProps> = ({ name, id, icon, hasBot, in
         <Column vertical={"between"}>
           <Text variant={"heading-strong-xs"}>{name}</Text>
           <Tag size={"s"} scheme={hasBot ? "brand" : "neutral"}>
-            {hasBot ? "Bot on the Guild" : "Bot not Invited"}
+            {hasBot ? t("settings.guilds.botPresent") : t("settings.guilds.botMissing")}
           </Tag>
         </Column>
       </Row>
       <Line />
       {hasBot ? (
         <Button fillWidth prefixIcon={"gear"} href={`/dashboard/${id}`}>
-          Manage
+          {t("settings.guilds.manage")}
         </Button>
       ) : (
         <Button
@@ -60,7 +62,7 @@ export const GuildCard: React.FC<GuildCardProps> = ({ name, id, icon, hasBot, in
           target={"_blank"}
           href={inviteURL || ""}
         >
-          Invite Amelia
+          {t("settings.guilds.invite")}
         </Button>
       )}
     </Flex>

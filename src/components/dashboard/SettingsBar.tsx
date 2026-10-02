@@ -14,6 +14,7 @@ import {
   NavIcon,
 } from "@once-ui-system/core";
 import { getGuildAccessForDashboard } from "@/lib/discord/guilds-api";
+import { useT } from "@/i18n/client";
 import styles from "./SettingsBar.module.scss";
 
 interface SettingsBarProps {
@@ -22,6 +23,7 @@ interface SettingsBarProps {
 }
 
 export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
+  const t = useT();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -102,7 +104,7 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
           <Column gap={"32"} paddingX={"20"} fill as={"nav"} overflowY="auto">
             <Column gap={"8"}>
               <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
-                Manage
+                {t("settings.nav.manage")}
               </Text>
               <ToggleButton
                 size={"l"}
@@ -113,7 +115,7 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  General settings
+                  {t("settings.nav.general")}
                 </Text>
               </ToggleButton>
               <ToggleButton
@@ -125,14 +127,14 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId + "/commands"}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  Commands
+                  {t("settings.nav.commands")}
                 </Text>
               </ToggleButton>
             </Column>
 
             <Column gap={"8"}>
               <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
-                Moderation
+                {t("settings.nav.moderation")}
               </Text>
               <ToggleButton
                 size={"l"}
@@ -143,7 +145,7 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId + "/moderation"}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  Settings
+                  {t("settings.nav.moderationSettings")}
                 </Text>
               </ToggleButton>
               <ToggleButton
@@ -155,7 +157,7 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId + "/moderation/forms"}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  Report & appeal forms
+                  {t("settings.nav.moderationForms")}
                 </Text>
               </ToggleButton>
               <ToggleButton
@@ -167,7 +169,7 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId + "/moderation/queue"}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  Submission queue
+                  {t("settings.nav.moderationQueue")}
                 </Text>
               </ToggleButton>
               <ToggleButton
@@ -179,7 +181,7 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId + "/moderation/cases"}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  Case log
+                  {t("settings.nav.moderationCases")}
                 </Text>
               </ToggleButton>
               <ToggleButton
@@ -191,14 +193,14 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId + "/moderation/audit"}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  Audit log
+                  {t("settings.nav.moderationAudit")}
                 </Text>
               </ToggleButton>
             </Column>
 
             <Column gap={"8"}>
               <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
-                Engagement
+                {t("settings.nav.engagement")}
               </Text>
               <ToggleButton
                 size={"l"}
@@ -209,7 +211,7 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId + "/economy"}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  Economy
+                  {t("settings.nav.economy")}
                 </Text>
               </ToggleButton>
               <ToggleButton
@@ -221,7 +223,7 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId + "/shop"}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  Shop
+                  {t("settings.nav.shop")}
                 </Text>
               </ToggleButton>
               <ToggleButton
@@ -233,14 +235,14 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId + "/levels"}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  Leveling
+                  {t("settings.nav.leveling")}
                 </Text>
               </ToggleButton>
             </Column>
 
             <Column gap={"8"}>
               <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
-                Utils
+                {t("settings.nav.utils")}
               </Text>
               <ToggleButton
                 size={"l"}
@@ -251,14 +253,14 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId + "/private"}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  Private Rooms
+                  {t("settings.nav.privateRooms")}
                 </Text>
               </ToggleButton>
             </Column>
 
             <Column gap={"8"}>
               <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
-                Interactions
+                {t("settings.nav.interactions")}
               </Text>
               <ToggleButton
                 size={"l"}
@@ -269,7 +271,7 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId + "/components"}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  Components
+                  {t("settings.nav.components")}
                 </Text>
               </ToggleButton>
               <ToggleButton
@@ -281,7 +283,7 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
                 href={"/dashboard/" + guildId + "/scenarios"}
               >
                 <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  Scenarios
+                  {t("settings.nav.scenarios")}
                 </Text>
               </ToggleButton>
             </Column>
@@ -298,7 +300,7 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
             style={{ flexShrink: 0 }}
           >
             <Button prefixIcon={"back"} fillWidth href={"/dashboard"}>
-              Back to list
+              {t("settings.nav.backToList")}
             </Button>
           </Row>
         </Flex>

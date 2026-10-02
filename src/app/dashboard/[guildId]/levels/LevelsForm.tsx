@@ -28,6 +28,7 @@ import { ChannelPill } from "@/components/dashboard/discord/ChannelPill";
 import { GuildActionState } from "@/types/dashboard";
 import { DashIcon } from "@/components/dashboard/DashIcon";
 import { Section } from "@/components/dashboard/Section";
+import { useT } from "@/i18n/client";
 
 export function LevelsForm({
   guildId,
@@ -44,6 +45,7 @@ export function LevelsForm({
   voiceChannels: ChannelPickOption[];
   roles: DiscordRole[];
 }) {
+  const t = useT();
   const router = useRouter();
   const { addToast } = useToast();
   const { setIsDirty, setSaveAction, setCancelAction } = useUnsavedChanges();
@@ -73,17 +75,17 @@ export function LevelsForm({
 
     const result: GuildActionState = await updateLevelsSettings(guildId, fd);
     if (!result) {
-      addToast({ variant: "danger", message: "No response from server" });
+      addToast({ variant: "danger", message: t("settings.shared.noResponse") });
       return;
     }
     if (result.ok) {
       setBaseline({ levels, economy });
-      addToast({ message: "Settings saved successfully", variant: "success" });
+      addToast({ message: t("settings.levels.saved"), variant: "success" });
       router.refresh();
     } else {
-      addToast({ message: result.error || "Save failed", variant: "danger" });
+      addToast({ message: result.error || t("settings.levels.saveFailed"), variant: "danger" });
     }
-  }, [guildId, levels, economy, router, addToast]);
+  }, [guildId, levels, economy, router, addToast, t]);
 
   const handleCancel = useCallback(() => {
     setLevels(baseline.levels);
@@ -159,9 +161,9 @@ export function LevelsForm({
             <Flex gap="16">
               <DashIcon name={"ribbon"} />
               <Column gap="8">
-                <Text variant="body-strong-l">Enable Module</Text>
+                <Text variant="body-strong-l">{t("settings.levels.enableTitle")}</Text>
                 <Text variant="body-default-s" onBackground="neutral-weak">
-                  Toggle the entire leveling and XP system.
+                  {t("settings.levels.enableDescription")}
                 </Text>
               </Column>
             </Flex>
@@ -174,8 +176,8 @@ export function LevelsForm({
       </RevealFx>
 
       <Section
-        title="Role Rewards"
-        description="Roles automatically granted to users when they reach a specific level."
+        title={t("settings.levels.rewardsTitle")}
+        description={t("settings.levels.rewardsDescription")}
         num={2}
         icon="trophy"
       >
@@ -183,7 +185,7 @@ export function LevelsForm({
           {Object.entries(levels.level_roles).length === 0 ? (
             <Row fillWidth center padding="s">
               <Text variant="body-default-s" onBackground="neutral-weak">
-                No role rewards configured.
+                {t("settings.levels.rewardsEmpty")}
               </Text>
             </Row>
           ) : (
@@ -203,9 +205,14 @@ export function LevelsForm({
                   >
                     <Row gap="16" vertical="center">
                       <Flex width="48">
-                        <Text variant="body-strong-m">Lv. {lvl}</Text>
+                        <Text variant="body-strong-m">
+                          {t("settings.levels.levelShort", { level: lvl })}
+                        </Text>
                       </Flex>
-                      <RolePill roleColor={role?.color || 0} label={role?.name || "Unknown Role"} />
+                      <RolePill
+                        roleColor={role?.color || 0}
+                        label={role?.name || t("common.select.unknownRole")}
+                      />
                     </Row>
                     <IconButton
                       icon="close"
@@ -228,7 +235,7 @@ export function LevelsForm({
               value={newLevel}
               onChange={(value) => setNewLevel(value)}
               placeholder="5"
-              label={"Level"}
+              label={t("settings.levels.levelLabel")}
             />
           </Column>
           <RoleSelect
@@ -237,17 +244,17 @@ export function LevelsForm({
             options={roleOptions}
             selectedRole={newRoleId}
             setSelectedRole={(val) => setNewRoleId(val as string)}
-            label={"Role to grant"}
+            label={t("settings.levels.roleToGrant")}
           />
           <Button variant="primary" onClick={addRoleReward} disabled={!newLevel || !newRoleId}>
-            Add
+            {t("common.actions.add")}
           </Button>
         </Row>
       </Section>
 
       <Section
-        title="Announcements"
-        description="Configure level-up announcements."
+        title={t("settings.levels.announcementsTitle")}
+        description={t("settings.levels.announcementsDescription")}
         num={3}
         icon="send"
         switcher={
@@ -264,7 +271,7 @@ export function LevelsForm({
       >
         <Column gap="12">
           <ChannelSelect
-            label={"Announcement Channel"}
+            label={t("settings.levels.announcementChannel")}
             id="level-up-channel"
             options={channelOptions}
             selectedChannel={levels.message.channel || ""}
@@ -277,7 +284,7 @@ export function LevelsForm({
           />
           <NumberInput
             id="msg-delete-delay"
-            label="Auto-delete delay (seconds, 0 to keep)"
+            label={t("settings.levels.deleteDelay")}
             value={levels.message.delete}
             onChange={(value) =>
               setLevels((p) => ({
@@ -290,14 +297,14 @@ export function LevelsForm({
       </Section>
 
       <Section
-        title="Restrictions"
-        description={"Exclude certain channels or roles from earning XP and leveling up."}
+        title={t("settings.levels.restrictionsTitle")}
+        description={t("settings.levels.restrictionsDescription")}
         num={4}
         icon="eyeoff"
       >
         <Column gap="12">
           <ChannelSelect
-            label={"Ignored Channels"}
+            label={t("settings.levels.ignoredChannels")}
             id="ignored-channels"
             multiple
             options={allChannelOptions}
@@ -309,7 +316,7 @@ export function LevelsForm({
         </Column>
         <Column gap="12">
           <RoleSelect
-            label={"Ignored Roles"}
+            label={t("settings.levels.ignoredRoles")}
             id="ignored-roles"
             multiple
             options={roleOptions}
@@ -320,8 +327,8 @@ export function LevelsForm({
       </Section>
 
       <Section
-        title="Cash Reward"
-        description="Give currency to users upon leveling up."
+        title={t("settings.levels.cashTitle")}
+        description={t("settings.levels.cashDescription")}
         num={5}
         icon={"money"}
         switcher={
@@ -333,7 +340,7 @@ export function LevelsForm({
       >
         <NumberInput
           id="eco-reward-amount"
-          label="Reward Amount"
+          label={t("settings.levels.rewardAmount")}
           value={economy.amount}
           onChange={(value) => setEconomy((p) => ({ ...p, amount: Number(value) }))}
         />

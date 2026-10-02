@@ -6,6 +6,7 @@ import { ShopRole } from "@/lib/db/types";
 import { Button, Column, Flex, Row, Text } from "@once-ui-system/core";
 import { RolePill } from "@/components/dashboard/discord/RolePill";
 import { DiscordRole } from "@/lib/discord/role-style";
+import { useFormat, useT } from "@/i18n/client";
 
 export interface RoleCardProps {
   role: ShopRole;
@@ -22,13 +23,11 @@ export const RoleCard: React.FC<RoleCardProps> = ({
   setRoles,
   setOpenModal,
 }) => {
-  const formatDate = (date: number | Date) => {
-    const d = new Date(date);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const year = d.getFullYear();
-    return `${day}.${month}.${year}`;
-  };
+  const t = useT();
+  const format = useFormat();
+
+  const formatDate = (date: number | Date) =>
+    format.date(date, { day: "2-digit", month: "2-digit", year: "numeric" });
 
   const saleDate =
     role.discount.starts_at && role.discount.expires_at
@@ -46,10 +45,13 @@ export const RoleCard: React.FC<RoleCardProps> = ({
       gap={"16"}
     >
       <Column center fill gap={"4"}>
-        <RolePill roleColor={discordRole?.color || 0} label={discordRole?.name || "Unknown Role"} />
+        <RolePill
+          roleColor={discordRole?.color || 0}
+          label={discordRole?.name || t("common.select.unknownRole")}
+        />
         {role.discount.amount > 0 && (
           <Text variant="body-default-s" onBackground={"neutral-weak"}>
-            On Sale {saleDate}
+            {t("settings.shop.onSale", { dates: saleDate ?? "" })}
           </Text>
         )}
       </Column>
@@ -57,7 +59,7 @@ export const RoleCard: React.FC<RoleCardProps> = ({
         <Row horizontal="between">
           <Column center>
             <Text variant="body-default-s" onBackground={"neutral-weak"}>
-              PRICE
+              {t("settings.shop.price")}
             </Text>
             {role.discount.amount > 0 ? (
               <Row gap={"4"} vertical="center">
@@ -75,7 +77,7 @@ export const RoleCard: React.FC<RoleCardProps> = ({
           {role.discount.amount > 0 && (
             <Column center>
               <Text variant="body-default-s" onBackground={"neutral-weak"}>
-                DISCOUNT
+                {t("settings.shop.discount")}
               </Text>
               <Text variant="body-default-m" onBackground={"brand-weak"}>
                 {role.discount.amount}%
@@ -91,7 +93,7 @@ export const RoleCard: React.FC<RoleCardProps> = ({
               setOpenModal(true);
             }}
           >
-            Edit
+            {t("common.actions.edit")}
           </Button>
           <Button
             variant="danger"
@@ -99,7 +101,7 @@ export const RoleCard: React.FC<RoleCardProps> = ({
               setRoles((prev) => prev.filter((lRole) => lRole.role !== role.role));
             }}
           >
-            Remove
+            {t("common.actions.remove")}
           </Button>
         </Flex>
       </Column>

@@ -24,6 +24,7 @@ import { ChannelPickOption } from "@/lib/discord/channel-type";
 import { ChannelSelect } from "@/components/dashboard/discord/ChannelSelect";
 import { ChannelPill } from "@/components/dashboard/discord/ChannelPill";
 import { Section } from "@/components/dashboard/Section";
+import { useT } from "@/i18n/client";
 
 type Form = Pick<GuildSchema["utils"], "join_to_create">;
 
@@ -38,6 +39,7 @@ export function PrivateForm({
   voiceChannels: ChannelPickOption[];
   categories: ChannelPickOption[];
 }) {
+  const t = useT();
   const router = useRouter();
   const { setIsDirty, setSaveAction, setCancelAction } = useUnsavedChanges();
   const { addToast } = useToast();
@@ -66,10 +68,13 @@ export function PrivateForm({
       if (autoState.ok) {
         addToast({
           variant: "success",
-          message: "Auto-setup successful! Changes might take a moment to appear.",
+          message: t("settings.private.autoSetupSuccess"),
         });
       } else {
-        addToast({ variant: "danger", message: autoState.error || "Auto-setup failed." });
+        addToast({
+          variant: "danger",
+          message: autoState.error || t("settings.private.autoSetupFailed"),
+        });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -96,7 +101,7 @@ export function PrivateForm({
 
     const result: GuildActionState = await updatePrivateRoomSettings(guildId, fd);
     if (!result) {
-      addToast({ variant: "danger", message: "No response from server" });
+      addToast({ variant: "danger", message: t("settings.shared.noResponse") });
       return;
     }
     if (result.ok) {
@@ -105,11 +110,11 @@ export function PrivateForm({
         join_to_create: joinToCreate,
       });
       router.refresh();
-      addToast({ variant: "success", message: "Successfully updated settings" });
+      addToast({ variant: "success", message: t("settings.shared.saveSuccess") });
       return;
     }
-    addToast({ variant: "danger", message: result.error ?? "Cannot save settings" });
-  }, [guildId, joinToCreate, router]);
+    addToast({ variant: "danger", message: result.error ?? t("settings.shared.saveFailed") });
+  }, [guildId, joinToCreate, router, addToast, t]);
 
   const handleCancel = useCallback(() => {
     setJoinToCreate(baseline.join_to_create);
@@ -134,10 +139,8 @@ export function PrivateForm({
 
   return (
     <Section
-      title="Private rooms"
-      description={
-        'Users will be able to create temporary voice channels by joining a designated "Join to Create" channel.'
-      }
+      title={t("settings.private.sectionTitle")}
+      description={t("settings.private.sectionDescription")}
       num={1}
       switcher={
         <Switch
@@ -159,25 +162,26 @@ export function PrivateForm({
           <Row gap={"12"}>
             <DashIcon name={"plane"} />
             <Flex direction="column" gap="12">
-              <Text variant="body-strong-m">Auto-setup</Text>
+              <Text variant="body-strong-m">{t("settings.private.autoSetupTitle")}</Text>
               <Text variant="body-default-xs" onBackground="neutral-medium">
-                Automatically create a "Join to Create" voice channel, category and the necessary
-                permissions for it.
+                {t("settings.private.autoSetupDescription")}
               </Text>
               <Button prefixIcon={"plane"} type="submit" disabled={autoPending}>
-                {autoPending ? "Setting up..." : "Auto-setup"}
+                {autoPending
+                  ? t("settings.private.autoSetupPending")
+                  : t("settings.private.autoSetupButton")}
               </Button>
             </Flex>
           </Row>
         </Column>
       </form>
       <Column gap="16">
-        <Text variant="body-strong-s">CHANNEL TRIGGER</Text>
+        <Text variant="body-strong-s">{t("settings.private.triggerTitle")}</Text>
         <Text variant="body-default-xs" onBackground="neutral-medium">
-          Select the voice channel that users will join to create their private rooms.
+          {t("settings.private.triggerDescription")}
         </Text>
         <ChannelSelect
-          label={"Select trigger channel"}
+          label={t("settings.private.triggerLabel")}
           selectedChannel={joinToCreate.channel || ""}
           setSelectedChannel={handleVoiceChannel}
           options={voiceChannels.map((channel) => ({
@@ -188,12 +192,12 @@ export function PrivateForm({
         />
       </Column>
       <Column gap="16">
-        <Text variant="body-strong-s">CATEGORY FOR NEW ROOMS</Text>
+        <Text variant="body-strong-s">{t("settings.private.categoryTitle")}</Text>
         <Text variant="body-default-xs" onBackground="neutral-medium">
-          Select the category where the new private rooms will be created.
+          {t("settings.private.categoryDescription")}
         </Text>
         <ChannelSelect
-          label={"Select category"}
+          label={t("settings.private.categoryLabel")}
           selectedChannel={joinToCreate.category || ""}
           setSelectedChannel={handleCategory}
           options={categories.map((channel) => ({
@@ -204,19 +208,19 @@ export function PrivateForm({
         />
       </Column>
       <Column gap="16">
-        <Text variant="body-strong-s">DEFAULT NAME</Text>
+        <Text variant="body-strong-s">{t("settings.private.nameTitle")}</Text>
         <Text variant="body-default-xs" onBackground="neutral-medium">
-          Set the default name for the private rooms. Users will be able to change it after the room
-          is created.
+          {t("settings.private.nameDescription")}
         </Text>
         <Input
           id={"default-name"}
           value={joinToCreate.default_name}
           onChange={(e) => handleChannelName(e.target.value)}
-          placeholder="Private Room"
+          placeholder={t("settings.private.namePlaceholder")}
           description={
             <Row vertical="center" gap="4">
-              Use <InlineCode>{"%{VAR}%"}</InlineCode> to include user name in the channel name.
+              {t("settings.private.nameHintBefore")} <InlineCode>{"%{VAR}%"}</InlineCode>
+              {t("settings.private.nameHintAfter")}
             </Row>
           }
         />
