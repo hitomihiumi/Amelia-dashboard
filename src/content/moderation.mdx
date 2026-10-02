@@ -95,8 +95,10 @@ Twenty-one events are covered, grouped into four categories:
 - **Voice** — joining, leaving and switching channels.
 - **Server** — channels, roles and server settings.
 
-Every event can be switched off on its own, or sent to a channel of its own — leave the override
-empty to use the main audit channel.
+Each category — Members, Messages, Voice and Server — can post to a channel of its own, so the
+voice noise does not bury the bans. Every event can also be switched off on its own, or sent to yet
+another channel. The most specific setting wins: the event's channel, then its category's channel,
+then the default audit log channel. Leave a field empty to fall back to the next one.
 
 You can also ignore whole channels or roles, skip everything bots do, and give the webhook its own
 name and avatar.

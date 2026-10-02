@@ -4,10 +4,13 @@ import React, { forwardRef, ReactNode } from "react";
 
 import { Flex, Text, Row, Icon } from "@once-ui-system/core";
 import {
+  isAnnouncementChannel,
   isCategoryChannel,
+  isStageChannel,
   isVoiceLikeChannel,
   type ChannelPickOption,
 } from "@/lib/discord/channel-type";
+import { useSelectDisplay } from "@/components/user/selectDisplay";
 
 interface ChannelPillProps extends React.ComponentProps<typeof Flex> {
   channel: ChannelPickOption;
@@ -15,13 +18,22 @@ interface ChannelPillProps extends React.ComponentProps<typeof Flex> {
   children?: ReactNode;
 }
 
+/** The icon Discord itself uses for each kind of channel. */
+function channelIcon(type: number): string {
+  if (isCategoryChannel(type)) return "folder";
+  if (isStageChannel(type)) return "stage";
+  if (isVoiceLikeChannel(type)) return "speaker";
+  if (isAnnouncementChannel(type)) return "megaphone";
+  return "hash";
+}
+
 const ChannelPill = forwardRef<HTMLDivElement, ChannelPillProps>(
   ({ channel, size = "m", className, children, ...rest }, ref) => {
-    const paddingX = size === "s" ? "8" : size === "m" ? "8" : "12";
-    const paddingY = size === "s" ? "1" : size === "m" ? "2" : "4";
+    // Inside a select the row or chip is the badge; a second one would be noise.
+    const plain = useSelectDisplay() === "plain";
 
-    const isCategory = isCategoryChannel(channel.type);
-    const isVoice = isVoiceLikeChannel(channel.type);
+    const paddingX = plain ? "0" : size === "s" ? "8" : size === "m" ? "8" : "12";
+    const paddingY = plain ? "0" : size === "s" ? "1" : size === "m" ? "2" : "4";
 
     return (
       <Row
@@ -32,24 +44,18 @@ const ChannelPill = forwardRef<HTMLDivElement, ChannelPillProps>(
         radius="s"
         gap="8"
         ref={ref}
-        style={{
-          whiteSpace: "nowrap",
-          userSelect: "none",
-          border: "none",
-          backgroundColor: "rgba(63, 63, 70, 0.35)",
-        }}
+        background={plain ? undefined : "neutral-alpha-medium"}
+        style={{ minWidth: 0, maxWidth: "100%", userSelect: "none", border: "none" }}
         {...rest}
       >
-        <Icon
-          size={"xs"}
-          name={isCategory ? "folder" : isVoice ? "microphone" : "mail"}
-          style={{ color: "rgb(244 244 245)" }}
-        />
-        <Row style={{ userSelect: "none" }} vertical="center">
-          <Text variant="label-default-s" style={{ color: "rgb(244 244 245)" }}>
-            {channel.name || children}
-          </Text>
-        </Row>
+        <Icon size="xs" name={channelIcon(channel.type)} onBackground="neutral-weak" />
+        <Text
+          variant="label-default-s"
+          onBackground="neutral-strong"
+          style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+        >
+          {channel.name || children}
+        </Text>
       </Row>
     );
   },

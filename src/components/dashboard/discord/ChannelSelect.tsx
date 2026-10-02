@@ -17,6 +17,9 @@ export const ChannelSelect: React.FC<ChannelSelectProps> = ({
   label,
   options,
   multiple = false,
+  // Servers have dozens of channels and roles, so searching is the default.
+  searchable = true,
+  placeholder = multiple ? "Select channels" : "Select a channel",
   ...rest
 }) => {
   return (
@@ -28,6 +31,8 @@ export const ChannelSelect: React.FC<ChannelSelectProps> = ({
       placement={placement}
       options={options}
       multiple={multiple}
+      searchable={searchable}
+      placeholder={placeholder}
       {...rest}
     />
   );

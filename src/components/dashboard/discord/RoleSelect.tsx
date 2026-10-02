@@ -18,6 +18,9 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({
   label,
   options,
   multiple = false,
+  // Servers have dozens of channels and roles, so searching is the default.
+  searchable = true,
+  placeholder = multiple ? "Select roles" : "Select a role",
   ...rest
 }) => {
   return (
@@ -29,6 +32,8 @@ export const RoleSelect: React.FC<RoleSelectProps> = ({
       placement={placement}
       options={options}
       multiple={multiple}
+      searchable={searchable}
+      placeholder={placeholder}
       {...rest}
     />
   );

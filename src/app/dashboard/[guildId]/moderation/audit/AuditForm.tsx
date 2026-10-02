@@ -134,6 +134,12 @@ export function AuditForm({
   const eventConfig = (event: AuditEventKey) =>
     audit.events[event] ?? { enabled: true, channel: null };
 
+  const updateCategory = (category: AuditCategory, channel: string | null) =>
+    setAudit((prev) => ({
+      ...prev,
+      categories: { ...prev.categories, [category]: { channel } },
+    }));
+
   const updateEvent = (
     event: AuditEventKey,
     patch: Partial<{ enabled: boolean; channel: string | null }>,
@@ -157,7 +163,8 @@ export function AuditForm({
         <ChannelSelect
           fillWidth
           id="audit-channel"
-          label="Audit log channel"
+          label="Default audit log channel"
+          description="Used by every event that has no channel of its own or of its category."
           options={channelOptions}
           selectedChannel={audit.channel ?? ""}
           setSelectedChannel={(value) => update({ channel: (value as string) || null })}
@@ -221,9 +228,18 @@ export function AuditForm({
         <Section
           key={category}
           title={CATEGORY_LABELS[category]}
-          description="Turn single events off, or send them to their own channel."
+          description="Send the whole category to its own channel, or fine-tune single events below."
           num={idx + 2}
         >
+          <ChannelSelect
+            fillWidth
+            id={`audit-category-${category}`}
+            label={`${CATEGORY_LABELS[category]} channel`}
+            options={channelOptions}
+            selectedChannel={audit.categories?.[category]?.channel ?? ""}
+            setSelectedChannel={(value) => updateCategory(category, (value as string) || null)}
+            description="Leave empty to use the default audit log channel."
+          />
 
           {AUDIT_EVENT_KEYS.filter((event) => AUDIT_EVENT_CATEGORY[event] === category).map(
             (event) => (
@@ -240,7 +256,7 @@ export function AuditForm({
                   <ChannelSelect
                     fillWidth
                     id={`audit-channel-${event}`}
-                    label="Send to a different channel (optional)"
+                    label="Channel for this event only (optional)"
                     options={channelOptions}
                     selectedChannel={eventConfig(event).channel ?? ""}
                     setSelectedChannel={(value) =>

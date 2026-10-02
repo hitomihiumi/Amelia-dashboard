@@ -44,6 +44,7 @@ export default async function AuditPage({ params }: { params: Promise<{ guildId:
       name: (await guild.get("audit.webhook.name")) as string | null,
       avatar: (await guild.get("audit.webhook.avatar")) as string | null,
     },
+    categories: ((await guild.get("audit.categories")) ?? {}) as AuditSettings["categories"],
     events: ((await guild.get("audit.events")) ?? {}) as AuditSettings["events"],
   };
 

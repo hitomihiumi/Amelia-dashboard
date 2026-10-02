@@ -51,12 +51,19 @@ import {
   IoShieldOutline,
   IoPersonAddOutline,
   IoClipboardOutline,
+  IoVolumeHigh,
+  IoMegaphone,
+  IoRadio,
 } from "react-icons/io5";
 
-import { FaDiscord } from "react-icons/fa";
+import { FaDiscord, FaHashtag } from "react-icons/fa";
 
 export const iconLibrary: Record<string, IconType> = {
   discord: FaDiscord,
+  hash: FaHashtag,
+  speaker: IoVolumeHigh,
+  megaphone: IoMegaphone,
+  stage: IoRadio,
   gear: IoSettings,
   logout: IoLogOut,
   plus: IoAdd,

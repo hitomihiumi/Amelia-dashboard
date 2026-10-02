@@ -13,7 +13,12 @@ import type {
   ModerationSubmissionStatus,
   WarnThreshold,
 } from "@/lib/db/types";
-import { AUDIT_EVENT_KEYS } from "@/lib/db/types";
+import {
+  AUDIT_CATEGORIES,
+  AUDIT_EVENT_KEYS,
+  resolveAuditChannel,
+  resolveAuditEvent,
+} from "@/lib/db/types";
 import { normalizeForm, validateFormConfiguration } from "@/lib/moderation/forms";
 import { validateLinkPattern } from "@/lib/moderation/linkPatterns";
 import { resolveSubmission, revokeCase } from "@/lib/moderation/service";
@@ -283,6 +288,7 @@ export async function updateAuditSettings(
     await guild.set("audit.ignore_bots", audit.ignore_bots);
     await guild.set("audit.webhook.name", audit.webhook.name);
     await guild.set("audit.webhook.avatar", audit.webhook.avatar);
+    await guild.set("audit.categories", audit.categories);
     await guild.set("audit.events", audit.events);
 
     // Create the webhooks up front so the admin finds out about missing
@@ -290,12 +296,13 @@ export async function updateAuditSettings(
     let webhookError: string | null = null;
 
     if (audit.enabled) {
-      const channels = [
-        audit.channel,
-        ...Object.values(audit.events)
-          .filter((event) => event?.enabled)
-          .map((event) => event?.channel ?? null),
-      ].filter((channel): channel is string => Boolean(channel));
+      // Exactly the channels the bot will resolve for the events that are on:
+      // event override, then category channel, then the default channel.
+      const channels = AUDIT_EVENT_KEYS.filter(
+        (event) => resolveAuditEvent(audit.events, event).enabled,
+      )
+        .map((event) => resolveAuditChannel(audit, event))
+        .filter((channel): channel is string => Boolean(channel));
 
       webhookError = await syncAuditWebhooks(
         guildId,
@@ -321,8 +328,13 @@ function validateAudit(audit: AuditSettings): string | null {
   if (audit.channel !== null && !SNOWFLAKE.test(String(audit.channel))) {
     return "Invalid audit log channel.";
   }
-  if (audit.enabled && !audit.channel) {
-    return "Choose the channel the audit log posts to before enabling it.";
+
+  for (const [key, category] of Object.entries(audit.categories ?? {})) {
+    if (!AUDIT_CATEGORIES.includes(key as never)) return `Unknown audit category "${key}".`;
+    const channel = category?.channel ?? null;
+    if (channel !== null && !SNOWFLAKE.test(String(channel))) {
+      return `Invalid channel selected for the "${key}" category.`;
+    }
   }
 
   for (const [field, list] of [
@@ -349,6 +361,18 @@ function validateAudit(audit: AuditSettings): string | null {
     if (typeof event?.enabled !== "boolean") return `Invalid configuration for "${key}".`;
     if (event.channel !== null && !SNOWFLAKE.test(String(event.channel))) {
       return `Invalid channel selected for "${key}".`;
+    }
+  }
+
+  // Every event that is on must end up somewhere.
+  if (audit.enabled) {
+    const orphan = AUDIT_EVENT_KEYS.find(
+      (event) =>
+        resolveAuditEvent(audit.events, event).enabled && !resolveAuditChannel(audit, event),
+    );
+
+    if (orphan) {
+      return "Some events have no channel. Pick a default channel, or a channel for every category.";
     }
   }
 
