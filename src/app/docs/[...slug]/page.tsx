@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getPages, getAdjacentPages } from "@/app/utils/utils";
 import { formatDate } from "@/app/utils/formatDate";
+import { getLocale, getT } from "@/i18n/server";
 import {
   Column,
   Heading,
@@ -27,7 +28,8 @@ export async function generateMetadata({
   const routeParams = await params;
   const slugPath = routeParams.slug ? routeParams.slug.join("/") : "";
 
-  const docs = await getPages();
+  const locale = await getLocale();
+  const docs = getPages(undefined, locale);
   const doc = docs.find((doc) => doc.slug === slugPath);
 
   if (!doc) return {};
@@ -49,18 +51,21 @@ export default async function Docs({ params }: { params: Promise<{ slug: string[
   const routeParams = await params;
   const slugPath = routeParams.slug.join("/");
 
-  let doc = getPages().find((doc) => doc.slug === slugPath);
+  const locale = await getLocale();
+  const t = await getT();
+
+  const doc = getPages(undefined, locale).find((doc) => doc.slug === slugPath);
 
   if (!doc) {
     notFound();
   }
 
-  const { prevPage, nextPage } = getAdjacentPages(slugPath, "section");
+  const { prevPage, nextPage } = getAdjacentPages(slugPath, "section", locale);
 
   // Determine section title - use "Docs" for top-level elements
   const sectionTitle =
     routeParams.slug.length === 1 && !routeParams.slug[0].includes("/")
-      ? "Docs"
+      ? t("common.nav.docs")
       : routeParams.slug[0]
           ?.split("-")
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -88,9 +93,13 @@ export default async function Docs({ params }: { params: Promise<{ slug: string[
               {sectionTitle}
             </Text>
             <Heading variant="display-strong-s">{doc.metadata.title}</Heading>
-            <Text variant="body-default-s" onBackground="neutral-weak">
-              Last update: {formatDate(doc.metadata.updatedAt)}
-            </Text>
+            {doc.metadata.updatedAt && (
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                {t("docs.page.lastUpdate", {
+                  date: formatDate(doc.metadata.updatedAt, false, locale),
+                })}
+              </Text>
+            )}
             {doc.metadata.github && (
               <Button
                 className="mt-20"
@@ -104,7 +113,7 @@ export default async function Docs({ params }: { params: Promise<{ slug: string[
                 weight="default"
                 data-border="rounded"
               >
-                View on GitHub
+                {t("docs.page.viewOnGithub")}
               </Button>
             )}
           </Column>
@@ -113,7 +122,7 @@ export default async function Docs({ params }: { params: Promise<{ slug: string[
               border="neutral-alpha-medium"
               enlarge
               src={doc.metadata.image}
-              alt={"Thumbnail of " + doc.metadata.title}
+              alt={t("docs.page.thumbnailAlt", { title: doc.metadata.title })}
               aspectRatio="16 / 9"
               radius="m"
               sizes="(max-width: 768px) 100vw, 768px"
@@ -146,7 +155,7 @@ export default async function Docs({ params }: { params: Promise<{ slug: string[
                               .split("-")
                               .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                               .join(" ")}`
-                          : "page"}
+                          : t("docs.page.label")}
                       </Text>
                       <Text onBackground="neutral-strong" variant="heading-strong-m" wrap="balance">
                         {prevPage.metadata.title}
@@ -179,7 +188,7 @@ export default async function Docs({ params }: { params: Promise<{ slug: string[
                               .split("-")
                               .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                               .join(" ")}`
-                          : "page"}
+                          : t("docs.page.label")}
                       </Text>
                       <Text onBackground="neutral-strong" variant="heading-strong-m" wrap="balance">
                         {nextPage.metadata.title}

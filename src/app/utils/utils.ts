@@ -3,6 +3,8 @@ import path from "path";
 import matter from "gray-matter";
 import { Schemes } from "@once-ui-system/core";
 import type { IconName } from "@/resources/icons";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
+import { CONTENT_DIR, isLocaleFolder, resolveLocalizedFile } from "./content";
 
 interface Post {
   slug: string;
@@ -21,9 +23,17 @@ interface Post {
   };
 }
 
-export function getPages(customPath = ["src", "content"]): Post[] {
+/**
+ * Reads the documentation pages under `customPath`. The English files define which pages
+ * exist; for another locale each page is read from `src/content/<locale>/…` when a
+ * translation exists and from the English file otherwise.
+ */
+export function getPages(
+  customPath = ["src", "content"],
+  locale: Locale = DEFAULT_LOCALE,
+): Post[] {
   const postsDir = path.join(process.cwd(), ...customPath);
-  const contentBasePath = path.join(process.cwd(), "src", "content");
+  const contentBasePath = CONTENT_DIR;
 
   // Check if directory exists before trying to read it
   if (!fs.existsSync(postsDir)) {
@@ -50,14 +60,17 @@ export function getPages(customPath = ["src", "content"]): Post[] {
     const stat = fs.statSync(filePath);
 
     if (stat.isDirectory()) {
+      // src/content/<locale>/ holds translations, not English sections
+      if (isLocaleFolder(postsDir, file)) return;
+
       try {
-        posts.push(...getPages([...customPath, file]));
+        posts.push(...getPages([...customPath, file], locale));
       } catch (error) {
         console.warn(`Error reading directory: ${filePath}`, error);
       }
     } else if (file.endsWith(".mdx")) {
       try {
-        const fileContents = fs.readFileSync(filePath, "utf8");
+        const fileContents = fs.readFileSync(resolveLocalizedFile(filePath, locale), "utf8");
         const { data, content } = matter(fileContents);
 
         // Create slug without src/content prefix
@@ -173,10 +186,14 @@ export function sortPages(pages: Post[], sortType: SortType = "order"): Post[] {
 }
 
 // Function to get adjacent pages based on the current slug
-export function getAdjacentPages(currentSlug: string, sortType: SortType = "section") {
+export function getAdjacentPages(
+  currentSlug: string,
+  sortType: SortType = "section",
+  locale: Locale = DEFAULT_LOCALE,
+) {
   try {
     // Get all pages
-    const allPages = getPages();
+    const allPages = getPages(undefined, locale);
 
     // First, create a flattened array that represents the exact order of the sidebar
     const sidebarOrderedPages: Post[] = [];
@@ -462,10 +479,13 @@ export function getAdjacentPages(currentSlug: string, sortType: SortType = "sect
 }
 
 // Function to get all sections with their pages
-export function getSections(sortType: SortType = "order"): { section: string; pages: Post[] }[] {
+export function getSections(
+  sortType: SortType = "order",
+  locale: Locale = DEFAULT_LOCALE,
+): { section: string; pages: Post[] }[] {
   try {
     // Get all pages
-    const allPages = getPages();
+    const allPages = getPages(undefined, locale);
 
     // Group pages by section
     const sectionMap = new Map<string, Post[]>();

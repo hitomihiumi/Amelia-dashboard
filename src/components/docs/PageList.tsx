@@ -1,6 +1,7 @@
 import { getPages, sortPages } from "@/app/utils/utils";
 import { Card, Column, Icon, Row, Media, Text } from "@once-ui-system/core";
 import React from "react";
+import { getLocale, getT } from "@/i18n/server";
 
 interface props extends Omit<React.ComponentProps<typeof Card>, "onClick"> {
   range?: [number] | [number, number];
@@ -43,7 +44,7 @@ function formatSlug(slug: string): React.JSX.Element {
   );
 }
 
-export function PageList({
+export async function PageList({
   range,
   thumbnail = false,
   path = [],
@@ -52,6 +53,9 @@ export function PageList({
   description = true,
   ...rest
 }: props) {
+  const locale = await getLocale();
+  const t = await getT();
+
   // Create a base path array starting with src/content
   const basePath = ["src", "content"];
 
@@ -59,7 +63,7 @@ export function PageList({
   const fullPath = [...basePath, ...path];
 
   // Get pages from the specified path
-  let pages = getPages(fullPath);
+  let pages = getPages(fullPath, locale);
 
   // Filter pages by depth if specified
   if (depth !== undefined) {
@@ -106,7 +110,7 @@ export function PageList({
                 cursor="interactive"
                 radius="m"
                 src={page.metadata.image}
-                alt={"Thumbnail of " + page.metadata.title}
+                alt={t("docs.page.thumbnailAlt", { title: page.metadata.title })}
                 aspectRatio="16 / 9"
               />
             )}
