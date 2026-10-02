@@ -9,6 +9,7 @@ import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import type { ChannelPickOption } from "@/lib/discord/channel-type";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import type { GuildSchema, WarnThreshold } from "@/lib/db/types";
+import { getT } from "@/i18n/server";
 import { ModerationForm } from "./ModerationForm";
 
 export default async function ModerationSettingsPage({
@@ -17,6 +18,7 @@ export default async function ModerationSettingsPage({
   params: Promise<{ guildId: string }>;
 }) {
   const { guildId } = await params;
+  const t = await getT();
   const session = await getServerSession(authOptions);
 
   let textChannels: ChannelPickOption[] = [];
@@ -30,18 +32,20 @@ export default async function ModerationSettingsPage({
       textChannels = await fetchGuildTextChannels(session.accessToken, guildId);
     } catch (e) {
       loadError =
-        e instanceof Error ? e.message : "An unknown error occurred while loading server data.";
+        e instanceof Error ? e.message : t("moderation.errors.loadServerData");
     }
   }
 
   const guild = new Guild(guildId);
 
   const settings = {
-    moderation_roles: ((await guild.get("moderation.moderation_roles")) ?? []) as string[],
+    moderation_roles: ((await guild.get("moderation.moderation_roles")) ??
+      []) as string[],
     log_channel: (await guild.get("moderation.log_channel")) as string | null,
     dm_notify: Boolean(await guild.get("moderation.dm_notify")),
     warn_expiry: Number((await guild.get("moderation.warn_expiry")) ?? 0),
-    warn_thresholds: ((await guild.get("moderation.warn_thresholds")) ?? []) as WarnThreshold[],
+    warn_thresholds: ((await guild.get("moderation.warn_thresholds")) ??
+      []) as WarnThreshold[],
   };
 
   const autoModeration = (await guild.get(
@@ -51,10 +55,9 @@ export default async function ModerationSettingsPage({
   return (
     <Flex direction="column" gap="24">
       <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">Moderation</Text>
+        <Text variant="heading-strong-l">{t("moderation.settings.title")}</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
-          Configure who can moderate, how punishments escalate and what the bot filters
-          automatically.
+          {t("moderation.settings.description")}
         </Text>
       </RevealFx>
 
@@ -62,11 +65,15 @@ export default async function ModerationSettingsPage({
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (
           <Feedback
             variant="danger"
-            title="Session expired"
-            description="Your Discord session has expired. Please log in again."
+            title={t("moderation.errors.sessionExpiredTitle")}
+            description={t("moderation.errors.sessionExpiredText")}
           />
         ) : (
-          <Feedback variant="danger" title="Error" description={loadError} />
+          <Feedback
+            variant="danger"
+            title={t("moderation.errors.genericTitle")}
+            description={loadError}
+          />
         ))}
 
       <ModerationForm

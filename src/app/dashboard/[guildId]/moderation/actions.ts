@@ -7,6 +7,8 @@ import { Guild } from "@/lib/db/Guild";
 import { requireGuildAdmin } from "@/app/dashboard/[guildId]/actions";
 import { GuildActionState } from "@/types/dashboard";
 import type {
+  AuditCategory,
+  AuditEventKey,
   AuditSettings,
   GuildSchema,
   ModerationForm,
@@ -19,10 +21,15 @@ import {
   resolveAuditChannel,
   resolveAuditEvent,
 } from "@/lib/db/types";
-import { normalizeForm, validateFormConfiguration } from "@/lib/moderation/forms";
-import { validateLinkPattern } from "@/lib/moderation/linkPatterns";
+import {
+  normalizeForm,
+  validateFormConfiguration,
+} from "@/lib/moderation/forms";
+import { describeLinkPatternIssue } from "@/lib/moderation/linkPatternMessages";
 import { resolveSubmission, revokeCase } from "@/lib/moderation/service";
 import { syncAuditWebhooks } from "@/lib/moderation/webhooks";
+import { getT } from "@/i18n/server";
+import type { Translator } from "@/i18n/translate";
 
 type ModerationSettings = {
   moderation_roles: string[];
@@ -42,6 +49,8 @@ export async function updateModerationSettings(
   guildId: string,
   formData: FormData,
 ): Promise<GuildActionState> {
+  const t = await getT();
+
   try {
     const gate = await requireGuildAdmin(guildId);
     if (gate.error) return { ok: false, error: gate.error };
@@ -49,15 +58,16 @@ export async function updateModerationSettings(
     const settingsRaw = formData.get("settings");
     const autoModRaw = formData.get("auto_moderation");
 
-    if (!settingsRaw || !autoModRaw) return { ok: false, error: "Required data is missing." };
+    if (!settingsRaw || !autoModRaw)
+      return { ok: false, error: t("moderation.errors.missingData") };
 
     const settings = JSON.parse(settingsRaw as string) as ModerationSettings;
     const autoMod = JSON.parse(autoModRaw as string) as AutoModeration;
 
-    const settingsError = validateSettings(settings);
+    const settingsError = validateSettings(settings, t);
     if (settingsError) return { ok: false, error: settingsError };
 
-    const autoModError = validateAutoModeration(autoMod);
+    const autoModError = validateAutoModeration(autoMod, t);
     if (autoModError) return { ok: false, error: autoModError };
 
     const guild = new Guild(guildId);
@@ -73,90 +83,116 @@ export async function updateModerationSettings(
     return { ok: true };
   } catch (error) {
     console.error("[Moderation Action Error]:", error);
-    if (error instanceof SyntaxError) return { ok: false, error: "Failed to parse data payload." };
-    return { ok: false, error: "Internal server error occurred while saving." };
+    if (error instanceof SyntaxError)
+      return { ok: false, error: t("moderation.errors.parseFailed") };
+    return { ok: false, error: t("moderation.errors.internalSave") };
   }
 }
 
-function validateSettings(settings: ModerationSettings): string | null {
-  if (!Array.isArray(settings.moderation_roles) || settings.moderation_roles.length > 25) {
-    return "Moderation roles must be a list of at most 25 roles.";
+function validateSettings(
+  settings: ModerationSettings,
+  t: Translator,
+): string | null {
+  if (
+    !Array.isArray(settings.moderation_roles) ||
+    settings.moderation_roles.length > 25
+  ) {
+    return t("moderation.errors.rolesLimit");
   }
   if (settings.moderation_roles.some((role) => !SNOWFLAKE.test(role))) {
-    return "Invalid role selected.";
+    return t("moderation.errors.invalidRole");
   }
-  if (settings.log_channel !== null && !SNOWFLAKE.test(String(settings.log_channel))) {
-    return "Invalid moderation log channel.";
+  if (
+    settings.log_channel !== null &&
+    !SNOWFLAKE.test(String(settings.log_channel))
+  ) {
+    return t("moderation.errors.invalidLogChannel");
   }
   if (
     typeof settings.warn_expiry !== "number" ||
     settings.warn_expiry < 0 ||
     settings.warn_expiry > 365
   ) {
-    return "Warn expiry must be between 0 and 365 days.";
+    return t("moderation.errors.warnExpiryRange");
   }
-  if (!Array.isArray(settings.warn_thresholds) || settings.warn_thresholds.length > 10) {
-    return "You can configure at most 10 escalation rules.";
+  if (
+    !Array.isArray(settings.warn_thresholds) ||
+    settings.warn_thresholds.length > 10
+  ) {
+    return t("moderation.errors.thresholdsLimit");
   }
 
   const seen = new Set<number>();
 
   for (const rule of settings.warn_thresholds) {
     if (typeof rule?.count !== "number" || rule.count < 1 || rule.count > 100) {
-      return "Every escalation rule needs a warn count between 1 and 100.";
+      return t("moderation.errors.thresholdCount");
     }
-    if (seen.has(rule.count)) return "Escalation rules must use distinct warn counts.";
+    if (seen.has(rule.count)) return t("moderation.errors.thresholdDuplicate");
     seen.add(rule.count);
 
     if (!PUNISHMENT_TYPES.includes(String(rule.punishment?.type))) {
-      return "Every escalation rule needs a valid punishment.";
+      return t("moderation.errors.thresholdPunishment");
     }
     if (
       typeof rule.punishment.time !== "number" ||
       rule.punishment.time < 0 ||
       rule.punishment.time > 2_419_200
     ) {
-      return "Escalation durations must be between 0 and 28 days.";
+      return t("moderation.errors.thresholdDuration");
     }
   }
 
   return null;
 }
 
-function validateAutoModeration(autoMod: AutoModeration): string | null {
+function validateAutoModeration(
+  autoMod: AutoModeration,
+  t: Translator,
+): string | null {
   for (const key of ["invite", "links"] as const) {
     const rule = autoMod?.[key];
-    if (!rule) return "Auto moderation data is incomplete.";
+    if (!rule) return t("moderation.errors.autoModIncomplete");
 
-    if (!Array.isArray(rule.ignore_channels) || rule.ignore_channels.length > 50) {
-      return "Ignored channels must be a list of at most 50 channels.";
+    if (
+      !Array.isArray(rule.ignore_channels) ||
+      rule.ignore_channels.length > 50
+    ) {
+      return t("moderation.errors.ignoredChannelsLimit");
     }
     if (!Array.isArray(rule.ignore_roles) || rule.ignore_roles.length > 50) {
-      return "Ignored roles must be a list of at most 50 roles.";
+      return t("moderation.errors.ignoredRolesLimit");
     }
     if (!PUNISHMENT_TYPES.includes(String(rule.punishment?.type))) {
-      return "Every auto moderation rule needs a valid punishment.";
+      return t("moderation.errors.autoModPunishment");
     }
     if (
       typeof rule.punishment.time !== "number" ||
       rule.punishment.time < 0 ||
       rule.punishment.time > 2_419_200
     ) {
-      return "Auto moderation durations must be between 0 and 28 days.";
+      return t("moderation.errors.autoModDuration");
     }
-    if (typeof rule.punishment.reason !== "string" || rule.punishment.reason.length > 400) {
-      return "Auto moderation reasons must be at most 400 characters long.";
+    if (
+      typeof rule.punishment.reason !== "string" ||
+      rule.punishment.reason.length > 400
+    ) {
+      return t("moderation.errors.autoModReason");
     }
   }
 
-  if (!Array.isArray(autoMod.links.ignore_links) || autoMod.links.ignore_links.length > 100) {
-    return "The link whitelist accepts at most 100 entries.";
+  if (
+    !Array.isArray(autoMod.links.ignore_links) ||
+    autoMod.links.ignore_links.length > 100
+  ) {
+    return t("moderation.errors.whitelistLimit");
   }
 
   for (const pattern of autoMod.links.ignore_links) {
-    if (typeof pattern !== "string") return "The link whitelist accepts text patterns only.";
+    if (typeof pattern !== "string")
+      return t("moderation.errors.whitelistText");
 
-    const error = validateLinkPattern(pattern);
+    const error = describeLinkPatternIssue(t, pattern);
     if (error) return error;
   }
 
@@ -168,6 +204,8 @@ export async function updateModerationForms(
   guildId: string,
   formData: FormData,
 ): Promise<GuildActionState> {
+  const t = await getT();
+
   try {
     const gate = await requireGuildAdmin(guildId);
     if (gate.error) return { ok: false, error: gate.error };
@@ -175,16 +213,31 @@ export async function updateModerationForms(
     const reportRaw = formData.get("report");
     const appealRaw = formData.get("appeal");
 
-    if (!reportRaw || !appealRaw) return { ok: false, error: "Required data is missing." };
+    if (!reportRaw || !appealRaw)
+      return { ok: false, error: t("moderation.errors.missingData") };
 
-    const report = normalizeForm(JSON.parse(reportRaw as string) as ModerationForm, "report");
-    const appeal = normalizeForm(JSON.parse(appealRaw as string) as ModerationForm, "appeal");
+    const report = normalizeForm(
+      JSON.parse(reportRaw as string) as ModerationForm,
+      "report",
+    );
+    const appeal = normalizeForm(
+      JSON.parse(appealRaw as string) as ModerationForm,
+      "appeal",
+    );
 
-    const reportError = validateFormConfiguration(report);
-    if (reportError) return { ok: false, error: `Report form: ${reportError}` };
+    const reportError = validateFormConfiguration(report, t);
+    if (reportError)
+      return {
+        ok: false,
+        error: t("moderation.errors.reportForm", { error: reportError }),
+      };
 
-    const appealError = validateFormConfiguration(appeal);
-    if (appealError) return { ok: false, error: `Appeal form: ${appealError}` };
+    const appealError = validateFormConfiguration(appeal, t);
+    if (appealError)
+      return {
+        ok: false,
+        error: t("moderation.errors.appealForm", { error: appealError }),
+      };
 
     const guild = new Guild(guildId);
 
@@ -195,8 +248,9 @@ export async function updateModerationForms(
     return { ok: true };
   } catch (error) {
     console.error("[Moderation Forms Action Error]:", error);
-    if (error instanceof SyntaxError) return { ok: false, error: "Failed to parse data payload." };
-    return { ok: false, error: "Internal server error occurred while saving." };
+    if (error instanceof SyntaxError)
+      return { ok: false, error: t("moderation.errors.parseFailed") };
+    return { ok: false, error: t("moderation.errors.internalSave") };
   }
 }
 
@@ -207,20 +261,29 @@ export async function handleSubmission(
   status: ModerationSubmissionStatus,
   response: string | null,
 ): Promise<GuildActionState> {
+  const t = await getT();
+
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return { ok: false, error: "Not authorized." };
+    if (!session?.user?.id)
+      return { ok: false, error: t("moderation.errors.notAuthorized") };
 
     const gate = await requireGuildAdmin(guildId);
     if (gate.error) return { ok: false, error: gate.error };
 
     if (!["in_review", "approved", "rejected"].includes(status)) {
-      return { ok: false, error: "Unknown status." };
+      return { ok: false, error: t("moderation.errors.unknownStatus") };
     }
 
     const trimmed = response?.trim().slice(0, 1000) || null;
 
-    const result = await resolveSubmission(guildId, submissionId, status, session.user.id, trimmed);
+    const result = await resolveSubmission(
+      guildId,
+      submissionId,
+      status,
+      session.user.id,
+      trimmed,
+    );
 
     if (!result.ok) return { ok: false, error: result.error };
 
@@ -228,7 +291,7 @@ export async function handleSubmission(
     return { ok: true };
   } catch (error) {
     console.error("[Submission Handling Error]:", error);
-    return { ok: false, error: "Internal server error occurred." };
+    return { ok: false, error: t("moderation.errors.internal") };
   }
 }
 
@@ -238,9 +301,12 @@ export async function revokeModerationCase(
   caseNumber: number,
   reason: string,
 ): Promise<GuildActionState> {
+  const t = await getT();
+
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return { ok: false, error: "Not authorized." };
+    if (!session?.user?.id)
+      return { ok: false, error: t("moderation.errors.notAuthorized") };
 
     const gate = await requireGuildAdmin(guildId);
     if (gate.error) return { ok: false, error: gate.error };
@@ -258,7 +324,7 @@ export async function revokeModerationCase(
     return { ok: true };
   } catch (error) {
     console.error("[Case Revoke Error]:", error);
-    return { ok: false, error: "Internal server error occurred." };
+    return { ok: false, error: t("moderation.errors.internal") };
   }
 }
 
@@ -267,16 +333,18 @@ export async function updateAuditSettings(
   guildId: string,
   formData: FormData,
 ): Promise<GuildActionState> {
+  const t = await getT();
+
   try {
     const gate = await requireGuildAdmin(guildId);
     if (gate.error) return { ok: false, error: gate.error };
 
     const raw = formData.get("audit");
-    if (!raw) return { ok: false, error: "Required data is missing." };
+    if (!raw) return { ok: false, error: t("moderation.errors.missingData") };
 
     const audit = JSON.parse(raw as string) as AuditSettings;
 
-    const error = validateAudit(audit);
+    const error = validateAudit(audit, t);
     if (error) return { ok: false, error };
 
     const guild = new Guild(guildId);
@@ -317,50 +385,67 @@ export async function updateAuditSettings(
     return webhookError ? { ok: false, error: webhookError } : { ok: true };
   } catch (error) {
     console.error("[Audit Action Error]:", error);
-    if (error instanceof SyntaxError) return { ok: false, error: "Failed to parse data payload." };
-    return { ok: false, error: "Internal server error occurred while saving." };
+    if (error instanceof SyntaxError)
+      return { ok: false, error: t("moderation.errors.parseFailed") };
+    return { ok: false, error: t("moderation.errors.internalSave") };
   }
 }
 
-function validateAudit(audit: AuditSettings): string | null {
-  if (typeof audit?.enabled !== "boolean") return "Invalid audit log data.";
+function validateAudit(audit: AuditSettings, t: Translator): string | null {
+  if (typeof audit?.enabled !== "boolean")
+    return t("moderation.errors.auditInvalid");
 
   if (audit.channel !== null && !SNOWFLAKE.test(String(audit.channel))) {
-    return "Invalid audit log channel.";
+    return t("moderation.errors.auditChannel");
   }
 
   for (const [key, category] of Object.entries(audit.categories ?? {})) {
-    if (!AUDIT_CATEGORIES.includes(key as never)) return `Unknown audit category "${key}".`;
+    if (!AUDIT_CATEGORIES.includes(key as never))
+      return t("moderation.errors.auditUnknownCategory", { key });
     const channel = category?.channel ?? null;
     if (channel !== null && !SNOWFLAKE.test(String(channel))) {
-      return `Invalid channel selected for the "${key}" category.`;
+      return t("moderation.errors.auditCategoryChannel", {
+        category: t(`moderation.audit.categories.${key as AuditCategory}`),
+      });
     }
   }
 
-  for (const [field, list] of [
-    ["Ignored channels", audit.ignore_channels],
-    ["Ignored roles", audit.ignore_roles],
+  for (const [list, limit, invalid] of [
+    [
+      audit.ignore_channels,
+      "auditIgnoredChannelsLimit",
+      "auditIgnoredChannelsInvalid",
+    ],
+    [audit.ignore_roles, "auditIgnoredRolesLimit", "auditIgnoredRolesInvalid"],
   ] as const) {
     if (!Array.isArray(list) || list.length > 50) {
-      return `${field} must be a list of at most 50 entries.`;
+      return t(`moderation.errors.${limit}`);
     }
     if (list.some((entry) => !SNOWFLAKE.test(String(entry)))) {
-      return `${field} contains an invalid ID.`;
+      return t(`moderation.errors.${invalid}`);
     }
   }
 
   if (audit.webhook?.name && audit.webhook.name.length > 80) {
-    return "The webhook name must be at most 80 characters long.";
+    return t("moderation.errors.webhookNameLength");
   }
-  if (audit.webhook?.avatar && !/^https?:\/\/\S+$/i.test(audit.webhook.avatar)) {
-    return "The webhook avatar must be a link to an image.";
+  if (
+    audit.webhook?.avatar &&
+    !/^https?:\/\/\S+$/i.test(audit.webhook.avatar)
+  ) {
+    return t("moderation.errors.webhookAvatar");
   }
 
   for (const [key, event] of Object.entries(audit.events ?? {})) {
-    if (!AUDIT_EVENT_KEYS.includes(key as never)) return `Unknown audit event "${key}".`;
-    if (typeof event?.enabled !== "boolean") return `Invalid configuration for "${key}".`;
+    if (!AUDIT_EVENT_KEYS.includes(key as never)) {
+      return t("moderation.errors.auditUnknownEvent", { key });
+    }
+    const label = t(`moderation.audit.events.${key as AuditEventKey}`);
+    if (typeof event?.enabled !== "boolean") {
+      return t("moderation.errors.auditEventInvalid", { event: label });
+    }
     if (event.channel !== null && !SNOWFLAKE.test(String(event.channel))) {
-      return `Invalid channel selected for "${key}".`;
+      return t("moderation.errors.auditEventChannel", { event: label });
     }
   }
 
@@ -368,11 +453,12 @@ function validateAudit(audit: AuditSettings): string | null {
   if (audit.enabled) {
     const orphan = AUDIT_EVENT_KEYS.find(
       (event) =>
-        resolveAuditEvent(audit.events, event).enabled && !resolveAuditChannel(audit, event),
+        resolveAuditEvent(audit.events, event).enabled &&
+        !resolveAuditChannel(audit, event),
     );
 
     if (orphan) {
-      return "Some events have no channel. Pick a default channel, or a channel for every category.";
+      return t("moderation.errors.auditOrphan");
     }
   }
 

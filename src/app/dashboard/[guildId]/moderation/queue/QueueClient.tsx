@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import type { ModerationSubmissionAnswer } from "@/lib/db/types";
 import type { GuildActionState } from "@/types/dashboard";
 import { handleSubmission } from "../actions";
+import { useFormat, useT } from "@/i18n/client";
 
 export interface QueueItem {
   id: string;
@@ -33,19 +34,21 @@ export interface QueueItem {
   createdAt: string;
 }
 
-const STATUS_VARIANT: Record<string, "neutral" | "info" | "success" | "danger"> = {
+const STATUS_VARIANT: Record<
+  string,
+  "neutral" | "info" | "success" | "danger"
+> = {
   pending: "neutral",
   in_review: "info",
   approved: "success",
   rejected: "danger",
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "Pending",
-  in_review: "In review",
-  approved: "Approved",
-  rejected: "Rejected",
-};
+const STATUSES = ["pending", "in_review", "approved", "rejected"] as const;
+type Status = (typeof STATUSES)[number];
+
+const isStatus = (value: string): value is Status =>
+  (STATUSES as readonly string[]).includes(value);
 
 export function QueueClient({
   guildId,
@@ -58,6 +61,7 @@ export function QueueClient({
   status: string;
   kind: string;
 }) {
+  const t = useT();
   const router = useRouter();
 
   const setFilter = (next: { status?: string; kind?: string }) => {
@@ -73,20 +77,20 @@ export function QueueClient({
         <Row fillWidth gap="12" wrap>
           <SegmentedControl
             buttons={[
-              { value: "open", label: "Open" },
-              { value: "pending", label: "Pending" },
-              { value: "in_review", label: "In review" },
-              { value: "approved", label: "Approved" },
-              { value: "rejected", label: "Rejected" },
+              { value: "open", label: t("moderation.queue.filters.open") },
+              ...STATUSES.map((value) => ({
+                value,
+                label: t(`moderation.queue.status.${value}`),
+              })),
             ]}
             value={status}
             onChange={(value) => setFilter({ status: value })}
           />
           <SegmentedControl
             buttons={[
-              { value: "all", label: "All" },
-              { value: "report", label: "Reports" },
-              { value: "appeal", label: "Appeals" },
+              { value: "all", label: t("moderation.queue.filters.all") },
+              { value: "report", label: t("moderation.queue.filters.reports") },
+              { value: "appeal", label: t("moderation.queue.filters.appeals") },
             ]}
             value={kind}
             onChange={(value) => setFilter({ kind: value })}
@@ -98,22 +102,30 @@ export function QueueClient({
         <RevealFx delay={400} translateY={-0.5}>
           <Feedback
             variant="info"
-            title="Nothing here"
-            description="No submissions match the current filters."
+            title={t("moderation.queue.emptyTitle")}
+            description={t("moderation.queue.emptyText")}
           />
         </RevealFx>
       )}
 
       {items.map((item, idx) => (
-        <RevealFx delay={400 + idx * 100} translateY={-0.5}>
-          <SubmissionCard key={item.id} guildId={guildId} item={item} />
+        <RevealFx key={item.id} delay={400 + idx * 100} translateY={-0.5}>
+          <SubmissionCard guildId={guildId} item={item} />
         </RevealFx>
       ))}
     </Column>
   );
 }
 
-function SubmissionCard({ guildId, item }: { guildId: string; item: QueueItem }) {
+function SubmissionCard({
+  guildId,
+  item,
+}: {
+  guildId: string;
+  item: QueueItem;
+}) {
+  const t = useT();
+  const format = useFormat();
   const router = useRouter();
   const { addToast } = useToast();
 
@@ -135,10 +147,13 @@ function SubmissionCard({ guildId, item }: { guildId: string; item: QueueItem })
     setPending(false);
 
     if (result?.ok) {
-      addToast({ message: "Submission updated", variant: "success" });
+      addToast({ message: t("moderation.queue.updated"), variant: "success" });
       router.refresh();
     } else {
-      addToast({ message: result?.error || "Action failed", variant: "danger" });
+      addToast({
+        message: result?.error || t("moderation.errors.actionFailed"),
+        variant: "danger",
+      });
     }
   };
 
@@ -154,22 +169,43 @@ function SubmissionCard({ guildId, item }: { guildId: string; item: QueueItem })
     >
       <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
         <Text variant="heading-strong-s">
-          {item.kind === "appeal" ? "Appeal" : "Report"} #{item.number}
+          {t("moderation.queue.cardTitle", {
+            kind: t(
+              item.kind === "appeal"
+                ? "moderation.queue.kinds.appeal"
+                : "moderation.queue.kinds.report",
+            ),
+            number: item.number,
+          })}
         </Text>
         <Tag scheme={STATUS_VARIANT[item.status] ?? "neutral"}>
-          {STATUS_LABEL[item.status] ?? item.status}
+          {isStatus(item.status)
+            ? t(`moderation.queue.status.${item.status}`)
+            : item.status}
         </Tag>
       </Row>
 
       <Column gap="4">
         <Text variant="body-default-s" onBackground="neutral-weak">
-          Author: {item.authorId}
-          {item.targetId ? ` • Reported: ${item.targetId}` : ""}
-          {item.caseNumber !== null ? ` • Case #${item.caseNumber}` : ""}
+          {[
+            t("moderation.queue.author", { id: item.authorId }),
+            item.targetId
+              ? t("moderation.queue.reported", { id: item.targetId })
+              : null,
+            item.caseNumber !== null
+              ? t("moderation.queue.caseRef", { number: item.caseNumber })
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" • ")}
         </Text>
         <Text variant="body-default-s" onBackground="neutral-weak">
-          Sent {new Date(item.createdAt).toLocaleString()}
-          {item.handledBy ? ` • Handled by ${item.handledBy}` : ""}
+          {t("moderation.queue.sent", {
+            date: format.dateTime(item.createdAt),
+          })}
+          {item.handledBy
+            ? ` • ${t("moderation.queue.handledBy", { id: item.handledBy })}`
+            : ""}
         </Text>
       </Column>
 
@@ -178,7 +214,9 @@ function SubmissionCard({ guildId, item }: { guildId: string; item: QueueItem })
           <Column key={answer.fieldId} gap="2">
             <Text variant="label-default-s">{answer.label}</Text>
             <Text variant="body-default-s" onBackground="neutral-medium">
-              {answer.value === null || answer.value === "" ? "—" : String(answer.value)}
+              {answer.value === null || answer.value === ""
+                ? "—"
+                : String(answer.value)}
             </Text>
           </Column>
         ))}
@@ -187,7 +225,9 @@ function SubmissionCard({ guildId, item }: { guildId: string; item: QueueItem })
       {resolved ? (
         item.response && (
           <Column gap="2">
-            <Text variant="label-default-s">Response</Text>
+            <Text variant="label-default-s">
+              {t("moderation.queue.response")}
+            </Text>
             <Text variant="body-default-s" onBackground="neutral-medium">
               {item.response}
             </Text>
@@ -197,7 +237,7 @@ function SubmissionCard({ guildId, item }: { guildId: string; item: QueueItem })
         <>
           <Textarea
             id={`response-${item.id}`}
-            label="Response to the author (sent in DM)"
+            label={t("moderation.queue.responseLabel")}
             lines={2}
             value={response}
             maxLength={1000}
@@ -210,13 +250,21 @@ function SubmissionCard({ guildId, item }: { guildId: string; item: QueueItem })
               disabled={pending || item.status === "in_review"}
               onClick={() => act("in_review")}
             >
-              Take in review
+              {t("moderation.queue.takeInReview")}
             </Button>
-            <Button variant="danger" disabled={pending} onClick={() => act("rejected")}>
-              Reject
+            <Button
+              variant="danger"
+              disabled={pending}
+              onClick={() => act("rejected")}
+            >
+              {t("moderation.queue.reject")}
             </Button>
-            <Button variant="primary" disabled={pending} onClick={() => act("approved")}>
-              Approve
+            <Button
+              variant="primary"
+              disabled={pending}
+              onClick={() => act("approved")}
+            >
+              {t("moderation.queue.approve")}
             </Button>
           </Row>
         </>

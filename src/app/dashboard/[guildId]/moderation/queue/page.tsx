@@ -2,6 +2,7 @@ import React from "react";
 import { Flex, RevealFx, Text } from "@once-ui-system/core";
 import { prisma } from "@/lib/db/db";
 import type { ModerationSubmissionAnswer } from "@/lib/db/types";
+import { getT } from "@/i18n/server";
 import { QueueClient, type QueueItem } from "./QueueClient";
 
 const STATUS_FILTERS = ["open", "pending", "in_review", "approved", "rejected"];
@@ -16,15 +17,20 @@ export default async function ModerationQueuePage({
 }) {
   const { guildId } = await params;
   const query = await searchParams;
+  const t = await getT();
 
-  const status = STATUS_FILTERS.includes(query.status ?? "") ? query.status! : "open";
+  const status = STATUS_FILTERS.includes(query.status ?? "")
+    ? query.status!
+    : "open";
   const kind = KIND_FILTERS.includes(query.kind ?? "") ? query.kind! : "all";
 
   const submissions = await prisma.moderationSubmission.findMany({
     where: {
       guildId,
       ...(kind === "all" ? {} : { kind }),
-      ...(status === "open" ? { status: { in: ["pending", "in_review"] } } : { status }),
+      ...(status === "open"
+        ? { status: { in: ["pending", "in_review"] } }
+        : { status }),
     },
     orderBy: { createdAt: "desc" },
     take: 50,
@@ -50,14 +56,18 @@ export default async function ModerationQueuePage({
   return (
     <Flex direction="column" gap="24">
       <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">Submission queue</Text>
+        <Text variant="heading-strong-l">{t("moderation.queue.title")}</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
-          Reports and appeals sent through the dashboard forms. Approving an appeal automatically
-          lifts the punishment it was filed against.
+          {t("moderation.queue.description")}
         </Text>
       </RevealFx>
 
-      <QueueClient guildId={guildId} items={items} status={status} kind={kind} />
+      <QueueClient
+        guildId={guildId}
+        items={items}
+        status={status}
+        kind={kind}
+      />
     </Flex>
   );
 }

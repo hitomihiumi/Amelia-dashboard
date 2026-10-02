@@ -18,6 +18,7 @@ import {
 import { useRouter } from "next/navigation";
 import type { GuildActionState } from "@/types/dashboard";
 import { revokeModerationCase } from "../actions";
+import { useFormat, useT } from "@/i18n/client";
 
 export interface CaseItem {
   id: string;
@@ -34,14 +35,9 @@ export interface CaseItem {
   createdAt: string;
 }
 
-const TYPE_FILTERS = [
-  { value: "all", label: "All" },
-  { value: "warn", label: "Warns" },
-  { value: "mute", label: "Mutes" },
-  { value: "ban", label: "Bans" },
-  { value: "kick", label: "Kicks" },
-  { value: "note", label: "Notes" },
-];
+const TYPE_FILTERS = ["all", "warn", "mute", "ban", "kick", "note"] as const;
+
+const SOURCES = ["command", "automod", "dashboard", "submission"] as const;
 
 const REVOCABLE = ["warn", "mute", "ban"];
 
@@ -60,13 +56,15 @@ export function CasesClient({
   page: number;
   pages: number;
 }) {
+  const t = useT();
   const router = useRouter();
   const [search, setSearch] = useState(user);
 
   const navigate = (next: { type?: string; user?: string; page?: number }) => {
     const params = new URLSearchParams();
     params.set("type", next.type ?? type);
-    if ((next.user ?? user).trim()) params.set("user", (next.user ?? user).trim());
+    if ((next.user ?? user).trim())
+      params.set("user", (next.user ?? user).trim());
     params.set("page", String(next.page ?? 1));
     router.push(`/dashboard/${guildId}/moderation/cases?${params.toString()}`);
   };
@@ -76,13 +74,16 @@ export function CasesClient({
       <RevealFx delay={300} translateY={-0.5}>
         <Row fillWidth gap="12" vertical="center" wrap>
           <SegmentedControl
-            buttons={TYPE_FILTERS}
+            buttons={TYPE_FILTERS.map((value) => ({
+              value,
+              label: t(`moderation.cases.filters.${value}`),
+            }))}
             value={type}
             onChange={(value) => navigate({ type: value, page: 1 })}
           />
           <Input
             id="case-user"
-            label="Filter by user ID"
+            label={t("moderation.cases.userFilter")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             prefix={
@@ -100,8 +101,8 @@ export function CasesClient({
         <RevealFx delay={600} translateY={-0.5}>
           <Feedback
             variant="info"
-            title="No cases"
-            description="Nothing matches the current filters."
+            title={t("moderation.cases.emptyTitle")}
+            description={t("moderation.cases.emptyText")}
           />
         </RevealFx>
       )}
@@ -120,17 +121,17 @@ export function CasesClient({
               disabled={page <= 1}
               onClick={() => navigate({ page: page - 1 })}
             >
-              Previous
+              {t("moderation.cases.previous")}
             </Button>
             <Text variant="body-default-s" onBackground="neutral-weak">
-              Page {page} / {pages}
+              {t("moderation.cases.pageOf", { page, pages })}
             </Text>
             <Button
               variant="secondary"
               disabled={page >= pages}
               onClick={() => navigate({ page: page + 1 })}
             >
-              Next
+              {t("moderation.cases.next")}
             </Button>
           </Row>
         </RevealFx>
@@ -140,26 +141,42 @@ export function CasesClient({
 }
 
 function CaseCard({ guildId, item }: { guildId: string; item: CaseItem }) {
+  const t = useT();
+  const format = useFormat();
   const router = useRouter();
   const { addToast } = useToast();
 
   const [reason, setReason] = useState("");
   const [pending, setPending] = useState(false);
 
+  const source = (SOURCES as readonly string[]).includes(item.source)
+    ? t(`moderation.cases.sources.${item.source as (typeof SOURCES)[number]}`)
+    : item.source;
+
   const canRevoke = item.active && REVOCABLE.includes(item.type);
 
   const revoke = async () => {
     setPending(true);
 
-    const result: GuildActionState = await revokeModerationCase(guildId, item.caseNumber, reason);
+    const result: GuildActionState = await revokeModerationCase(
+      guildId,
+      item.caseNumber,
+      reason,
+    );
 
     setPending(false);
 
     if (result?.ok) {
-      addToast({ message: `Case #${item.caseNumber} revoked`, variant: "success" });
+      addToast({
+        message: t("moderation.cases.revoked", { number: item.caseNumber }),
+        variant: "success",
+      });
       router.refresh();
     } else {
-      addToast({ message: result?.error || "Action failed", variant: "danger" });
+      addToast({
+        message: result?.error || t("moderation.errors.actionFailed"),
+        variant: "danger",
+      });
     }
   };
 
@@ -175,20 +192,39 @@ function CaseCard({ guildId, item }: { guildId: string; item: CaseItem }) {
     >
       <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
         <Text variant="heading-strong-s">
-          #{item.caseNumber} • {item.typeLabel}
+          {t("moderation.cases.caseTitle", {
+            number: item.caseNumber,
+            type: item.typeLabel,
+          })}
         </Text>
-        <Tag scheme={item.active ? "danger" : "neutral"}>{item.active ? "Active" : "Closed"}</Tag>
+        <Tag scheme={item.active ? "danger" : "neutral"}>
+          {item.active
+            ? t("moderation.cases.active")
+            : t("moderation.cases.closed")}
+        </Tag>
       </Row>
 
       <Text variant="body-default-s" onBackground="neutral-weak">
-        User: {item.targetId} • Moderator:{" "}
-        {item.moderatorId === "AUTOMOD" ? "Auto moderation" : item.moderatorId} • {item.source}
+        {t("moderation.cases.user", { id: item.targetId })} •{" "}
+        {t("moderation.cases.moderator", {
+          moderator:
+            item.moderatorId === "AUTOMOD"
+              ? t("moderation.cases.autoModeration")
+              : item.moderatorId,
+        })}{" "}
+        • {source}
       </Text>
 
       {["ban", "mute"].includes(item.type) && (
-          <Text variant="body-default-s" onBackground="neutral-weak">
-            Duration: {item.duration ? `${item.duration} seconds` : "Permanent"}
-          </Text>
+        <Text variant="body-default-s" onBackground="neutral-weak">
+          {t("moderation.cases.duration", {
+            value: item.duration
+              ? t("moderation.cases.durationSeconds", {
+                  seconds: item.duration,
+                })
+              : t("moderation.cases.permanent"),
+          })}
+        </Text>
       )}
 
       <Text variant="body-default-s" onBackground="neutral-medium">
@@ -196,21 +232,23 @@ function CaseCard({ guildId, item }: { guildId: string; item: CaseItem }) {
       </Text>
 
       <Text variant="body-default-xs" onBackground="neutral-weak">
-        {new Date(item.createdAt).toLocaleString()}
-        {item.expiresAt ? ` • expires ${new Date(item.expiresAt).toLocaleString()}` : ""}
+        {format.dateTime(item.createdAt)}
+        {item.expiresAt
+          ? ` • ${t("moderation.cases.expires", { date: format.dateTime(item.expiresAt) })}`
+          : ""}
       </Text>
 
       {canRevoke && (
         <Row fillWidth gap="8" vertical="center" wrap>
           <Input
             id={`revoke-reason-${item.id}`}
-            label="Revocation reason"
+            label={t("moderation.cases.revokeReason")}
             value={reason}
             maxLength={400}
             onChange={(e) => setReason(e.target.value)}
           />
           <Button variant="danger" disabled={pending} onClick={revoke}>
-            Revoke
+            {t("moderation.cases.revoke")}
           </Button>
         </Row>
       )}

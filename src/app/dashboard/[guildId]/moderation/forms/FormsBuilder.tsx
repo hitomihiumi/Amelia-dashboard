@@ -23,23 +23,31 @@ import { ChannelSelect } from "@/components/dashboard/discord/ChannelSelect";
 import { ChannelPill } from "@/components/dashboard/discord/ChannelPill";
 import { generateID } from "@/lib/db/generateID";
 import type { ChannelPickOption } from "@/lib/discord/channel-type";
-import type { ModerationForm, ModerationFormField, ModerationFormFieldType } from "@/lib/db/types";
+import type {
+  ModerationForm,
+  ModerationFormField,
+  ModerationFormFieldType,
+} from "@/lib/db/types";
 import type { GuildActionState } from "@/types/dashboard";
 import { updateModerationForms } from "../actions";
 import { Section } from "@/components/dashboard/Section";
 import { IconName } from "@/resources/icons";
+import { useT } from "@/i18n/client";
 
-const FIELD_TYPES: { value: ModerationFormFieldType; label: string }[] = [
-  { value: "short", label: "Short text" },
-  { value: "paragraph", label: "Long text" },
-  { value: "number", label: "Number" },
-  { value: "boolean", label: "Yes / no" },
-  { value: "select", label: "Choice" },
-  { value: "user", label: "User ID" },
-  { value: "channel", label: "Channel ID" },
-  { value: "message_link", label: "Message link" },
-  { value: "url", label: "Link" },
+const FIELD_TYPES: ModerationFormFieldType[] = [
+  "short",
+  "paragraph",
+  "number",
+  "boolean",
+  "select",
+  "user",
+  "channel",
+  "message_link",
+  "url",
 ];
+
+const MAX_FIELDS = 15;
+const MAX_OPTIONS = 25;
 
 export function FormsBuilder({
   guildId,
@@ -54,13 +62,17 @@ export function FormsBuilder({
   defaultAppeal: ModerationForm;
   textChannels: ChannelPickOption[];
 }) {
+  const t = useT();
   const router = useRouter();
   const { addToast } = useToast();
   const { setIsDirty, setSaveAction, setCancelAction } = useUnsavedChanges();
 
   const [report, setReport] = useState(defaultReport);
   const [appeal, setAppeal] = useState(defaultAppeal);
-  const [baseline, setBaseline] = useState({ report: defaultReport, appeal: defaultAppeal });
+  const [baseline, setBaseline] = useState({
+    report: defaultReport,
+    appeal: defaultAppeal,
+  });
 
   const isDirty = useMemo(
     () =>
@@ -91,12 +103,15 @@ export function FormsBuilder({
 
     if (result?.ok) {
       setBaseline({ report, appeal });
-      addToast({ message: "Forms saved", variant: "success" });
+      addToast({ message: t("moderation.forms.saved"), variant: "success" });
       router.refresh();
     } else {
-      addToast({ message: result?.error || "Save failed", variant: "danger" });
+      addToast({
+        message: result?.error || t("moderation.errors.saveFailed"),
+        variant: "danger",
+      });
     }
-  }, [guildId, report, appeal, router, addToast]);
+  }, [guildId, report, appeal, router, addToast, t]);
 
   const handleCancel = useCallback(() => {
     setReport(baseline.report);
@@ -115,8 +130,8 @@ export function FormsBuilder({
   return (
     <Column fillWidth gap="24">
       <FormEditor
-        title="Report form"
-        description="Members use this form to report rule violations."
+        title={t("moderation.forms.report.title")}
+        description={t("moderation.forms.report.description")}
         publicUrl={`${baseUrl}/submit/${guildId}/report`}
         guildId={guildId}
         form={report}
@@ -128,8 +143,8 @@ export function FormsBuilder({
       />
 
       <FormEditor
-        title="Appeal form"
-        description="Punished members use this form to ask for a review. Banned users can reach it too."
+        title={t("moderation.forms.appeal.title")}
+        description={t("moderation.forms.appeal.description")}
         publicUrl={`${baseUrl}/submit/${guildId}/appeal`}
         guildId={guildId}
         form={appeal}
@@ -166,12 +181,14 @@ function FormEditor({
   num: number;
   icon: IconName;
 }) {
-  const update = (patch: Partial<ModerationForm>) => onChange({ ...form, ...patch });
+  const t = useT();
+  const update = (patch: Partial<ModerationForm>) =>
+    onChange({ ...form, ...patch });
 
   const addField = () => {
     const field: ModerationFormField = {
       id: generateID(guildId, "field"),
-      label: "New question",
+      label: t("moderation.forms.newQuestion"),
       description: null,
       type: "paragraph",
       required: true,
@@ -185,7 +202,9 @@ function FormEditor({
 
   const updateField = (index: number, patch: Partial<ModerationFormField>) =>
     update({
-      fields: form.fields.map((field, i) => (i === index ? { ...field, ...patch } : field)),
+      fields: form.fields.map((field, i) =>
+        i === index ? { ...field, ...patch } : field,
+      ),
     });
 
   const removeField = (index: number) =>
@@ -206,26 +225,31 @@ function FormEditor({
       num={num}
       icon={icon}
       switcher={
-        <Switch checked={form.enabled} onToggle={() => update({ enabled: !form.enabled })} />
+        <Switch
+          checked={form.enabled}
+          onToggle={() => update({ enabled: !form.enabled })}
+        />
       }
     >
       <Text variant="body-default-s" onBackground="neutral-weak">
-        Public link: {publicUrl}
+        {t("moderation.forms.publicLink", { url: publicUrl })}
       </Text>
 
       <ChannelSelect
         fillWidth
         id={`${kind}-channel`}
-        label="Submissions are posted to"
+        label={t("moderation.forms.channel")}
         options={channelOptions}
         selectedChannel={form.channel ?? ""}
-        setSelectedChannel={(value) => update({ channel: (value as string) || null })}
+        setSelectedChannel={(value) =>
+          update({ channel: (value as string) || null })
+        }
       />
 
       <Row fillWidth gap="12" wrap>
         <NumberInput
           id={`${kind}-cooldown`}
-          label="Cooldown between submissions (seconds)"
+          label={t("moderation.forms.cooldown")}
           value={form.cooldown}
           min={0}
           max={2592000}
@@ -233,11 +257,13 @@ function FormEditor({
         />
         <NumberInput
           id={`${kind}-max-pending`}
-          label="Open submissions per member"
+          label={t("moderation.forms.maxPending")}
           value={form.max_pending}
           min={1}
           max={20}
-          onChange={(value: number) => update({ max_pending: Number(value) || 1 })}
+          onChange={(value: number) =>
+            update({ max_pending: Number(value) || 1 })
+          }
         />
       </Row>
 
@@ -248,17 +274,23 @@ function FormEditor({
               checked={form.require_target}
               onToggle={() => update({ require_target: !form.require_target })}
             />
-            <Text variant="label-default-s">Require the reported user's ID</Text>
+            <Text variant="label-default-s">
+              {t("moderation.forms.requireTarget")}
+            </Text>
           </Row>
           <Row fillWidth gap="12" vertical="center">
             <Switch
               checked={form.allow_anonymous}
-              onToggle={() => update({ allow_anonymous: !form.allow_anonymous })}
+              onToggle={() =>
+                update({ allow_anonymous: !form.allow_anonymous })
+              }
             />
             <Column gap="4">
-              <Text variant="label-default-s">Hide the author in Discord</Text>
+              <Text variant="label-default-s">
+                {t("moderation.forms.hideAuthor")}
+              </Text>
               <Text variant="body-default-xs" onBackground="neutral-weak">
-                The author is still stored and visible in the dashboard queue.
+                {t("moderation.forms.hideAuthorHint")}
               </Text>
             </Column>
           </Row>
@@ -271,22 +303,33 @@ function FormEditor({
             checked={form.allow_banned}
             onToggle={() => update({ allow_banned: !form.allow_banned })}
           />
-          <Text variant="label-default-s">Banned users may appeal</Text>
+          <Text variant="label-default-s">
+            {t("moderation.forms.allowBanned")}
+          </Text>
         </Row>
       )}
 
       <Line />
 
       <Row fillWidth horizontal="between" vertical="center" gap="8">
-        <Text variant="label-default-s">Questions ({form.fields.length}/15)</Text>
-        <Button prefixIcon="plus" onClick={addField} disabled={form.fields.length >= 15}>
-          Add question
+        <Text variant="label-default-s">
+          {t("moderation.forms.questions", {
+            count: form.fields.length,
+            max: MAX_FIELDS,
+          })}
+        </Text>
+        <Button
+          prefixIcon="plus"
+          onClick={addField}
+          disabled={form.fields.length >= MAX_FIELDS}
+        >
+          {t("moderation.forms.addQuestion")}
         </Button>
       </Row>
 
       {form.fields.length === 0 && (
         <Text variant="body-default-s" onBackground="neutral-weak">
-          No questions yet. Members would only see the built-in fields.
+          {t("moderation.forms.noQuestions")}
         </Text>
       )}
 
@@ -306,21 +349,21 @@ function FormEditor({
 
       <Textarea
         id={`${kind}-success`}
-        label="Confirmation shown after sending"
+        label={t("moderation.forms.successMessage")}
         lines={2}
         value={form.success_message ?? ""}
         onChange={(e) => update({ success_message: e.target.value || null })}
       />
       <Textarea
         id={`${kind}-approve`}
-        label="Message sent when approved"
+        label={t("moderation.forms.approveMessage")}
         lines={2}
         value={form.approve_message ?? ""}
         onChange={(e) => update({ approve_message: e.target.value || null })}
       />
       <Textarea
         id={`${kind}-reject`}
-        label="Message sent when rejected"
+        label={t("moderation.forms.rejectMessage")}
         lines={2}
         value={form.reject_message ?? ""}
         onChange={(e) => update({ reject_message: e.target.value || null })}
@@ -342,13 +385,15 @@ function FieldEditor({
   onDelete: () => void;
   onMove: (delta: number) => void;
 }) {
+  const t = useT();
+
   const addOption = () =>
     onChange({
       options: [
         ...field.options,
         {
           id: generateID(guildId, "opt"),
-          label: "New option",
+          label: t("moderation.forms.newOption"),
           value: `option_${field.options.length + 1}`,
         },
       ],
@@ -358,7 +403,7 @@ function FieldEditor({
     <Column fillWidth gap="16">
       <Input
         id={`${field.id}-label`}
-        label="Question"
+        label={t("moderation.forms.field.question")}
         value={field.label}
         maxLength={100}
         onChange={(e) => onChange({ label: e.target.value })}
@@ -366,7 +411,7 @@ function FieldEditor({
 
       <Input
         id={`${field.id}-description`}
-        label="Hint (optional)"
+        label={t("moderation.forms.field.hint")}
         value={field.description ?? ""}
         maxLength={200}
         onChange={(e) => onChange({ description: e.target.value || null })}
@@ -374,26 +419,45 @@ function FieldEditor({
 
       <SegmentedControl
         fillWidth
-        buttons={FIELD_TYPES.map((type) => ({ value: type.value, label: type.label }))}
+        buttons={FIELD_TYPES.map((type) => ({
+          value: type,
+          label: t(`moderation.forms.types.${type}`),
+        }))}
         value={field.type}
-        onChange={(value) => onChange({ type: value as ModerationFormFieldType })}
+        onChange={(value) =>
+          onChange({ type: value as ModerationFormFieldType })
+        }
       />
 
-      {(field.type === "short" || field.type === "paragraph" || field.type === "number") && (
+      {(field.type === "short" ||
+        field.type === "paragraph" ||
+        field.type === "number") && (
         <Row fillWidth gap="12" wrap>
           <NumberInput
             id={`${field.id}-min`}
-            label={field.type === "number" ? "Minimum value" : "Minimum length"}
+            label={
+              field.type === "number"
+                ? t("moderation.forms.field.minValue")
+                : t("moderation.forms.field.minLength")
+            }
             value={field.min ?? 0}
             min={0}
-            onChange={(value: number) => onChange({ min: Number(value) || null })}
+            onChange={(value: number) =>
+              onChange({ min: Number(value) || null })
+            }
           />
           <NumberInput
             id={`${field.id}-max`}
-            label={field.type === "number" ? "Maximum value" : "Maximum length"}
+            label={
+              field.type === "number"
+                ? t("moderation.forms.field.maxValue")
+                : t("moderation.forms.field.maxLength")
+            }
             value={field.max ?? 0}
             min={0}
-            onChange={(value: number) => onChange({ max: Number(value) || null })}
+            onChange={(value: number) =>
+              onChange({ max: Number(value) || null })
+            }
           />
         </Row>
       )}
@@ -401,7 +465,7 @@ function FieldEditor({
       {field.type !== "boolean" && field.type !== "select" && (
         <Input
           id={`${field.id}-placeholder`}
-          label="Placeholder"
+          label={t("moderation.forms.field.placeholder")}
           value={field.placeholder ?? ""}
           maxLength={100}
           onChange={(e) => onChange({ placeholder: e.target.value || null })}
@@ -411,15 +475,20 @@ function FieldEditor({
       {field.type === "select" && (
         <Column fillWidth gap="8">
           <Row fillWidth horizontal="between" vertical="center">
-            <Text variant="label-default-s">Options ({field.options.length}/25)</Text>
+            <Text variant="label-default-s">
+              {t("moderation.forms.field.options", {
+                count: field.options.length,
+                max: MAX_OPTIONS,
+              })}
+            </Text>
             <Button
               size="s"
               prefixIcon="plus"
               variant="secondary"
               onClick={addOption}
-              disabled={field.options.length >= 25}
+              disabled={field.options.length >= MAX_OPTIONS}
             >
-              Add option
+              {t("moderation.forms.field.addOption")}
             </Button>
           </Row>
 
@@ -427,7 +496,7 @@ function FieldEditor({
             <Row key={option.id} fillWidth gap="8" vertical="center">
               <Input
                 id={`${option.id}-label`}
-                label="Label"
+                label={t("moderation.forms.field.optionLabel")}
                 value={option.label}
                 maxLength={100}
                 onChange={(e) =>
@@ -440,7 +509,7 @@ function FieldEditor({
               />
               <Input
                 id={`${option.id}-value`}
-                label="Value"
+                label={t("moderation.forms.field.optionValue")}
                 value={option.value}
                 maxLength={100}
                 onChange={(e) =>
@@ -455,7 +524,9 @@ function FieldEditor({
                 icon="trash"
                 variant="danger"
                 onClick={() =>
-                  onChange({ options: field.options.filter((_, index) => index !== i) })
+                  onChange({
+                    options: field.options.filter((_, index) => index !== i),
+                  })
                 }
               />
             </Row>
@@ -465,7 +536,7 @@ function FieldEditor({
 
       <Row fillWidth gap="8" horizontal="between" vertical="center">
         <Switch
-          label="Required"
+          label={t("moderation.forms.field.required")}
           checked={field.required}
           onToggle={() => onChange({ required: !field.required })}
         />
@@ -474,15 +545,20 @@ function FieldEditor({
             icon="chevronUp"
             variant="secondary"
             onClick={() => onMove(-1)}
-            tooltip="Move up"
+            tooltip={t("moderation.forms.field.moveUp")}
           />
           <IconButton
             icon="chevronDown"
             variant="secondary"
             onClick={() => onMove(1)}
-            tooltip="Move down"
+            tooltip={t("moderation.forms.field.moveDown")}
           />
-          <IconButton icon="trash" variant="danger" onClick={onDelete} tooltip="Delete question" />
+          <IconButton
+            icon="trash"
+            variant="danger"
+            onClick={onDelete}
+            tooltip={t("moderation.forms.field.delete")}
+          />
         </Row>
       </Row>
     </Column>

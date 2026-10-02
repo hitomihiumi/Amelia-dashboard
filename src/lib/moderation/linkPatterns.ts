@@ -20,7 +20,7 @@
 export const MAX_PATTERN_LENGTH = 200;
 
 /** More wildcards than this is always a mistake, and slows matching down. */
-const MAX_WILDCARDS = 10;
+export const MAX_WILDCARDS = 10;
 
 /** Anything that may follow a host or a path: `/page`, `?query`, `#anchor`. */
 const OPTIONAL_TAIL = "(?:[/?#].*)?";
@@ -100,22 +100,47 @@ export function isLinkIgnored(link: string, patterns: string[]): string | null {
   return null;
 }
 
+export type LinkPatternIssue =
+  | "empty"
+  | "spaces"
+  | "too_long"
+  | "wildcards"
+  | "invalid";
+
+/**
+ * Find out what is wrong with a pattern coming from the dashboard.
+ * Returns `null` when the pattern is usable. The dashboard turns the issue into
+ * a translated message; `validateLinkPattern` keeps the English one.
+ */
+export function getLinkPatternIssue(pattern: string): LinkPatternIssue | null {
+  const cleaned = normalizeLink(pattern);
+
+  if (!cleaned) return "empty";
+  if (/\s/.test(cleaned)) return "spaces";
+  if (cleaned.length > MAX_PATTERN_LENGTH) return "too_long";
+  if ((cleaned.match(/\*/g)?.length ?? 0) > MAX_WILDCARDS) return "wildcards";
+  if (!compileLinkPattern(pattern)) return "invalid";
+
+  return null;
+}
+
 /**
  * Validate a pattern coming from the dashboard.
  * Returns an error message, or `null` when the pattern is usable.
  */
 export function validateLinkPattern(pattern: string): string | null {
-  const cleaned = normalizeLink(pattern);
-
-  if (!cleaned) return "Pattern cannot be empty.";
-  if (/\s/.test(cleaned)) return `"${pattern}" cannot contain spaces.`;
-  if (cleaned.length > MAX_PATTERN_LENGTH) {
-    return `"${pattern}" is longer than ${MAX_PATTERN_LENGTH} characters.`;
+  switch (getLinkPatternIssue(pattern)) {
+    case "empty":
+      return "Pattern cannot be empty.";
+    case "spaces":
+      return `"${pattern}" cannot contain spaces.`;
+    case "too_long":
+      return `"${pattern}" is longer than ${MAX_PATTERN_LENGTH} characters.`;
+    case "wildcards":
+      return `"${pattern}" uses more than ${MAX_WILDCARDS} wildcards.`;
+    case "invalid":
+      return `"${pattern}" is not a valid pattern.`;
+    default:
+      return null;
   }
-  if ((cleaned.match(/\*/g)?.length ?? 0) > MAX_WILDCARDS) {
-    return `"${pattern}" uses more than ${MAX_WILDCARDS} wildcards.`;
-  }
-  if (!compileLinkPattern(pattern)) return `"${pattern}" is not a valid pattern.`;
-
-  return null;
 }

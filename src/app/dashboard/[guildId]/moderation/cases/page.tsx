@@ -1,12 +1,26 @@
 import React from "react";
 import { Flex, RevealFx, Text } from "@once-ui-system/core";
 import { prisma } from "@/lib/db/db";
-import { CASE_TYPE_LABELS } from "@/lib/moderation/embeds";
+import { getT } from "@/i18n/server";
 import { CasesClient, type CaseItem } from "./CasesClient";
 
 const PER_PAGE = 20;
 const TYPES = ["all", "warn", "mute", "ban", "kick", "note"];
 const SNOWFLAKE = /^\d{17,20}$/;
+const CASE_TYPES = [
+  "warn",
+  "mute",
+  "kick",
+  "ban",
+  "note",
+  "unwarn",
+  "unmute",
+  "unban",
+  "purge",
+] as const;
+
+const isCaseType = (value: string): value is (typeof CASE_TYPES)[number] =>
+  (CASE_TYPES as readonly string[]).includes(value);
 
 export default async function ModerationCasesPage({
   params,
@@ -17,6 +31,7 @@ export default async function ModerationCasesPage({
 }) {
   const { guildId } = await params;
   const query = await searchParams;
+  const t = await getT();
 
   const type = TYPES.includes(query.type ?? "") ? query.type! : "all";
   const user = SNOWFLAKE.test(query.user ?? "") ? query.user! : "";
@@ -42,7 +57,9 @@ export default async function ModerationCasesPage({
     id: entry.id,
     caseNumber: entry.caseNumber,
     type: entry.type,
-    typeLabel: CASE_TYPE_LABELS[entry.type] ?? entry.type,
+    typeLabel: isCaseType(entry.type)
+      ? t(`moderation.punishments.${entry.type}`)
+      : entry.type,
     targetId: entry.targetId,
     moderatorId: entry.moderatorId,
     reason: entry.reason,
@@ -56,10 +73,9 @@ export default async function ModerationCasesPage({
   return (
     <Flex direction="column" gap="24">
       <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">Case log</Text>
+        <Text variant="heading-strong-l">{t("moderation.cases.title")}</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
-          Every moderation action taken by commands, auto moderation or the dashboard. Revoking a
-          case lifts the punishment in Discord as well.
+          {t("moderation.cases.description")}
         </Text>
       </RevealFx>
 

@@ -16,14 +16,24 @@ import type {
   ModerationSubmissionKind,
   ModerationSubmissionStatus,
 } from "@/lib/db/types";
-import { COLORS, buildCaseEmbed, buildSubmissionComponents, buildSubmissionEmbed } from "./embeds";
+import { getT } from "@/i18n/server";
+import {
+  COLORS,
+  buildCaseEmbed,
+  buildSubmissionComponents,
+  buildSubmissionEmbed,
+} from "./embeds";
 
 /** Allocate the next per-guild number without races. */
 async function nextSequence(
   guildId: string,
   field: "modCaseSeq" | "modReportSeq" | "modAppealSeq",
 ): Promise<number> {
-  await prisma.guild.upsert({ where: { id: guildId }, update: {}, create: { id: guildId } });
+  await prisma.guild.upsert({
+    where: { id: guildId },
+    update: {},
+    create: { id: guildId },
+  });
 
   const row = await prisma.guild.update({
     where: { id: guildId },
@@ -57,11 +67,18 @@ export async function createSubmission(
 ): Promise<CreateSubmissionResult> {
   const { guildId, kind, authorId, form } = input;
 
-  if (!form.enabled) return { ok: false, error: "This form is currently disabled." };
-  if (!form.channel) return { ok: false, error: "This form is not fully configured yet." };
+  if (!form.enabled)
+    return { ok: false, error: "This form is currently disabled." };
+  if (!form.channel)
+    return { ok: false, error: "This form is not fully configured yet." };
 
   const pending = await prisma.moderationSubmission.count({
-    where: { guildId, kind, authorId, status: { in: ["pending", "in_review"] } },
+    where: {
+      guildId,
+      kind,
+      authorId,
+      status: { in: ["pending", "in_review"] },
+    },
   });
 
   if (pending >= form.max_pending) {
@@ -82,12 +99,18 @@ export async function createSubmission(
       const elapsed = (Date.now() - last.createdAt.getTime()) / 1000;
       if (elapsed < form.cooldown) {
         const wait = Math.ceil((form.cooldown - elapsed) / 60);
-        return { ok: false, error: `Please wait ${wait} more minute(s) before submitting again.` };
+        return {
+          ok: false,
+          error: `Please wait ${wait} more minute(s) before submitting again.`,
+        };
       }
     }
   }
 
-  const number = await nextSequence(guildId, kind === "report" ? "modReportSeq" : "modAppealSeq");
+  const number = await nextSequence(
+    guildId,
+    kind === "report" ? "modReportSeq" : "modAppealSeq",
+  );
 
   const submission = await prisma.moderationSubmission.create({
     data: {
@@ -103,11 +126,15 @@ export async function createSubmission(
   });
 
   const relatedCase = submission.caseId
-    ? await prisma.moderationCase.findUnique({ where: { id: submission.caseId } })
+    ? await prisma.moderationCase.findUnique({
+        where: { id: submission.caseId },
+      })
     : null;
 
   const messageId = await postChannelMessage(form.channel, {
-    embeds: [buildSubmissionEmbed(submission, relatedCase, form.allow_anonymous)],
+    embeds: [
+      buildSubmissionEmbed(submission, relatedCase, form.allow_anonymous),
+    ],
     components: buildSubmissionComponents(submission),
   });
 
@@ -140,13 +167,16 @@ export async function resolveSubmission(
   moderatorId: string,
   response: string | null,
 ): Promise<ResolveResult> {
-  const submission = await prisma.moderationSubmission.findUnique({ where: { id: submissionId } });
+  const t = await getT();
+  const submission = await prisma.moderationSubmission.findUnique({
+    where: { id: submissionId },
+  });
 
   if (!submission || submission.guildId !== guildId) {
-    return { ok: false, error: "Submission not found." };
+    return { ok: false, error: t("moderation.errors.submissionNotFound") };
   }
   if (submission.status === "approved" || submission.status === "rejected") {
-    return { ok: false, error: "This submission has already been handled." };
+    return { ok: false, error: t("moderation.errors.submissionHandled") };
   }
 
   const updated = await prisma.moderationSubmission.update({
@@ -161,10 +191,17 @@ export async function resolveSubmission(
 
   // Approving an appeal lifts the punishment it was filed against.
   if (status === "approved" && updated.kind === "appeal" && updated.caseId) {
-    const related = await prisma.moderationCase.findUnique({ where: { id: updated.caseId } });
+    const related = await prisma.moderationCase.findUnique({
+      where: { id: updated.caseId },
+    });
 
     if (related?.active) {
-      await revokeCase(guildId, related.caseNumber, moderatorId, `Appeal #${updated.number}`);
+      await revokeCase(
+        guildId,
+        related.caseNumber,
+        moderatorId,
+        `Appeal #${updated.number}`,
+      );
     }
   }
 
@@ -178,11 +215,15 @@ export async function resolveSubmission(
 }
 
 /** Re-render the submission message in the moderation channel. */
-async function refreshSubmissionMessage(submission: ModerationSubmission): Promise<void> {
+async function refreshSubmissionMessage(
+  submission: ModerationSubmission,
+): Promise<void> {
   if (!submission.channelId || !submission.messageId) return;
 
   const relatedCase = submission.caseId
-    ? await prisma.moderationCase.findUnique({ where: { id: submission.caseId } })
+    ? await prisma.moderationCase.findUnique({
+        where: { id: submission.caseId },
+      })
     : null;
 
   await editChannelMessage(submission.channelId, submission.messageId, {
@@ -201,11 +242,17 @@ async function notifyAuthor(
     `moderation.forms.${submission.kind === "appeal" ? "appeal" : "report"}`,
   )) as ModerationForm | null;
 
-  const custom = status === "approved" ? form?.approve_message : form?.reject_message;
+  const custom =
+    status === "approved" ? form?.approve_message : form?.reject_message;
   const kindLabel = submission.kind === "appeal" ? "appeal" : "report";
 
   const fields = submission.response
-    ? [{ name: "Moderator response", value: submission.response.slice(0, 1024) }]
+    ? [
+        {
+          name: "Moderator response",
+          value: submission.response.slice(0, 1024),
+        },
+      ]
     : undefined;
 
   await sendDirectMessage(submission.authorId, {
@@ -213,14 +260,17 @@ async function notifyAuthor(
       {
         color: status === "approved" ? COLORS.success : COLORS.error,
         description:
-          custom?.trim() || `Your ${kindLabel} #${submission.number} has been ${status}.`,
+          custom?.trim() ||
+          `Your ${kindLabel} #${submission.number} has been ${status}.`,
         fields,
       },
     ],
   });
 }
 
-export type RevokeResult = { ok: true; case: ModerationCase } | { ok: false; error: string };
+export type RevokeResult =
+  | { ok: true; case: ModerationCase }
+  | { ok: false; error: string };
 
 /**
  * Revoke an active case: lift the punishment in Discord, close the case and
@@ -232,20 +282,34 @@ export async function revokeCase(
   moderatorId: string,
   reason: string,
 ): Promise<RevokeResult> {
+  const t = await getT();
   const target = await prisma.moderationCase.findUnique({
     where: { guildId_caseNumber: { guildId, caseNumber } },
   });
 
-  if (!target) return { ok: false, error: `Case #${caseNumber} was not found.` };
-  if (!target.active) return { ok: false, error: `Case #${caseNumber} is already revoked.` };
+  if (!target) {
+    return {
+      ok: false,
+      error: t("moderation.errors.caseNotFound", { number: caseNumber }),
+    };
+  }
+  if (!target.active) {
+    return {
+      ok: false,
+      error: t("moderation.errors.caseRevoked", { number: caseNumber }),
+    };
+  }
 
-  const revokeType = { warn: "unwarn", mute: "unmute", ban: "unban" }[target.type];
-  if (!revokeType) return { ok: false, error: "This case type cannot be revoked." };
+  const revokeType = { warn: "unwarn", mute: "unmute", ban: "unban" }[
+    target.type
+  ];
+  if (!revokeType)
+    return { ok: false, error: t("moderation.errors.caseNotRevocable") };
 
   if (target.type === "ban") {
     const removed = await removeGuildBan(guildId, target.targetId, reason);
     if (!removed) {
-      return { ok: false, error: "Discord rejected the unban. Check the bot permissions." };
+      return { ok: false, error: t("moderation.errors.unbanRejected") };
     }
   }
 
@@ -284,15 +348,23 @@ export async function revokeCase(
 }
 
 /** Post a case to the configured moderation log channel. */
-export async function logCase(guildId: string, entry: ModerationCase): Promise<void> {
+export async function logCase(
+  guildId: string,
+  entry: ModerationCase,
+): Promise<void> {
   const guild = new Guild(guildId);
-  const channelId = (await guild.get("moderation.log_channel")) as string | null;
+  const channelId = (await guild.get("moderation.log_channel")) as
+    | string
+    | null;
   if (!channelId) return;
 
   await postChannelMessage(channelId, { embeds: [buildCaseEmbed(entry)] });
 }
 
-async function notifyRevocation(guildId: string, entry: ModerationCase): Promise<void> {
+async function notifyRevocation(
+  guildId: string,
+  entry: ModerationCase,
+): Promise<void> {
   const guild = new Guild(guildId);
   if (!(await guild.get("moderation.dm_notify"))) return;
 

@@ -28,7 +28,9 @@ import type { DiscordRole } from "@/lib/discord/role-style";
 import type { GuildActionState } from "@/types/dashboard";
 import type { GuildSchema, WarnThreshold } from "@/lib/db/types";
 import { PunishmentType } from "@/lib/db/types";
-import { isLinkIgnored, validateLinkPattern } from "@/lib/moderation/linkPatterns";
+import { isLinkIgnored } from "@/lib/moderation/linkPatterns";
+import { describeLinkPatternIssue } from "@/lib/moderation/linkPatternMessages";
+import { useT } from "@/i18n/client";
 import { updateModerationSettings } from "./actions";
 import { Section } from "@/components/dashboard/Section";
 import { IconName } from "@/resources/icons";
@@ -43,12 +45,16 @@ export interface ModerationSettingsState {
   warn_thresholds: WarnThreshold[];
 }
 
-const PUNISHMENT_OPTIONS = [
-  { label: "Warn", value: PunishmentType.Warn },
-  { label: "Mute", value: PunishmentType.Mute },
-  { label: "Kick", value: PunishmentType.Kick },
-  { label: "Ban", value: PunishmentType.Ban },
-];
+function usePunishmentOptions() {
+  const t = useT();
+
+  return [
+    { label: t("moderation.punishments.warn"), value: PunishmentType.Warn },
+    { label: t("moderation.punishments.mute"), value: PunishmentType.Mute },
+    { label: t("moderation.punishments.kick"), value: PunishmentType.Kick },
+    { label: t("moderation.punishments.ban"), value: PunishmentType.Ban },
+  ];
+}
 
 export function ModerationForm({
   guildId,
@@ -63,6 +69,8 @@ export function ModerationForm({
   textChannels: ChannelPickOption[];
   roles: DiscordRole[];
 }) {
+  const t = useT();
+  const punishmentOptions = usePunishmentOptions();
   const router = useRouter();
   const { addToast } = useToast();
   const { setIsDirty, setSaveAction, setCancelAction } = useUnsavedChanges();
@@ -108,16 +116,22 @@ export function ModerationForm({
     fd.set("settings", JSON.stringify(settings));
     fd.set("auto_moderation", JSON.stringify(autoMod));
 
-    const result: GuildActionState = await updateModerationSettings(guildId, fd);
+    const result: GuildActionState = await updateModerationSettings(
+      guildId,
+      fd,
+    );
 
     if (result?.ok) {
       setBaseline({ settings, autoMod });
-      addToast({ message: "Moderation settings saved", variant: "success" });
+      addToast({ message: t("moderation.settings.saved"), variant: "success" });
       router.refresh();
     } else {
-      addToast({ message: result?.error || "Save failed", variant: "danger" });
+      addToast({
+        message: result?.error || t("moderation.errors.saveFailed"),
+        variant: "danger",
+      });
     }
-  }, [guildId, settings, autoMod, router, addToast]);
+  }, [guildId, settings, autoMod, router, addToast, t]);
 
   const handleCancel = useCallback(() => {
     setSettings(baseline.settings);
@@ -142,7 +156,10 @@ export function ModerationForm({
       ...prev,
       warn_thresholds: [
         ...prev.warn_thresholds,
-        { count, punishment: { type: PunishmentType.Mute, time: 3600, reason: "" } },
+        {
+          count,
+          punishment: { type: PunishmentType.Mute, time: 3600, reason: "" },
+        },
       ].sort((a, b) => a.count - b.count),
     }));
   };
@@ -164,8 +181,8 @@ export function ModerationForm({
   return (
     <Column fillWidth gap="24">
       <Section
-        title="General"
-        description="Who may moderate and where actions are recorded."
+        title={t("moderation.settings.general.title")}
+        description={t("moderation.settings.general.description")}
         icon="shield"
         num={1}
       >
@@ -173,60 +190,78 @@ export function ModerationForm({
           fillWidth
           multiple
           id="moderation-roles"
-          label="Moderator roles"
+          label={t("moderation.settings.general.roles")}
           options={roleOptions}
           selectedRole={settings.moderation_roles}
           setSelectedRole={(value) =>
-            setSettings((prev) => ({ ...prev, moderation_roles: value as string[] }))
+            setSettings((prev) => ({
+              ...prev,
+              moderation_roles: value as string[],
+            }))
           }
-          description="Members with these roles can use the /mod commands. Administrators always can."
+          description={t("moderation.settings.general.rolesHint")}
         />
 
         <ChannelSelect
           fillWidth
           id="moderation-log"
-          label="Moderation log channel"
+          label={t("moderation.settings.general.logChannel")}
           options={channelOptions}
           selectedChannel={settings.log_channel ?? ""}
           setSelectedChannel={(value) =>
-            setSettings((prev) => ({ ...prev, log_channel: (value as string) || null }))
+            setSettings((prev) => ({
+              ...prev,
+              log_channel: (value as string) || null,
+            }))
           }
         />
 
         <Row fillWidth gap="12" vertical="center">
           <Switch
             checked={settings.dm_notify}
-            onToggle={() => setSettings((prev) => ({ ...prev, dm_notify: !prev.dm_notify }))}
+            onToggle={() =>
+              setSettings((prev) => ({ ...prev, dm_notify: !prev.dm_notify }))
+            }
           />
           <Column gap="4">
-            <Text variant="label-default-s">Notify punished members</Text>
+            <Text variant="label-default-s">
+              {t("moderation.settings.general.dmNotify")}
+            </Text>
             <Text variant="body-default-xs" onBackground="neutral-weak">
-              Send a direct message with the reason, the duration and the appeal link.
+              {t("moderation.settings.general.dmNotifyHint")}
             </Text>
           </Column>
         </Row>
       </Section>
 
       <Section
-        title="Warn escalation"
-        description="Punish members automatically once they collect a given number of active warns."
+        title={t("moderation.settings.escalation.title")}
+        description={t("moderation.settings.escalation.description")}
         icon="warning"
         num={2}
       >
         <NumberInput
           id="warn-expiry"
-          label="Warns expire after (days, 0 = never)"
+          label={t("moderation.settings.escalation.expiry")}
           value={settings.warn_expiry}
           min={0}
           max={365}
           onChange={(value: number) =>
-            setSettings((prev) => ({ ...prev, warn_expiry: Number(value) || 0 }))
+            setSettings((prev) => ({
+              ...prev,
+              warn_expiry: Number(value) || 0,
+            }))
           }
         />
 
         <Column fillWidth gap="12">
           {settings.warn_thresholds.map((rule, index) => (
-            <Accordion title={`Rule ${index + 1}`} key={`${rule.count}-${index}`}>
+            <Accordion
+              title={t("moderation.settings.escalation.rule", {
+                number: index + 1,
+              })}
+              key={`${rule.count}-${index}`}
+            >
               <Row fillWidth gap="8" vertical="center" wrap>
                 <Row
                   fillWidth
@@ -239,12 +274,12 @@ export function ModerationForm({
                     icon="trash"
                     variant="danger"
                     onClick={() => removeThreshold(index)}
-                    tooltip="Remove rule"
+                    tooltip={t("moderation.settings.escalation.removeRule")}
                   />
                 </Row>
                 <NumberInput
                   id={`threshold-count-${index}`}
-                  label="Warns"
+                  label={t("moderation.settings.escalation.warns")}
                   value={rule.count}
                   min={1}
                   max={100}
@@ -254,26 +289,32 @@ export function ModerationForm({
                 />
                 <SegmentedControl
                   fillWidth
-                  buttons={PUNISHMENT_OPTIONS.map((option) => ({
+                  buttons={punishmentOptions.map((option) => ({
                     value: option.value,
                     label: option.label,
                   }))}
                   value={rule.punishment.type}
                   onChange={(value) =>
                     updateThreshold(index, {
-                      punishment: { ...rule.punishment, type: value as PunishmentType },
+                      punishment: {
+                        ...rule.punishment,
+                        type: value as PunishmentType,
+                      },
                     })
                   }
                 />
                 <NumberInput
                   id={`threshold-time-${index}`}
-                  label="Duration (seconds)"
+                  label={t("moderation.settings.escalation.duration")}
                   value={rule.punishment.time}
                   min={0}
                   max={2419200}
                   onChange={(value: number) =>
                     updateThreshold(index, {
-                      punishment: { ...rule.punishment, time: Number(value) || 0 },
+                      punishment: {
+                        ...rule.punishment,
+                        time: Number(value) || 0,
+                      },
                     })
                   }
                 />
@@ -283,7 +324,7 @@ export function ModerationForm({
 
           {settings.warn_thresholds.length === 0 && (
             <Text variant="body-default-s" onBackground="neutral-weak">
-              No escalation configured — warns only accumulate.
+              {t("moderation.settings.escalation.empty")}
             </Text>
           )}
 
@@ -294,15 +335,15 @@ export function ModerationForm({
               onClick={addThreshold}
               disabled={settings.warn_thresholds.length >= 10}
             >
-              Add rule
+              {t("moderation.settings.escalation.addRule")}
             </Button>
           </Row>
         </Column>
       </Section>
 
       <AutoModerationSection
-        title="Invite filter"
-        description="Act on messages containing invites to other Discord servers."
+        title={t("moderation.settings.invite.title")}
+        description={t("moderation.settings.invite.description")}
         rule={autoMod.invite}
         onChange={(next) => setAutoMod((prev) => ({ ...prev, invite: next }))}
         roleOptions={roleOptions}
@@ -312,8 +353,8 @@ export function ModerationForm({
       />
 
       <AutoModerationSection
-        title="Link filter"
-        description="Act on messages containing links. Whitelisted domains are ignored."
+        title={t("moderation.settings.links.title")}
+        description={t("moderation.settings.links.description")}
         rule={autoMod.links}
         onChange={(next) => setAutoMod((prev) => ({ ...prev, links: next }))}
         roleOptions={roleOptions}
@@ -349,9 +390,12 @@ function AutoModerationSection({
   icon: IconName;
   whitelist?: boolean;
 }) {
+  const t = useT();
+  const punishmentOptions = usePunishmentOptions();
   const linkRule = rule as AutoModRule;
 
-  const update = (patch: Record<string, unknown>) => onChange({ ...rule, ...patch });
+  const update = (patch: Record<string, unknown>) =>
+    onChange({ ...rule, ...patch });
 
   return (
     <Section
@@ -360,7 +404,10 @@ function AutoModerationSection({
       num={num}
       icon={icon}
       switcher={
-        <Switch checked={rule.enabled} onToggle={() => update({ enabled: !rule.enabled })} />
+        <Switch
+          checked={rule.enabled}
+          onToggle={() => update({ enabled: !rule.enabled })}
+        />
       }
     >
       <Row fillWidth gap="12" vertical="center">
@@ -368,32 +415,40 @@ function AutoModerationSection({
           checked={rule.delete_message}
           onToggle={() => update({ delete_message: !rule.delete_message })}
         />
-        <Text variant="label-default-s">Delete the offending message</Text>
+        <Text variant="label-default-s">
+          {t("moderation.settings.autoMod.deleteMessage")}
+        </Text>
       </Row>
 
       <Row fillWidth gap="12" vertical="center">
         <Switch
           checked={rule.moderation_immune}
-          onToggle={() => update({ moderation_immune: !rule.moderation_immune })}
+          onToggle={() =>
+            update({ moderation_immune: !rule.moderation_immune })
+          }
         />
-        <Text variant="label-default-s">Moderators are exempt</Text>
+        <Text variant="label-default-s">
+          {t("moderation.settings.autoMod.moderatorsExempt")}
+        </Text>
       </Row>
 
       <ChannelSelect
         fillWidth
         multiple
         id={`${title}-ignore-channels`}
-        label="Ignored channels"
+        label={t("moderation.settings.autoMod.ignoredChannels")}
         options={channelOptions}
         selectedChannel={rule.ignore_channels}
-        setSelectedChannel={(value) => update({ ignore_channels: value as string[] })}
+        setSelectedChannel={(value) =>
+          update({ ignore_channels: value as string[] })
+        }
       />
 
       <RoleSelect
         fillWidth
         multiple
         id={`${title}-ignore-roles`}
-        label="Ignored roles"
+        label={t("moderation.settings.autoMod.ignoredRoles")}
         options={roleOptions}
         selectedRole={rule.ignore_roles}
         setSelectedRole={(value) => update({ ignore_roles: value as string[] })}
@@ -409,46 +464,57 @@ function AutoModerationSection({
       <Line />
 
       <Column fillWidth gap="12">
-        <Text variant="label-default-s">Punishment</Text>
+        <Text variant="label-default-s">
+          {t("moderation.settings.autoMod.punishment")}
+        </Text>
         <SegmentedControl
           fillWidth
-          buttons={PUNISHMENT_OPTIONS.map((option) => ({
+          buttons={punishmentOptions.map((option) => ({
             value: option.value,
             label: option.label,
           }))}
           value={rule.punishment.type}
           onChange={(value) =>
-            update({ punishment: { ...rule.punishment, type: value as PunishmentType } })
+            update({
+              punishment: { ...rule.punishment, type: value as PunishmentType },
+            })
           }
         />
         <NumberInput
           id={`${title}-punishment-time`}
-          label="Duration in seconds (0 = permanent)"
+          label={t("moderation.settings.autoMod.duration")}
           value={rule.punishment.time}
           min={0}
           max={2419200}
           onChange={(value: number) =>
-            update({ punishment: { ...rule.punishment, time: Number(value) || 0 } })
+            update({
+              punishment: { ...rule.punishment, time: Number(value) || 0 },
+            })
           }
         />
         <Input
           id={`${title}-punishment-reason`}
-          label="Reason"
+          label={t("moderation.settings.autoMod.reason")}
           value={rule.punishment.reason}
           maxLength={400}
-          onChange={(e) => update({ punishment: { ...rule.punishment, reason: e.target.value } })}
+          onChange={(e) =>
+            update({
+              punishment: { ...rule.punishment, reason: e.target.value },
+            })
+          }
         />
       </Column>
     </Section>
   );
 }
 
-const PATTERN_EXAMPLES: [string, string][] = [
-  ["youtube.com", "the domain itself, every subdomain and every page"],
-  ["*.wikipedia.org", "subdomains only"],
-  ["discord.com/channels/*", "only links pointing at a channel"],
-  ["*docs*", "any link containing “docs”"],
-];
+// The pattern syntax stays literal in every language; only the explanation is translated.
+const PATTERN_EXAMPLES = [
+  ["youtube.com", "domain"],
+  ["*.wikipedia.org", "subdomains"],
+  ["discord.com/channels/*", "channel"],
+  ["*docs*", "contains"],
+] as const;
 
 /**
  * Whitelist editor for the link filter.
@@ -464,12 +530,14 @@ function LinkWhitelist({
   patterns: string[];
   onChange: (next: string[]) => void;
 }) {
+  const t = useT();
   const [draft, setDraft] = useState("");
   const [probe, setProbe] = useState("");
 
   const trimmed = draft.trim();
-  const draftError = trimmed ? validateLinkPattern(trimmed) : null;
-  const duplicate = trimmed.length > 0 && patterns.includes(trimmed.toLowerCase());
+  const draftError = trimmed ? describeLinkPatternIssue(t, trimmed) : null;
+  const duplicate =
+    trimmed.length > 0 && patterns.includes(trimmed.toLowerCase());
 
   const probeMatch = probe.trim() ? isLinkIgnored(probe, patterns) : null;
 
@@ -482,40 +550,52 @@ function LinkWhitelist({
 
   return (
     <Column fillWidth gap="12">
-      <Text variant="label-default-s">Allowed links ({patterns.length}/100)</Text>
+      <Text variant="label-default-s">
+        {t("moderation.settings.whitelist.title", {
+          count: patterns.length,
+          max: 100,
+        })}
+      </Text>
 
       <Row fillWidth gap="8" vertical="center">
         <Input
           id="link-whitelist"
-          label="Pattern"
+          label={t("moderation.settings.whitelist.pattern")}
           value={draft}
           maxLength={200}
           placeholder="youtube.com"
           errorMessage={
-            draftError ?? (duplicate ? "This pattern is already in the list." : undefined)
+            draftError ??
+            (duplicate
+              ? t("moderation.settings.whitelist.duplicate")
+              : undefined)
           }
           onChange={(e) => setDraft(e.target.value)}
         />
         <Button
           variant="secondary"
           onClick={addPattern}
-          disabled={!trimmed || Boolean(draftError) || duplicate || patterns.length >= 100}
+          disabled={
+            !trimmed ||
+            Boolean(draftError) ||
+            duplicate ||
+            patterns.length >= 100
+          }
         >
-          Add
+          {t("moderation.settings.whitelist.add")}
         </Button>
       </Row>
 
-      <Accordion title="How patterns work">
+      <Accordion title={t("moderation.settings.whitelist.howTitle")}>
         <Column fillWidth gap="8">
           <Text variant="body-default-s" onBackground="neutral-medium">
-            Write the address as you would read it. The star stands for “anything”; everything else
-            is matched literally. A pattern always covers the deeper pages of what it matched.
+            {t("moderation.settings.whitelist.howText")}
           </Text>
           {PATTERN_EXAMPLES.map(([pattern, meaning]) => (
             <Row key={pattern} fillWidth gap="8" vertical="center" wrap>
               <InlineCode>{pattern}</InlineCode>
               <Text variant="body-default-s" onBackground="neutral-weak">
-                {meaning}
+                {t(`moderation.settings.whitelist.examples.${meaning}`)}
               </Text>
             </Row>
           ))}
@@ -530,14 +610,18 @@ function LinkWhitelist({
             vertical="center"
             padding="4"
             radius="m"
-            border={probeMatch === pattern ? "success-medium" : "neutral-medium"}
+            border={
+              probeMatch === pattern ? "success-medium" : "neutral-medium"
+            }
           >
             <Text variant="body-default-xs">{pattern}</Text>
             <IconButton
               size="s"
               icon="close"
               variant="ghost"
-              onClick={() => onChange(patterns.filter((entry) => entry !== pattern))}
+              onClick={() =>
+                onChange(patterns.filter((entry) => entry !== pattern))
+              }
             />
           </Row>
         ))}
@@ -545,7 +629,7 @@ function LinkWhitelist({
 
       <Input
         id="link-whitelist-test"
-        label="Test a link against the list"
+        label={t("moderation.settings.whitelist.test")}
         value={probe}
         maxLength={400}
         placeholder="https://www.youtube.com/watch?v=1"
@@ -556,14 +640,16 @@ function LinkWhitelist({
         (probeMatch ? (
           <Feedback
             variant="success"
-            title="This link is allowed"
-            description={`Matched by the pattern “${probeMatch}”.`}
+            title={t("moderation.settings.whitelist.allowedTitle")}
+            description={t("moderation.settings.whitelist.allowedText", {
+              pattern: probeMatch,
+            })}
           />
         ) : (
           <Feedback
             variant="warning"
-            title="This link is moderated"
-            description="No pattern matches it, so the filter would act on this link."
+            title={t("moderation.settings.whitelist.moderatedTitle")}
+            description={t("moderation.settings.whitelist.moderatedText")}
           />
         ))}
     </Column>

@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/db/db";
 import { botFetch } from "@/lib/discord/rest";
+import { getT } from "@/i18n/server";
 
 /**
  * Webhooks used by the audit log.
@@ -29,33 +30,46 @@ export async function ensureWebhook(
 
   if (existing) {
     // Confirm Discord still knows about it; the token is part of the URL.
-    const check = await botFetch(`/webhooks/${existing.webhookId}/${existing.token}`);
+    const check = await botFetch(
+      `/webhooks/${existing.webhookId}/${existing.token}`,
+    );
     if (check?.ok) return { ok: true, webhookId: existing.webhookId };
 
-    await prisma.guildWebhook.delete({ where: { id: existing.id } }).catch(() => null);
+    await prisma.guildWebhook
+      .delete({ where: { id: existing.id } })
+      .catch(() => null);
   }
+
+  const t = await getT();
 
   const res = await botFetch(
     `/channels/${channelId}/webhooks`,
     {
       method: "POST",
-      body: JSON.stringify({ name: name?.trim() || "Audit log", avatar: avatar || undefined }),
+      body: JSON.stringify({
+        name: name?.trim() || "Audit log",
+        avatar: avatar || undefined,
+      }),
     },
     "Audit log",
   );
 
-  if (!res) return { ok: false, error: "The bot token is not configured." };
+  if (!res) return { ok: false, error: t("moderation.errors.botTokenMissing") };
 
   if (!res.ok) {
     const body = await res.text();
     return {
       ok: false,
-      error: `Discord refused to create a webhook (${res.status}). Check that the bot may manage webhooks in that channel. ${body.slice(0, 120)}`,
+      error: t("moderation.errors.webhookRefused", {
+        status: res.status,
+        details: body.slice(0, 120),
+      }),
     };
   }
 
   const webhook = (await res.json()) as DiscordWebhook;
-  if (!webhook.token) return { ok: false, error: "Discord returned a webhook without a token." };
+  if (!webhook.token)
+    return { ok: false, error: t("moderation.errors.webhookNoToken") };
 
   await prisma.guildWebhook.upsert({
     where: { guildId_channelId: { guildId, channelId } },
@@ -67,15 +81,22 @@ export async function ensureWebhook(
 }
 
 /** Drop a webhook the audit log no longer posts to. */
-export async function removeWebhook(guildId: string, channelId: string): Promise<void> {
+export async function removeWebhook(
+  guildId: string,
+  channelId: string,
+): Promise<void> {
   const stored = await prisma.guildWebhook.findUnique({
     where: { guildId_channelId: { guildId, channelId } },
   });
 
   if (!stored) return;
 
-  await botFetch(`/webhooks/${stored.webhookId}/${stored.token}`, { method: "DELETE" });
-  await prisma.guildWebhook.delete({ where: { id: stored.id } }).catch(() => null);
+  await botFetch(`/webhooks/${stored.webhookId}/${stored.token}`, {
+    method: "DELETE",
+  });
+  await prisma.guildWebhook
+    .delete({ where: { id: stored.id } })
+    .catch(() => null);
 }
 
 /**
