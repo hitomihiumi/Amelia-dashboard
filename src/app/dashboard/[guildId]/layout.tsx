@@ -50,7 +50,8 @@ export default async function GuildDashboardLayout({
         }}
       >
         <UnsavedNavigationGuard />
-        <Flex fillWidth fillHeight direction={"row"} m={{ direction: "column" }}>
+        {/* Grows with the page (instead of being pinned to the viewport height) so the sticky sidebar has room to stay in view. */}
+        <Flex fillWidth direction={"row"} m={{ direction: "column" }} style={{ minHeight: "100vh" }}>
           <SettingsBar access={access} guildId={guildId} />
           <Flex fill horizontal={"center"}>
             <Flex direction="column" fillWidth padding="24" overflow="auto" maxWidth={"m"}>

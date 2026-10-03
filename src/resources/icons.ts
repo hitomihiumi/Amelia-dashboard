@@ -55,6 +55,16 @@ import {
   IoVolumeHigh,
   IoMegaphone,
   IoRadio,
+  IoArrowBackOutline,
+  IoCartOutline,
+  IoFileTrayFullOutline,
+  IoGitNetworkOutline,
+  IoMicOutline,
+  IoOptionsOutline,
+  IoRibbonOutline,
+  IoShieldCheckmarkOutline,
+  IoTerminalOutline,
+  IoWalletOutline,
 } from "react-icons/io5";
 
 import { FaDiscord, FaGithub, FaHashtag } from "react-icons/fa";
@@ -120,6 +130,21 @@ export const iconLibrary = {
   shield: IoShieldOutline,
   invite: IoPersonAddOutline,
   clipboard: IoClipboardOutline,
+  // Dashboard navigation: one outline set, so every row has the same visual weight.
+  navGeneral: IoOptionsOutline,
+  navCommands: IoTerminalOutline,
+  navModeration: IoShieldCheckmarkOutline,
+  navForms: IoClipboardOutline,
+  navQueue: IoFileTrayFullOutline,
+  navCases: IoListOutline,
+  navAudit: IoDocumentTextOutline,
+  navEconomy: IoWalletOutline,
+  navShop: IoCartOutline,
+  navLevels: IoRibbonOutline,
+  navPrivate: IoMicOutline,
+  navComponents: IoToggleOutline,
+  navScenarios: IoGitNetworkOutline,
+  navBack: IoArrowBackOutline,
 } satisfies Record<string, IconType>;
 
 declare module "@once-ui-system/core" {
@@ -184,6 +209,20 @@ declare module "@once-ui-system/core" {
     shield: true;
     invite: true;
     clipboard: true;
+    navGeneral: true;
+    navCommands: true;
+    navModeration: true;
+    navForms: true;
+    navQueue: true;
+    navCases: true;
+    navAudit: true;
+    navEconomy: true;
+    navShop: true;
+    navLevels: true;
+    navPrivate: true;
+    navComponents: true;
+    navScenarios: true;
+    navBack: true;
   }
 }
 

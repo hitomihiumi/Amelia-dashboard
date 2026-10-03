@@ -39,7 +39,7 @@ export const settings = {
     interactions: "Interactions",
     components: "Components",
     scenarios: "Scenarios",
-    backToList: "Back to list",
+    backToList: "All servers",
   },
   guilds: {
     loginRequiredTitle: "Login Required",

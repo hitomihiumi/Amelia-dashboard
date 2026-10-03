@@ -1,20 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Avatar,
-  Button,
-  Column,
-  Flex,
-  Line,
-  Row,
-  Text,
-  ToggleButton,
-  NavIcon,
-} from "@once-ui-system/core";
+import { Avatar, Column, Flex, Icon, NavIcon, Row, Text } from "@once-ui-system/core";
+import classNames from "classnames";
 import { getGuildAccessForDashboard } from "@/lib/discord/guilds-api";
 import { useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
+import type { IconName } from "@/resources/icons";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import styles from "./SettingsBar.module.scss";
 
 interface SettingsBarProps {
@@ -22,21 +17,85 @@ interface SettingsBarProps {
   guildId: string;
 }
 
+interface NavEntry {
+  /** Path below /dashboard/{guildId}; empty for the overview. */
+  path: string;
+  icon: IconName;
+  label: MessageKey;
+  /**
+   * Highlight only on this exact path. Everything else also stays highlighted on its
+   * sub-pages, e.g. a scenario being edited keeps "Scenarios" active.
+   */
+  exact?: boolean;
+}
+
+interface NavGroup {
+  label: MessageKey;
+  items: NavEntry[];
+}
+
+const NAV: NavGroup[] = [
+  {
+    label: "settings.nav.manage",
+    items: [
+      { path: "", icon: "navGeneral", label: "settings.nav.general", exact: true },
+      { path: "/commands", icon: "navCommands", label: "settings.nav.commands" },
+    ],
+  },
+  {
+    label: "settings.nav.moderation",
+    items: [
+      {
+        path: "/moderation",
+        icon: "navModeration",
+        label: "settings.nav.moderationSettings",
+        exact: true,
+      },
+      { path: "/moderation/forms", icon: "navForms", label: "settings.nav.moderationForms" },
+      { path: "/moderation/queue", icon: "navQueue", label: "settings.nav.moderationQueue" },
+      { path: "/moderation/cases", icon: "navCases", label: "settings.nav.moderationCases" },
+      { path: "/moderation/audit", icon: "navAudit", label: "settings.nav.moderationAudit" },
+    ],
+  },
+  {
+    label: "settings.nav.engagement",
+    items: [
+      { path: "/economy", icon: "navEconomy", label: "settings.nav.economy" },
+      { path: "/shop", icon: "navShop", label: "settings.nav.shop" },
+      { path: "/levels", icon: "navLevels", label: "settings.nav.leveling" },
+    ],
+  },
+  {
+    label: "settings.nav.utils",
+    items: [{ path: "/private", icon: "navPrivate", label: "settings.nav.privateRooms" }],
+  },
+  {
+    label: "settings.nav.interactions",
+    items: [
+      { path: "/components", icon: "navComponents", label: "settings.nav.components" },
+      { path: "/scenarios", icon: "navScenarios", label: "settings.nav.scenarios" },
+    ],
+  },
+];
+
 export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
   const t = useT();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+
+  const base = `/dashboard/${guildId}`;
+
+  const isActive = (entry: NavEntry) => {
+    const href = base + entry.path;
+    return entry.exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = isOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
@@ -55,254 +114,91 @@ export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
           radius={"xl"}
         >
           <NavIcon onClick={() => setIsOpen(true)} />
-          <Text variant="heading-strong-s" style={{ marginLeft: "12px" }}>
+          <Text
+            variant="heading-strong-s"
+            style={{
+              marginLeft: "12px",
+              flex: 1,
+              minWidth: 0,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
             {access.guildName}
           </Text>
+          <LanguageSwitcher />
         </Flex>
       </Flex>
 
       <Flex
         hide
         m={{ hide: false }}
-        className={`${styles.overlay} ${isOpen ? styles.open : ""}`}
+        className={classNames(styles.overlay, isOpen && styles.open)}
         onClick={() => setIsOpen(false)}
       />
 
-      <Flex className={`${styles.sidebarWrapper} ${isOpen ? styles.open : ""}`}>
+      <Flex className={classNames(styles.sidebarWrapper, isOpen && styles.open)}>
         <Flex
           direction="column"
-          margin={"16"}
-          gap="8"
           radius={"l"}
           border={"neutral-medium"}
           background="surface"
           className={styles.sidebarContent}
-          style={{
-            maxWidth: "20rem",
-            width: "100%",
-            maxHeight: "97vh",
-          }}
           as={"aside"}
         >
-          <Row gap={"12"} vertical={"center"} paddingX={"16"} paddingTop={"16"} paddingBottom={"4"}>
+          <Row gap={"12"} vertical={"center"} className={styles.guild}>
             <Avatar src={access.guildIconUrl || undefined} size={"l"} border={false} />
-            <Column vertical={"between"} style={{ minWidth: 0 }}>
-              <Text
-                variant="heading-strong-s"
-                style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-              >
+            <Column style={{ minWidth: 0 }} gap="2">
+              <Text variant="heading-strong-s" className={styles.truncate}>
                 {access.guildName}
               </Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">
+              <Text variant="body-default-xs" onBackground="neutral-weak" className={styles.truncate}>
                 {guildId}
               </Text>
             </Column>
           </Row>
 
-          <Line />
+          <nav className={styles.nav} aria-label={access.guildName ?? undefined}>
+            {NAV.map((group) => (
+              <div className={styles.group} key={group.label}>
+                <p className={classNames(styles.groupLabel, "font-label", "font-strong")}>
+                  {t(group.label)}
+                </p>
+                <ul className={styles.list}>
+                  {group.items.map((entry) => {
+                    const active = isActive(entry);
 
-          <Column gap={"32"} paddingX={"20"} fill as={"nav"} overflowY="auto">
-            <Column gap={"8"}>
-              <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
-                {t("settings.nav.manage")}
-              </Text>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"boxes"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId)}
-                href={"/dashboard/" + guildId}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.general")}
-                </Text>
-              </ToggleButton>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"command"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId + "/commands")}
-                href={"/dashboard/" + guildId + "/commands"}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.commands")}
-                </Text>
-              </ToggleButton>
-            </Column>
+                    return (
+                      <li key={entry.path}>
+                        <Link
+                          href={base + entry.path}
+                          aria-current={active ? "page" : undefined}
+                          className={classNames(
+                            styles.item,
+                            active && styles.active,
+                            "font-body",
+                            "font-default",
+                          )}
+                        >
+                          <Icon name={entry.icon} size="s" className={styles.itemIcon} />
+                          <span className={styles.itemLabel}>{t(entry.label)}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </nav>
 
-            <Column gap={"8"}>
-              <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
-                {t("settings.nav.moderation")}
-              </Text>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"security"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId + "/moderation")}
-                href={"/dashboard/" + guildId + "/moderation"}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.moderationSettings")}
-                </Text>
-              </ToggleButton>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"clipboard"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId + "/moderation/forms")}
-                href={"/dashboard/" + guildId + "/moderation/forms"}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.moderationForms")}
-                </Text>
-              </ToggleButton>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"mail"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId + "/moderation/queue")}
-                href={"/dashboard/" + guildId + "/moderation/queue"}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.moderationQueue")}
-                </Text>
-              </ToggleButton>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"list"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId + "/moderation/cases")}
-                href={"/dashboard/" + guildId + "/moderation/cases"}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.moderationCases")}
-                </Text>
-              </ToggleButton>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"documentattach"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId + "/moderation/audit")}
-                href={"/dashboard/" + guildId + "/moderation/audit"}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.moderationAudit")}
-                </Text>
-              </ToggleButton>
-            </Column>
-
-            <Column gap={"8"}>
-              <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
-                {t("settings.nav.engagement")}
-              </Text>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"money"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId + "/economy")}
-                href={"/dashboard/" + guildId + "/economy"}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.economy")}
-                </Text>
-              </ToggleButton>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"cart"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId + "/shop")}
-                href={"/dashboard/" + guildId + "/shop"}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.shop")}
-                </Text>
-              </ToggleButton>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"ribbon"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId + "/levels")}
-                href={"/dashboard/" + guildId + "/levels"}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.leveling")}
-                </Text>
-              </ToggleButton>
-            </Column>
-
-            <Column gap={"8"}>
-              <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
-                {t("settings.nav.utils")}
-              </Text>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"microphone"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId + "/private")}
-                href={"/dashboard/" + guildId + "/private"}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.privateRooms")}
-                </Text>
-              </ToggleButton>
-            </Column>
-
-            <Column gap={"8"}>
-              <Text onBackground={"neutral-medium"} variant={"body-strong-m"}>
-                {t("settings.nav.interactions")}
-              </Text>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"target"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId + "/components")}
-                href={"/dashboard/" + guildId + "/components"}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.components")}
-                </Text>
-              </ToggleButton>
-              <ToggleButton
-                size={"l"}
-                prefixIcon={"gitnet"}
-                horizontal="start"
-                fillWidth
-                selected={pathname.endsWith("/dashboard/" + guildId + "/scenarios")}
-                href={"/dashboard/" + guildId + "/scenarios"}
-              >
-                <Text onBackground={"neutral-medium"} variant={"body-default-m"}>
-                  {t("settings.nav.scenarios")}
-                </Text>
-              </ToggleButton>
-            </Column>
-          </Column>
-
-          <Line />
-
-          <Row
-            gap={"12"}
-            center
-            paddingX={"16"}
-            paddingTop={"4"}
-            paddingBottom={"16"}
-            style={{ flexShrink: 0 }}
-          >
-            <Button prefixIcon={"back"} fillWidth href={"/dashboard"}>
-              {t("settings.nav.backToList")}
-            </Button>
-          </Row>
+          <div className={styles.footer}>
+            <Link href="/dashboard" className={classNames(styles.back, "font-body", "font-default")}>
+              <Icon name="navBack" size="s" />
+              <span className={styles.itemLabel}>{t("settings.nav.backToList")}</span>
+            </Link>
+            <LanguageSwitcher />
+          </div>
         </Flex>
       </Flex>
     </>

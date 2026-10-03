@@ -43,7 +43,7 @@ export const settings: Dict<typeof en> = {
     interactions: "Взаимодействия",
     components: "Компоненты",
     scenarios: "Сценарии",
-    backToList: "К списку серверов",
+    backToList: "Все серверы",
   },
   guilds: {
     loginRequiredTitle: "Требуется вход",

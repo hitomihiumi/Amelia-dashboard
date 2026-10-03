@@ -1,5 +1,6 @@
 @use "../styles/breakpoints.scss" as breakpoints;
 
+// Mobile drawer backdrop.
 .overlay {
   @include breakpoints.m {
     display: block;
@@ -19,16 +20,22 @@
   }
 }
 
+// Desktop: the sidebar stays put while the page scrolls and only the nav list scrolls inside it,
+// so the footer is never pushed off screen. Mobile: an off-canvas drawer.
 .sidebarWrapper {
-  position: relative;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
   display: flex;
+  height: 100vh;
+  padding: var(--static-space-16);
   z-index: 8;
 
   @include breakpoints.m {
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
+    padding: 0;
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 
@@ -39,13 +46,145 @@
 }
 
 .sidebarContent {
+  width: 18rem;
+  max-width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+
   @include breakpoints.m {
-    margin: 0 !important;
+    width: 18rem;
     border-radius: 0 !important;
-    max-height: 100vh !important;
-    border-right: 1px solid var(--neutral-medium) !important;
-    border-left: none !important;
     border-top: none !important;
     border-bottom: none !important;
+    border-left: none !important;
+  }
+}
+
+.guild {
+  flex-shrink: 0;
+  padding: var(--static-space-16) var(--static-space-16) var(--static-space-12);
+  border-bottom: 1px solid var(--neutral-alpha-weak);
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--static-space-12) var(--static-space-12) var(--static-space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-20);
+
+  // A thin, quiet scrollbar instead of the system one.
+  scrollbar-width: thin;
+  scrollbar-color: var(--neutral-alpha-medium) transparent;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-4);
+}
+
+.groupLabel {
+  margin: 0;
+  padding: 0 var(--static-space-12);
+  color: var(--neutral-on-background-weak);
+  font-size: var(--font-size-label-xs, 0.6875rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item,
+.back {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-12);
+  min-height: 2.25rem;
+  padding: 0 var(--static-space-12);
+  border-radius: var(--radius-m);
+  color: var(--neutral-on-background-medium);
+  font-size: var(--font-size-body-s, 0.875rem);
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--neutral-alpha-weak);
+    color: var(--neutral-on-background-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-solid-strong);
+    outline-offset: 1px;
+  }
+}
+
+.itemIcon {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.itemLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// The page you are on: brand tint plus an accent bar on the left edge.
+.item.active {
+  background: color-mix(in srgb, var(--brand-alpha-medium) 55%, transparent);
+  color: var(--neutral-on-background-strong);
+  font-weight: 600;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 22%;
+    bottom: 22%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--brand-solid-strong);
+  }
+
+  .itemIcon {
+    opacity: 1;
+    color: var(--brand-on-background-strong);
+  }
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-8);
+  flex-shrink: 0;
+  padding: var(--static-space-12);
+  border-top: 1px solid var(--neutral-alpha-weak);
+
+  .back {
+    flex: 1;
+    min-width: 0;
+    gap: var(--static-space-8);
+    padding: 0 var(--static-space-10, 10px);
+    border: 1px solid var(--neutral-border-medium);
+    background: var(--neutral-alpha-weak);
   }
 }
