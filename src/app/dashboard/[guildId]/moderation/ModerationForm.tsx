@@ -6,6 +6,7 @@ import {
   Button,
   Column,
   Feedback,
+  Grid,
   IconButton,
   InlineCode,
   Input,
@@ -35,6 +36,19 @@ import { updateModerationSettings } from "./actions";
 import { Section } from "@/components/dashboard/Section";
 import { IconName } from "@/resources/icons";
 import styles from "./ModerationForm.module.scss";
+
+// Inner grids follow the width of the card they sit in (not the viewport), so the same markup
+// is one column on a phone and two or three side by side inside a wide card.
+const autoFit = (min: number): React.CSSProperties => ({
+  gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${min}px), 1fr))`,
+  alignItems: "start",
+});
+
+const FIELDS_GRID = autoFit(210);
+const TOGGLES_GRID: React.CSSProperties = {
+  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
+  gap: "var(--static-space-12) var(--static-space-16)",
+};
 
 type AutoModeration = GuildSchema["moderation"]["auto_moderation"];
 
@@ -180,15 +194,21 @@ export function ModerationForm({
     }));
 
   return (
-    <div className={styles.layout}>
-      <div className={styles.stack}>
+    <Grid fillWidth gap="24" className={styles.layout}>
+      <Column gap="24" minWidth={0} className={styles.stack}>
         <Section
           title={t("moderation.settings.general.title")}
           description={t("moderation.settings.general.description")}
           icon="shield"
           num={1}
         >
-          <div className={styles.fields}>
+          <Grid
+            fillWidth
+            gap="16"
+            minWidth={0}
+            className={styles.labels}
+            style={FIELDS_GRID}
+          >
             <RoleSelect
               fillWidth
               multiple
@@ -218,7 +238,7 @@ export function ModerationForm({
                 }))
               }
             />
-          </div>
+          </Grid>
 
           <Row fillWidth gap="12" vertical="center">
             <Switch
@@ -260,10 +280,26 @@ export function ModerationForm({
 
           <Column fillWidth gap="12">
             {settings.warn_thresholds.length > 0 && (
-              <div className={styles.rules}>
+              <Grid
+                fillWidth
+                gap="12"
+                minWidth={0}
+                style={{
+                  gridTemplateColumns:
+                    "repeat(auto-fill, minmax(min(100%, 300px), 1fr))",
+                }}
+              >
                 {settings.warn_thresholds.map((rule, index) => (
-                  <div className={styles.rule} key={`${rule.count}-${index}`}>
-                    <div className={styles.ruleHead}>
+                  <Column
+                    key={`${rule.count}-${index}`}
+                    gap="12"
+                    minWidth={0}
+                    padding="16"
+                    radius="m"
+                    border="neutral-medium"
+                    background="neutral-alpha-weak"
+                  >
+                    <Row horizontal="between" vertical="center" gap="8">
                       <Text variant="label-strong-s">
                         {t("moderation.settings.escalation.rule", {
                           number: index + 1,
@@ -276,8 +312,12 @@ export function ModerationForm({
                         onClick={() => removeThreshold(index)}
                         tooltip={t("moderation.settings.escalation.removeRule")}
                       />
-                    </div>
-                    <div className={styles.ruleFields}>
+                    </Row>
+                    <Grid
+                      gap="12"
+                      className={styles.labels}
+                      style={autoFit(120)}
+                    >
                       <NumberInput
                         id={`threshold-count-${index}`}
                         label={t("moderation.settings.escalation.warns")}
@@ -303,7 +343,7 @@ export function ModerationForm({
                           })
                         }
                       />
-                    </div>
+                    </Grid>
                     <SegmentedControl
                       fillWidth
                       buttons={punishmentOptions.map((option) => ({
@@ -320,9 +360,9 @@ export function ModerationForm({
                         })
                       }
                     />
-                  </div>
+                  </Column>
                 ))}
-              </div>
+              </Grid>
             )}
 
             {settings.warn_thresholds.length === 0 && (
@@ -343,9 +383,13 @@ export function ModerationForm({
             </Row>
           </Column>
         </Section>
-      </div>
+      </Column>
 
-      <div className={`${styles.stack} ${styles.filters}`}>
+      <Column
+        gap="24"
+        minWidth={0}
+        className={`${styles.stack} ${styles.filters}`}
+      >
         <AutoModerationSection
           title={t("moderation.settings.invite.title")}
           description={t("moderation.settings.invite.description")}
@@ -368,8 +412,8 @@ export function ModerationForm({
           whitelist
           icon="link"
         />
-      </div>
-    </div>
+      </Column>
+    </Grid>
   );
 }
 
@@ -416,7 +460,7 @@ function AutoModerationSection({
         />
       }
     >
-      <div className={styles.toggles}>
+      <Grid fillWidth minWidth={0} style={TOGGLES_GRID}>
         <Row fillWidth gap="12" vertical="center">
           <Switch
             checked={rule.delete_message}
@@ -438,9 +482,15 @@ function AutoModerationSection({
             {t("moderation.settings.autoMod.moderatorsExempt")}
           </Text>
         </Row>
-      </div>
+      </Grid>
 
-      <div className={styles.fields}>
+      <Grid
+        fillWidth
+        gap="16"
+        minWidth={0}
+        className={styles.labels}
+        style={FIELDS_GRID}
+      >
         <ChannelSelect
           fillWidth
           multiple
@@ -464,7 +514,7 @@ function AutoModerationSection({
             update({ ignore_roles: value as string[] })
           }
         />
-      </div>
+      </Grid>
 
       {whitelist && (
         <LinkWhitelist
@@ -492,7 +542,13 @@ function AutoModerationSection({
             })
           }
         />
-        <div className={styles.fields}>
+        <Grid
+          fillWidth
+          gap="16"
+          minWidth={0}
+          className={styles.labels}
+          style={FIELDS_GRID}
+        >
           <NumberInput
             id={`${title}-punishment-time`}
             label={t("moderation.settings.autoMod.duration")}
@@ -516,7 +572,7 @@ function AutoModerationSection({
               })
             }
           />
-        </div>
+        </Grid>
       </Column>
     </Section>
   );
@@ -571,21 +627,23 @@ function LinkWhitelist({
         })}
       </Text>
 
-      <div className={styles.patternRow}>
-        <Input
-          id="link-whitelist"
-          label={t("moderation.settings.whitelist.pattern")}
-          value={draft}
-          maxLength={200}
-          placeholder="youtube.com"
-          errorMessage={
-            draftError ??
-            (duplicate
-              ? t("moderation.settings.whitelist.duplicate")
-              : undefined)
-          }
-          onChange={(e) => setDraft(e.target.value)}
-        />
+      <Row fillWidth vertical="start" gap="8">
+        <Column style={{ flex: 1, minWidth: 0 }}>
+          <Input
+            id="link-whitelist"
+            label={t("moderation.settings.whitelist.pattern")}
+            value={draft}
+            maxLength={200}
+            placeholder="youtube.com"
+            errorMessage={
+              draftError ??
+              (duplicate
+                ? t("moderation.settings.whitelist.duplicate")
+                : undefined)
+            }
+            onChange={(e) => setDraft(e.target.value)}
+          />
+        </Column>
         <Button
           variant="secondary"
           onClick={addPattern}
@@ -598,7 +656,7 @@ function LinkWhitelist({
         >
           {t("moderation.settings.whitelist.add")}
         </Button>
-      </div>
+      </Row>
 
       <Accordion title={t("moderation.settings.whitelist.howTitle")}>
         <Column fillWidth gap="8">

@@ -11,7 +11,7 @@ import {
   Accordion,
   Column,
   Feedback,
-  Flex,
+  Grid,
   Input,
   Line,
   Row,
@@ -239,8 +239,17 @@ export function AuditForm({
           />
         }
       >
-        <div className={styles.two}>
-          <div className={styles.col}>
+        <Grid
+          fillWidth
+          gap="24"
+          minWidth={0}
+          style={{
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
+            alignItems: "start",
+          }}
+        >
+          <Column gap="16" minWidth={0}>
             <ChannelSelect
               fillWidth
               id="audit-channel"
@@ -286,8 +295,8 @@ export function AuditForm({
                 {t("moderation.audit.general.skipBots")}
               </Text>
             </Row>
-          </div>
-          <div className={styles.col}>
+          </Column>
+          <Column gap="16" minWidth={0}>
             <Input
               id="audit-webhook-name"
               label={t("moderation.audit.general.webhookName")}
@@ -316,22 +325,28 @@ export function AuditForm({
               title={t("moderation.audit.general.permissionsTitle")}
               description={t("moderation.audit.general.permissionsText")}
             />
-          </div>
-        </div>
+          </Column>
+        </Grid>
       </Section>
 
       <SectionGrid.Full>
-        <div
+        <Grid
           ref={catsRef}
+          fillWidth
+          gap="24"
+          minWidth={0}
           className={styles.cats}
-          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+          style={{
+            gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+            alignItems: "start",
+          }}
         >
           {stacks.map((group, i) => (
-            <div key={i} className={styles.stack}>
+            <Column key={i} gap="24" minWidth={0} className={styles.cats}>
               {group.map(renderCategory)}
-            </div>
+            </Column>
           ))}
-        </div>
+        </Grid>
       </SectionGrid.Full>
     </SectionGrid>
   );

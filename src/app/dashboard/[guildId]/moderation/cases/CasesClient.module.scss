@@ -6,81 +6,12 @@
 //   >= 1180px table on the left, the open case in a sticky panel on the right
 //   >= 1480px table gets moderator and source columns
 
-// ---------------------------------------------------------------- toolbar
-
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--static-space-12) var(--static-space-24);
-  width: 100%;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--static-space-8);
-  min-width: 0;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 36px;
-  padding: 0 var(--static-space-16);
-  border: 1px solid var(--neutral-border-medium);
-  border-radius: var(--radius-full);
-  background: var(--surface-background);
-  color: var(--neutral-on-background-medium);
-  font: inherit;
-  font-size: var(--font-size-s);
-  cursor: pointer;
-  transition: var(--transition-micro-medium);
-
-  &:hover {
-    background: var(--neutral-alpha-weak);
-    color: var(--neutral-on-background-strong);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--brand-border-strong);
-    outline-offset: 2px;
-  }
-
-  &[aria-pressed="true"] {
-    border-color: var(--brand-border-strong);
-    background: var(--brand-alpha-weak);
-    color: var(--neutral-on-background-strong);
-  }
-
-  @include breakpoints.phone {
-    min-height: 40px;
-  }
-}
-
-.search {
-  flex: 0 1 380px;
-  min-width: min(100%, 260px);
-}
-
-// ------------------------------------------------------------------ board
-
 .board {
   --cols: 64px 104px minmax(150px, 190px) minmax(0, 1fr) 150px 88px;
   --areas: "num type user reason date status";
 
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-8);
-  width: 100%;
-  min-width: 0;
-}
-
-.entry {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--static-space-8);
 }
 
 .rowWrap {
@@ -101,47 +32,95 @@
   min-width: 0;
 }
 
-.hmod,
-.hsource {
+.wideOnly {
   display: none;
+}
 
-  @container page (min-width: 1480px) {
-    display: block;
+// ------------------------------------------------------------------- row
+
+.row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "num type status"
+    "user user user"
+    "reason reason reason"
+    "date date date";
+  align-items: center;
+  gap: var(--static-space-8) var(--static-space-12);
+  padding: var(--static-space-16);
+}
+
+.status {
+  justify-self: start;
+}
+
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+// ---------------------------------------------------------------- detail
+
+.detail {
+  // The row above already sits one board gap away, the detail hugs it at 4px.
+  margin-top: calc(-1 * var(--static-space-4));
+  padding: var(--static-space-20);
+
+  @include breakpoints.phone {
+    padding: var(--static-space-16);
   }
 }
 
-.hnum {
-  grid-area: num;
-}
-.htype {
-  grid-area: type;
-}
-.huser {
-  grid-area: user;
-}
-.hmod {
-  grid-area: mod;
-}
-.hreason {
-  grid-area: reason;
-}
-.hsource {
-  grid-area: source;
-}
-.hdate {
-  grid-area: date;
-}
-.hstatus {
-  grid-area: status;
+.facts {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  column-gap: var(--static-space-16);
 }
 
+.revokeActions {
+  @include breakpoints.phone {
+    > * {
+      flex: 1 1 100%;
+    }
+  }
+}
+
+// ----------------------------------------------------------- breakpoints
+
 @container page (min-width: 720px) {
+  .board {
+    row-gap: var(--static-space-4);
+  }
+
   .head {
     display: grid;
   }
 
-  .board {
-    gap: var(--static-space-4);
+  .card {
+    border-radius: var(--radius-m);
+  }
+
+  .row {
+    grid-template-columns: var(--cols);
+    grid-template-areas: var(--areas);
+    gap: var(--static-space-16);
+    padding: var(--static-space-12) var(--static-space-16);
+  }
+
+  .status {
+    justify-self: end;
+  }
+
+  .clamp {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+
+  .detail {
+    margin-top: 0;
   }
 }
 
@@ -149,16 +128,10 @@
   .board {
     --cols: 56px 96px minmax(140px, 170px) minmax(0, 1fr) 132px 84px;
 
-    display: grid;
     grid-template-columns: minmax(0, 1fr) 380px;
     grid-template-rows: auto repeat(var(--rows), auto) 1fr;
     column-gap: var(--static-space-24);
-    row-gap: var(--static-space-4);
     align-items: start;
-  }
-
-  .entry {
-    display: contents;
   }
 
   .head,
@@ -178,12 +151,15 @@
   .detail {
     max-height: calc(100vh - var(--static-space-48));
     overflow-y: auto;
+    padding: var(--static-space-24);
+  }
+
+  .facts {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .placeholder {
     display: flex;
-    align-items: center;
-    justify-content: center;
     min-height: 240px;
     padding: var(--static-space-24);
     border: 1px dashed var(--neutral-border-medium);
@@ -197,188 +173,8 @@
     --cols: 52px 112px 150px 150px minmax(0, 1fr) 100px 124px 80px;
     --areas: "num type user mod reason source date status";
   }
-}
 
-// -------------------------------------------------------------------- row
-
-.row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  grid-template-areas:
-    "num type status"
-    "user user user"
-    "reason reason reason"
-    "date date date";
-  align-items: center;
-  gap: var(--static-space-8) var(--static-space-12);
-  width: 100%;
-  min-width: 0;
-  padding: var(--static-space-16);
-  border: 1px solid var(--neutral-border-medium);
-  border-radius: var(--radius-l);
-  background: var(--surface-background);
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: var(--transition-micro-medium);
-
-  &:hover {
-    background: var(--neutral-alpha-weak);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--brand-border-strong);
-    outline-offset: 2px;
-  }
-
-  &[aria-expanded="true"] {
-    border-color: var(--brand-border-strong);
-    background: var(--brand-alpha-weak);
-  }
-
-  @container page (min-width: 720px) {
-    grid-template-columns: var(--cols);
-    grid-template-areas: var(--areas);
-    gap: var(--static-space-16);
-    padding: var(--static-space-12) var(--static-space-16);
-    border-radius: var(--radius-m);
-  }
-}
-
-.num {
-  grid-area: num;
-}
-.type {
-  grid-area: type;
-  justify-self: start;
-}
-.user {
-  grid-area: user;
-}
-.mod {
-  grid-area: mod;
-  display: none;
-}
-.reason {
-  grid-area: reason;
-}
-.source {
-  grid-area: source;
-  display: none;
-}
-.date {
-  grid-area: date;
-}
-.status {
-  grid-area: status;
-  justify-self: start;
-}
-
-.cell {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.clamp {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-}
-
-@container page (min-width: 720px) {
-  .clamp {
-    -webkit-line-clamp: 1;
-    line-clamp: 1;
-  }
-
-  .status {
-    justify-self: end;
-  }
-}
-
-@container page (min-width: 1480px) {
-  .mod,
-  .source {
+  .wideOnly {
     display: block;
   }
-}
-
-// ----------------------------------------------------------------- detail
-
-.detail {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-16);
-  min-width: 0;
-  margin-top: var(--static-space-4);
-  padding: var(--static-space-20);
-  border: 1px solid var(--neutral-border-medium);
-  border-radius: var(--radius-l);
-  background: var(--surface-background);
-
-  @container page (min-width: 1180px) {
-    margin-top: 0;
-    padding: var(--static-space-24);
-  }
-
-  @include breakpoints.phone {
-    padding: var(--static-space-16);
-  }
-}
-
-.detailHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--static-space-8) var(--static-space-16);
-}
-
-.facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-  gap: var(--static-space-4) var(--static-space-16);
-  min-width: 0;
-  overflow-wrap: anywhere;
-
-  @container page (min-width: 1180px) {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.reasonText {
-  max-width: 72ch;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.revoke {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-12);
-  padding-top: var(--static-space-16);
-  border-top: 1px solid var(--neutral-border-medium);
-}
-
-.revokeActions {
-  display: flex;
-  justify-content: flex-end;
-
-  @include breakpoints.phone {
-    > * {
-      flex: 1 1 100%;
-    }
-  }
-}
-
-.pager {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: var(--static-space-8) var(--static-space-16);
 }

@@ -1,92 +1,11 @@
 @use "../../../../../components/styles/breakpoints.scss" as breakpoints;
 
 // Everything here follows the `page` container (the room next to the sidebar), not the viewport.
+//   narrow: a list of cards, the open one expands under its row
+//   wide:   list on the left, the chosen submission on the right (sticky)
 
-// ---------------------------------------------------------------- toolbar
-
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--static-space-12) var(--static-space-24);
-  width: 100%;
-}
-
-.kinds {
-  flex: 0 1 380px;
-  min-width: min(100%, 260px);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--static-space-8);
-  min-width: 0;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--static-space-8);
-  min-height: 36px;
-  padding: 0 var(--static-space-12);
-  border: 1px solid var(--neutral-border-medium);
-  border-radius: var(--radius-full);
-  background: var(--surface-background);
-  color: var(--neutral-on-background-medium);
-  font: inherit;
-  font-size: var(--font-size-s);
-  cursor: pointer;
-  transition: var(--transition-micro-medium);
-
-  &:hover {
-    background: var(--neutral-alpha-weak);
-    color: var(--neutral-on-background-strong);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--brand-border-strong);
-    outline-offset: 2px;
-  }
-
-  &[aria-pressed="true"] {
-    border-color: var(--brand-border-strong);
-    background: var(--brand-alpha-weak);
-    color: var(--neutral-on-background-strong);
-  }
-
-  @include breakpoints.phone {
-    min-height: 40px;
-  }
-}
-
-.count {
-  min-width: 20px;
-  padding: 0 6px;
-  border-radius: var(--radius-full);
-  background: var(--neutral-alpha-medium);
-  color: var(--neutral-on-background-strong);
-  font-size: var(--font-size-xs);
-  line-height: 20px;
-  text-align: center;
-}
-
-// ------------------------------------------------------------ board
-
-// Narrow: a list of cards, the open one expands under its row.
 .board {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-8);
-  width: 100%;
-  min-width: 0;
-}
-
-.entry {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .rowWrap {
@@ -97,21 +16,58 @@
   display: none;
 }
 
-// Wide: list on the left, the chosen submission on the right (sticky).
+.detail {
+  padding: var(--static-space-20);
+
+  @include breakpoints.phone {
+    padding: var(--static-space-16);
+  }
+}
+
+// The open row above already says which submission this is; the wide layout has no such row.
+.head {
+  display: none;
+}
+
+// Answers and the reply box sit side by side on very wide screens.
+.body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.reply {
+  @container page (min-width: 1480px) {
+    padding: var(--static-space-16);
+    border: 1px solid var(--neutral-border-medium);
+    border-radius: var(--radius-m);
+    background: var(--neutral-alpha-weak);
+  }
+}
+
+.snippet {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  @include breakpoints.phone {
+    > * {
+      flex: 1 1 140px;
+    }
+  }
+}
+
 @container page (min-width: 1100px) {
   .board {
     --list-width: 360px;
 
-    display: grid;
     grid-template-columns: var(--list-width) minmax(0, 1fr);
     grid-template-rows: repeat(var(--rows), auto) 1fr;
     column-gap: var(--static-space-24);
-    row-gap: var(--static-space-8);
     align-items: start;
-  }
-
-  .entry {
-    display: contents;
   }
 
   .rowWrap {
@@ -130,12 +86,15 @@
   .detail {
     max-height: calc(100vh - var(--static-space-48));
     overflow-y: auto;
+    padding: var(--static-space-24);
+  }
+
+  .head {
+    display: flex;
   }
 
   .placeholder {
     display: flex;
-    align-items: center;
-    justify-content: center;
     min-height: 240px;
     padding: var(--static-space-24);
     border: 1px dashed var(--neutral-border-medium);
@@ -148,167 +107,9 @@
   .board {
     --list-width: 400px;
   }
-}
 
-// ------------------------------------------------------------ list row
-
-.row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-8);
-  width: 100%;
-  min-width: 0;
-  padding: var(--static-space-16);
-  border: 1px solid var(--neutral-border-medium);
-  border-radius: var(--radius-l);
-  background: var(--surface-background);
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: var(--transition-micro-medium);
-
-  &:hover {
-    background: var(--neutral-alpha-weak);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--brand-border-strong);
-    outline-offset: 2px;
-  }
-
-  &[aria-expanded="true"] {
-    border-color: var(--brand-border-strong);
-    background: var(--brand-alpha-weak);
-  }
-}
-
-.rowTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--static-space-8);
-}
-
-.rowMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--static-space-8);
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.snippet {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-}
-
-// ------------------------------------------------------------ detail
-
-.detail {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-16);
-  min-width: 0;
-  margin-top: var(--static-space-8);
-  padding: var(--static-space-20);
-  border: 1px solid var(--neutral-border-medium);
-  border-radius: var(--radius-l);
-  background: var(--surface-background);
-
-  @container page (min-width: 1100px) {
-    margin-top: 0;
-    padding: var(--static-space-24);
-  }
-
-  @include breakpoints.phone {
-    padding: var(--static-space-16);
-  }
-}
-
-// The open row above already says which submission this is; the wide layout has no such row.
-// The open row above already says which submission this is; the wide layout has no such row.
-.head {
-  display: none;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--static-space-8) var(--static-space-16);
-
-  @container page (min-width: 1100px) {
-    display: flex;
-  }
-}
-
-.facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-  gap: var(--static-space-4) var(--static-space-16);
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-// Answers and the reply box sit side by side on very wide screens.
-.body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--static-space-20);
-  min-width: 0;
-
-  @container page (min-width: 1480px) {
+  .body {
     grid-template-columns: minmax(0, 1fr) minmax(300px, 400px);
     align-items: start;
-  }
-}
-
-.answers {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-  gap: var(--static-space-16);
-  min-width: 0;
-}
-
-.answer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-4);
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.answerLong {
-  grid-column: 1 / -1;
-  max-width: 80ch;
-  white-space: pre-wrap;
-}
-
-.reply {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-12);
-  min-width: 0;
-
-  @container page (min-width: 1480px) {
-    padding: var(--static-space-16);
-    border: 1px solid var(--neutral-border-medium);
-    border-radius: var(--radius-m);
-    background: var(--neutral-alpha-weak);
-  }
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: var(--static-space-8);
-
-  @include breakpoints.phone {
-    > * {
-      flex: 1 1 140px;
-    }
   }
 }

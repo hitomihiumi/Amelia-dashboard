@@ -1,45 +1,8 @@
-// General card: the channel rules on one side, the webhook identity on the other.
-.two {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
-  gap: var(--static-space-24);
-  align-items: start;
-  width: 100%;
-  min-width: 0;
-}
-
-.col {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-16);
-  min-width: 0;
-}
-
 // Category cards. Their heights differ a lot (members and server have many events, messages
 // and voice only a few), so AuditForm distributes them into balanced stacks per column count.
-.cats {
-  display: grid;
-  gap: var(--static-space-24);
-  align-items: start;
-  width: 100%;
-  min-width: 0;
-}
-
-.stack {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-24);
-  min-width: 0;
-}
-
+// The grid and every stack share the gap, which tightens on phones.
 @media (max-width: 640px) {
-  .cats,
-  .stack {
+  .cats {
     gap: var(--static-space-16);
   }
-}
-
-.eventTitle {
-  min-width: 0;
-  overflow-wrap: anywhere;
 }

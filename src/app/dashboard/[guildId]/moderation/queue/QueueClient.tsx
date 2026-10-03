@@ -3,9 +3,13 @@
 import React, { useState } from "react";
 import {
   Button,
+  Card,
+  Chip,
   Column,
   Feedback,
+  Grid,
   RevealFx,
+  Row,
   SegmentedControl,
   Tag,
   Text,
@@ -57,6 +61,11 @@ const firstAnswer = (answers: ModerationSubmissionAnswer[]) => {
 // Long free text gets the whole row, short answers share it.
 const isLong = (value: string) => value.length > 90 || value.includes("\n");
 
+// Answers and facts follow the width of the detail panel, not the viewport.
+const autoFit = (min: number): React.CSSProperties => ({
+  gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${min}px), 1fr))`,
+});
+
 export function QueueClient({
   guildId,
   items,
@@ -75,11 +84,15 @@ export function QueueClient({
   const router = useRouter();
 
   // undefined: first submission, null: the person closed the detail.
-  const [selectedId, setSelectedId] = useState<string | null | undefined>(undefined);
+  const [selectedId, setSelectedId] = useState<string | null | undefined>(
+    undefined,
+  );
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const selected =
-    selectedId === null ? null : (items.find((item) => item.id === selectedId) ?? items[0] ?? null);
+    selectedId === null
+      ? null
+      : (items.find((item) => item.id === selectedId) ?? items[0] ?? null);
 
   const setFilter = (next: { status?: string; kind?: string }) => {
     const params = new URLSearchParams();
@@ -99,35 +112,49 @@ export function QueueClient({
   return (
     <Column fillWidth gap="16">
       <RevealFx delay={100} translateY={-0.5} fillWidth>
-        <div className={styles.toolbar}>
-          <div className={styles.chips} role="group">
+        <Row
+          fillWidth
+          wrap
+          vertical="center"
+          horizontal="between"
+          style={{ gap: "var(--static-space-12) var(--static-space-24)" }}
+        >
+          <Row wrap gap="8" minWidth={0} role="group">
             {statusFilters.map((filter) => (
-              <button
+              <Chip
                 key={filter.value}
-                type="button"
-                className={styles.chip}
-                aria-pressed={status === filter.value}
+                // The label and the count render together as children.
+                label=""
+                selected={status === filter.value}
                 onClick={() => setFilter({ status: filter.value })}
               >
-                {filter.label}
-                {counts[filter.value] !== undefined && (
-                  <span className={styles.count}>{counts[filter.value]}</span>
-                )}
-              </button>
+                <Row as="span" gap="8" vertical="center">
+                  {filter.label}
+                  {counts[filter.value] !== undefined && (
+                    <Tag size="s">{counts[filter.value]}</Tag>
+                  )}
+                </Row>
+              </Chip>
             ))}
-          </div>
-          <div className={styles.kinds}>
-          <SegmentedControl
-            buttons={[
-              { value: "all", label: t("moderation.queue.filters.all") },
-              { value: "report", label: t("moderation.queue.filters.reports") },
-              { value: "appeal", label: t("moderation.queue.filters.appeals") },
-            ]}
-            value={kind}
-            onChange={(value) => setFilter({ kind: value })}
-          />
-          </div>
-        </div>
+          </Row>
+          <Column style={{ flex: "0 1 380px", minWidth: "min(100%, 260px)" }}>
+            <SegmentedControl
+              buttons={[
+                { value: "all", label: t("moderation.queue.filters.all") },
+                {
+                  value: "report",
+                  label: t("moderation.queue.filters.reports"),
+                },
+                {
+                  value: "appeal",
+                  label: t("moderation.queue.filters.appeals"),
+                },
+              ]}
+              value={kind}
+              onChange={(value) => setFilter({ kind: value })}
+            />
+          </Column>
+        </Row>
       </RevealFx>
 
       {items.length === 0 && (
@@ -141,9 +168,17 @@ export function QueueClient({
       )}
 
       {items.length > 0 && (
-        <div
+        <Grid
+          fillWidth
+          gap="8"
+          minWidth={0}
           className={styles.board}
-          style={{ "--rows": items.length, "--span": items.length + 1 } as React.CSSProperties}
+          style={
+            {
+              "--rows": items.length,
+              "--span": items.length + 1,
+            } as React.CSSProperties
+          }
         >
           {items.map((item, idx) => {
             const open = selected?.id === item.id;
@@ -158,33 +193,56 @@ export function QueueClient({
             });
 
             return (
-              <div key={item.id} className={styles.entry}>
+              <React.Fragment key={item.id}>
                 <RevealFx
                   delay={Math.min(idx * 50, 400)}
                   translateY={-0.5}
                   fillWidth
                   className={styles.rowWrap}
                 >
-                  <button
-                    type="button"
-                    className={styles.row}
-                    aria-expanded={open}
+                  <Card
+                    selected={open}
                     onClick={() => setSelectedId(open ? null : item.id)}
+                    direction="column"
+                    gap="8"
+                    padding="16"
+                    radius="l"
+                    fillWidth
+                    minWidth={0}
                   >
-                    <span className={styles.rowTop}>
+                    <Row
+                      fillWidth
+                      vertical="center"
+                      horizontal="between"
+                      gap="8"
+                    >
                       <Text variant="heading-strong-s">{title}</Text>
                       <StatusTag status={item.status} />
-                    </span>
-                    <span className={styles.rowMeta}>
-                      <Text variant="code-default-xs" onBackground="neutral-weak">
+                    </Row>
+                    <Row
+                      fillWidth
+                      wrap
+                      minWidth={0}
+                      style={{
+                        columnGap: "var(--static-space-8)",
+                        overflowWrap: "anywhere",
+                      }}
+                    >
+                      <Text
+                        variant="code-default-xs"
+                        onBackground="neutral-weak"
+                      >
                         {item.authorId}
                       </Text>
                       {item.targetId && (
-                        <Text variant="body-default-xs" onBackground="neutral-weak">
+                        <Text
+                          variant="body-default-xs"
+                          onBackground="neutral-weak"
+                        >
                           → {item.targetId}
                         </Text>
                       )}
-                    </span>
+                    </Row>
                     {snippet && (
                       <Text
                         variant="body-default-s"
@@ -197,7 +255,7 @@ export function QueueClient({
                     <Text variant="body-default-xs" onBackground="neutral-weak">
                       {format.dateTime(item.createdAt)}
                     </Text>
-                  </button>
+                  </Card>
                 </RevealFx>
 
                 {open && (
@@ -205,21 +263,23 @@ export function QueueClient({
                     guildId={guildId}
                     item={item}
                     draft={drafts[item.id] ?? item.response ?? ""}
-                    onDraft={(value) => setDrafts((prev) => ({ ...prev, [item.id]: value }))}
+                    onDraft={(value) =>
+                      setDrafts((prev) => ({ ...prev, [item.id]: value }))
+                    }
                   />
                 )}
-              </div>
+              </React.Fragment>
             );
           })}
 
           {!selected && (
-            <div className={styles.placeholder}>
+            <Column center minWidth={0} className={styles.placeholder}>
               <Text variant="body-default-m" onBackground="neutral-weak">
                 {t("moderation.queue.selectHint")}
               </Text>
-            </div>
+            </Column>
           )}
-        </div>
+        </Grid>
       )}
     </Column>
   );
@@ -279,15 +339,34 @@ function SubmissionDetail({
 
   const facts = [
     t("moderation.queue.author", { id: item.authorId }),
-    item.targetId ? t("moderation.queue.reported", { id: item.targetId }) : null,
-    item.caseNumber !== null ? t("moderation.queue.caseRef", { number: item.caseNumber }) : null,
+    item.targetId
+      ? t("moderation.queue.reported", { id: item.targetId })
+      : null,
+    item.caseNumber !== null
+      ? t("moderation.queue.caseRef", { number: item.caseNumber })
+      : null,
     t("moderation.queue.sent", { date: format.dateTime(item.createdAt) }),
-    item.handledBy ? t("moderation.queue.handledBy", { id: item.handledBy }) : null,
+    item.handledBy
+      ? t("moderation.queue.handledBy", { id: item.handledBy })
+      : null,
   ].filter(Boolean);
 
   return (
-    <div className={styles.detail}>
-      <div className={styles.head}>
+    <Column
+      gap="16"
+      minWidth={0}
+      radius="l"
+      border="neutral-medium"
+      background="surface"
+      className={styles.detail}
+    >
+      <Row
+        wrap
+        vertical="center"
+        horizontal="between"
+        className={styles.head}
+        style={{ gap: "var(--static-space-8) var(--static-space-16)" }}
+      >
         <Text variant="heading-strong-m">
           {t("moderation.queue.cardTitle", {
             kind: t(
@@ -299,46 +378,69 @@ function SubmissionDetail({
           })}
         </Text>
         <StatusTag status={item.status} />
-      </div>
+      </Row>
 
-      <div className={styles.facts}>
+      <Grid
+        gap="4"
+        minWidth={0}
+        style={{
+          ...autoFit(220),
+          columnGap: "var(--static-space-16)",
+          overflowWrap: "anywhere",
+        }}
+      >
         {facts.map((fact) => (
           <Text key={fact} variant="body-default-s" onBackground="neutral-weak">
             {fact}
           </Text>
         ))}
-      </div>
+      </Grid>
 
-      <div className={styles.body}>
-        <div className={styles.answers}>
+      <Grid gap="20" minWidth={0} className={styles.body}>
+        <Grid gap="16" minWidth={0} style={autoFit(240)}>
           {item.answers.map((answer) => {
             const value =
-              answer.value === null || answer.value === "" ? "—" : String(answer.value);
+              answer.value === null || answer.value === ""
+                ? "—"
+                : String(answer.value);
             return (
-              <div
+              <Column
                 key={answer.fieldId}
-                className={`${styles.answer} ${isLong(value) ? styles.answerLong : ""}`}
+                gap="4"
+                minWidth={0}
+                style={{
+                  overflowWrap: "anywhere",
+                  ...(isLong(value)
+                    ? {
+                        gridColumn: "1 / -1",
+                        maxWidth: "80ch",
+                        whiteSpace: "pre-wrap",
+                      }
+                    : null),
+                }}
               >
                 <Text variant="label-default-s">{answer.label}</Text>
                 <Text variant="body-default-s" onBackground="neutral-medium">
                   {value}
                 </Text>
-              </div>
+              </Column>
             );
           })}
-        </div>
+        </Grid>
 
         {resolved ? (
           item.response && (
-            <div className={styles.reply}>
-              <Text variant="label-default-s">{t("moderation.queue.response")}</Text>
+            <Column gap="12" minWidth={0} className={styles.reply}>
+              <Text variant="label-default-s">
+                {t("moderation.queue.response")}
+              </Text>
               <Text variant="body-default-s" onBackground="neutral-medium">
                 {item.response}
               </Text>
-            </div>
+            </Column>
           )
         ) : (
-          <div className={styles.reply}>
+          <Column gap="12" minWidth={0} className={styles.reply}>
             <Textarea
               id={`response-${item.id}`}
               label={t("moderation.queue.responseLabel")}
@@ -348,7 +450,7 @@ function SubmissionDetail({
               onChange={(e) => onDraft(e.target.value)}
             />
 
-            <div className={styles.actions}>
+            <Row wrap horizontal="end" gap="8" className={styles.actions}>
               <Button
                 variant="secondary"
                 disabled={pending || item.status === "in_review"}
@@ -356,16 +458,24 @@ function SubmissionDetail({
               >
                 {t("moderation.queue.takeInReview")}
               </Button>
-              <Button variant="danger" disabled={pending} onClick={() => act("rejected")}>
+              <Button
+                variant="danger"
+                disabled={pending}
+                onClick={() => act("rejected")}
+              >
                 {t("moderation.queue.reject")}
               </Button>
-              <Button variant="primary" disabled={pending} onClick={() => act("approved")}>
+              <Button
+                variant="primary"
+                disabled={pending}
+                onClick={() => act("approved")}
+              >
                 {t("moderation.queue.approve")}
               </Button>
-            </div>
-          </div>
+            </Row>
+          </Column>
         )}
-      </div>
-    </div>
+      </Grid>
+    </Column>
   );
 }

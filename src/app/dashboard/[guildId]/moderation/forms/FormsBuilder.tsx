@@ -5,7 +5,7 @@ import {
   Accordion,
   Button,
   Column,
-  Flex,
+  Grid,
   IconButton,
   Input,
   Line,
@@ -35,6 +35,21 @@ import { SectionGrid } from "@/components/layout/SectionGrid";
 import { IconName } from "@/resources/icons";
 import styles from "./FormsBuilder.module.scss";
 import { useT } from "@/i18n/client";
+
+// Inner grids follow the card width, so each form editor adapts on its own.
+const autoFit = (min: number): React.CSSProperties => ({
+  gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${min}px), 1fr))`,
+  alignItems: "start",
+});
+
+const FIELDS_GRID = autoFit(200);
+const FIELDS_GRID_WIDE = autoFit(260);
+const TOGGLES_GRID: React.CSSProperties = {
+  ...autoFit(240),
+  gap: "var(--static-space-12) var(--static-space-16)",
+};
+
+const OPTION_INPUT: React.CSSProperties = { flex: "1 1 160px", minWidth: 0 };
 
 const FIELD_TYPES: ModerationFormFieldType[] = [
   "short",
@@ -236,12 +251,22 @@ function FormEditor({
       <Text
         variant="body-default-s"
         onBackground="neutral-weak"
-        className={styles.link}
+        style={{
+          minWidth: 0,
+          overflowWrap: "anywhere",
+          wordBreak: "break-all",
+        }}
       >
         {t("moderation.forms.publicLink", { url: publicUrl })}
       </Text>
 
-      <div className={`${styles.fields} ${styles.fieldsWide}`}>
+      <Grid
+        fillWidth
+        gap="16"
+        minWidth={0}
+        className={styles.labels}
+        style={FIELDS_GRID_WIDE}
+      >
         <ChannelSelect
           fillWidth
           id={`${kind}-channel`}
@@ -252,9 +277,15 @@ function FormEditor({
             update({ channel: (value as string) || null })
           }
         />
-      </div>
+      </Grid>
 
-      <div className={`${styles.fields} ${styles.fieldsWide}`}>
+      <Grid
+        fillWidth
+        gap="16"
+        minWidth={0}
+        className={styles.labels}
+        style={FIELDS_GRID_WIDE}
+      >
         <NumberInput
           id={`${kind}-cooldown`}
           label={t("moderation.forms.cooldown")}
@@ -273,10 +304,10 @@ function FormEditor({
             update({ max_pending: Number(value) || 1 })
           }
         />
-      </div>
+      </Grid>
 
       {kind === "report" && (
-        <div className={styles.toggles}>
+        <Grid fillWidth style={TOGGLES_GRID}>
           <Row fillWidth gap="12" vertical="center">
             <Switch
               checked={form.require_target}
@@ -302,7 +333,7 @@ function FormEditor({
               </Text>
             </Column>
           </Row>
-        </div>
+        </Grid>
       )}
 
       {kind === "appeal" && (
@@ -319,7 +350,7 @@ function FormEditor({
 
       <Line />
 
-      <div className={styles.questionsHead}>
+      <Row fillWidth wrap vertical="center" horizontal="between" gap="8">
         <Text variant="label-default-s">
           {t("moderation.forms.questions", {
             count: form.fields.length,
@@ -333,7 +364,7 @@ function FormEditor({
         >
           {t("moderation.forms.addQuestion")}
         </Button>
-      </div>
+      </Row>
 
       {form.fields.length === 0 && (
         <Text variant="body-default-s" onBackground="neutral-weak">
@@ -342,7 +373,7 @@ function FormEditor({
       )}
 
       {form.fields.length > 0 && (
-        <div className={styles.questions}>
+        <Column fillWidth gap="8" minWidth={0}>
           {form.fields.map((field, index) => (
             <Accordion key={field.id} title={`${index + 1}. ${field.label}`}>
               <FieldEditor
@@ -354,34 +385,34 @@ function FormEditor({
               />
             </Accordion>
           ))}
-        </div>
+        </Column>
       )}
 
       <Line />
 
-      <div className={styles.messages}>
-      <Textarea
-        id={`${kind}-success`}
-        label={t("moderation.forms.successMessage")}
-        lines={2}
-        value={form.success_message ?? ""}
-        onChange={(e) => update({ success_message: e.target.value || null })}
-      />
-      <Textarea
-        id={`${kind}-approve`}
-        label={t("moderation.forms.approveMessage")}
-        lines={2}
-        value={form.approve_message ?? ""}
-        onChange={(e) => update({ approve_message: e.target.value || null })}
-      />
-      <Textarea
-        id={`${kind}-reject`}
-        label={t("moderation.forms.rejectMessage")}
-        lines={2}
-        value={form.reject_message ?? ""}
-        onChange={(e) => update({ reject_message: e.target.value || null })}
-      />
-      </div>
+      <Column fillWidth gap="16" minWidth={0}>
+        <Textarea
+          id={`${kind}-success`}
+          label={t("moderation.forms.successMessage")}
+          lines={2}
+          value={form.success_message ?? ""}
+          onChange={(e) => update({ success_message: e.target.value || null })}
+        />
+        <Textarea
+          id={`${kind}-approve`}
+          label={t("moderation.forms.approveMessage")}
+          lines={2}
+          value={form.approve_message ?? ""}
+          onChange={(e) => update({ approve_message: e.target.value || null })}
+        />
+        <Textarea
+          id={`${kind}-reject`}
+          label={t("moderation.forms.rejectMessage")}
+          lines={2}
+          value={form.reject_message ?? ""}
+          onChange={(e) => update({ reject_message: e.target.value || null })}
+        />
+      </Column>
     </Section>
   );
 }
@@ -415,7 +446,13 @@ function FieldEditor({
 
   return (
     <Column fillWidth gap="16">
-      <div className={`${styles.fields} ${styles.fieldsWide}`}>
+      <Grid
+        fillWidth
+        gap="16"
+        minWidth={0}
+        className={styles.labels}
+        style={FIELDS_GRID_WIDE}
+      >
         <Input
           id={`${field.id}-label`}
           label={t("moderation.forms.field.question")}
@@ -431,7 +468,7 @@ function FieldEditor({
           maxLength={200}
           onChange={(e) => onChange({ description: e.target.value || null })}
         />
-      </div>
+      </Grid>
 
       <SegmentedControl
         fillWidth
@@ -448,7 +485,13 @@ function FieldEditor({
       {(field.type === "short" ||
         field.type === "paragraph" ||
         field.type === "number") && (
-        <div className={styles.fields}>
+        <Grid
+          fillWidth
+          gap="16"
+          minWidth={0}
+          className={styles.labels}
+          style={FIELDS_GRID}
+        >
           <NumberInput
             id={`${field.id}-min`}
             label={
@@ -475,7 +518,7 @@ function FieldEditor({
               onChange({ max: Number(value) || null })
             }
           />
-        </div>
+        </Grid>
       )}
 
       {field.type !== "boolean" && field.type !== "select" && (
@@ -509,33 +552,37 @@ function FieldEditor({
           </Row>
 
           {field.options.map((option, i) => (
-            <div key={option.id} className={styles.optionRow}>
-              <Input
-                id={`${option.id}-label`}
-                label={t("moderation.forms.field.optionLabel")}
-                value={option.label}
-                maxLength={100}
-                onChange={(e) =>
-                  onChange({
-                    options: field.options.map((o, index) =>
-                      index === i ? { ...o, label: e.target.value } : o,
-                    ),
-                  })
-                }
-              />
-              <Input
-                id={`${option.id}-value`}
-                label={t("moderation.forms.field.optionValue")}
-                value={option.value}
-                maxLength={100}
-                onChange={(e) =>
-                  onChange({
-                    options: field.options.map((o, index) =>
-                      index === i ? { ...o, value: e.target.value } : o,
-                    ),
-                  })
-                }
-              />
+            <Row key={option.id} fillWidth wrap vertical="center" gap="8">
+              <Column style={OPTION_INPUT}>
+                <Input
+                  id={`${option.id}-label`}
+                  label={t("moderation.forms.field.optionLabel")}
+                  value={option.label}
+                  maxLength={100}
+                  onChange={(e) =>
+                    onChange({
+                      options: field.options.map((o, index) =>
+                        index === i ? { ...o, label: e.target.value } : o,
+                      ),
+                    })
+                  }
+                />
+              </Column>
+              <Column style={OPTION_INPUT}>
+                <Input
+                  id={`${option.id}-value`}
+                  label={t("moderation.forms.field.optionValue")}
+                  value={option.value}
+                  maxLength={100}
+                  onChange={(e) =>
+                    onChange({
+                      options: field.options.map((o, index) =>
+                        index === i ? { ...o, value: e.target.value } : o,
+                      ),
+                    })
+                  }
+                />
+              </Column>
               <IconButton
                 icon="trash"
                 variant="danger"
@@ -545,12 +592,12 @@ function FieldEditor({
                   })
                 }
               />
-            </div>
+            </Row>
           ))}
         </Column>
       )}
 
-      <div className={styles.fieldFooter}>
+      <Row fillWidth wrap vertical="center" horizontal="between" gap="12">
         <Switch
           label={t("moderation.forms.field.required")}
           checked={field.required}
@@ -576,7 +623,7 @@ function FieldEditor({
             tooltip={t("moderation.forms.field.delete")}
           />
         </Row>
-      </div>
+      </Row>
     </Column>
   );
 }

@@ -3,11 +3,15 @@
 import React, { useState } from "react";
 import {
   Button,
+  Card,
+  Chip,
   Column,
   Feedback,
+  Grid,
   IconButton,
   Input,
   RevealFx,
+  Row,
   Tag,
   Text,
   useToast,
@@ -53,6 +57,24 @@ const TYPE_SCHEME: Record<
   note: "info",
   purge: "neutral",
 };
+
+// Table cells: the grid area comes from the row template (see the module).
+const cell = (area: string): React.CSSProperties => ({
+  gridArea: area,
+  minWidth: 0,
+  overflowWrap: "anywhere",
+});
+
+const COLUMNS = [
+  ["num", "number"],
+  ["type", "type"],
+  ["user", "user"],
+  ["mod", "moderator"],
+  ["reason", "reason"],
+  ["source", "source"],
+  ["date", "date"],
+  ["status", "status"],
+] as const;
 
 const COMPACT_DATE: Intl.DateTimeFormatOptions = {
   day: "numeric",
@@ -109,21 +131,24 @@ export function CasesClient({
   return (
     <Column fillWidth gap="16">
       <RevealFx delay={100} translateY={-0.5} fillWidth>
-        <div className={styles.toolbar}>
-          <div className={styles.chips} role="group">
+        <Row
+          fillWidth
+          wrap
+          vertical="center"
+          horizontal="between"
+          style={{ gap: "var(--static-space-12) var(--static-space-24)" }}
+        >
+          <Row wrap gap="8" minWidth={0} role="group">
             {TYPE_FILTERS.map((value) => (
-              <button
+              <Chip
                 key={value}
-                type="button"
-                className={styles.chip}
-                aria-pressed={type === value}
+                selected={type === value}
+                label={t(`moderation.cases.filters.${value}`)}
                 onClick={() => navigate({ type: value, page: 1 })}
-              >
-                {t(`moderation.cases.filters.${value}`)}
-              </button>
+              />
             ))}
-          </div>
-          <div className={styles.search}>
+          </Row>
+          <Column style={{ flex: "0 1 380px", minWidth: "min(100%, 260px)" }}>
             <Input
               id="case-user"
               label={t("moderation.cases.userFilter")}
@@ -140,8 +165,8 @@ export function CasesClient({
                 />
               }
             />
-          </div>
-        </div>
+          </Column>
+        </Row>
       </RevealFx>
 
       {items.length === 0 && (
@@ -155,7 +180,9 @@ export function CasesClient({
       )}
 
       {items.length > 0 && (
-        <div
+        <Grid
+          fillWidth
+          minWidth={0}
           className={styles.board}
           style={
             {
@@ -164,97 +191,105 @@ export function CasesClient({
             } as React.CSSProperties
           }
         >
-          <div className={styles.head} aria-hidden>
-            {(
-              [
-                ["hnum", "number"],
-                ["htype", "type"],
-                ["huser", "user"],
-                ["hmod", "moderator"],
-                ["hreason", "reason"],
-                ["hsource", "source"],
-                ["hdate", "date"],
-                ["hstatus", "status"],
-              ] as const
-            ).map(([cls, key]) => (
+          <Grid className={styles.head} aria-hidden>
+            {COLUMNS.map(([area, key]) => (
               <Text
                 key={key}
-                className={styles[cls]}
+                className={
+                  area === "mod" || area === "source"
+                    ? styles.wideOnly
+                    : undefined
+                }
+                style={{ gridArea: area }}
                 variant="label-default-xs"
                 onBackground="neutral-weak"
               >
                 {t(`moderation.cases.columns.${key}`)}
               </Text>
             ))}
-          </div>
+          </Grid>
 
           {items.map((item, idx) => {
             const open = selected?.id === item.id;
             return (
-              <div key={item.id} className={styles.entry}>
+              <React.Fragment key={item.id}>
                 <RevealFx
                   delay={Math.min(idx * 30, 400)}
                   translateY={-0.5}
                   fillWidth
                   className={styles.rowWrap}
                 >
-                  <button
-                    type="button"
-                    className={styles.row}
-                    aria-expanded={open}
+                  <Card
+                    selected={open}
                     onClick={() => setSelectedId(open ? null : item.id)}
+                    padding="0"
+                    radius="l"
+                    fillWidth
+                    minWidth={0}
+                    className={styles.card}
                   >
-                    <Text className={styles.num} variant="heading-strong-s">
-                      #{item.caseNumber}
-                    </Text>
-                    <span className={styles.type}>
-                      <Tag scheme={TYPE_SCHEME[item.type] ?? "neutral"}>
+                    <Grid fillWidth minWidth={0} className={styles.row}>
+                      <Text
+                        style={{ gridArea: "num" }}
+                        variant="heading-strong-s"
+                      >
+                        #{item.caseNumber}
+                      </Text>
+                      <Tag
+                        scheme={TYPE_SCHEME[item.type] ?? "neutral"}
+                        style={{ gridArea: "type", justifySelf: "start" }}
+                      >
                         {item.typeLabel}
                       </Tag>
-                    </span>
-                    <Text
-                      className={`${styles.user} ${styles.cell}`}
-                      variant="code-default-xs"
-                      onBackground="neutral-medium"
-                    >
-                      {item.targetId}
-                    </Text>
-                    <Text
-                      className={`${styles.mod} ${styles.cell}`}
-                      variant="body-default-xs"
-                      onBackground="neutral-weak"
-                    >
-                      {moderatorLabel(item.moderatorId)}
-                    </Text>
-                    <Text
-                      className={`${styles.reason} ${styles.clamp}`}
-                      variant="body-default-s"
-                      onBackground="neutral-medium"
-                    >
-                      {item.reason}
-                    </Text>
-                    <Text
-                      className={`${styles.source} ${styles.cell}`}
-                      variant="body-default-xs"
-                      onBackground="neutral-weak"
-                    >
-                      {sourceLabel(item.source)}
-                    </Text>
-                    <Text
-                      className={`${styles.date} ${styles.cell}`}
-                      variant="body-default-xs"
-                      onBackground="neutral-weak"
-                    >
-                      {format.dateTime(item.createdAt, COMPACT_DATE)}
-                    </Text>
-                    <span className={styles.status}>
-                      <Tag scheme={item.active ? "danger" : "neutral"}>
+                      <Text
+                        style={cell("user")}
+                        variant="code-default-xs"
+                        onBackground="neutral-medium"
+                      >
+                        {item.targetId}
+                      </Text>
+                      <Text
+                        className={styles.wideOnly}
+                        style={cell("mod")}
+                        variant="body-default-xs"
+                        onBackground="neutral-weak"
+                      >
+                        {moderatorLabel(item.moderatorId)}
+                      </Text>
+                      <Text
+                        className={styles.clamp}
+                        style={{ gridArea: "reason" }}
+                        variant="body-default-s"
+                        onBackground="neutral-medium"
+                      >
+                        {item.reason}
+                      </Text>
+                      <Text
+                        className={styles.wideOnly}
+                        style={cell("source")}
+                        variant="body-default-xs"
+                        onBackground="neutral-weak"
+                      >
+                        {sourceLabel(item.source)}
+                      </Text>
+                      <Text
+                        style={cell("date")}
+                        variant="body-default-xs"
+                        onBackground="neutral-weak"
+                      >
+                        {format.dateTime(item.createdAt, COMPACT_DATE)}
+                      </Text>
+                      <Tag
+                        scheme={item.active ? "danger" : "neutral"}
+                        className={styles.status}
+                        style={{ gridArea: "status" }}
+                      >
                         {item.active
                           ? t("moderation.cases.active")
                           : t("moderation.cases.closed")}
                       </Tag>
-                    </span>
-                  </button>
+                    </Grid>
+                  </Card>
                 </RevealFx>
 
                 {open && (
@@ -266,23 +301,28 @@ export function CasesClient({
                     moderator={moderatorLabel(item.moderatorId)}
                   />
                 )}
-              </div>
+              </React.Fragment>
             );
           })}
 
           {!selected && (
-            <div className={styles.placeholder}>
+            <Column center minWidth={0} className={styles.placeholder}>
               <Text variant="body-default-m" onBackground="neutral-weak">
                 {t("moderation.cases.selectHint")}
               </Text>
-            </div>
+            </Column>
           )}
-        </div>
+        </Grid>
       )}
 
       {pages > 1 && (
         <RevealFx delay={200} translateY={-0.5} fillWidth>
-          <div className={styles.pager}>
+          <Row
+            wrap
+            vertical="center"
+            horizontal="center"
+            style={{ gap: "var(--static-space-8) var(--static-space-16)" }}
+          >
             <Button
               variant="secondary"
               disabled={page <= 1}
@@ -300,7 +340,7 @@ export function CasesClient({
             >
               {t("moderation.cases.next")}
             </Button>
-          </div>
+          </Row>
         </RevealFx>
       )}
     </Column>
@@ -371,8 +411,20 @@ function CaseDetail({
   ].filter(Boolean);
 
   return (
-    <div className={styles.detail}>
-      <div className={styles.detailHead}>
+    <Column
+      gap="16"
+      minWidth={0}
+      radius="l"
+      border="neutral-medium"
+      background="surface"
+      className={styles.detail}
+    >
+      <Row
+        wrap
+        vertical="center"
+        horizontal="between"
+        style={{ gap: "var(--static-space-8) var(--static-space-16)" }}
+      >
         <Text variant="heading-strong-m">
           {t("moderation.cases.caseTitle", {
             number: item.caseNumber,
@@ -384,26 +436,35 @@ function CaseDetail({
             ? t("moderation.cases.active")
             : t("moderation.cases.closed")}
         </Tag>
-      </div>
+      </Row>
 
       <Text
         variant="body-default-m"
         onBackground="neutral-medium"
-        className={styles.reasonText}
+        style={{
+          maxWidth: "72ch",
+          whiteSpace: "pre-wrap",
+          overflowWrap: "anywhere",
+        }}
       >
         {item.reason}
       </Text>
 
-      <div className={styles.facts}>
+      <Grid
+        gap="4"
+        minWidth={0}
+        className={styles.facts}
+        style={{ overflowWrap: "anywhere" }}
+      >
         {facts.map((fact) => (
           <Text key={fact} variant="body-default-s" onBackground="neutral-weak">
             {fact}
           </Text>
         ))}
-      </div>
+      </Grid>
 
       {canRevoke && (
-        <div className={styles.revoke}>
+        <Column gap="12" paddingTop="16" borderTop="neutral-medium">
           <Input
             id={`revoke-reason-${item.id}`}
             label={t("moderation.cases.revokeReason")}
@@ -411,13 +472,13 @@ function CaseDetail({
             maxLength={400}
             onChange={(e) => setReason(e.target.value)}
           />
-          <div className={styles.revokeActions}>
+          <Row horizontal="end" className={styles.revokeActions}>
             <Button variant="danger" disabled={pending} onClick={revoke}>
               {t("moderation.cases.revoke")}
             </Button>
-          </div>
-        </div>
+          </Row>
+        </Column>
       )}
-    </div>
+    </Column>
   );
 }
