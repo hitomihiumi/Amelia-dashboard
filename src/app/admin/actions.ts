@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db/db";
 import { requireSiteAdmin } from "@/lib/admin/access";
 import { NEWS_CATEGORIES, slugify } from "@/lib/news/categories";
+import { CONFIG_LIMITS, isValidLink, type ServiceOverride } from "@/lib/admin/defaults";
 import { getT } from "@/i18n/server";
 
 export type AdminActionState = { ok: true; id?: string } | { ok: false; error: string };
@@ -230,29 +231,46 @@ export async function updateGlobalConfig(formData: FormData): Promise<AdminActio
       return { ok: false, error: t("admin.errors.unknownBannerVariant") };
     }
 
-    for (const key of ["inviteUrl", "supportUrl", "githubUrl"] as const) {
-      const value = config[key];
-      if (value && !/^https?:\/\/\S+$/i.test(String(value))) {
-        return { ok: false, error: t("admin.errors.invalidLink", { field: key }) };
+    const linkFields = {
+      inviteUrl: t("admin.config.links.invite"),
+      supportUrl: t("admin.config.links.support"),
+      githubUrl: t("admin.config.links.github"),
+    } as const;
+
+    for (const key of Object.keys(linkFields) as (keyof typeof linkFields)[]) {
+      const value = String(config[key] ?? "").trim();
+      if (value && !isValidLink(value)) {
+        return { ok: false, error: t("admin.errors.invalidLink", { field: linkFields[key] }) };
       }
     }
 
-    const overrides = (config.serviceOverrides ?? {}) as Record<
-      string,
-      { status?: string; note?: string | null }
-    >;
-
-    for (const [key, override] of Object.entries(overrides)) {
-      if (!SERVICE_KEYS.includes(key)) return { ok: false, error: t("admin.errors.unknownService", { service: key }) };
-      if (override?.status && !SERVICE_STATUSES.includes(override.status)) {
-        return { ok: false, error: t("admin.errors.unknownServiceStatus", { service: key }) };
-      }
-    }
+    const rawOverrides =
+      config.serviceOverrides && typeof config.serviceOverrides === "object"
+        ? (config.serviceOverrides as Record<string, ServiceOverride | undefined>)
+        : {};
 
     const text = (value: unknown, max: number) => {
       const trimmed = String(value ?? "").trim();
       return trimmed ? trimmed.slice(0, max) : null;
     };
+
+    // Only a recognised service with an actual status is stored; an empty status
+    // means "trust the measurement" and the entry is dropped.
+    const overrides: Record<string, ServiceOverride> = {};
+
+    for (const [key, override] of Object.entries(rawOverrides)) {
+      if (!(SERVICE_KEYS as readonly string[]).includes(key)) {
+        return { ok: false, error: t("admin.errors.unknownService", { service: key }) };
+      }
+      if (!override?.status) continue;
+      if (!(SERVICE_STATUSES as readonly string[]).includes(override.status)) {
+        return { ok: false, error: t("admin.errors.unknownServiceStatus", { service: key }) };
+      }
+      overrides[key] = {
+        status: override.status,
+        note: text(override.note, CONFIG_LIMITS.serviceNote),
+      };
+    }
 
     await prisma.globalConfig.upsert({
       where: { id: "global" },
@@ -264,15 +282,15 @@ export async function updateGlobalConfig(formData: FormData): Promise<AdminActio
       where: { id: "global" },
       data: {
         bannerEnabled: Boolean(config.bannerEnabled),
-        bannerText: text(config.bannerText, 300),
+        bannerText: text(config.bannerText, CONFIG_LIMITS.bannerText),
         bannerVariant,
-        inviteUrl: text(config.inviteUrl, 500),
-        supportUrl: text(config.supportUrl, 500),
-        githubUrl: text(config.githubUrl, 500),
-        heroTagline: text(config.heroTagline, 120),
-        heroText: text(config.heroText, 400),
+        inviteUrl: text(config.inviteUrl, CONFIG_LIMITS.url),
+        supportUrl: text(config.supportUrl, CONFIG_LIMITS.url),
+        githubUrl: text(config.githubUrl, CONFIG_LIMITS.url),
+        heroTagline: text(config.heroTagline, CONFIG_LIMITS.heroTagline),
+        heroText: text(config.heroText, CONFIG_LIMITS.heroText),
         maintenance: Boolean(config.maintenance),
-        maintenanceMessage: text(config.maintenanceMessage, 300),
+        maintenanceMessage: text(config.maintenanceMessage, CONFIG_LIMITS.maintenanceMessage),
         serviceOverrides: overrides as object,
       },
     });

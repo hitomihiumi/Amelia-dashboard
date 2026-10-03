@@ -1,0 +1,295 @@
+// The admin shell keeps an 18rem sidebar next to the content above 1024px, so the
+// space available to the page is not the viewport width. The thresholds below
+// are chosen for the content column, not for the window.
+
+// Stat tiles: six across when there is room, then three, then two.
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--static-space-12);
+
+  @media (min-width: 1025px) and (max-width: 1280px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (max-width: 800px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+// Two columns of panels; on a narrow page they flatten into one stack where
+// "needs attention" comes first.
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--static-space-16);
+  align-items: start;
+
+  @media (min-width: 1025px) and (max-width: 1180px) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (max-width: 860px) {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-16);
+  min-width: 0;
+
+  @media (min-width: 1025px) and (max-width: 1180px) {
+    display: contents;
+  }
+
+  @media (max-width: 860px) {
+    display: contents;
+  }
+}
+
+.orderAttention {
+  @media (min-width: 1025px) and (max-width: 1180px) {
+    order: 1;
+  }
+  @media (max-width: 860px) {
+    order: 1;
+  }
+}
+
+.orderServices {
+  @media (min-width: 1025px) and (max-width: 1180px) {
+    order: 2;
+  }
+  @media (max-width: 860px) {
+    order: 2;
+  }
+}
+
+.orderActions {
+  @media (min-width: 1025px) and (max-width: 1180px) {
+    order: 3;
+  }
+  @media (max-width: 860px) {
+    order: 3;
+  }
+}
+
+.orderRecent {
+  @media (min-width: 1025px) and (max-width: 1180px) {
+    order: 4;
+  }
+  @media (max-width: 860px) {
+    order: 4;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Status dot and pill. One tone attribute drives the colour so a service, an
+// incident severity and the overall state all read the same way.
+// ---------------------------------------------------------------------------
+
+.dot {
+  --tone: var(--neutral-solid-strong);
+
+  display: inline-block;
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--tone);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 22%, transparent);
+}
+
+.pill {
+  --tone: var(--neutral-solid-strong);
+  --tone-bg: var(--neutral-alpha-weak);
+  --tone-border: var(--neutral-alpha-medium);
+
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 1.5rem;
+  padding: 0 var(--static-space-8);
+  border-radius: 999px;
+  border: 1px solid var(--tone-border);
+  background: var(--tone-bg);
+  color: var(--neutral-on-background-strong);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.dot,
+.pill {
+  &[data-tone="success"] {
+    --tone: var(--success-solid-strong);
+    --tone-bg: var(--success-alpha-weak);
+    --tone-border: var(--success-alpha-medium);
+  }
+  &[data-tone="warning"] {
+    --tone: var(--warning-solid-strong);
+    --tone-bg: var(--warning-alpha-weak);
+    --tone-border: var(--warning-alpha-medium);
+  }
+  &[data-tone="danger"] {
+    --tone: var(--danger-solid-strong);
+    --tone-bg: var(--danger-alpha-weak);
+    --tone-border: var(--danger-alpha-medium);
+  }
+  &[data-tone="info"] {
+    --tone: var(--info-solid-strong);
+    --tone-bg: var(--info-alpha-weak);
+    --tone-border: var(--info-alpha-medium);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Rows inside panels
+// ---------------------------------------------------------------------------
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.serviceRow {
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-12);
+  min-height: 2.75rem;
+  padding: var(--static-space-8) var(--static-space-12);
+  border-radius: var(--radius-m);
+  background: var(--neutral-alpha-weak);
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// A clickable row: incident, draft, post.
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-12);
+  flex: 1;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: var(--static-space-8) var(--static-space-12);
+  border-radius: var(--radius-m);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: var(--neutral-alpha-weak);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-solid-strong);
+    outline-offset: 1px;
+  }
+
+  .chevron {
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+
+  &:hover .chevron {
+    opacity: 1;
+    transform: translateX(2px);
+  }
+}
+
+.rowWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-4);
+}
+
+// Quick action: a larger, card-like link.
+.action {
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-12);
+  min-width: 0;
+  padding: var(--static-space-12);
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: var(--radius-l);
+  background: var(--neutral-alpha-weak);
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--brand-alpha-weak) 80%, transparent);
+    border-color: var(--brand-alpha-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-solid-strong);
+    outline-offset: 1px;
+  }
+
+  .chevron {
+    flex-shrink: 0;
+    margin-left: auto;
+    opacity: 0.5;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+
+  &:hover .chevron {
+    opacity: 1;
+    transform: translateX(2px);
+  }
+}
+
+.subHeading {
+  margin: 0;
+  padding: 0 var(--static-space-12);
+  color: var(--neutral-on-background-weak);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+// The calm "all clear" state.
+.clear {
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-12);
+  padding: var(--static-space-16);
+  border: 1px dashed var(--success-alpha-strong);
+  border-radius: var(--radius-l);
+  background: var(--success-alpha-weak);
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--static-space-12);
+  padding: var(--static-space-12);
+  border: 1px solid var(--warning-alpha-strong);
+  border-radius: var(--radius-l);
+  background: var(--warning-alpha-weak);
+}

@@ -1,8 +1,8 @@
 import React from "react";
-import { Column, Text } from "@once-ui-system/core";
 import { getGlobalConfig, serviceOverrides } from "@/lib/admin/config";
 import { getT } from "@/i18n/server";
-import { GlobalConfigForm } from "./GlobalConfigForm";
+import { AdminPage } from "@/components/admin/AdminPage";
+import { GlobalConfigForm } from "@/components/admin/config/GlobalConfigForm";
 
 export const dynamic = "force-dynamic";
 
@@ -11,15 +11,23 @@ export default async function AdminConfigPage() {
   const config = await getGlobalConfig();
 
   return (
-    <Column fillWidth gap="16">
-      <Column gap="4">
-        <Text variant="heading-strong-m">{t("admin.config.title")}</Text>
-        <Text variant="body-default-s" onBackground="neutral-weak">
-          {t("admin.config.description")}
-        </Text>
-      </Column>
-
-      <GlobalConfigForm config={config} overrides={serviceOverrides(config)} />
-    </Column>
+    <AdminPage width="xl" title={t("admin.config.title")} description={t("admin.config.description")}>
+      {/* Only the editable fields cross to the client. */}
+      <GlobalConfigForm
+        config={{
+          bannerEnabled: config.bannerEnabled,
+          bannerText: config.bannerText,
+          bannerVariant: config.bannerVariant,
+          inviteUrl: config.inviteUrl,
+          supportUrl: config.supportUrl,
+          githubUrl: config.githubUrl,
+          heroTagline: config.heroTagline,
+          heroText: config.heroText,
+          maintenance: config.maintenance,
+          maintenanceMessage: config.maintenanceMessage,
+        }}
+        overrides={serviceOverrides(config)}
+      />
+    </AdminPage>
   );
 }

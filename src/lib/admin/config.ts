@@ -4,16 +4,11 @@ import { cache } from "react";
 import type { GlobalConfig } from "@prisma/client";
 import { prisma } from "@/lib/db/db";
 
-/** Fallbacks for a site that has never opened the admin panel. */
-export const CONFIG_DEFAULTS = {
-  inviteUrl:
-    "https://discord.com/oauth2/authorize?client_id=1356347611283591218&scope=bot+applications.commands&permissions=295749283071",
-  githubUrl: "https://github.com/hitomihiumi/Amelia",
-  heroTagline: "Open Source",
-  heroText: "Your handy assistant for improving and customizing your Discord guild!",
-} as const;
+import { CONFIG_DEFAULTS, type ServiceOverride } from "./defaults";
 
-export type ServiceOverride = { status?: string; note?: string | null };
+// Re-exported so existing imports keep working; the values live in a client-safe module.
+export { CONFIG_DEFAULTS };
+export type { ServiceOverride };
 
 /**
  * The single configuration row, created on first access.
