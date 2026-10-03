@@ -7,6 +7,7 @@ import {
   Input,
   Column,
   Row,
+  Grid,
   Switch,
   IconButton,
   Button,
@@ -30,7 +31,22 @@ import { DashIcon } from "@/components/dashboard/DashIcon";
 import { Section } from "@/components/dashboard/Section";
 import { SectionGrid } from "@/components/layout/SectionGrid";
 import { useT } from "@/i18n/client";
-import styles from "./LevelsForm.module.scss";
+
+/** Form fields sharing a row while each keeps ~220px; `fill` keeps a lone field from stretching. */
+function Fields({ children, fill = false }: { children: React.ReactNode; fill?: boolean }) {
+  return (
+    <Grid
+      fillWidth
+      gap="12"
+      style={{
+        gridTemplateColumns: `repeat(auto-${fill ? "fill" : "fit"}, minmax(min(100%, 220px), 1fr))`,
+        alignItems: fill ? undefined : "start",
+      }}
+    >
+      {children}
+    </Grid>
+  );
+}
 
 export function LevelsForm({
   guildId,
@@ -159,8 +175,8 @@ export function LevelsForm({
             background="surface"
             fillWidth
           >
-            <div className={styles.enable}>
-              <div className={styles.enableText}>
+            <Row horizontal="between" vertical="center" gap="16">
+              <Row vertical="center" gap="16" style={{ minWidth: 0 }}>
                 <DashIcon name={"ribbon"} />
                 <Column gap="4">
                   <Text variant="body-strong-l">{t("settings.levels.enableTitle")}</Text>
@@ -168,12 +184,12 @@ export function LevelsForm({
                     {t("settings.levels.enableDescription")}
                   </Text>
                 </Column>
-              </div>
+              </Row>
               <Switch
                 checked={levels.enabled}
                 onToggle={() => setLevels((p) => ({ ...p, enabled: !p.enabled }))}
               />
-            </div>
+            </Row>
           </Flex>
         </RevealFx>
       </SectionGrid.Full>
@@ -191,7 +207,11 @@ export function LevelsForm({
             </Text>
           </Row>
         ) : (
-          <div className={styles.rewardList}>
+          <Grid
+            fillWidth
+            gap="8"
+            style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 230px), 1fr))" }}
+          >
             {Object.entries(levels.level_roles)
               .sort(([a], [b]) => parseInt(a) - parseInt(b))
               .map(([lvl, rId]) => {
@@ -199,21 +219,27 @@ export function LevelsForm({
                 return (
                   <Row
                     key={lvl}
-                    className={styles.reward}
+                    horizontal="between"
+                    vertical="center"
+                    gap="8"
+                    style={{ minWidth: 0 }}
                     padding="12"
                     background="overlay"
                     radius="m"
                     border="neutral-alpha-medium"
                   >
-                    <div className={styles.rewardInfo}>
-                      <Text variant="body-strong-m" className={styles.rewardLevel}>
+                    <Row vertical="center" gap="12" style={{ minWidth: 0 }}>
+                      <Text
+                        variant="body-strong-m"
+                        style={{ flex: "0 0 auto", minWidth: 40, whiteSpace: "nowrap" }}
+                      >
                         {t("settings.levels.levelShort", { level: lvl })}
                       </Text>
                       <RolePill
                         roleColor={role?.color || 0}
                         label={role?.name || t("common.select.unknownRole")}
                       />
-                    </div>
+                    </Row>
                     <IconButton
                       icon="close"
                       variant="tertiary"
@@ -223,13 +249,16 @@ export function LevelsForm({
                   </Row>
                 );
               })}
-          </div>
+          </Grid>
         )}
 
         <Line />
 
-        <div className={styles.addRow}>
-          <div className={styles.addLevel}>
+        <Row wrap vertical="end" gap="12">
+          <Row
+            style={{ flex: "1 1 100px", maxWidth: 160, minWidth: 0 }}
+            s={{ style: { maxWidth: "none" } }}
+          >
             <NumberInput
               id="new-reward-level"
               value={newLevel}
@@ -237,8 +266,8 @@ export function LevelsForm({
               placeholder="5"
               label={t("settings.levels.levelLabel")}
             />
-          </div>
-          <div className={styles.addRole}>
+          </Row>
+          <Row style={{ flex: "3 1 200px", minWidth: 0 }}>
             <RoleSelect
               fillWidth
               id="new-reward-role"
@@ -247,16 +276,16 @@ export function LevelsForm({
               setSelectedRole={(val) => setNewRoleId(val as string)}
               label={t("settings.levels.roleToGrant")}
             />
-          </div>
+          </Row>
           <Button
-            className={styles.addButton}
+            style={{ flex: "0 0 auto" }}
             variant="primary"
             onClick={addRoleReward}
             disabled={!newLevel || !newRoleId}
           >
             {t("common.actions.add")}
           </Button>
-        </div>
+        </Row>
       </Section>
 
       <Section
@@ -276,7 +305,7 @@ export function LevelsForm({
           />
         }
       >
-        <div className={styles.fields}>
+        <Fields>
           <ChannelSelect
             label={t("settings.levels.announcementChannel")}
             id="level-up-channel"
@@ -300,7 +329,7 @@ export function LevelsForm({
               }))
             }
           />
-        </div>
+        </Fields>
       </Section>
 
       <Section
@@ -309,7 +338,7 @@ export function LevelsForm({
         num={4}
         icon="eyeoff"
       >
-        <div className={styles.fields}>
+        <Fields>
           <ChannelSelect
             label={t("settings.levels.ignoredChannels")}
             id="ignored-channels"
@@ -328,7 +357,7 @@ export function LevelsForm({
             selectedRole={levels.ignore_roles}
             setSelectedRole={(val) => setLevels((p) => ({ ...p, ignore_roles: val as string[] }))}
           />
-        </div>
+        </Fields>
       </Section>
 
       <Section
@@ -343,14 +372,14 @@ export function LevelsForm({
           />
         }
       >
-        <div className={styles.fieldsSingle}>
+        <Fields fill>
           <NumberInput
             id="eco-reward-amount"
             label={t("settings.levels.rewardAmount")}
             value={economy.amount}
             onChange={(value) => setEconomy((p) => ({ ...p, amount: Number(value) }))}
           />
-        </div>
+        </Fields>
       </Section>
     </SectionGrid>
   );

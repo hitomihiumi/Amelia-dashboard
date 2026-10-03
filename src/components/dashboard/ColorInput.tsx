@@ -22,6 +22,9 @@ export interface ColorInputProps extends Omit<InputProps, "onChange" | "value" |
   presets?: string[];
 }
 
+// `Flex` does not type native button attributes; a swatch must never submit a surrounding form.
+const BUTTON_TYPE = { type: "button" };
+
 function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
 }
@@ -211,9 +214,10 @@ const ColorInput = forwardRef<HTMLInputElement, ColorInputProps>(
               const presetHex = normalizeHex(preset) ?? preset;
               const active = hexValue.toLowerCase() === presetHex.toLowerCase();
               return (
-                <button
+                <Flex
+                  as="button"
                   key={preset}
-                  type="button"
+                  {...BUTTON_TYPE}
                   aria-label={t("common.color.presetLabel", { color: preset })}
                   onClick={() => applyHex(presetHex)}
                   style={{

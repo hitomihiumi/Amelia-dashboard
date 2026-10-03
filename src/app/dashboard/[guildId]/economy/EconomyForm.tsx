@@ -7,6 +7,7 @@ import {
   Input,
   Row,
   Column,
+  Grid,
   Switch,
   SegmentedControl,
   Slider,
@@ -113,8 +114,8 @@ export function EconomyForm({
     }));
 
   return (
-    <div className={styles.layout}>
-      <aside className={styles.aside}>
+    <Grid fillWidth gap="24" s={{ style: { gap: "var(--static-space-16)" } }} style={{ minWidth: 0 }} className={styles.layout}>
+      <Column as="aside" style={{ minWidth: 0 }} className={styles.aside}>
         <Section
           title={t("settings.economy.currencyTitle")}
           description={t("settings.economy.currencyDescription")}
@@ -122,8 +123,8 @@ export function EconomyForm({
           icon="money"
         >
           <Flex direction="column" gap="8">
-            <div className={styles.currencyRow}>
-              <div className={styles.currencyInput}>
+            <Row wrap vertical="end" gap="12">
+              <Row style={{ flex: "1 1 200px", minWidth: 0 }}>
                 <Input
                   id={"currency-emoji"}
                   label={t("settings.economy.currencyLabel")}
@@ -135,39 +136,41 @@ export function EconomyForm({
                       : setCurrency({ id: emojiFromString(val).id, emoji: val });
                   }}
                 />
-              </div>
-              <EmojiPickerDropdown
-                guildId={guildId}
-                onSelect={(emoji) =>
-                  setCurrency({
-                    id: emoji.type === "custom" ? emoji.id : null,
-                    emoji: emojiToText(emoji),
-                  })
-                }
-              />
-            </div>
+              </Row>
+              <Row style={{ flex: "0 0 auto" }}>
+                <EmojiPickerDropdown
+                  guildId={guildId}
+                  onSelect={(emoji) =>
+                    setCurrency({
+                      id: emoji.type === "custom" ? emoji.id : null,
+                      emoji: emojiToText(emoji),
+                    })
+                  }
+                />
+              </Row>
+            </Row>
             <Text variant="body-default-s" onBackground="neutral-weak">
               {t("settings.economy.currencyHint")}
             </Text>
           </Flex>
         </Section>
-      </aside>
+      </Column>
 
-      <div className={styles.main}>
+      <Column style={{ minWidth: 0 }}>
         <Section
           title={t("settings.economy.incomeTitle")}
           description={t("settings.economy.incomeDescription")}
           num={2}
           icon="diamond"
         >
-          <div className={styles.incomeGrid}>
+          <Grid fillWidth gap="16" style={{ minWidth: 0 }} className={styles.incomeGrid}>
             <IncomeCard
               title={t("settings.economy.workTitle")}
               description={t("settings.economy.workDescription")}
               enabled={income.work.enabled}
               onToggle={() => setWork({ enabled: !income.work.enabled })}
             >
-              <div className={styles.fields}>
+              <Fields>
                 <NumberInput
                   id={"work-min-income"}
                   label={t("settings.economy.minIncome")}
@@ -195,7 +198,7 @@ export function EconomyForm({
                   max={86400}
                   step={1}
                 />
-              </div>
+              </Fields>
             </IncomeCard>
 
             <IncomeCard
@@ -216,7 +219,7 @@ export function EconomyForm({
                 ]}
                 onChange={(value) => setRobIncome({ type: value as "fixed" | "percentage" })}
               />
-              <div className={styles.fields}>
+              <Fields>
                 <NumberInput
                   id={"rob-min-income"}
                   label={t("settings.economy.minIncome")}
@@ -244,7 +247,7 @@ export function EconomyForm({
                   max={86400}
                   step={1}
                 />
-              </div>
+              </Fields>
               <Line />
               <Text variant="label-default-xs" onBackground="neutral-weak" className={styles.groupLabel}>
                 {t("settings.economy.punishmentGroup")}
@@ -257,7 +260,7 @@ export function EconomyForm({
                 ]}
                 onChange={(value) => setRobPunishment({ type: value as "fixed" | "percentage" })}
               />
-              <div className={styles.fields}>
+              <Fields>
                 <NumberInput
                   id={"rob-min-punishment"}
                   label={t("settings.economy.minPunishment")}
@@ -276,9 +279,9 @@ export function EconomyForm({
                   max={100000}
                   step={1}
                 />
-              </div>
-              <div className={styles.chance}>
-                <div className={styles.chanceNumbers}>
+              </Fields>
+              <Column gap="4" paddingX="4">
+                <Row horizontal="between" vertical="center" gap="16">
                   <Column center>
                     <Text variant="body-strong-xl" onBackground="brand-weak">
                       {income.rob.punishment.fail_chance}%
@@ -295,7 +298,7 @@ export function EconomyForm({
                       {t("settings.economy.winChance")}
                     </Text>
                   </Column>
-                </div>
+                </Row>
                 <Slider
                   value={income.rob.punishment.fail_chance}
                   onChange={(value) => setRobPunishment({ fail_chance: value })}
@@ -303,7 +306,7 @@ export function EconomyForm({
                   max={95}
                   step={1}
                 />
-              </div>
+              </Column>
             </IncomeCard>
 
             <IncomeCard
@@ -386,10 +389,23 @@ export function EconomyForm({
                 step={1}
               />
             </IncomeCard>
-          </div>
+          </Grid>
         </Section>
-      </div>
-    </div>
+      </Column>
+    </Grid>
+  );
+}
+
+/** Number fields that share a row while each keeps ~140px. */
+function Fields({ children }: { children: React.ReactNode }) {
+  return (
+    <Grid
+      fillWidth
+      gap="8"
+      style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))" }}
+    >
+      {children}
+    </Grid>
   );
 }
 
@@ -412,21 +428,22 @@ function IncomeCard({
   return (
     <Column
       className={[styles.subcard, className].filter(Boolean).join(" ")}
+      style={{ minWidth: 0 }}
       background="overlay"
       border="neutral-medium"
       radius="m"
       padding="16"
       gap="12"
     >
-      <div className={styles.subcardHead}>
-        <Column gap="4" className={styles.subcardText}>
+      <Row horizontal="between" vertical="start" gap="16">
+        <Column gap="4" style={{ minWidth: 0, maxWidth: "60ch" }}>
           <Text variant="body-strong-m">{title}</Text>
           <Text variant="body-default-xs" onBackground="neutral-weak">
             {description}
           </Text>
         </Column>
         <Switch checked={enabled} onToggle={onToggle} />
-      </div>
+      </Row>
       {children}
     </Column>
   );

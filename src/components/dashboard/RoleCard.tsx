@@ -63,8 +63,8 @@ export const RoleCard: React.FC<RoleCardProps> = ({
             </Text>
             {role.discount.amount > 0 ? (
               <Row gap={"4"} vertical="center">
-                <Text variant="body-default-m" onBackground={"neutral-weak"}>
-                  <s>{role.price}</s>
+                <Text as="s" variant="body-default-m" onBackground={"neutral-weak"}>
+                  {role.price}
                 </Text>
                 <Text variant="body-default-m">
                   {Math.floor(role.price * (1 - role.discount.amount / 100))}

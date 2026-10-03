@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Text, useToast, Column, Line, Row, Select, RevealFx, Tag } from "@once-ui-system/core";
+import { Text, useToast, Column, Grid, Line, Row, Select, RevealFx, Tag } from "@once-ui-system/core";
 import styles from "./CommandsFrom.module.scss";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { updateCommandPermissions } from "./actions";
@@ -255,7 +255,12 @@ export function CommandsFrom({
       >
         <Column gap="16" paddingBottom="12">
           <Line />
-          <div className={styles.fields}>
+          <Grid
+            fillWidth
+            gap="16"
+            className={styles.fields}
+            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))" }}
+          >
             <Select
               label={t("settings.commands.requiredPermission")}
               id={`${name}-perm`}
@@ -297,14 +302,14 @@ export function CommandsFrom({
                 updateCmd(name, { roles: updated });
               }}
             />
-          </div>
+          </Grid>
         </Column>
       </CommandAccordion>
     );
   };
 
   return (
-    <div className={styles.grid}>
+    <Grid fillWidth className={styles.grid} style={{ minWidth: 0 }}>
       {commandList.map((cmd, idx) => (
         <RevealFx
           key={cmd.name}
@@ -316,6 +321,6 @@ export function CommandsFrom({
           {renderCommandSettings(cmd.name, t(cmd.label), t(cmd.description), cmd.icon)}
         </RevealFx>
       ))}
-    </div>
+    </Grid>
   );
 }

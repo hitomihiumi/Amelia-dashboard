@@ -137,7 +137,17 @@ const CommandAccordion = forwardRef<AccordionHandle, CommandAccordionProps>(
               <Row fillWidth textVariant="body-default-s" onBackground={"neutral-weak"}>
                 {subline}
               </Row>
-              {meta && <div className={styles.meta}>{meta}</div>}
+              {meta && (
+                <Row
+                  fillWidth
+                  wrap
+                  vertical="center"
+                  marginTop="8"
+                  style={{ gap: "var(--static-space-4) var(--static-space-8)", minWidth: 0 }}
+                >
+                  {meta}
+                </Row>
+              )}
             </Column>
           </Row>
           <Icon

@@ -24,7 +24,6 @@ import { ChannelSelect } from "@/components/dashboard/discord/ChannelSelect";
 import { ChannelPill } from "@/components/dashboard/discord/ChannelPill";
 import { Section } from "@/components/dashboard/Section";
 import { SectionGrid } from "@/components/layout/SectionGrid";
-import styles from "./PrivateForm.module.scss";
 import { useT } from "@/i18n/client";
 
 type Form = Pick<GuildSchema["utils"], "join_to_create">;
@@ -160,28 +159,28 @@ export function PrivateForm({
             radius={"m"}
             padding={"20"}
             gap={"16"}
-            className={styles.autoSetup}
+            vertical="start"
           >
             <DashIcon name={"plane"} />
-            <Flex direction="column" gap="12" className={styles.autoSetupText}>
+            <Flex direction="column" gap="12" style={{ minWidth: 0, maxWidth: "60ch" }}>
               <Text variant="body-strong-m">{t("settings.private.autoSetupTitle")}</Text>
               <Text variant="body-default-xs" onBackground="neutral-medium">
                 {t("settings.private.autoSetupDescription")}
               </Text>
-              <div>
+              <Row>
                 <Button prefixIcon={"plane"} type="submit" disabled={autoPending}>
                   {autoPending
                     ? t("settings.private.autoSetupPending")
                     : t("settings.private.autoSetupButton")}
                 </Button>
-              </div>
+              </Row>
             </Flex>
           </Row>
         </form>
 
         <Column gap="12">
           <Text variant="body-strong-s">{t("settings.private.nameTitle")}</Text>
-          <Text variant="body-default-xs" onBackground="neutral-medium" className={styles.hint}>
+          <Text variant="body-default-xs" onBackground="neutral-medium" style={{ maxWidth: "72ch" }}>
             {t("settings.private.nameDescription")}
           </Text>
           <Input
@@ -207,7 +206,7 @@ export function PrivateForm({
       >
         <Column gap="12">
           <Text variant="body-strong-s">{t("settings.private.triggerTitle")}</Text>
-          <Text variant="body-default-xs" onBackground="neutral-medium" className={styles.hint}>
+          <Text variant="body-default-xs" onBackground="neutral-medium" style={{ maxWidth: "72ch" }}>
             {t("settings.private.triggerDescription")}
           </Text>
           <ChannelSelect
@@ -223,7 +222,7 @@ export function PrivateForm({
         </Column>
         <Column gap="12">
           <Text variant="body-strong-s">{t("settings.private.categoryTitle")}</Text>
-          <Text variant="body-default-xs" onBackground="neutral-medium" className={styles.hint}>
+          <Text variant="body-default-xs" onBackground="neutral-medium" style={{ maxWidth: "72ch" }}>
             {t("settings.private.categoryDescription")}
           </Text>
           <ChannelSelect

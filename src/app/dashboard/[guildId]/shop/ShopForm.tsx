@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Flex, Text, useToast, Button, Column, RevealFx } from "@once-ui-system/core";
+import { Flex, Text, useToast, Button, Column, Grid, Row, RevealFx } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 
 import type { GuildSchema, ShopRole } from "@/lib/db/types";
@@ -14,7 +14,6 @@ import { GuildActionState } from "@/types/dashboard";
 import { RoleCard } from "@/components/dashboard/RoleCard";
 import { DashIcon } from "@/components/dashboard/DashIcon";
 import { useT } from "@/i18n/client";
-import styles from "./ShopForm.module.scss";
 
 type Form = GuildSchema["economy"]["shop"];
 
@@ -112,12 +111,15 @@ export function ShopFrom({
           radius="l"
           background="surface"
           fillWidth
-          className={styles.toolbar}
+          wrap
+          horizontal="between"
+          vertical="center"
+          gap="16"
         >
-          <div className={styles.toolbarText}>
+          <Row vertical="center" gap="16" style={{ minWidth: 0 }}>
             <DashIcon name={"cart"} />
             <Text variant="body-strong-l">{t("settings.shop.addTitle")}</Text>
-          </div>
+          </Row>
           <Button
             prefixIcon={"plus"}
             onClick={() => {
@@ -139,12 +141,27 @@ export function ShopFrom({
       </RevealFx>
 
       {roles.length > 0 ? (
-        <div className={styles.roles}>
+        <Grid
+          fillWidth
+          gap="16"
+          s={{ style: { gap: "var(--static-space-12)" } }}
+          style={{
+            gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))",
+            minWidth: 0,
+          }}
+        >
           {roles.map((item, id) => {
             const discordRole = guildRoles.find((r) => r.id === item.role) as DiscordRole;
             return (
-              <RevealFx delay={Math.min(400 + 100 * id, 900)} translateY={-0.5} fillWidth key={id}>
-                <div className={styles.cell}>
+              <RevealFx
+                delay={Math.min(400 + 100 * id, 900)}
+                translateY={-0.5}
+                fillWidth
+                key={id}
+                style={{ minWidth: 0 }}
+              >
+                {/* A grid wrapper lets the card stretch to the cell height. */}
+                <Grid fillWidth style={{ minWidth: 0 }}>
                   <RoleCard
                     setRoles={setRoles}
                     setOpenModal={setOpenModal}
@@ -152,19 +169,35 @@ export function ShopFrom({
                     role={item}
                     discordRole={discordRole}
                   />
-                </div>
+                </Grid>
               </RevealFx>
             );
           })}
-        </div>
+        </Grid>
       ) : (
         <RevealFx delay={400} translateY={-0.5} fillWidth>
-          <div className={styles.empty}>
-            <Text variant="body-strong-m">{t("settings.shop.emptyTitle")}</Text>
-            <Text variant="body-default-s" onBackground="neutral-weak">
+          <Column
+            fillWidth
+            horizontal="center"
+            gap="8"
+            paddingY="40"
+            paddingX="24"
+            border="neutral-strong"
+            borderStyle="dashed"
+            radius="l"
+          >
+            <Text variant="body-strong-m" align="center" style={{ maxWidth: "52ch" }}>
+              {t("settings.shop.emptyTitle")}
+            </Text>
+            <Text
+              variant="body-default-s"
+              onBackground="neutral-weak"
+              align="center"
+              style={{ maxWidth: "52ch" }}
+            >
               {t("settings.shop.emptyHint")}
             </Text>
-          </div>
+          </Column>
         </RevealFx>
       )}
 

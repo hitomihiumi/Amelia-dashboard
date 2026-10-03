@@ -3,13 +3,3 @@
     background: var(--neutral-alpha-weak);
   }
 }
-
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--static-space-4) var(--static-space-8);
-  margin-top: var(--static-space-8);
-  align-self: stretch;
-  min-width: 0;
-}
