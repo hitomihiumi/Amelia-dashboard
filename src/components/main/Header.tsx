@@ -78,8 +78,11 @@ export function Header() {
             name={session.user?.name || t("common.nav.user")}
             placement="bottom"
             avatarProps={{
-              src: session.user?.image + "?size=128" || undefined,
-              frame: session.user?.avatarDecoration + "?size=64" || undefined,
+              // A missing avatar or decoration is null; "null?size=128" would not be a URL.
+              src: session.user?.image ? `${session.user.image}?size=128` : undefined,
+              frame: session.user?.avatarDecoration
+                ? `${session.user.avatarDecoration}?size=64`
+                : undefined,
               radius: "full",
               size: "l",
             }}

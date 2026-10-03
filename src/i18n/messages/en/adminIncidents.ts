@@ -17,7 +17,6 @@ export const adminIncidents = {
     showMore: "Show more",
     updates: "{count, plural, one {# update} other {# updates}}",
     noUpdates: "No updates yet",
-    lastUpdate: "Last update",
     openIncident: "Open incident: {title}",
   },
   meta: {
@@ -26,7 +25,6 @@ export const adminIncidents = {
     lasted: "Lasted {duration}",
     auto: "Auto",
     autoHint: "Opened automatically by the health check",
-    noComponent: "General",
   },
   duration: {
     lessThanMinute: "under a minute",

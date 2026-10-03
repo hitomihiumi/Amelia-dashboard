@@ -22,7 +22,6 @@ export const adminIncidents: Dict<typeof en> = {
     updates:
       "{count, plural, one {# обновление} few {# обновления} many {# обновлений} other {# обновления}}",
     noUpdates: "Обновлений пока нет",
-    lastUpdate: "Последнее обновление",
     openIncident: "Открыть инцидент: {title}",
   },
   meta: {
@@ -31,7 +30,6 @@ export const adminIncidents: Dict<typeof en> = {
     lasted: "Длился {duration}",
     auto: "Авто",
     autoHint: "Открыт автоматически проверкой работоспособности",
-    noComponent: "Общее",
   },
   duration: {
     lessThanMinute: "меньше минуты",

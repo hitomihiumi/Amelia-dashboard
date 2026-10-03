@@ -76,3 +76,41 @@
     border-bottom: none;
   }
 }
+
+.list {
+  margin: var(--static-space-8) 0 var(--static-space-12);
+  padding-left: var(--static-space-24);
+  color: var(--neutral-on-background-medium);
+  line-height: 175%;
+
+  // Nested lists sit closer to their parent item.
+  .list {
+    margin: var(--static-space-4) 0;
+  }
+}
+
+.bullets {
+  list-style: disc;
+
+  .bullets {
+    list-style: circle;
+  }
+}
+
+.numbers {
+  list-style: decimal;
+}
+
+.item {
+  margin: var(--static-space-4) 0;
+  padding-left: var(--static-space-4);
+
+  &::marker {
+    color: var(--neutral-on-background-weak);
+  }
+
+  // Loose lists wrap their text in <p>; the item already provides the spacing.
+  > p {
+    margin: 0 !important;
+  }
+}

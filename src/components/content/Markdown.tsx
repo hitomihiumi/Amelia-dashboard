@@ -1,7 +1,7 @@
 import React, { type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Heading, InlineCode, Line, List, ListItem, SmartLink, Text } from "@once-ui-system/core";
+import { Heading, InlineCode, Line, SmartLink, Text } from "@once-ui-system/core";
 import { CodeBlock } from "@once-ui-system/core/code";
 import styles from "./Markdown.module.scss";
 
@@ -72,13 +72,14 @@ const components: Components = {
     );
   },
   strong: ({ children }) => <strong className={styles.strong}>{children}</strong>,
-  ul: ({ children }) => <List>{children}</List>,
-  ol: ({ children }) => <List>{children}</List>,
-  li: ({ children }) => (
-    <ListItem marginTop="4" marginBottom="8">
-      {children}
-    </ListItem>
+  // Native lists: Once UI's List/ListItem draw no markers, so bullets and numbers would vanish.
+  ul: ({ children }) => (
+    <ul className={`${styles.list} ${styles.bullets} font-body font-default font-m`}>{children}</ul>
   ),
+  ol: ({ children }) => (
+    <ol className={`${styles.list} ${styles.numbers} font-body font-default font-m`}>{children}</ol>
+  ),
+  li: ({ children }) => <li className={styles.item}>{children}</li>,
   blockquote: ({ children }) => <blockquote className={styles.quote}>{children}</blockquote>,
   hr: () => <Line />,
   // Any host is allowed here, which `next/image` would reject without a configured pattern.
@@ -86,7 +87,7 @@ const components: Components = {
   img: ({ src, alt }) => <img src={typeof src === "string" ? src : undefined} alt={alt ?? ""} loading="lazy" className={styles.image} />,
   table: ({ children }) => (
     <div className={styles.tableWrap}>
-      <table className={styles.table}>{children}</table>
+      <table className={`${styles.table} font-body font-default font-s`}>{children}</table>
     </div>
   ),
   code: ({ className, children }) => {
