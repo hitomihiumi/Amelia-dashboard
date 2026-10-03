@@ -13,7 +13,8 @@ import { fetchGuildTextChannels } from "@/lib/discord/channels-api";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
-import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Feedback, Flex } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import { ComponentsManager } from "./ComponentsManager";
 import { type ComponentsState, parseComponentsTab } from "./componentsTypes";
@@ -66,12 +67,7 @@ export default async function ComponentsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">{t("builder.components.title")}</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          {t("builder.components.subtitle")}
-        </Text>
-      </RevealFx>
+      <PageHeader title={t("builder.components.title")} description={t("builder.components.subtitle")} />
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

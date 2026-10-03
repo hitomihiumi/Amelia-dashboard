@@ -12,6 +12,8 @@ export interface SectionProps {
   num: number;
   icon?: IconName;
   switcher?: React.ReactNode;
+  /** Take the whole row inside a `SectionGrid`. */
+  span?: "full";
 }
 
 export const Section: React.FC<SectionProps> = ({
@@ -21,9 +23,16 @@ export const Section: React.FC<SectionProps> = ({
   num,
   icon,
   switcher,
+  span,
 }) => {
   return (
-    <RevealFx delay={300 * num} translateY={-0.5}>
+    <RevealFx
+      delay={Math.min(300 * num, 900)}
+      translateY={-0.5}
+      fillWidth
+      className={span === "full" ? "section-full" : undefined}
+      style={{ minWidth: 0 }}
+    >
       <Flex
         direction="column"
         fillWidth
@@ -33,10 +42,11 @@ export const Section: React.FC<SectionProps> = ({
         border="neutral-medium"
         background="surface"
       >
-        <Flex gap="16">
+        <Flex gap="16" style={{ minWidth: 0 }}>
           {icon && <DashIcon name={icon} />}
-          <Row horizontal="between" vertical="center" fillWidth>
-            <Column gap="8">
+          {/* Wraps: a long description next to the switch drops the switch below instead of squeezing the text. */}
+          <Row horizontal="between" vertical="center" fillWidth wrap gap="12" style={{ minWidth: 0 }}>
+            <Column gap="8" style={{ flex: "1 1 220px", minWidth: 0 }}>
               <Text variant="body-strong-l">{title}</Text>
               {description && (
                 <Text variant="body-default-s" onBackground="neutral-medium">
@@ -44,7 +54,7 @@ export const Section: React.FC<SectionProps> = ({
                 </Text>
               )}
             </Column>
-            {switcher && <Flex>{switcher}</Flex>}
+            {switcher && <Flex style={{ flexShrink: 0 }}>{switcher}</Flex>}
           </Row>
         </Flex>
         <Line />

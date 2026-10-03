@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Flex, Text, useToast, Column, Line, Row, Select, RevealFx } from "@once-ui-system/core";
+import { Text, useToast, Column, Line, Row, Select, RevealFx, Tag } from "@once-ui-system/core";
+import styles from "./CommandsFrom.module.scss";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { updateCommandPermissions } from "./actions";
 import { RoleSelect } from "@/components/dashboard/discord/RoleSelect";
@@ -220,8 +221,29 @@ export function CommandsFrom({
       <CommandAccordion
         key={name}
         iconName={icon}
+        meta={
+          <>
+            <Tag size="s" scheme="neutral" prefixIcon="shield">
+              {cmd.permission !== null
+                ? permissionLabelKeys[cmd.permission.toString()]
+                  ? t(permissionLabelKeys[cmd.permission.toString()])
+                  : cmd.permission.toString()
+                : t("settings.commands.defaultNone")}
+            </Tag>
+            {allowedIds.length > 0 && (
+              <Tag size="s" scheme="success">
+                {t("settings.commands.allowedCount", { count: allowedIds.length })}
+              </Tag>
+            )}
+            {deniedIds.length > 0 && (
+              <Tag size="s" scheme="danger">
+                {t("settings.commands.deniedCount", { count: deniedIds.length })}
+              </Tag>
+            )}
+          </>
+        }
         title={
-          <Row center gap={"16"}>
+          <Row center gap={"8"} wrap>
             <Text variant="body-strong-m">{label}</Text>
             <Text variant="body-default-s" onBackground={"brand-weak"}>
               /{name}
@@ -232,7 +254,8 @@ export function CommandsFrom({
         fillWidth
       >
         <Column gap="16" paddingBottom="12">
-          <Column gap="8">
+          <Line />
+          <div className={styles.fields}>
             <Select
               label={t("settings.commands.requiredPermission")}
               id={`${name}-perm`}
@@ -242,11 +265,7 @@ export function CommandsFrom({
                 updateCmd(name, { permission: val === "null" ? null : BigInt(String(val)) })
               }
             />
-          </Column>
 
-          <Line />
-
-          <Column gap="8">
             <RoleSelect
               label={t("settings.commands.whitelist")}
               id={`${name}-allow`}
@@ -262,9 +281,7 @@ export function CommandsFrom({
                 updateCmd(name, { roles: updated });
               }}
             />
-          </Column>
 
-          <Column gap="8">
             <RoleSelect
               label={t("settings.commands.blacklist")}
               id={`${name}-deny`}
@@ -280,21 +297,25 @@ export function CommandsFrom({
                 updateCmd(name, { roles: updated });
               }}
             />
-          </Column>
+          </div>
         </Column>
       </CommandAccordion>
     );
   };
 
   return (
-    <Flex direction="column" gap="24">
-      <Column gap="12">
-        {commandList.map((cmd, idx) => (
-          <RevealFx key={cmd.name} delay={100 * idx} translateY={-0.5}>
-            {renderCommandSettings(cmd.name, t(cmd.label), t(cmd.description), cmd.icon)}
-          </RevealFx>
-        ))}
-      </Column>
-    </Flex>
+    <div className={styles.grid}>
+      {commandList.map((cmd, idx) => (
+        <RevealFx
+          key={cmd.name}
+          delay={Math.min(60 * idx, 400)}
+          translateY={-0.5}
+          fillWidth
+          style={{ minWidth: 0 }}
+        >
+          {renderCommandSettings(cmd.name, t(cmd.label), t(cmd.description), cmd.icon)}
+        </RevealFx>
+      ))}
+    </div>
   );
 }

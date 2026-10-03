@@ -159,6 +159,7 @@ export const settings: Dict<typeof en> = {
     fixed: "Фіксований (0)",
     percentage: "Відсоток (%)",
     minPunishment: "Мін. штраф",
+    punishmentGroup: "Штраф",
     maxPunishment: "Макс. штраф",
     failChance: "Шанс провалу",
     winChance: "Шанс успіху",
@@ -188,6 +189,9 @@ export const settings: Dict<typeof en> = {
       "Налаштуйте ролі, які користувачі можуть купити в магазині. Для кожного товару можна задати ціну та роль.",
     addTitle: "Додати роль до магазину",
     addButton: "Додати роль",
+    emptyTitle: "Магазин поки порожній",
+    emptyHint:
+      'Натисніть «Додати роль», щоб виставити першу роль на продаж. Учасники купують її за валюту сервера.',
     saved: "Магазин успішно оновлено",
     alreadyExists: "Ця роль уже є в магазині",
     onSale: "Знижка {dates}",
@@ -220,6 +224,8 @@ export const settings: Dict<typeof en> = {
     sectionTitle: "Приватні кімнати",
     sectionDescription:
       "Користувачі зможуть створювати тимчасові голосові канали, заходячи до спеціального каналу «Join to Create».",
+    channelsTitle: "Канали",
+    channelsDescription: "Куди заходять учасники, щоб створити кімнату, і де з’являються нові кімнати.",
     autoSetupTitle: "Автоналаштування",
     autoSetupDescription:
       "Автоматично створює голосовий канал «Join to Create», категорію та потрібні для них права.",
@@ -258,6 +264,8 @@ export const settings: Dict<typeof en> = {
     defaultNone: "Немає (за замовчуванням)",
     whitelist: "Дозволені ролі (доступ є завжди)",
     blacklist: "Заборонені ролі (доступу немає ніколи)",
+    allowedCount: "Дозволено: {count}",
+    deniedCount: "Заборонено: {count}",
     saved: "Права успішно оновлено",
     saveFailed: "Не вдалося оновити",
     items: {

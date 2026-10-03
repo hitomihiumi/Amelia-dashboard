@@ -71,7 +71,8 @@ export interface ScenarioFlowProps {
   onAddStep: (actionType: ScenarioStep["action"]["type"]) => void;
   /** Scenario name/description/trigger/restrictions/variables form, rendered as a
    * collapsible overlay inside the canvas instead of a fixed sidebar column. */
-  settingsPanel: React.ReactNode;
+  /** Scenario settings shown in an overlay on the canvas; leave out when they live elsewhere. */
+  settingsPanel?: React.ReactNode;
   library: ComponentsLibrary;
   roles: DiscordRole[];
   channels: GuildChannelOption[];
@@ -229,7 +230,7 @@ function AddStepPanel({
   children,
 }: {
   onAddStep: (actionType: ScenarioStep["action"]["type"]) => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }) {
   const t = useT();
   const [open, setOpen] = useState<"settings" | "steps" | null>(null);
@@ -245,15 +246,17 @@ function AddStepPanel({
         style={{ boxShadow: "0 6px 16px rgba(0,0,0,0.25)", maxWidth: 334 }}
       >
         <Row gap="16">
-          <Button
-            size="s"
-            variant={open === "settings" ? "primary" : "tertiary"}
-            prefixIcon="gear"
-            suffixIcon={open === "settings" ? "chevronUp" : "chevronDown"}
-            onClick={() => setOpen((v) => (v === "settings" ? null : "settings"))}
-          >
-            {t("builder.flow.scenarioSettings")}
-          </Button>
+          {children ? (
+            <Button
+              size="s"
+              variant={open === "settings" ? "primary" : "tertiary"}
+              prefixIcon="gear"
+              suffixIcon={open === "settings" ? "chevronUp" : "chevronDown"}
+              onClick={() => setOpen((v) => (v === "settings" ? null : "settings"))}
+            >
+              {t("builder.flow.scenarioSettings")}
+            </Button>
+          ) : null}
           <Button
             size="s"
             variant={open === "steps" ? "primary" : "tertiary"}

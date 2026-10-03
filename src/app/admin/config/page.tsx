@@ -11,7 +11,7 @@ export default async function AdminConfigPage() {
   const config = await getGlobalConfig();
 
   return (
-    <AdminPage width="xl" title={t("admin.config.title")} description={t("admin.config.description")}>
+    <AdminPage title={t("admin.config.title")} description={t("admin.config.description")}>
       {/* Only the editable fields cross to the client. */}
       <GlobalConfigForm
         config={{

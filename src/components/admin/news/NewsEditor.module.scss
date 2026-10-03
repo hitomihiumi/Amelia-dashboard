@@ -10,9 +10,20 @@ $topbar: 3.5rem;
   container-name: news-editor;
   font-family: var(--font-body);
   width: 100%;
-  max-width: 80rem;
-  margin: 0 auto;
   min-width: 0;
+  // The page padding of AppShell, so the top bar can bleed into it.
+  --page-pad-x: var(--static-space-32);
+  --page-pad-top: var(--static-space-32);
+
+  @media (max-width: 1024px) {
+    --page-pad-x: var(--static-space-24);
+    --page-pad-top: var(--static-space-24);
+  }
+
+  @include breakpoints.phone {
+    --page-pad-x: var(--static-space-16);
+    --page-pad-top: var(--static-space-16);
+  }
 }
 
 /* ───────────────────────── Top bar ───────────────────────── */
@@ -27,15 +38,14 @@ $topbar: 3.5rem;
   gap: var(--static-space-12);
   height: $topbar;
   // Bleed into the layout padding so the bar spans the whole content column when stuck.
-  margin: calc(var(--static-space-24) * -1) calc(var(--static-space-24) * -1) var(--static-space-24);
-  padding: 0 var(--static-space-24);
+  margin: calc(var(--page-pad-top) * -1) calc(var(--page-pad-x) * -1) var(--static-space-24);
+  padding: 0 var(--page-pad-x);
   border-bottom: 1px solid var(--neutral-alpha-weak);
   background: color-mix(in srgb, var(--page-background) 90%, transparent);
   backdrop-filter: blur(12px);
 
   @include breakpoints.s {
-    margin: calc(var(--static-space-24) * -1) calc(var(--static-space-24) * -1) var(--static-space-16);
-    padding: 0 var(--static-space-16);
+    margin-bottom: var(--static-space-16);
     gap: var(--static-space-8);
   }
 }

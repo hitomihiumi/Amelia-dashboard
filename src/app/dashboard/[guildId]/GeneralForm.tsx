@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { GuildActionState } from "@/types/dashboard";
 import { DashIcon } from "@/components/dashboard/DashIcon";
 import { Section } from "@/components/dashboard/Section";
+import { SectionGrid } from "@/components/layout/SectionGrid";
 import { useT } from "@/i18n/client";
 import { LOCALES, LOCALE_META } from "@/i18n/config";
 
@@ -96,7 +97,7 @@ export function GeneralForm({
   }, [setIsDirty]);
 
   return (
-    <>
+    <SectionGrid>
       <Section
         title={t("settings.general.prefixTitle")}
         description={t("settings.general.prefixDescription")}
@@ -127,6 +128,6 @@ export function GeneralForm({
           maxLength={5}
         />
       </Section>
-    </>
+    </SectionGrid>
   );
 }

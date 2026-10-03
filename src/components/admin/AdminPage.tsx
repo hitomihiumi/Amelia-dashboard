@@ -1,43 +1,26 @@
 import React, { type ReactNode } from "react";
-import { Column, Flex, Row, Text } from "@once-ui-system/core";
+import { Flex } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
 
 interface AdminPageProps {
-  title: ReactNode;
-  description?: ReactNode;
+  title: string;
+  description?: string;
   /** Buttons aligned to the right of the title. */
   actions?: ReactNode;
-  /** Content column width; editors use "xl", lists the default. */
-  width?: "m" | "l" | "xl";
+  badge?: ReactNode;
   children: ReactNode;
 }
 
-const MAX_WIDTH = { m: 48, l: 64, xl: 80 } as const;
-
-/** Page frame used by every admin screen: title row, optional actions, centered content. */
-export function AdminPage({ title, description, actions, width = "l", children }: AdminPageProps) {
+/**
+ * Page frame used by every admin screen: the shared page header, then the content. The width
+ * comes from `AppShell` (the content column), so every screen uses the room next to the sidebar.
+ */
+export function AdminPage({ title, description, actions, badge, children }: AdminPageProps) {
   return (
-    <Flex fillWidth horizontal="center">
-      <Column fillWidth gap="24" style={{ maxWidth: `${MAX_WIDTH[width]}rem`, minWidth: 0 }}>
-        <Row fillWidth horizontal="between" vertical="center" gap="16" wrap>
-          <Column gap="4" style={{ minWidth: 0 }}>
-            <Text variant="heading-strong-xl" as="h1">
-              {title}
-            </Text>
-            {description && (
-              <Text variant="body-default-m" onBackground="neutral-weak">
-                {description}
-              </Text>
-            )}
-          </Column>
-          {actions && (
-            <Row gap="8" vertical="center" wrap>
-              {actions}
-            </Row>
-          )}
-        </Row>
-        {children}
-      </Column>
-    </Flex>
+    <>
+      <PageHeader title={title} description={description} actions={actions} badge={badge} />
+      {children}
+    </>
   );
 }
 

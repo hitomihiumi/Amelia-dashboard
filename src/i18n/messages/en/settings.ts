@@ -149,6 +149,7 @@ export const settings = {
     fixed: "Fixed (0)",
     percentage: "Percentage (%)",
     minPunishment: "Min Punishment",
+    punishmentGroup: "Punishment",
     maxPunishment: "Max Punishment",
     failChance: "Chance of failure",
     winChance: "Chance of win",
@@ -178,6 +179,9 @@ export const settings = {
       "Configure the roles that users can buy in the shop. You can set the price and the role for each item.",
     addTitle: "Add role to shop",
     addButton: "Add role",
+    emptyTitle: "The shop is empty",
+    emptyHint:
+      'Use "Add role" to put the first role up for sale. Members buy it with your server currency.',
     saved: "Successfully updated shop",
     alreadyExists: "Role already exists in the shop",
     onSale: "On Sale {dates}",
@@ -209,6 +213,8 @@ export const settings = {
     sectionTitle: "Private rooms",
     sectionDescription:
       'Users will be able to create temporary voice channels by joining a designated "Join to Create" channel.',
+    channelsTitle: "Channels",
+    channelsDescription: "Where members join to create a room and where the new rooms appear.",
     autoSetupTitle: "Auto-setup",
     autoSetupDescription:
       'Automatically create a "Join to Create" voice channel, category and the necessary permissions for it.',
@@ -246,6 +252,8 @@ export const settings = {
     defaultNone: "None (Default)",
     whitelist: "Whitelisted Roles (Always Allowed)",
     blacklist: "Blacklisted Roles (Always Denied)",
+    allowedCount: "Allowed: {count}",
+    deniedCount: "Denied: {count}",
     saved: "Permissions updated successfully",
     saveFailed: "Update failed",
     items: {

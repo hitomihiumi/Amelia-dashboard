@@ -156,6 +156,7 @@ export const settings: Dict<typeof en> = {
     fixed: "Фиксированный (0)",
     percentage: "Процент (%)",
     minPunishment: "Мин. штраф",
+    punishmentGroup: "Штраф",
     maxPunishment: "Макс. штраф",
     failChance: "Шанс провала",
     winChance: "Шанс успеха",
@@ -185,6 +186,9 @@ export const settings: Dict<typeof en> = {
       "Настройте роли, которые пользователи могут купить в магазине. Для каждого товара можно задать цену и роль.",
     addTitle: "Добавить роль в магазин",
     addButton: "Добавить роль",
+    emptyTitle: "Магазин пока пуст",
+    emptyHint:
+      'Нажмите «Добавить роль», чтобы выставить первую роль на продажу. Участники покупают её за валюту сервера.',
     saved: "Магазин успешно обновлён",
     alreadyExists: "Эта роль уже есть в магазине",
     onSale: "Скидка {dates}",
@@ -217,6 +221,8 @@ export const settings: Dict<typeof en> = {
     sectionTitle: "Приватные комнаты",
     sectionDescription:
       "Пользователи смогут создавать временные голосовые каналы, заходя в специальный канал «Join to Create».",
+    channelsTitle: "Каналы",
+    channelsDescription: "Куда заходят участники, чтобы создать комнату, и где появляются новые комнаты.",
     autoSetupTitle: "Автонастройка",
     autoSetupDescription:
       "Автоматически создаёт голосовой канал «Join to Create», категорию и необходимые для них права.",
@@ -255,6 +261,8 @@ export const settings: Dict<typeof en> = {
     defaultNone: "Нет (по умолчанию)",
     whitelist: "Разрешённые роли (всегда есть доступ)",
     blacklist: "Запрещённые роли (доступа нет никогда)",
+    allowedCount: "Разрешено: {count}",
+    deniedCount: "Запрещено: {count}",
     saved: "Права успешно обновлены",
     saveFailed: "Не удалось обновить",
     items: {

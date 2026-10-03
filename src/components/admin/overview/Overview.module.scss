@@ -1,93 +1,96 @@
-// The admin shell keeps an 18rem sidebar next to the content above 1024px, so the
-// space available to the page is not the viewport width. The thresholds below
-// are chosen for the content column, not for the window.
+// Everything here reacts to the room next to the sidebar (the `page` container of AppShell),
+// not to the viewport: at a 1024px window only ~680px are left for the page.
 
-// Stat tiles: six across when there is room, then three, then two.
+// Stat tiles: two across on phones, three on tablets, six when there is room.
 .tiles {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--static-space-12);
 
-  @media (min-width: 1025px) and (max-width: 1280px) {
+  @container page (min-width: 560px) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  @media (max-width: 800px) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  @media (max-width: 520px) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  @container page (min-width: 1100px) {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--static-space-16);
   }
 }
 
-// Two columns of panels; on a narrow page they flatten into one stack where
-// "needs attention" comes first.
+// Panels. Narrow: one stack where "needs attention" comes first. From 980px: two independent
+// columns. From 1480px: three columns (services | attention + actions | recent posts).
 .body {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  display: flex;
+  flex-direction: column;
   gap: var(--static-space-16);
-  align-items: start;
 
-  @media (min-width: 1025px) and (max-width: 1180px) {
-    display: flex;
-    flex-direction: column;
+  @container page (min-width: 980px) {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: var(--static-space-24);
+    align-items: start;
   }
 
-  @media (max-width: 860px) {
-    display: flex;
-    flex-direction: column;
+  @container page (min-width: 1480px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto 1fr;
   }
 }
 
 .column {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-16);
-  min-width: 0;
+  display: contents;
 
-  @media (min-width: 1025px) and (max-width: 1180px) {
-    display: contents;
+  @container page (min-width: 980px) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--static-space-24);
+    min-width: 0;
   }
 
-  @media (max-width: 860px) {
+  @container page (min-width: 1480px) {
     display: contents;
   }
 }
 
+// Narrow stack order.
 .orderAttention {
-  @media (min-width: 1025px) and (max-width: 1180px) {
-    order: 1;
-  }
-  @media (max-width: 860px) {
-    order: 1;
-  }
+  order: 1;
 }
-
 .orderServices {
-  @media (min-width: 1025px) and (max-width: 1180px) {
-    order: 2;
-  }
-  @media (max-width: 860px) {
-    order: 2;
-  }
+  order: 2;
 }
-
 .orderActions {
-  @media (min-width: 1025px) and (max-width: 1180px) {
-    order: 3;
-  }
-  @media (max-width: 860px) {
-    order: 3;
+  order: 3;
+}
+.orderRecent {
+  order: 4;
+}
+
+@container page (min-width: 980px) {
+  .orderAttention,
+  .orderServices,
+  .orderActions,
+  .orderRecent {
+    order: 0;
   }
 }
 
-.orderRecent {
-  @media (min-width: 1025px) and (max-width: 1180px) {
-    order: 4;
+@container page (min-width: 1480px) {
+  .orderServices {
+    grid-column: 1;
+    grid-row: 1 / span 2;
   }
-  @media (max-width: 860px) {
-    order: 4;
+  .orderAttention {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .orderActions {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .orderRecent {
+    grid-column: 3;
+    grid-row: 1 / span 2;
   }
 }
 

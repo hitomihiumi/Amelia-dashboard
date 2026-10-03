@@ -50,12 +50,7 @@ export default async function GuildDashboardLayout({
         }}
       >
         <UnsavedNavigationGuard />
-        <AppShell
-          sidebar={<SettingsBar access={access} guildId={guildId} />}
-          contentMaxWidth="var(--responsive-width-m)"
-        >
-          {children}
-        </AppShell>
+        <AppShell sidebar={<SettingsBar access={access} guildId={guildId} />}>{children}</AppShell>
         <UnsavedBar />
       </DiscordPreviewProvider>
     </UnsavedChangesProvider>

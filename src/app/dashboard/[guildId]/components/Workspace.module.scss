@@ -1,0 +1,152 @@
+// Two-pane workspace: the editor takes the flexible space, the preview keeps a readable width and
+// stays in view while the editor scrolls. Every switch follows the `page` container (the room
+// next to the sidebar, see AppShell), never the viewport.
+
+$split-at: 1000px;
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-24);
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+
+  @container page (max-width: 640px) {
+    gap: var(--static-space-16);
+  }
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: var(--static-space-16);
+}
+
+.aside {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+@container page (min-width: #{$split-at}) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) clamp(420px, 38%, 640px);
+  }
+
+  .workspaceWide {
+    grid-template-columns: minmax(0, 1fr) clamp(380px, 32%, 560px);
+  }
+
+  .aside {
+    position: sticky;
+    top: var(--static-space-16);
+    max-height: calc(100vh - var(--static-space-32));
+  }
+}
+
+// ---------- preview pane ----------
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  max-height: inherit;
+  width: 100%;
+  border: 1px solid var(--neutral-border-medium);
+  border-radius: var(--radius-l);
+  background: var(--surface-background);
+  overflow: hidden;
+}
+
+.paneHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--static-space-8) var(--static-space-12);
+  padding: var(--static-space-12) var(--static-space-16);
+  border-bottom: 1px solid var(--neutral-border-weak);
+  min-width: 0;
+}
+
+.paneTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--static-space-8);
+  min-width: 0;
+}
+
+.paneMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-8);
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.paneToolbar {
+  padding: var(--static-space-8) var(--static-space-16);
+  border-bottom: 1px solid var(--neutral-border-weak);
+}
+
+.paneBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-16);
+  padding: var(--static-space-16);
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.paneEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--static-space-8);
+  min-height: 160px;
+  padding: var(--static-space-24);
+  border: 1px dashed var(--neutral-border-medium);
+  border-radius: var(--radius-m);
+  background: var(--neutral-alpha-weak);
+  color: var(--neutral-on-background-weak);
+
+  svg {
+    margin-bottom: var(--static-space-4);
+    opacity: 0.8;
+  }
+}
+
+.paneEmptyText {
+  max-width: 42ch;
+  text-wrap: balance;
+}
+
+// ---------- editor card ----------
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-16);
+  min-width: 0;
+  padding: var(--static-space-24);
+  border: 1px solid var(--neutral-border-medium);
+  border-radius: var(--radius-l);
+  background: var(--surface-background);
+
+  @container page (max-width: 640px) {
+    padding: var(--static-space-16);
+  }
+}
+
+@container page (min-width: #{$split-at}) {
+  .paneEmpty {
+    min-height: 240px;
+  }
+}

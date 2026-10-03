@@ -1,0 +1,71 @@
+// Composer fields flow into columns by the room the editor pane has (it varies with the preview
+// pane next to it), so the grid sizes itself instead of following the viewport.
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: var(--static-space-16);
+  align-items: start;
+  min-width: 0;
+}
+
+.full {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+// Channel and message type need more room than a plain field (the type switch has long labels).
+.pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: var(--static-space-16);
+  align-items: start;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-8);
+  min-width: 0;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-12);
+  padding-top: var(--static-space-16);
+  border-top: 1px solid var(--neutral-border-weak);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--static-space-8);
+
+  @container page (max-width: 640px) {
+    > * {
+      flex: 1 1 140px;
+    }
+  }
+}
+
+// Embeds, buttons and menus: one row of three when each gets a decent width, otherwise stacked.
+.pickers {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-16);
+  align-items: start;
+}
+
+@container page (min-width: 760px) and (max-width: 999px) {
+  .pickers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container page (min-width: 1480px) {
+  .pickers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

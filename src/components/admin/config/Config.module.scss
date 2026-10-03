@@ -1,8 +1,8 @@
 @use "../../styles/breakpoints.scss" as breakpoints;
 
-// Sections on the left, a sticky index on the right. The admin shell keeps an
-// 18rem sidebar above 1024px, so the index only appears when the content column
-// is wide enough for both.
+// Two columns of cards once the page has room (`page` container of AppShell), a sticky
+// index of the sections on the right when there is room for that as well. Phones and
+// tablets get one column, in the same order.
 .layout {
   display: flex;
   align-items: flex-start;
@@ -14,9 +14,35 @@
 .sections {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--static-space-24);
+
+  @container page (min-width: 980px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    // Banner + landing page on the left, links + status on the right: each pair is about
+    // as tall as the other one.
+    > :nth-child(1) {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    > :nth-child(2) {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    > :nth-child(3) {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    > :nth-child(4) {
+      grid-column: 2;
+      grid-row: 2;
+    }
+  }
+
+  @container page (max-width: 640px) {
+    gap: var(--static-space-16);
+  }
 }
 
 .index {
@@ -24,12 +50,12 @@
   top: var(--static-space-24);
   flex-shrink: 0;
   width: 13.5rem;
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: var(--static-space-8);
 
-  @media (max-width: 1280px) {
-    display: none;
+  @container page (min-width: 1480px) {
+    display: flex;
   }
 }
 
@@ -116,8 +142,14 @@
 }
 
 .section {
+  min-width: 0;
   // Anchors from the index and from the overview land below the top edge.
   scroll-margin-top: var(--static-space-24);
+
+  // Cards of one row share the height.
+  > * {
+    height: 100%;
+  }
 }
 
 .sectionTitle {

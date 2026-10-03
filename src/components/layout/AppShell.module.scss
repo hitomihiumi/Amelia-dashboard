@@ -21,15 +21,27 @@
   justify-content: center;
 }
 
+// Wide enough to use a large monitor, narrow enough to keep lines readable on an ultrawide.
+$page-max-width: 1680px;
+
 .inner {
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: $page-max-width;
   min-width: 0;
-  padding: var(--static-space-24);
+  padding: var(--static-space-32) var(--static-space-32) var(--static-space-40);
   gap: var(--static-space-24);
+  // Pages query the room next to the sidebar: `@container page (min-width: …)`.
+  container-type: inline-size;
+  container-name: page;
+
+  @include breakpoints.m {
+    padding: var(--static-space-24);
+  }
 
   @include breakpoints.phone {
     padding: var(--static-space-16);
+    gap: var(--static-space-16);
   }
 }

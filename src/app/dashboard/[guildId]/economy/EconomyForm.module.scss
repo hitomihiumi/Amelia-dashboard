@@ -1,0 +1,113 @@
+// Layout follows the `page` container (the room next to the sidebar), not the viewport.
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-24);
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.aside,
+.main {
+  min-width: 0;
+}
+
+// Wide screens: currency sits in a sticky aside next to the income grid.
+@container page (min-width: 1480px) {
+  .layout {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+
+  .aside {
+    position: sticky;
+    top: var(--static-space-24);
+  }
+}
+
+.currencyRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--static-space-12);
+
+  > .currencyInput {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+
+  > :not(.currencyInput) {
+    flex: 0 0 auto;
+  }
+}
+
+.incomeGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-16);
+  align-items: start;
+  min-width: 0;
+}
+
+// Two columns once each sub-card can keep ~370px; the long Robbing card sits beside the other four.
+@container page (min-width: 900px) {
+  .incomeGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .incomeGrid > .subcard {
+    grid-column: 1;
+  }
+
+  .incomeGrid > .rob {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+  }
+}
+
+.subcard {
+  min-width: 0;
+}
+
+.subcardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--static-space-16);
+}
+
+.subcardText {
+  min-width: 0;
+  max-width: 60ch;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+  gap: var(--static-space-8);
+}
+
+.groupLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.chance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-4);
+  padding-inline: var(--static-space-4);
+}
+
+.chanceNumbers {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--static-space-16);
+}
+
+@media (max-width: 640px) {
+  .layout {
+    gap: var(--static-space-16);
+  }
+}

@@ -57,7 +57,7 @@ export const builder = {
   components: {
     title: "Custom components",
     subtitle:
-      "Build reusable Buttons, Modals, Embeds and Select Menus that power your bot's scenarios. Every item is reflected in the live Discord preview on the right.",
+      "Build reusable Buttons, Modals, Embeds and Select Menus that power your bot's scenarios. Every item is reflected in the live Discord preview.",
     tabs: {
       buttons: "Buttons",
       modals: "Modals",
@@ -349,6 +349,18 @@ export const builder = {
     layoutNamed: "Layout: {name}",
     layoutNone: "Layout: not selected",
     layoutGone: "Layout: not found",
+  },
+
+  workspace: {
+    previewTitle: "Preview",
+    previewEmptyTitle: "Nothing to preview yet",
+    previewEmptyComponents:
+      "Open an item or create a new one and it appears here, exactly as Discord will show it.",
+    previewEmptyScenario:
+      "Select a step on the canvas and its message appears here, with its settings below.",
+    inspectorTitle: "Properties",
+    stepTitle: "Step settings",
+    stepPreview: "Message preview",
   },
 
   preview: {

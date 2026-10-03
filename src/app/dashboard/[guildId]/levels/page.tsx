@@ -6,7 +6,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { fetchGuildTextVoiceAndCategories } from "@/lib/discord/channels-api";
 import { ChannelPickOption } from "@/lib/discord/channel-type";
-import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
+import { Feedback, Flex } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import React from "react";
 import { getT } from "@/i18n/server";
@@ -45,12 +46,7 @@ export default async function LevelsSettingsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">{t("settings.levels.title")}</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          {t("settings.levels.description")}
-        </Text>
-      </RevealFx>
+      <PageHeader title={t("settings.levels.title")} description={t("settings.levels.description")} />
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

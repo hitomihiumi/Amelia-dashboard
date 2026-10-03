@@ -1,6 +1,7 @@
 import { Guild } from "@/lib/db/Guild";
 import { EconomyForm } from "@/app/dashboard/[guildId]/economy/EconomyForm";
-import { Flex, RevealFx, Text } from "@once-ui-system/core";
+import { Flex } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { getT } from "@/i18n/server";
 
 export default async function GeneralSettingsPage({
@@ -16,12 +17,7 @@ export default async function GeneralSettingsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">{t("settings.economy.title")}</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          {t("settings.economy.description")}
-        </Text>
-      </RevealFx>
+      <PageHeader title={t("settings.economy.title")} description={t("settings.economy.description")} />
 
       <EconomyForm
         guildId={resolvedParams.guildId}

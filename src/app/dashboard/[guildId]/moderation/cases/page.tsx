@@ -1,5 +1,6 @@
 import React from "react";
-import { Flex, RevealFx, Text } from "@once-ui-system/core";
+import { Flex } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { prisma } from "@/lib/db/db";
 import { getT } from "@/i18n/server";
 import { CasesClient, type CaseItem } from "./CasesClient";
@@ -72,12 +73,7 @@ export default async function ModerationCasesPage({
 
   return (
     <Flex direction="column" gap="24">
-      <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">{t("moderation.cases.title")}</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          {t("moderation.cases.description")}
-        </Text>
-      </RevealFx>
+      <PageHeader title={t("moderation.cases.title")} description={t("moderation.cases.description")} />
 
       <CasesClient
         guildId={guildId}

@@ -12,7 +12,7 @@ export default async function NewIncidentPage() {
 
   return (
     <AdminPage
-      width="xl"
+     
       title={t("adminIncidents.form.title")}
       description={t("adminIncidents.form.description")}
       actions={

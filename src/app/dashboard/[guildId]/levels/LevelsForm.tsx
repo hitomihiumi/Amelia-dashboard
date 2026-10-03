@@ -28,7 +28,9 @@ import { ChannelPill } from "@/components/dashboard/discord/ChannelPill";
 import { GuildActionState } from "@/types/dashboard";
 import { DashIcon } from "@/components/dashboard/DashIcon";
 import { Section } from "@/components/dashboard/Section";
+import { SectionGrid } from "@/components/layout/SectionGrid";
 import { useT } from "@/i18n/client";
+import styles from "./LevelsForm.module.scss";
 
 export function LevelsForm({
   guildId,
@@ -146,34 +148,35 @@ export function LevelsForm({
   );
 
   return (
-    <Flex direction="column" gap="24">
-      <RevealFx delay={300} translateY={-0.5}>
-        <Flex
-          direction="column"
-          gap="16"
-          padding="24"
-          border="neutral-weak"
-          radius="l"
-          background="surface"
-          fillWidth
-        >
-          <Row horizontal="between" vertical="center">
-            <Flex gap="16">
-              <DashIcon name={"ribbon"} />
-              <Column gap="8">
-                <Text variant="body-strong-l">{t("settings.levels.enableTitle")}</Text>
-                <Text variant="body-default-s" onBackground="neutral-weak">
-                  {t("settings.levels.enableDescription")}
-                </Text>
-              </Column>
-            </Flex>
-            <Switch
-              checked={levels.enabled}
-              onToggle={() => setLevels((p) => ({ ...p, enabled: !p.enabled }))}
-            />
-          </Row>
-        </Flex>
-      </RevealFx>
+    <SectionGrid>
+      <SectionGrid.Full>
+        <RevealFx translateY={-0.5} fillWidth>
+          <Flex
+            direction="column"
+            padding="20"
+            border="neutral-medium"
+            radius="l"
+            background="surface"
+            fillWidth
+          >
+            <div className={styles.enable}>
+              <div className={styles.enableText}>
+                <DashIcon name={"ribbon"} />
+                <Column gap="4">
+                  <Text variant="body-strong-l">{t("settings.levels.enableTitle")}</Text>
+                  <Text variant="body-default-s" onBackground="neutral-weak">
+                    {t("settings.levels.enableDescription")}
+                  </Text>
+                </Column>
+              </div>
+              <Switch
+                checked={levels.enabled}
+                onToggle={() => setLevels((p) => ({ ...p, enabled: !p.enabled }))}
+              />
+            </div>
+          </Flex>
+        </RevealFx>
+      </SectionGrid.Full>
 
       <Section
         title={t("settings.levels.rewardsTitle")}
@@ -181,39 +184,36 @@ export function LevelsForm({
         num={2}
         icon="trophy"
       >
-        <Column gap="8">
-          {Object.entries(levels.level_roles).length === 0 ? (
-            <Row fillWidth center padding="s">
-              <Text variant="body-default-s" onBackground="neutral-weak">
-                {t("settings.levels.rewardsEmpty")}
-              </Text>
-            </Row>
-          ) : (
-            Object.entries(levels.level_roles)
+        {Object.entries(levels.level_roles).length === 0 ? (
+          <Row fillWidth center padding="s">
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              {t("settings.levels.rewardsEmpty")}
+            </Text>
+          </Row>
+        ) : (
+          <div className={styles.rewardList}>
+            {Object.entries(levels.level_roles)
               .sort(([a], [b]) => parseInt(a) - parseInt(b))
               .map(([lvl, rId]) => {
                 const role = roles.find((r) => r.id === rId);
                 return (
                   <Row
                     key={lvl}
-                    horizontal="between"
-                    vertical="center"
+                    className={styles.reward}
                     padding="12"
                     background="overlay"
                     radius="m"
                     border="neutral-alpha-medium"
                   >
-                    <Row gap="16" vertical="center">
-                      <Flex width="48">
-                        <Text variant="body-strong-m">
-                          {t("settings.levels.levelShort", { level: lvl })}
-                        </Text>
-                      </Flex>
+                    <div className={styles.rewardInfo}>
+                      <Text variant="body-strong-m" className={styles.rewardLevel}>
+                        {t("settings.levels.levelShort", { level: lvl })}
+                      </Text>
                       <RolePill
                         roleColor={role?.color || 0}
                         label={role?.name || t("common.select.unknownRole")}
                       />
-                    </Row>
+                    </div>
                     <IconButton
                       icon="close"
                       variant="tertiary"
@@ -222,14 +222,14 @@ export function LevelsForm({
                     />
                   </Row>
                 );
-              })
-          )}
-        </Column>
+              })}
+          </div>
+        )}
 
         <Line />
 
-        <Row gap="12" vertical="center" s={{ direction: "column" }}>
-          <Column fillWidth>
+        <div className={styles.addRow}>
+          <div className={styles.addLevel}>
             <NumberInput
               id="new-reward-level"
               value={newLevel}
@@ -237,19 +237,26 @@ export function LevelsForm({
               placeholder="5"
               label={t("settings.levels.levelLabel")}
             />
-          </Column>
-          <RoleSelect
-            fillWidth
-            id="new-reward-role"
-            options={roleOptions}
-            selectedRole={newRoleId}
-            setSelectedRole={(val) => setNewRoleId(val as string)}
-            label={t("settings.levels.roleToGrant")}
-          />
-          <Button variant="primary" onClick={addRoleReward} disabled={!newLevel || !newRoleId}>
+          </div>
+          <div className={styles.addRole}>
+            <RoleSelect
+              fillWidth
+              id="new-reward-role"
+              options={roleOptions}
+              selectedRole={newRoleId}
+              setSelectedRole={(val) => setNewRoleId(val as string)}
+              label={t("settings.levels.roleToGrant")}
+            />
+          </div>
+          <Button
+            className={styles.addButton}
+            variant="primary"
+            onClick={addRoleReward}
+            disabled={!newLevel || !newRoleId}
+          >
             {t("common.actions.add")}
           </Button>
-        </Row>
+        </div>
       </Section>
 
       <Section
@@ -269,7 +276,7 @@ export function LevelsForm({
           />
         }
       >
-        <Column gap="12">
+        <div className={styles.fields}>
           <ChannelSelect
             label={t("settings.levels.announcementChannel")}
             id="level-up-channel"
@@ -293,7 +300,7 @@ export function LevelsForm({
               }))
             }
           />
-        </Column>
+        </div>
       </Section>
 
       <Section
@@ -302,7 +309,7 @@ export function LevelsForm({
         num={4}
         icon="eyeoff"
       >
-        <Column gap="12">
+        <div className={styles.fields}>
           <ChannelSelect
             label={t("settings.levels.ignoredChannels")}
             id="ignored-channels"
@@ -313,8 +320,6 @@ export function LevelsForm({
               setLevels((p) => ({ ...p, ignore_channels: val as string[] }))
             }
           />
-        </Column>
-        <Column gap="12">
           <RoleSelect
             label={t("settings.levels.ignoredRoles")}
             id="ignored-roles"
@@ -323,7 +328,7 @@ export function LevelsForm({
             selectedRole={levels.ignore_roles}
             setSelectedRole={(val) => setLevels((p) => ({ ...p, ignore_roles: val as string[] }))}
           />
-        </Column>
+        </div>
       </Section>
 
       <Section
@@ -338,13 +343,15 @@ export function LevelsForm({
           />
         }
       >
-        <NumberInput
-          id="eco-reward-amount"
-          label={t("settings.levels.rewardAmount")}
-          value={economy.amount}
-          onChange={(value) => setEconomy((p) => ({ ...p, amount: Number(value) }))}
-        />
+        <div className={styles.fieldsSingle}>
+          <NumberInput
+            id="eco-reward-amount"
+            label={t("settings.levels.rewardAmount")}
+            value={economy.amount}
+            onChange={(value) => setEconomy((p) => ({ ...p, amount: Number(value) }))}
+          />
+        </div>
       </Section>
-    </Flex>
+    </SectionGrid>
   );
 }

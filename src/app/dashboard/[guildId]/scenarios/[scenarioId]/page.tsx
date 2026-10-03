@@ -14,7 +14,8 @@ import { fetchGuildTextChannels } from "@/lib/discord/channels-api";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
-import { Button, Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Button, Feedback, Flex } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import type { ComponentsLibrary } from "../scenariosTypes";
 import { ScenarioEditorPage } from "./ScenarioEditorPage";
@@ -65,16 +66,19 @@ export default async function ScenarioEditorRoute({
 
   return (
     <Flex direction="column" gap="24" fillWidth>
-      <RevealFx direction="row" gap="8" translateY={-0.5} vertical="center" wrap>
-        <Button
-          variant="secondary"
-          size="s"
-          prefixIcon="back"
-          href={`/dashboard/${guildId}/scenarios`}
-        >
-          {t("builder.scenarios.allScenarios")}
-        </Button>
-      </RevealFx>
+      <PageHeader
+        title={scenario?.name || t("builder.scenarios.untitled")}
+        actions={
+          <Button
+            variant="secondary"
+            size="s"
+            prefixIcon="back"
+            href={`/dashboard/${guildId}/scenarios`}
+          >
+            {t("builder.scenarios.allScenarios")}
+          </Button>
+        }
+      />
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

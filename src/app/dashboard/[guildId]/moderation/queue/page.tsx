@@ -1,5 +1,6 @@
 import React from "react";
-import { Flex, RevealFx, Text } from "@once-ui-system/core";
+import { Flex } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { prisma } from "@/lib/db/db";
 import type { ModerationSubmissionAnswer } from "@/lib/db/types";
 import { getT } from "@/i18n/server";
@@ -23,6 +24,17 @@ export default async function ModerationQueuePage({
     ? query.status!
     : "open";
   const kind = KIND_FILTERS.includes(query.kind ?? "") ? query.kind! : "all";
+
+  const statusCounts = await prisma.moderationSubmission.groupBy({
+    by: ["status"],
+    where: { guildId, ...(kind === "all" ? {} : { kind }) },
+    _count: { _all: true },
+  });
+  const counts: Record<string, number> = { open: 0 };
+  for (const row of statusCounts) {
+    counts[row.status] = row._count._all;
+    if (row.status === "pending" || row.status === "in_review") counts.open += row._count._all;
+  }
 
   const submissions = await prisma.moderationSubmission.findMany({
     where: {
@@ -55,16 +67,12 @@ export default async function ModerationQueuePage({
 
   return (
     <Flex direction="column" gap="24">
-      <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">{t("moderation.queue.title")}</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          {t("moderation.queue.description")}
-        </Text>
-      </RevealFx>
+      <PageHeader title={t("moderation.queue.title")} description={t("moderation.queue.description")} />
 
       <QueueClient
         guildId={guildId}
         items={items}
+        counts={counts}
         status={status}
         kind={kind}
       />

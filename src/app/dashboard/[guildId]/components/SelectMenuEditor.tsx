@@ -16,6 +16,7 @@ import {
   Text,
 } from "@once-ui-system/core";
 import React from "react";
+import styles from "./Editors.module.scss";
 
 /** Discord allows at most 25 options per select menu. */
 const MAX_OPTIONS = 25;
@@ -57,21 +58,23 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
 
   return (
     <Column fillWidth gap="16">
-      <Input
-        id="select-name"
-        label={t("builder.shared.internalName")}
-        value={value.name}
-        onChange={(e) => update({ name: e.target.value })}
-        maxLength={100}
-      />
-      <Input
-        id="select-placeholder"
-        label={t("builder.selectMenus.placeholder")}
-        value={value.placeholder ?? ""}
-        onChange={(e) => update({ placeholder: e.target.value || undefined })}
-        maxLength={150}
-        characterCount
-      />
+      <div className={styles.grid}>
+        <Input
+          id="select-name"
+          label={t("builder.shared.internalName")}
+          value={value.name}
+          onChange={(e) => update({ name: e.target.value })}
+          maxLength={100}
+        />
+        <Input
+          id="select-placeholder"
+          label={t("builder.selectMenus.placeholder")}
+          value={value.placeholder ?? ""}
+          onChange={(e) => update({ placeholder: e.target.value || undefined })}
+          maxLength={150}
+          characterCount
+        />
+      </div>
       <Text variant="body-default-s" onBackground="neutral-weak">
         {t("builder.shared.customId")} <InlineCode>{value.id}</InlineCode>
       </Text>
@@ -112,15 +115,17 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
         </Button>
       </Row>
 
-      {value.options.map((opt, i) => (
-        <OptionEditor
-          key={opt.value}
-          option={opt}
-          onChange={(patch) => updateOption(i, patch)}
-          onDelete={() => removeOption(i)}
-          onMove={(direction) => moveOption(i, direction)}
-        />
-      ))}
+      <div className={styles.list}>
+        {value.options.map((opt, i) => (
+          <OptionEditor
+            key={opt.value}
+            option={opt}
+            onChange={(patch) => updateOption(i, patch)}
+            onDelete={() => removeOption(i)}
+            onMove={(direction) => moveOption(i, direction)}
+          />
+        ))}
+      </div>
     </Column>
   );
 }

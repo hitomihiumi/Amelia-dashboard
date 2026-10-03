@@ -1,6 +1,7 @@
 import { Guild } from "@/lib/db/Guild";
 import { ShopFrom } from "@/app/dashboard/[guildId]/shop/ShopForm";
-import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
+import { Feedback, Flex } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
@@ -61,12 +62,7 @@ export default async function GeneralSettingsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">{t("settings.shop.title")}</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          {t("settings.shop.description")}
-        </Text>
-      </RevealFx>
+      <PageHeader title={t("settings.shop.title")} description={t("settings.shop.description")} />
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

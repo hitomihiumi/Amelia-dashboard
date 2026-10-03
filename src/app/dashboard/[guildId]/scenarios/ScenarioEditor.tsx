@@ -20,7 +20,6 @@ import type { DiscordRole } from "@/lib/discord/role-style";
 import {
   Button,
   Column,
-  Flex,
   IconButton,
   Input,
   NumberInput,
@@ -32,9 +31,12 @@ import {
   Textarea,
 } from "@once-ui-system/core";
 import type React from "react";
+import { LuSlidersHorizontal } from "react-icons/lu";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PreviewEmpty, PreviewPane, Workspace } from "../components/Workspace";
 import { ActionNodeForm } from "./ActionNodeForm";
 import { type ScenarioEdge, ScenarioFlow, type ScenarioNode } from "./ScenarioFlow";
+import styles from "./ScenarioEditor.module.scss";
 import { buildPreviewForStep } from "./previewBuild";
 import {
   TRIGGER_TYPE_OPTION_LABEL,
@@ -70,7 +72,13 @@ export function ScenarioEditor({
   const t = useT();
   const [nodes, setNodes] = useState<ScenarioNode[]>(() => stepsToNodesEdges(scenario).nodes);
   const [edges, setEdges] = useState<ScenarioEdge[]>(() => stepsToNodesEdges(scenario).edges);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeId, setSelectedNodeIdRaw] = useState<string | null>(null);
+  // The inspector shows the scenario's own settings or the selected step; picking a step opens it.
+  const [inspector, setInspector] = useState<"settings" | "step">("settings");
+  const setSelectedNodeId = useCallback((id: string | null) => {
+    setSelectedNodeIdRaw(id);
+    if (id) setInspector("step");
+  }, []);
   const [restrictionsOpen, setRestrictionsOpen] = useState(true);
   const [variablesOpen, setVariablesOpen] = useState(false);
 
@@ -137,7 +145,7 @@ export function ScenarioEditor({
       setNodes((prev) => [...prev, node]);
       setSelectedNodeId(id);
     },
-    [guildId, nodes],
+    [guildId, nodes, setSelectedNodeId],
   );
 
   const removeStep = useCallback(
@@ -146,7 +154,7 @@ export function ScenarioEditor({
       setEdges((prev) => prev.filter((e) => e.source !== stepId && e.target !== stepId));
       if (selectedNodeId === stepId) setSelectedNodeId(null);
     },
-    [selectedNodeId],
+    [selectedNodeId, setSelectedNodeId],
   );
 
   const handleCanvasChange = useCallback((nextNodes: ScenarioNode[], nextEdges: ScenarioEdge[]) => {
@@ -333,83 +341,75 @@ export function ScenarioEditor({
     </Column>
   );
 
-  return (
-    <Flex
-      fillWidth
-      direction="column"
-      gap="16"
-      wrap
-      m={{ direction: "column" }}
-      style={{ alignItems: "flex-start" }}
+  const inspectorPane = (
+    <PreviewPane
+      title={t("builder.workspace.inspectorTitle")}
+      icon={<LuSlidersHorizontal size={16} aria-hidden />}
+      toolbar={
+        <SegmentedControl
+          fillWidth
+          value={inspector}
+          onChange={(v) => setInspector(v as "settings" | "step")}
+          buttons={[
+            { label: t("builder.flow.scenarioSettings"), value: "settings" },
+            { label: t("builder.workspace.stepTitle"), value: "step" },
+          ]}
+        />
+      }
     >
-      {/* Canvas — scenario settings and add-step live inside it as collapsible overlays */}
-      <RevealFx delay={600} translateY={-0.5}>
-        <Column
-          gap="12"
-          fillWidth
-          padding="24"
-          border="neutral-weak"
-          radius="l"
-          background="surface"
-          minHeight={55}
-          style={{ flex: "3 1 600px", minWidth: 360 }}
-        >
-          <Flex fill>
-            <ScenarioFlow
-              guildId={guildId}
-              nodes={nodes}
-              edges={edges}
-              selectedNodeId={selectedNodeId}
-              setNodes={setNodes}
-              setEdges={setEdges}
-              onCanvasChange={handleCanvasChange}
-              onSelectNode={setSelectedNodeId}
-              onRemoveStep={removeStep}
-              onAddStep={addStep}
-              settingsPanel={settingsPanel}
-              library={library}
-              roles={roles}
-              channels={channels}
-            />
-          </Flex>
-        </Column>
-      </RevealFx>
-
-      <RevealFx delay={900} translateY={-0.5}>
-        <Column
-          gap="12"
-          fillWidth
-          padding="24"
-          border="neutral-weak"
-          radius="l"
-          background="surface"
-          style={{ minWidth: 320 }}
-        >
-          <Text variant="label-default-s">{t("builder.scenarios.preview")}</Text>
-          <Flex center>
+      {inspector === "settings" ? (
+        settingsPanel
+      ) : selectedStep ? (
+        <>
+          <div className={styles.stepSection}>
+            <Text variant="label-default-s" onBackground="neutral-weak">
+              {t("builder.workspace.stepPreview")}
+            </Text>
             <DiscordPreview message={previewMessage} />
-          </Flex>
-          {selectedStep ? (
-            <ActionNodeForm
-              guildId={guildId}
-              step={selectedStep}
-              library={library}
-              roles={roles}
-              channels={channels}
-              triggerModalFields={triggerModalFields}
-              onUpdate={(action) => updateStepAction(selectedStep.id, action)}
-              onUpdateMeta={(patch) => updateStepMeta(selectedStep.id, patch)}
-            />
-          ) : (
-            <Flex center>
-              <Text variant="body-default-s" onBackground="neutral-weak" align="center">
-                {t("builder.scenarios.selectStepHint")}
-              </Text>
-            </Flex>
-          )}
-        </Column>
-      </RevealFx>
-    </Flex>
+          </div>
+          <hr className={styles.divider} />
+          <ActionNodeForm
+            guildId={guildId}
+            step={selectedStep}
+            library={library}
+            roles={roles}
+            channels={channels}
+            triggerModalFields={triggerModalFields}
+            onUpdate={(action) => updateStepAction(selectedStep.id, action)}
+            onUpdateMeta={(patch) => updateStepMeta(selectedStep.id, patch)}
+          />
+        </>
+      ) : (
+        <PreviewEmpty
+          title={t("builder.workspace.previewEmptyTitle")}
+          text={t("builder.workspace.previewEmptyScenario")}
+        />
+      )}
+    </PreviewPane>
+  );
+
+  return (
+    <RevealFx delay={300} translateY={-0.5} fillWidth>
+      <Workspace aside={inspectorPane} asideSize="narrow">
+        <div className={styles.canvas}>
+          <ScenarioFlow
+            guildId={guildId}
+            nodes={nodes}
+            edges={edges}
+            selectedNodeId={selectedNodeId}
+            setNodes={setNodes}
+            setEdges={setEdges}
+            onCanvasChange={handleCanvasChange}
+            onSelectNode={setSelectedNodeId}
+            onRemoveStep={removeStep}
+            onAddStep={addStep}
+            library={library}
+            roles={roles}
+            channels={channels}
+          />
+        </div>
+      </Workspace>
+    </RevealFx>
   );
 }
 

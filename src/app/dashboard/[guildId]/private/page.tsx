@@ -1,6 +1,7 @@
 import { Guild } from "@/lib/db/Guild";
 import { PrivateForm } from "@/app/dashboard/[guildId]/private/PrivateForm";
-import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
+import { Feedback, Flex } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ChannelPickOption } from "@/lib/discord/channel-type";
@@ -39,12 +40,7 @@ export default async function GeneralSettingsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">{t("settings.private.title")}</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          {t("settings.private.description")}
-        </Text>
-      </RevealFx>
+      <PageHeader title={t("settings.private.title")} description={t("settings.private.description")} />
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

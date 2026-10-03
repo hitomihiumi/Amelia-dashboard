@@ -12,7 +12,8 @@ import type {
 } from "@/lib/db/types";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import { fetchGuildTextChannels } from "@/lib/discord/channels-api";
-import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Feedback, Flex } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import type { ComponentsLibrary } from "../scenarios/scenariosTypes";
 import { SendComposer } from "./SendComposer";
@@ -49,12 +50,7 @@ export default async function SendPage({ params }: { params: Promise<{ guildId: 
 
   return (
     <Flex direction="column" gap="24">
-      <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">{t("send.title")}</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          {t("send.subtitle")}
-        </Text>
-      </RevealFx>
+      <PageHeader title={t("send.title")} description={t("send.subtitle")} />
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

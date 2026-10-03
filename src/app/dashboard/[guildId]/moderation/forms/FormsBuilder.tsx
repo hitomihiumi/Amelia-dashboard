@@ -31,7 +31,9 @@ import type {
 import type { GuildActionState } from "@/types/dashboard";
 import { updateModerationForms } from "../actions";
 import { Section } from "@/components/dashboard/Section";
+import { SectionGrid } from "@/components/layout/SectionGrid";
 import { IconName } from "@/resources/icons";
+import styles from "./FormsBuilder.module.scss";
 import { useT } from "@/i18n/client";
 
 const FIELD_TYPES: ModerationFormFieldType[] = [
@@ -128,7 +130,7 @@ export function FormsBuilder({
   }, [handleSave, handleCancel, setSaveAction, setCancelAction]);
 
   return (
-    <Column fillWidth gap="24">
+    <SectionGrid>
       <FormEditor
         title={t("moderation.forms.report.title")}
         description={t("moderation.forms.report.description")}
@@ -154,7 +156,7 @@ export function FormsBuilder({
         num={2}
         icon="refresh"
       />
-    </Column>
+    </SectionGrid>
   );
 }
 
@@ -231,22 +233,28 @@ function FormEditor({
         />
       }
     >
-      <Text variant="body-default-s" onBackground="neutral-weak">
+      <Text
+        variant="body-default-s"
+        onBackground="neutral-weak"
+        className={styles.link}
+      >
         {t("moderation.forms.publicLink", { url: publicUrl })}
       </Text>
 
-      <ChannelSelect
-        fillWidth
-        id={`${kind}-channel`}
-        label={t("moderation.forms.channel")}
-        options={channelOptions}
-        selectedChannel={form.channel ?? ""}
-        setSelectedChannel={(value) =>
-          update({ channel: (value as string) || null })
-        }
-      />
+      <div className={`${styles.fields} ${styles.fieldsWide}`}>
+        <ChannelSelect
+          fillWidth
+          id={`${kind}-channel`}
+          label={t("moderation.forms.channel")}
+          options={channelOptions}
+          selectedChannel={form.channel ?? ""}
+          setSelectedChannel={(value) =>
+            update({ channel: (value as string) || null })
+          }
+        />
+      </div>
 
-      <Row fillWidth gap="12" wrap>
+      <div className={`${styles.fields} ${styles.fieldsWide}`}>
         <NumberInput
           id={`${kind}-cooldown`}
           label={t("moderation.forms.cooldown")}
@@ -265,10 +273,10 @@ function FormEditor({
             update({ max_pending: Number(value) || 1 })
           }
         />
-      </Row>
+      </div>
 
       {kind === "report" && (
-        <>
+        <div className={styles.toggles}>
           <Row fillWidth gap="12" vertical="center">
             <Switch
               checked={form.require_target}
@@ -294,7 +302,7 @@ function FormEditor({
               </Text>
             </Column>
           </Row>
-        </>
+        </div>
       )}
 
       {kind === "appeal" && (
@@ -311,7 +319,7 @@ function FormEditor({
 
       <Line />
 
-      <Row fillWidth horizontal="between" vertical="center" gap="8">
+      <div className={styles.questionsHead}>
         <Text variant="label-default-s">
           {t("moderation.forms.questions", {
             count: form.fields.length,
@@ -325,7 +333,7 @@ function FormEditor({
         >
           {t("moderation.forms.addQuestion")}
         </Button>
-      </Row>
+      </div>
 
       {form.fields.length === 0 && (
         <Text variant="body-default-s" onBackground="neutral-weak">
@@ -333,20 +341,25 @@ function FormEditor({
         </Text>
       )}
 
-      {form.fields.map((field, index) => (
-        <Accordion key={field.id} title={`${index + 1}. ${field.label}`}>
-          <FieldEditor
-            guildId={guildId}
-            field={field}
-            onChange={(patch) => updateField(index, patch)}
-            onDelete={() => removeField(index)}
-            onMove={(delta) => moveField(index, delta)}
-          />
-        </Accordion>
-      ))}
+      {form.fields.length > 0 && (
+        <div className={styles.questions}>
+          {form.fields.map((field, index) => (
+            <Accordion key={field.id} title={`${index + 1}. ${field.label}`}>
+              <FieldEditor
+                guildId={guildId}
+                field={field}
+                onChange={(patch) => updateField(index, patch)}
+                onDelete={() => removeField(index)}
+                onMove={(delta) => moveField(index, delta)}
+              />
+            </Accordion>
+          ))}
+        </div>
+      )}
 
       <Line />
 
+      <div className={styles.messages}>
       <Textarea
         id={`${kind}-success`}
         label={t("moderation.forms.successMessage")}
@@ -368,6 +381,7 @@ function FormEditor({
         value={form.reject_message ?? ""}
         onChange={(e) => update({ reject_message: e.target.value || null })}
       />
+      </div>
     </Section>
   );
 }
@@ -401,21 +415,23 @@ function FieldEditor({
 
   return (
     <Column fillWidth gap="16">
-      <Input
-        id={`${field.id}-label`}
-        label={t("moderation.forms.field.question")}
-        value={field.label}
-        maxLength={100}
-        onChange={(e) => onChange({ label: e.target.value })}
-      />
+      <div className={`${styles.fields} ${styles.fieldsWide}`}>
+        <Input
+          id={`${field.id}-label`}
+          label={t("moderation.forms.field.question")}
+          value={field.label}
+          maxLength={100}
+          onChange={(e) => onChange({ label: e.target.value })}
+        />
 
-      <Input
-        id={`${field.id}-description`}
-        label={t("moderation.forms.field.hint")}
-        value={field.description ?? ""}
-        maxLength={200}
-        onChange={(e) => onChange({ description: e.target.value || null })}
-      />
+        <Input
+          id={`${field.id}-description`}
+          label={t("moderation.forms.field.hint")}
+          value={field.description ?? ""}
+          maxLength={200}
+          onChange={(e) => onChange({ description: e.target.value || null })}
+        />
+      </div>
 
       <SegmentedControl
         fillWidth
@@ -432,7 +448,7 @@ function FieldEditor({
       {(field.type === "short" ||
         field.type === "paragraph" ||
         field.type === "number") && (
-        <Row fillWidth gap="12" wrap>
+        <div className={styles.fields}>
           <NumberInput
             id={`${field.id}-min`}
             label={
@@ -459,7 +475,7 @@ function FieldEditor({
               onChange({ max: Number(value) || null })
             }
           />
-        </Row>
+        </div>
       )}
 
       {field.type !== "boolean" && field.type !== "select" && (
@@ -493,7 +509,7 @@ function FieldEditor({
           </Row>
 
           {field.options.map((option, i) => (
-            <Row key={option.id} fillWidth gap="8" vertical="center">
+            <div key={option.id} className={styles.optionRow}>
               <Input
                 id={`${option.id}-label`}
                 label={t("moderation.forms.field.optionLabel")}
@@ -529,12 +545,12 @@ function FieldEditor({
                   })
                 }
               />
-            </Row>
+            </div>
           ))}
         </Column>
       )}
 
-      <Row fillWidth gap="8" horizontal="between" vertical="center">
+      <div className={styles.fieldFooter}>
         <Switch
           label={t("moderation.forms.field.required")}
           checked={field.required}
@@ -560,7 +576,7 @@ function FieldEditor({
             tooltip={t("moderation.forms.field.delete")}
           />
         </Row>
-      </Row>
+      </div>
     </Column>
   );
 }

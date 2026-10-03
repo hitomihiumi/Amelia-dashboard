@@ -34,6 +34,7 @@ import { useT } from "@/i18n/client";
 import { updateModerationSettings } from "./actions";
 import { Section } from "@/components/dashboard/Section";
 import { IconName } from "@/resources/icons";
+import styles from "./ModerationForm.module.scss";
 
 type AutoModeration = GuildSchema["moderation"]["auto_moderation"];
 
@@ -179,191 +180,196 @@ export function ModerationForm({
     }));
 
   return (
-    <Column fillWidth gap="24">
-      <Section
-        title={t("moderation.settings.general.title")}
-        description={t("moderation.settings.general.description")}
-        icon="shield"
-        num={1}
-      >
-        <RoleSelect
-          fillWidth
-          multiple
-          id="moderation-roles"
-          label={t("moderation.settings.general.roles")}
-          options={roleOptions}
-          selectedRole={settings.moderation_roles}
-          setSelectedRole={(value) =>
-            setSettings((prev) => ({
-              ...prev,
-              moderation_roles: value as string[],
-            }))
-          }
-          description={t("moderation.settings.general.rolesHint")}
-        />
+    <div className={styles.layout}>
+      <div className={styles.stack}>
+        <Section
+          title={t("moderation.settings.general.title")}
+          description={t("moderation.settings.general.description")}
+          icon="shield"
+          num={1}
+        >
+          <div className={styles.fields}>
+            <RoleSelect
+              fillWidth
+              multiple
+              id="moderation-roles"
+              label={t("moderation.settings.general.roles")}
+              options={roleOptions}
+              selectedRole={settings.moderation_roles}
+              setSelectedRole={(value) =>
+                setSettings((prev) => ({
+                  ...prev,
+                  moderation_roles: value as string[],
+                }))
+              }
+              description={t("moderation.settings.general.rolesHint")}
+            />
 
-        <ChannelSelect
-          fillWidth
-          id="moderation-log"
-          label={t("moderation.settings.general.logChannel")}
-          options={channelOptions}
-          selectedChannel={settings.log_channel ?? ""}
-          setSelectedChannel={(value) =>
-            setSettings((prev) => ({
-              ...prev,
-              log_channel: (value as string) || null,
-            }))
-          }
-        />
+            <ChannelSelect
+              fillWidth
+              id="moderation-log"
+              label={t("moderation.settings.general.logChannel")}
+              options={channelOptions}
+              selectedChannel={settings.log_channel ?? ""}
+              setSelectedChannel={(value) =>
+                setSettings((prev) => ({
+                  ...prev,
+                  log_channel: (value as string) || null,
+                }))
+              }
+            />
+          </div>
 
-        <Row fillWidth gap="12" vertical="center">
-          <Switch
-            checked={settings.dm_notify}
-            onToggle={() =>
-              setSettings((prev) => ({ ...prev, dm_notify: !prev.dm_notify }))
+          <Row fillWidth gap="12" vertical="center">
+            <Switch
+              checked={settings.dm_notify}
+              onToggle={() =>
+                setSettings((prev) => ({ ...prev, dm_notify: !prev.dm_notify }))
+              }
+            />
+            <Column gap="4">
+              <Text variant="label-default-s">
+                {t("moderation.settings.general.dmNotify")}
+              </Text>
+              <Text variant="body-default-xs" onBackground="neutral-weak">
+                {t("moderation.settings.general.dmNotifyHint")}
+              </Text>
+            </Column>
+          </Row>
+        </Section>
+
+        <Section
+          title={t("moderation.settings.escalation.title")}
+          description={t("moderation.settings.escalation.description")}
+          icon="warning"
+          num={2}
+        >
+          <NumberInput
+            id="warn-expiry"
+            label={t("moderation.settings.escalation.expiry")}
+            value={settings.warn_expiry}
+            min={0}
+            max={365}
+            onChange={(value: number) =>
+              setSettings((prev) => ({
+                ...prev,
+                warn_expiry: Number(value) || 0,
+              }))
             }
           />
-          <Column gap="4">
-            <Text variant="label-default-s">
-              {t("moderation.settings.general.dmNotify")}
-            </Text>
-            <Text variant="body-default-xs" onBackground="neutral-weak">
-              {t("moderation.settings.general.dmNotifyHint")}
-            </Text>
-          </Column>
-        </Row>
-      </Section>
 
-      <Section
-        title={t("moderation.settings.escalation.title")}
-        description={t("moderation.settings.escalation.description")}
-        icon="warning"
-        num={2}
-      >
-        <NumberInput
-          id="warn-expiry"
-          label={t("moderation.settings.escalation.expiry")}
-          value={settings.warn_expiry}
-          min={0}
-          max={365}
-          onChange={(value: number) =>
-            setSettings((prev) => ({
-              ...prev,
-              warn_expiry: Number(value) || 0,
-            }))
-          }
+          <Column fillWidth gap="12">
+            {settings.warn_thresholds.length > 0 && (
+              <div className={styles.rules}>
+                {settings.warn_thresholds.map((rule, index) => (
+                  <div className={styles.rule} key={`${rule.count}-${index}`}>
+                    <div className={styles.ruleHead}>
+                      <Text variant="label-strong-s">
+                        {t("moderation.settings.escalation.rule", {
+                          number: index + 1,
+                        })}
+                      </Text>
+                      <IconButton
+                        icon="trash"
+                        variant="danger"
+                        size="s"
+                        onClick={() => removeThreshold(index)}
+                        tooltip={t("moderation.settings.escalation.removeRule")}
+                      />
+                    </div>
+                    <div className={styles.ruleFields}>
+                      <NumberInput
+                        id={`threshold-count-${index}`}
+                        label={t("moderation.settings.escalation.warns")}
+                        value={rule.count}
+                        min={1}
+                        max={100}
+                        onChange={(value: number) =>
+                          updateThreshold(index, { count: Number(value) || 1 })
+                        }
+                      />
+                      <NumberInput
+                        id={`threshold-time-${index}`}
+                        label={t("moderation.settings.escalation.duration")}
+                        value={rule.punishment.time}
+                        min={0}
+                        max={2419200}
+                        onChange={(value: number) =>
+                          updateThreshold(index, {
+                            punishment: {
+                              ...rule.punishment,
+                              time: Number(value) || 0,
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                    <SegmentedControl
+                      fillWidth
+                      buttons={punishmentOptions.map((option) => ({
+                        value: option.value,
+                        label: option.label,
+                      }))}
+                      value={rule.punishment.type}
+                      onChange={(value) =>
+                        updateThreshold(index, {
+                          punishment: {
+                            ...rule.punishment,
+                            type: value as PunishmentType,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {settings.warn_thresholds.length === 0 && (
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                {t("moderation.settings.escalation.empty")}
+              </Text>
+            )}
+
+            <Row fillWidth horizontal="start">
+              <Button
+                prefixIcon="plus"
+                variant="secondary"
+                onClick={addThreshold}
+                disabled={settings.warn_thresholds.length >= 10}
+              >
+                {t("moderation.settings.escalation.addRule")}
+              </Button>
+            </Row>
+          </Column>
+        </Section>
+      </div>
+
+      <div className={`${styles.stack} ${styles.filters}`}>
+        <AutoModerationSection
+          title={t("moderation.settings.invite.title")}
+          description={t("moderation.settings.invite.description")}
+          rule={autoMod.invite}
+          onChange={(next) => setAutoMod((prev) => ({ ...prev, invite: next }))}
+          roleOptions={roleOptions}
+          channelOptions={channelOptions}
+          num={4}
+          icon="invite"
         />
 
-        <Column fillWidth gap="12">
-          {settings.warn_thresholds.map((rule, index) => (
-            <Accordion
-              title={t("moderation.settings.escalation.rule", {
-                number: index + 1,
-              })}
-              key={`${rule.count}-${index}`}
-            >
-              <Row fillWidth gap="8" vertical="center" wrap>
-                <Row
-                  fillWidth
-                  gap="8"
-                  vertical="center"
-                  horizontal="end"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <IconButton
-                    icon="trash"
-                    variant="danger"
-                    onClick={() => removeThreshold(index)}
-                    tooltip={t("moderation.settings.escalation.removeRule")}
-                  />
-                </Row>
-                <NumberInput
-                  id={`threshold-count-${index}`}
-                  label={t("moderation.settings.escalation.warns")}
-                  value={rule.count}
-                  min={1}
-                  max={100}
-                  onChange={(value: number) =>
-                    updateThreshold(index, { count: Number(value) || 1 })
-                  }
-                />
-                <SegmentedControl
-                  fillWidth
-                  buttons={punishmentOptions.map((option) => ({
-                    value: option.value,
-                    label: option.label,
-                  }))}
-                  value={rule.punishment.type}
-                  onChange={(value) =>
-                    updateThreshold(index, {
-                      punishment: {
-                        ...rule.punishment,
-                        type: value as PunishmentType,
-                      },
-                    })
-                  }
-                />
-                <NumberInput
-                  id={`threshold-time-${index}`}
-                  label={t("moderation.settings.escalation.duration")}
-                  value={rule.punishment.time}
-                  min={0}
-                  max={2419200}
-                  onChange={(value: number) =>
-                    updateThreshold(index, {
-                      punishment: {
-                        ...rule.punishment,
-                        time: Number(value) || 0,
-                      },
-                    })
-                  }
-                />
-              </Row>
-            </Accordion>
-          ))}
-
-          {settings.warn_thresholds.length === 0 && (
-            <Text variant="body-default-s" onBackground="neutral-weak">
-              {t("moderation.settings.escalation.empty")}
-            </Text>
-          )}
-
-          <Row fillWidth horizontal="start">
-            <Button
-              prefixIcon="plus"
-              variant="secondary"
-              onClick={addThreshold}
-              disabled={settings.warn_thresholds.length >= 10}
-            >
-              {t("moderation.settings.escalation.addRule")}
-            </Button>
-          </Row>
-        </Column>
-      </Section>
-
-      <AutoModerationSection
-        title={t("moderation.settings.invite.title")}
-        description={t("moderation.settings.invite.description")}
-        rule={autoMod.invite}
-        onChange={(next) => setAutoMod((prev) => ({ ...prev, invite: next }))}
-        roleOptions={roleOptions}
-        channelOptions={channelOptions}
-        num={4}
-        icon="invite"
-      />
-
-      <AutoModerationSection
-        title={t("moderation.settings.links.title")}
-        description={t("moderation.settings.links.description")}
-        rule={autoMod.links}
-        onChange={(next) => setAutoMod((prev) => ({ ...prev, links: next }))}
-        roleOptions={roleOptions}
-        channelOptions={channelOptions}
-        num={5}
-        whitelist
-        icon="link"
-      />
-    </Column>
+        <AutoModerationSection
+          title={t("moderation.settings.links.title")}
+          description={t("moderation.settings.links.description")}
+          rule={autoMod.links}
+          onChange={(next) => setAutoMod((prev) => ({ ...prev, links: next }))}
+          roleOptions={roleOptions}
+          channelOptions={channelOptions}
+          num={5}
+          whitelist
+          icon="link"
+        />
+      </div>
+    </div>
   );
 }
 
@@ -410,49 +416,55 @@ function AutoModerationSection({
         />
       }
     >
-      <Row fillWidth gap="12" vertical="center">
-        <Switch
-          checked={rule.delete_message}
-          onToggle={() => update({ delete_message: !rule.delete_message })}
-        />
-        <Text variant="label-default-s">
-          {t("moderation.settings.autoMod.deleteMessage")}
-        </Text>
-      </Row>
+      <div className={styles.toggles}>
+        <Row fillWidth gap="12" vertical="center">
+          <Switch
+            checked={rule.delete_message}
+            onToggle={() => update({ delete_message: !rule.delete_message })}
+          />
+          <Text variant="label-default-s">
+            {t("moderation.settings.autoMod.deleteMessage")}
+          </Text>
+        </Row>
 
-      <Row fillWidth gap="12" vertical="center">
-        <Switch
-          checked={rule.moderation_immune}
-          onToggle={() =>
-            update({ moderation_immune: !rule.moderation_immune })
+        <Row fillWidth gap="12" vertical="center">
+          <Switch
+            checked={rule.moderation_immune}
+            onToggle={() =>
+              update({ moderation_immune: !rule.moderation_immune })
+            }
+          />
+          <Text variant="label-default-s">
+            {t("moderation.settings.autoMod.moderatorsExempt")}
+          </Text>
+        </Row>
+      </div>
+
+      <div className={styles.fields}>
+        <ChannelSelect
+          fillWidth
+          multiple
+          id={`${title}-ignore-channels`}
+          label={t("moderation.settings.autoMod.ignoredChannels")}
+          options={channelOptions}
+          selectedChannel={rule.ignore_channels}
+          setSelectedChannel={(value) =>
+            update({ ignore_channels: value as string[] })
           }
         />
-        <Text variant="label-default-s">
-          {t("moderation.settings.autoMod.moderatorsExempt")}
-        </Text>
-      </Row>
 
-      <ChannelSelect
-        fillWidth
-        multiple
-        id={`${title}-ignore-channels`}
-        label={t("moderation.settings.autoMod.ignoredChannels")}
-        options={channelOptions}
-        selectedChannel={rule.ignore_channels}
-        setSelectedChannel={(value) =>
-          update({ ignore_channels: value as string[] })
-        }
-      />
-
-      <RoleSelect
-        fillWidth
-        multiple
-        id={`${title}-ignore-roles`}
-        label={t("moderation.settings.autoMod.ignoredRoles")}
-        options={roleOptions}
-        selectedRole={rule.ignore_roles}
-        setSelectedRole={(value) => update({ ignore_roles: value as string[] })}
-      />
+        <RoleSelect
+          fillWidth
+          multiple
+          id={`${title}-ignore-roles`}
+          label={t("moderation.settings.autoMod.ignoredRoles")}
+          options={roleOptions}
+          selectedRole={rule.ignore_roles}
+          setSelectedRole={(value) =>
+            update({ ignore_roles: value as string[] })
+          }
+        />
+      </div>
 
       {whitelist && (
         <LinkWhitelist
@@ -480,29 +492,31 @@ function AutoModerationSection({
             })
           }
         />
-        <NumberInput
-          id={`${title}-punishment-time`}
-          label={t("moderation.settings.autoMod.duration")}
-          value={rule.punishment.time}
-          min={0}
-          max={2419200}
-          onChange={(value: number) =>
-            update({
-              punishment: { ...rule.punishment, time: Number(value) || 0 },
-            })
-          }
-        />
-        <Input
-          id={`${title}-punishment-reason`}
-          label={t("moderation.settings.autoMod.reason")}
-          value={rule.punishment.reason}
-          maxLength={400}
-          onChange={(e) =>
-            update({
-              punishment: { ...rule.punishment, reason: e.target.value },
-            })
-          }
-        />
+        <div className={styles.fields}>
+          <NumberInput
+            id={`${title}-punishment-time`}
+            label={t("moderation.settings.autoMod.duration")}
+            value={rule.punishment.time}
+            min={0}
+            max={2419200}
+            onChange={(value: number) =>
+              update({
+                punishment: { ...rule.punishment, time: Number(value) || 0 },
+              })
+            }
+          />
+          <Input
+            id={`${title}-punishment-reason`}
+            label={t("moderation.settings.autoMod.reason")}
+            value={rule.punishment.reason}
+            maxLength={400}
+            onChange={(e) =>
+              update({
+                punishment: { ...rule.punishment, reason: e.target.value },
+              })
+            }
+          />
+        </div>
       </Column>
     </Section>
   );
@@ -557,7 +571,7 @@ function LinkWhitelist({
         })}
       </Text>
 
-      <Row fillWidth gap="8" vertical="center">
+      <div className={styles.patternRow}>
         <Input
           id="link-whitelist"
           label={t("moderation.settings.whitelist.pattern")}
@@ -584,7 +598,7 @@ function LinkWhitelist({
         >
           {t("moderation.settings.whitelist.add")}
         </Button>
-      </Row>
+      </div>
 
       <Accordion title={t("moderation.settings.whitelist.howTitle")}>
         <Column fillWidth gap="8">

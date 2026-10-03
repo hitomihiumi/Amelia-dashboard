@@ -1,6 +1,5 @@
 "use client";
 
-import { CommandAccordion } from "@/components/dashboard/CommandAccordion";
 import { ConfirmIconButton } from "@/components/dashboard/ConfirmIconButton";
 import { DiscordPreview } from "@/components/dashboard/discord/preview/DiscordPreview";
 import { LayoutPreviewSelectionProvider } from "@/components/dashboard/discord/preview/layoutPreviewContext";
@@ -24,22 +23,23 @@ import type { DiscordRole } from "@/lib/discord/role-style";
 import type { GuildActionState } from "@/types/dashboard";
 import {
   Button,
-  Column,
   Feedback,
-  Flex,
+  Icon,
   IconButton,
   RevealFx,
-  Row,
   SegmentedControl,
+  Tag,
   Text,
   useToast,
 } from "@once-ui-system/core";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { BUTTON_STYLE_LABEL_KEY, ButtonEditor } from "./ButtonEditor";
+import styles from "./ComponentsManager.module.scss";
 import { EmbedEditor } from "./EmbedEditor";
 import { ModalEditor } from "./ModalEditor";
 import { SelectMenuEditor } from "./SelectMenuEditor";
+import { PreviewEmpty, PreviewPane, Workspace, WorkspaceCard } from "./Workspace";
 import { updateComponents } from "./actions";
 import { BudgetBar } from "./layouts/BudgetBar";
 import { LayoutEditor, type LayoutSelection } from "./layouts/LayoutEditor";
@@ -321,60 +321,100 @@ export function ComponentsManager({
     else if (box.bottom > paneBox.bottom) pane.scrollTop += box.bottom - paneBox.bottom + 8;
   }, [layoutSelection]);
 
-  return (
-    <Flex
-      fillWidth
-      direction="row"
-      gap="24"
-      m={{ direction: "column" }}
-      style={{ alignItems: "flex-start" }}
-    >
-      {/* Workspace */}
-      <RevealFx delay={300} translateY={-0.5}>
-        <Flex
-          direction="column"
-          fillWidth
-          gap="16"
-          padding="24"
-          border="neutral-weak"
-          radius="l"
-          background="surface"
-          style={{ minWidth: 0 }}
-        >
-          <SegmentedControl
-            fillWidth
-            value={tab}
-            onChange={(val) => setTab(val as TabValue)}
-            buttons={[
-              { label: t(TAB_LABEL_KEYS.buttons), value: "buttons" },
-              { label: t(TAB_LABEL_KEYS.modals), value: "modals" },
-              { label: t(TAB_LABEL_KEYS.embed), value: "embed" },
-              { label: t(TAB_LABEL_KEYS.selectMenus), value: "selectMenus" },
-              { label: t(TAB_LABEL_KEYS.layouts), value: "layouts" },
-            ]}
-          />
+  // Keep the item that was just opened or created in view (a new one lands at the end of the list).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only the opened item matters
+  useEffect(() => {
+    if (!editing) return;
+    const raf = requestAnimationFrame(() => {
+      const el = document.querySelector<HTMLElement>(`[data-item-id="${editing.id}"]`);
+      if (!el) return;
+      // Only when the card's head is off screen (a new item lands at the end of the list).
+      const top = el.getBoundingClientRect().top;
+      if (top < 0 || top > window.innerHeight - 160) el.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [editing?.id]);
 
-          <Row fillWidth horizontal="between" vertical="center" gap="16">
-            <Row gap="12" center>
+  // The tab strip scrolls on phones: keep the chosen tab in view (also when `?tab=` picked it).
+  const tabsRef = useRef<HTMLDivElement>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs when the tab changes
+  useEffect(() => {
+    tabsRef.current
+      ?.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')
+      ?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [tab]);
+
+  const items = itemsByTab[tab];
+
+  const preview = (
+    <PreviewPane
+      title={t("builder.workspace.previewTitle")}
+      bodyRef={previewPaneRef}
+      meta={
+        editing && liveItem ? (
+          <>
+            <Text variant="body-default-s" onBackground="neutral-medium" truncate>
+              {componentName(editing.kind, liveItem, t)}
+            </Text>
+            <Tag label={t(TAB_LABEL_KEYS[editing.kind])} size="s" />
+          </>
+        ) : undefined
+      }
+      toolbar={layoutEditing ? <BudgetBar layout={layoutEditing} compact /> : undefined}
+    >
+      {deferredPreviewMsg ? (
+        <LayoutPreviewSelectionProvider value={layoutEditing ? previewSelection : null}>
+          <DiscordPreview message={deferredPreviewMsg} />
+        </LayoutPreviewSelectionProvider>
+      ) : (
+        <PreviewEmpty
+          title={t("builder.workspace.previewEmptyTitle")}
+          text={t("builder.workspace.previewEmptyComponents")}
+        />
+      )}
+    </PreviewPane>
+  );
+
+  return (
+    <RevealFx delay={300} translateY={-0.5} fillWidth>
+      <Workspace aside={preview}>
+        <WorkspaceCard>
+          <div className={styles.tabs} ref={tabsRef}>
+            <SegmentedControl
+              fillWidth
+              value={tab}
+              onChange={(val) => setTab(val as TabValue)}
+              buttons={[
+                { label: t(TAB_LABEL_KEYS.buttons), value: "buttons" },
+                { label: t(TAB_LABEL_KEYS.modals), value: "modals" },
+                { label: t(TAB_LABEL_KEYS.embed), value: "embed" },
+                { label: t(TAB_LABEL_KEYS.selectMenus), value: "selectMenus" },
+                { label: t(TAB_LABEL_KEYS.layouts), value: "layouts" },
+              ]}
+            />
+          </div>
+
+          <div className={styles.toolbar}>
+            <span className={styles.toolbarTitle}>
               <Text variant="heading-strong-s">{t(TAB_LABEL_KEYS[tab])}</Text>
               <Text variant="body-default-s" onBackground="neutral-weak">
-                {itemsByTab[tab].length}
+                {items.length}
               </Text>
-            </Row>
+            </span>
             <Button prefixIcon="plus" onClick={() => startCreate(tab)}>
               {t(NEW_ITEM_KEYS[tab])}
             </Button>
-          </Row>
+          </div>
 
-          {itemsByTab[tab].length === 0 ? (
+          {items.length === 0 ? (
             <Feedback
               variant="info"
               title={t("builder.components.emptyTitle")}
               description={t(EMPTY_TEXT_KEYS[tab])}
             />
           ) : (
-            <Column gap="8" fillWidth>
-              {itemsByTab[tab].map((item) => (
+            <div className={styles.items}>
+              {items.map((item) => (
                 <ComponentItem
                   key={item.id}
                   tab={tab}
@@ -405,37 +445,11 @@ export function ComponentsManager({
                   }}
                 />
               ))}
-            </Column>
+            </div>
           )}
-        </Flex>
-      </RevealFx>
-
-      {/* Preview */}
-      <RevealFx delay={600} translateY={-0.5} style={layoutEditing ? { alignSelf: "stretch" } : undefined}>
-        <Flex
-          direction="column"
-          fill
-          gap="8"
-          style={
-            layoutEditing
-              ? { position: "sticky", top: 16, maxHeight: "calc(100vh - 32px)" }
-              : undefined
-          }
-        >
-          {layoutEditing ? <BudgetBar layout={layoutEditing} compact /> : null}
-          <Flex fillHeight fillWidth style={{ minHeight: 0 }}>
-            <LayoutPreviewSelectionProvider value={layoutEditing ? previewSelection : null}>
-              <div
-                ref={previewPaneRef}
-                style={{ width: "100%", overflowY: layoutEditing ? "auto" : undefined, minHeight: 0 }}
-              >
-                <DiscordPreview message={deferredPreviewMsg} />
-              </div>
-            </LayoutPreviewSelectionProvider>
-          </Flex>
-        </Flex>
-      </RevealFx>
-    </Flex>
+        </WorkspaceCard>
+      </Workspace>
+    </RevealFx>
   );
 }
 
@@ -551,86 +565,99 @@ function ComponentItem({
   const usage = usageNames && usageNames.length > 0 ? usageNames : undefined;
 
   return (
-    <CommandAccordion
-      title={
-        <Row fillWidth horizontal="between" vertical="center" gap="8">
-          <Text variant="body-strong-s" style={{ wordBreak: "break-word" }}>
-            {name}
-          </Text>
-        </Row>
-      }
-      subline={
-        <Column gap="2">
-          {subtitle && <Row>{subtitle}</Row>}
+    <div className={styles.item} data-open={open} data-item-id={item.id}>
+      <button
+        type="button"
+        className={styles.itemHead}
+        aria-expanded={open}
+        data-item-head
+        onClick={onToggle}
+      >
+        <span className={styles.itemIcon}>
+          <Icon name={tabIcon(tab)} size="s" onBackground="brand-strong" />
+        </span>
+        <span className={styles.itemText}>
+          <Text variant="body-strong-s">{name}</Text>
+          {subtitle && (
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              {subtitle}
+            </Text>
+          )}
           {usage && (
-            <Row onBackground="brand-medium">
+            <Text variant="body-default-xs" onBackground="brand-medium">
               {tab === "layouts"
                 ? t("layouts.tab.usedIn", { count: usage.length })
                 : t("builder.components.usedIn", { count: usage.length })}
-            </Row>
+            </Text>
           )}
-        </Column>
-      }
-      iconName={tabIcon(tab)}
-      open={open}
-      onToggle={onToggle}
-      gap="8"
-    >
-      <Row gap="4" horizontal="end" vertical="center" onClick={(e) => e.stopPropagation()}>
-        <IconButton
-          icon="copy"
-          variant="secondary"
-          tooltip={t("builder.shared.duplicate")}
-          onClick={() => onDuplicate()}
-        />
-        <IconButton
-          icon="chevronUp"
-          variant="secondary"
-          onClick={() => onMove(-1)}
-          tooltip={t("builder.shared.moveUp")}
-        />
-        <IconButton
-          icon="chevronDown"
-          variant="secondary"
-          onClick={() => onMove(1)}
-          tooltip={t("builder.shared.moveDown")}
-        />
-        {tab === "layouts" ? (
-          <ConfirmIconButton
-            variant="confirm"
-            tooltip={t("builder.components.deleteComponent")}
-            onConfirm={onDelete}
-            confirmMessage={
-              usage ? t("layouts.tab.deleteUsedConfirm", { count: usage.length }) : undefined
-            }
-          />
-        ) : (
-          <IconButton icon="trash" variant="danger" tooltip={t("builder.components.deleteComponent")} onClick={onDelete} />
-        )}
-      </Row>
-      {tab === "buttons" && (
-        <ButtonEditor guildId={guildId} value={item as ButtonCustom} onChange={onChange} />
+        </span>
+        <span className={styles.chevron}>
+          <Icon name="chevronDown" size="s" onBackground={open ? "neutral-strong" : "neutral-weak"} />
+        </span>
+      </button>
+      {open && (
+        <div className={styles.itemBody}>
+          <div className={styles.itemActions}>
+            <IconButton
+              icon="copy"
+              variant="secondary"
+              tooltip={t("builder.shared.duplicate")}
+              onClick={() => onDuplicate()}
+            />
+            <IconButton
+              icon="chevronUp"
+              variant="secondary"
+              onClick={() => onMove(-1)}
+              tooltip={t("builder.shared.moveUp")}
+            />
+            <IconButton
+              icon="chevronDown"
+              variant="secondary"
+              onClick={() => onMove(1)}
+              tooltip={t("builder.shared.moveDown")}
+            />
+            {tab === "layouts" ? (
+              <ConfirmIconButton
+                variant="confirm"
+                tooltip={t("builder.components.deleteComponent")}
+                onConfirm={onDelete}
+                confirmMessage={
+                  usage ? t("layouts.tab.deleteUsedConfirm", { count: usage.length }) : undefined
+                }
+              />
+            ) : (
+              <IconButton
+                icon="trash"
+                variant="danger"
+                tooltip={t("builder.components.deleteComponent")}
+                onClick={onDelete}
+              />
+            )}
+          </div>
+          {tab === "buttons" && (
+            <ButtonEditor guildId={guildId} value={item as ButtonCustom} onChange={onChange} />
+          )}
+          {tab === "modals" && (
+            <ModalEditor guildId={guildId} value={item as ModalCustom} onChange={onChange} />
+          )}
+          {tab === "embed" && (
+            <EmbedEditor guildId={guildId} value={item as EmbedCustom} onChange={onChange} />
+          )}
+          {tab === "selectMenus" && (
+            <SelectMenuEditor guildId={guildId} value={item as SelectMenuCustom} onChange={onChange} />
+          )}
+          {tab === "layouts" && (
+            <LayoutEditor
+              value={item as LayoutCustom}
+              onChange={onChange}
+              library={library}
+              selection={layoutSelection}
+              onSelect={onLayoutSelect}
+              onGotoTab={onGotoTab}
+            />
+          )}
+        </div>
       )}
-      {tab === "modals" && (
-        <ModalEditor guildId={guildId} value={item as ModalCustom} onChange={onChange} />
-      )}
-      {tab === "embed" && (
-        <EmbedEditor guildId={guildId} value={item as EmbedCustom} onChange={onChange} />
-      )}
-      {tab === "selectMenus" && (
-        <SelectMenuEditor guildId={guildId} value={item as SelectMenuCustom} onChange={onChange} />
-      )}
-      {/* Only mounted while open: a layout editor is a big tree and a closed one must not slow typing elsewhere. */}
-      {tab === "layouts" && open && (
-        <LayoutEditor
-          value={item as LayoutCustom}
-          onChange={onChange}
-          library={library}
-          selection={open ? layoutSelection : null}
-          onSelect={onLayoutSelect}
-          onGotoTab={onGotoTab}
-        />
-      )}
-    </CommandAccordion>
+    </div>
   );
 }

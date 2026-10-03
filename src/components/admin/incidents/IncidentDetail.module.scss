@@ -12,38 +12,77 @@
   font-family: var(--font-body);
 }
 
+// Two panes (incident + timeline | composer) once the page has room next to the sidebar;
+// below that the composer comes first, it is the thing you open this page for.
 .layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 24rem;
+  display: flex;
+  flex-direction: column;
   gap: var(--static-space-24);
-  align-items: start;
 
-  @media (max-width: 1199px) {
-    grid-template-columns: minmax(0, 1fr);
+  @container page (min-width: 980px) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 24rem;
+    align-items: start;
+  }
+
+  @container page (min-width: 1480px) {
+    grid-template-columns: minmax(0, 1fr) 28rem;
+  }
+
+  @container page (max-width: 640px) {
+    gap: var(--static-space-16);
   }
 }
 
-// On narrow screens the composer comes first: it is the thing you open this page for.
 .aside {
   min-width: 0;
+}
 
-  @media (max-width: 1199px) {
-    order: -1;
+// Narrow: the main column dissolves so the composer can sit between the header and the timeline.
+.main {
+  display: contents;
+
+  @container page (min-width: 980px) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--static-space-24);
+    min-width: 0;
+  }
+}
+
+.orderHeader {
+  order: 0;
+  min-width: 0;
+}
+
+.aside {
+  order: 1;
+}
+
+.orderTimeline {
+  order: 2;
+  min-width: 0;
+}
+
+.orderDanger {
+  order: 3;
+  min-width: 0;
+}
+
+@container page (min-width: 980px) {
+  .orderHeader,
+  .orderTimeline,
+  .orderDanger,
+  .aside {
+    order: 0;
   }
 }
 
 .composerSticky {
-  @media (min-width: 1200px) and (min-height: 760px) {
+  @container page (min-width: 980px) {
     position: sticky;
     top: var(--static-space-24);
   }
-}
-
-.main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-24);
-  min-width: 0;
 }
 
 .backLink {
@@ -236,7 +275,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 
-  @media (max-width: 480px) {
+  @container page (max-width: 480px) {
     padding: 0;
     font-size: 0.625rem;
     letter-spacing: -0.01em;

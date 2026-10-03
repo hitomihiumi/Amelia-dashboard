@@ -34,7 +34,7 @@ export async function OverviewDashboard({ data }: { data: OverviewData }) {
 
   return (
     <AdminPage
-      width="xl"
+     
       title={t("admin.overview.welcome", { name: data.adminName })}
       description={t("admin.overview.subtitle")}
       actions={

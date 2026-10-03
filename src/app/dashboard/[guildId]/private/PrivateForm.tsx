@@ -11,7 +11,6 @@ import {
   Input,
   Switch,
   InlineCode,
-  RevealFx,
 } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { autoSetupTempVoiceSettings, updatePrivateRoomSettings } from "./actions";
@@ -24,6 +23,8 @@ import { ChannelPickOption } from "@/lib/discord/channel-type";
 import { ChannelSelect } from "@/components/dashboard/discord/ChannelSelect";
 import { ChannelPill } from "@/components/dashboard/discord/ChannelPill";
 import { Section } from "@/components/dashboard/Section";
+import { SectionGrid } from "@/components/layout/SectionGrid";
+import styles from "./PrivateForm.module.scss";
 import { useT } from "@/i18n/client";
 
 type Form = Pick<GuildSchema["utils"], "join_to_create">;
@@ -138,93 +139,105 @@ export function PrivateForm({
   }, []);
 
   return (
-    <Section
-      title={t("settings.private.sectionTitle")}
-      description={t("settings.private.sectionDescription")}
-      num={1}
-      switcher={
-        <Switch
-          checked={joinToCreate.enabled}
-          onToggle={() => setJoinToCreate((prev) => ({ ...prev, enabled: !prev.enabled }))}
-        />
-      }
-      icon="microphone"
-    >
-      <form action={autoAction}>
-        <input type="hidden" name="guildId" value={guildId} />
-        <Column
-          background={"overlay"}
-          border={"neutral-medium"}
-          radius={"m"}
-          padding={"20"}
-          gap={"12"}
-        >
-          <Row gap={"12"}>
+    <SectionGrid>
+      <Section
+        title={t("settings.private.sectionTitle")}
+        description={t("settings.private.sectionDescription")}
+        num={1}
+        switcher={
+          <Switch
+            checked={joinToCreate.enabled}
+            onToggle={() => setJoinToCreate((prev) => ({ ...prev, enabled: !prev.enabled }))}
+          />
+        }
+        icon="microphone"
+      >
+        <form action={autoAction}>
+          <input type="hidden" name="guildId" value={guildId} />
+          <Row
+            background={"overlay"}
+            border={"neutral-medium"}
+            radius={"m"}
+            padding={"20"}
+            gap={"16"}
+            className={styles.autoSetup}
+          >
             <DashIcon name={"plane"} />
-            <Flex direction="column" gap="12">
+            <Flex direction="column" gap="12" className={styles.autoSetupText}>
               <Text variant="body-strong-m">{t("settings.private.autoSetupTitle")}</Text>
               <Text variant="body-default-xs" onBackground="neutral-medium">
                 {t("settings.private.autoSetupDescription")}
               </Text>
-              <Button prefixIcon={"plane"} type="submit" disabled={autoPending}>
-                {autoPending
-                  ? t("settings.private.autoSetupPending")
-                  : t("settings.private.autoSetupButton")}
-              </Button>
+              <div>
+                <Button prefixIcon={"plane"} type="submit" disabled={autoPending}>
+                  {autoPending
+                    ? t("settings.private.autoSetupPending")
+                    : t("settings.private.autoSetupButton")}
+                </Button>
+              </div>
             </Flex>
           </Row>
+        </form>
+
+        <Column gap="12">
+          <Text variant="body-strong-s">{t("settings.private.nameTitle")}</Text>
+          <Text variant="body-default-xs" onBackground="neutral-medium" className={styles.hint}>
+            {t("settings.private.nameDescription")}
+          </Text>
+          <Input
+            id={"default-name"}
+            value={joinToCreate.default_name}
+            onChange={(e) => handleChannelName(e.target.value)}
+            placeholder={t("settings.private.namePlaceholder")}
+            description={
+              <Row vertical="center" gap="4" wrap>
+                {t("settings.private.nameHintBefore")} <InlineCode>{"%{VAR}%"}</InlineCode>
+                {t("settings.private.nameHintAfter")}
+              </Row>
+            }
+          />
         </Column>
-      </form>
-      <Column gap="16">
-        <Text variant="body-strong-s">{t("settings.private.triggerTitle")}</Text>
-        <Text variant="body-default-xs" onBackground="neutral-medium">
-          {t("settings.private.triggerDescription")}
-        </Text>
-        <ChannelSelect
-          label={t("settings.private.triggerLabel")}
-          selectedChannel={joinToCreate.channel || ""}
-          setSelectedChannel={handleVoiceChannel}
-          options={voiceChannels.map((channel) => ({
-            label: <ChannelPill channel={channel} />,
-            value: channel.id,
-          }))}
-          id={"trigger-channel"}
-        />
-      </Column>
-      <Column gap="16">
-        <Text variant="body-strong-s">{t("settings.private.categoryTitle")}</Text>
-        <Text variant="body-default-xs" onBackground="neutral-medium">
-          {t("settings.private.categoryDescription")}
-        </Text>
-        <ChannelSelect
-          label={t("settings.private.categoryLabel")}
-          selectedChannel={joinToCreate.category || ""}
-          setSelectedChannel={handleCategory}
-          options={categories.map((channel) => ({
-            label: <ChannelPill channel={channel} />,
-            value: channel.id,
-          }))}
-          id={"trigger-channel"}
-        />
-      </Column>
-      <Column gap="16">
-        <Text variant="body-strong-s">{t("settings.private.nameTitle")}</Text>
-        <Text variant="body-default-xs" onBackground="neutral-medium">
-          {t("settings.private.nameDescription")}
-        </Text>
-        <Input
-          id={"default-name"}
-          value={joinToCreate.default_name}
-          onChange={(e) => handleChannelName(e.target.value)}
-          placeholder={t("settings.private.namePlaceholder")}
-          description={
-            <Row vertical="center" gap="4">
-              {t("settings.private.nameHintBefore")} <InlineCode>{"%{VAR}%"}</InlineCode>
-              {t("settings.private.nameHintAfter")}
-            </Row>
-          }
-        />
-      </Column>
-    </Section>
+      </Section>
+
+      <Section
+        title={t("settings.private.channelsTitle")}
+        description={t("settings.private.channelsDescription")}
+        num={2}
+        icon="gear"
+      >
+        <Column gap="12">
+          <Text variant="body-strong-s">{t("settings.private.triggerTitle")}</Text>
+          <Text variant="body-default-xs" onBackground="neutral-medium" className={styles.hint}>
+            {t("settings.private.triggerDescription")}
+          </Text>
+          <ChannelSelect
+            label={t("settings.private.triggerLabel")}
+            selectedChannel={joinToCreate.channel || ""}
+            setSelectedChannel={handleVoiceChannel}
+            options={voiceChannels.map((channel) => ({
+              label: <ChannelPill channel={channel} />,
+              value: channel.id,
+            }))}
+            id={"trigger-channel"}
+          />
+        </Column>
+        <Column gap="12">
+          <Text variant="body-strong-s">{t("settings.private.categoryTitle")}</Text>
+          <Text variant="body-default-xs" onBackground="neutral-medium" className={styles.hint}>
+            {t("settings.private.categoryDescription")}
+          </Text>
+          <ChannelSelect
+            label={t("settings.private.categoryLabel")}
+            selectedChannel={joinToCreate.category || ""}
+            setSelectedChannel={handleCategory}
+            options={categories.map((channel) => ({
+              label: <ChannelPill channel={channel} />,
+              value: channel.id,
+            }))}
+            id={"category-channel"}
+          />
+        </Column>
+      </Section>
+    </SectionGrid>
   );
 }

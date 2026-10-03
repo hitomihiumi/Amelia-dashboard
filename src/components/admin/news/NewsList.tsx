@@ -143,8 +143,7 @@ export function NewsList({
           </div>
         </AdminCard>
       ) : (
-        <AdminCard padding="16" gap="16">
-          <div className={styles.root}>
+        <div className={styles.root}>
           <div className={styles.toolbar}>
             <div className={styles.filters} role="group" aria-label={t("adminNews.list.filters.label")}>
               {filters.map((item) => (
@@ -215,7 +214,7 @@ export function NewsList({
                 return (
                   <li
                     key={post.id}
-                    className={styles.row}
+                    className={styles.cell}
                     style={
                       {
                         "--cat-alpha": tokens.alpha,
@@ -224,84 +223,86 @@ export function NewsList({
                       } as React.CSSProperties
                     }
                   >
-                    <Link href={editHref} className={styles.thumb} tabIndex={-1} aria-hidden>
-                      {post.coverUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={post.coverUrl} alt="" loading="lazy" className={styles.thumbImg} />
-                      ) : (
-                        <span className={styles.thumbPlaceholder}>
-                          <CategoryIcon category={post.category} size={24} />
-                        </span>
-                      )}
-                    </Link>
-
-                    <div className={styles.body}>
-                      <div className={styles.tags}>
-                        <Tag scheme={post.published ? "success" : "neutral"} size="s">
-                          {post.published ? t("adminNews.status.published") : t("adminNews.status.draft")}
-                        </Tag>
-                        <span className={styles.category}>
-                          <CategoryIcon category={post.category} size={13} />
-                          {categoryLabel(post.category)}
-                        </span>
-                      </div>
-
-                      <Link href={editHref} className={styles.title}>
-                        {post.title.trim() || t("adminNews.untitled")}
+                    <div className={styles.row}>
+                      <Link href={editHref} className={styles.thumb} tabIndex={-1} aria-hidden>
+                        {post.coverUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={post.coverUrl} alt="" loading="lazy" className={styles.thumbImg} />
+                        ) : (
+                          <span className={styles.thumbPlaceholder}>
+                            <CategoryIcon category={post.category} size={24} />
+                          </span>
+                        )}
                       </Link>
 
-                      <p className={styles.summary}>
-                        {post.summary.trim() || (
-                          <span className={styles.noSummary}>{t("adminNews.list.noSummary")}</span>
+                      <div className={styles.body}>
+                        <div className={styles.tags}>
+                          <Tag scheme={post.published ? "success" : "neutral"} size="s">
+                            {post.published ? t("adminNews.status.published") : t("adminNews.status.draft")}
+                          </Tag>
+                          <span className={styles.category}>
+                            <CategoryIcon category={post.category} size={13} />
+                            {categoryLabel(post.category)}
+                          </span>
+                        </div>
+
+                        <Link href={editHref} className={styles.title}>
+                          {post.title.trim() || t("adminNews.untitled")}
+                        </Link>
+
+                        <p className={styles.summary}>
+                          {post.summary.trim() || (
+                            <span className={styles.noSummary}>{t("adminNews.list.noSummary")}</span>
+                          )}
+                        </p>
+
+                        <p className={styles.date} title={when.full}>
+                          {when.text}
+                          {when.absolute && <span className={styles.dateAbs}> · {when.absolute}</span>}
+                          <span className={styles.slug}> · /news/{post.slug}</span>
+                        </p>
+                      </div>
+
+                      <div className={styles.actions}>
+                        <Button href={editHref} size="m" variant="secondary" prefixIcon="edit">
+                          {t("common.actions.edit")}
+                        </Button>
+                        {post.published && (
+                          <IconButton
+                            icon="arrowUpRight"
+                            variant="ghost"
+                            size="m"
+                            href={`/news/${post.slug}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            tooltip={t("adminNews.list.viewLive")}
+                            aria-label={t("adminNews.list.viewLive")}
+                          />
                         )}
-                      </p>
-
-                      <p className={styles.date} title={when.full}>
-                        {when.text}
-                        {when.absolute && <span className={styles.dateAbs}> · {when.absolute}</span>}
-                        <span className={styles.slug}> · /news/{post.slug}</span>
-                      </p>
-                    </div>
-
-                    <div className={styles.actions}>
-                      <Button href={editHref} size="s" variant="secondary" prefixIcon="edit">
-                        {t("common.actions.edit")}
-                      </Button>
-                      {post.published && (
-                        <IconButton
-                          icon="arrowUpRight"
-                          variant="ghost"
-                          size="s"
-                          href={`/news/${post.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          tooltip={t("adminNews.list.viewLive")}
-                          aria-label={t("adminNews.list.viewLive")}
+                        <Button
+                          size="m"
+                          variant="secondary"
+                          prefixIcon={post.published ? "eyeOff" : "eye"}
+                          loading={busy}
+                          disabled={busy}
+                          onClick={() => togglePublished(post)}
+                        >
+                          {post.published ? t("adminNews.list.unpublish") : t("adminNews.list.publish")}
+                        </Button>
+                        <ConfirmIconButton
+                          variant="confirm"
+                          size="m"
+                          onConfirm={() => remove(post)}
+                          tooltip={t("adminNews.list.delete")}
                         />
-                      )}
-                      <Button
-                        size="s"
-                        variant="secondary"
-                        prefixIcon={post.published ? "eyeOff" : "eye"}
-                        loading={busy}
-                        disabled={busy}
-                        onClick={() => togglePublished(post)}
-                      >
-                        {post.published ? t("adminNews.list.unpublish") : t("adminNews.list.publish")}
-                      </Button>
-                      <ConfirmIconButton
-                        variant="confirm"
-                        onConfirm={() => remove(post)}
-                        tooltip={t("adminNews.list.delete")}
-                      />
+                      </div>
                     </div>
                   </li>
                 );
               })}
             </ul>
           )}
-          </div>
-        </AdminCard>
+        </div>
       )}
     </AdminPage>
   );

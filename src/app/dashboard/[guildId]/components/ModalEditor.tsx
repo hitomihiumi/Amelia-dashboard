@@ -16,6 +16,7 @@ import {
   Switch,
   Text,
 } from "@once-ui-system/core";
+import styles from "./Editors.module.scss";
 import React from "react";
 
 /** Discord allows at most 5 text inputs per modal. */
@@ -85,15 +86,17 @@ export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
         </Text>
       )}
 
-      {value.fields.map((field, i) => (
-        <FieldRow
-          key={field.id}
-          field={field}
-          onChange={(patch) => updateField(i, patch)}
-          onDelete={() => removeField(i)}
-          onMove={(direction) => moveField(i, direction)}
-        />
-      ))}
+      <div className={styles.list}>
+        {value.fields.map((field, i) => (
+          <FieldRow
+            key={field.id}
+            field={field}
+            onChange={(patch) => updateField(i, patch)}
+            onDelete={() => removeField(i)}
+            onMove={(direction) => moveField(i, direction)}
+          />
+        ))}
+      </div>
     </Column>
   );
 }

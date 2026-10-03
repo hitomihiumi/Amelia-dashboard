@@ -12,6 +12,7 @@ import {
   Switch,
   Text,
 } from "@once-ui-system/core";
+import styles from "./Editors.module.scss";
 
 export interface ButtonEditorProps {
   guildId: string;
@@ -37,7 +38,7 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
   };
 
   return (
-    <Column fillWidth gap="16">
+    <div className={styles.grid}>
       <Input
         id="btn-name"
         label={t("builder.buttons.nameLabel")}
@@ -56,7 +57,7 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
         characterCount
         maxLength={80}
       />
-      <Column gap="8">
+      <Column gap="8" className={styles.full}>
         <Text variant="label-default-s">{t("builder.buttons.style")}</Text>
         <SegmentedControl
           fillWidth
@@ -83,12 +84,12 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
           errorMessage={t("builder.buttons.urlError")}
         />
       ) : (
-        <Text variant="body-default-s" onBackground="neutral-weak">
+        <Text variant="body-default-s" onBackground="neutral-weak" className={styles.full}>
           {t("builder.shared.customId")} <InlineCode>{value.id}</InlineCode>{" "}
           {t("builder.buttons.customIdHint")}
         </Text>
       )}
-      <Row gap="12" horizontal="start" vertical="center">
+      <Row gap="12" horizontal="start" vertical="center" className={styles.full}>
         <Switch
           label={t("builder.buttons.disabled")}
           description={t("builder.buttons.disabledHint")}
@@ -96,7 +97,7 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
           onToggle={() => update({ disabled: !value.disabled })}
         />
       </Row>
-    </Column>
+    </div>
   );
 }
 

@@ -5,12 +5,9 @@ import {
   Button,
   Column,
   Feedback,
-  Flex,
   IconButton,
   Input,
   RevealFx,
-  Row,
-  SegmentedControl,
   Tag,
   Text,
   useToast,
@@ -19,6 +16,7 @@ import { useRouter } from "next/navigation";
 import type { GuildActionState } from "@/types/dashboard";
 import { revokeModerationCase } from "../actions";
 import { useFormat, useT } from "@/i18n/client";
+import styles from "./CasesClient.module.scss";
 
 export interface CaseItem {
   id: string;
@@ -41,6 +39,28 @@ const SOURCES = ["command", "automod", "dashboard", "submission"] as const;
 
 const REVOCABLE = ["warn", "mute", "ban"];
 
+const TYPE_SCHEME: Record<
+  string,
+  "neutral" | "info" | "success" | "warning" | "danger"
+> = {
+  ban: "danger",
+  kick: "danger",
+  mute: "warning",
+  warn: "warning",
+  unban: "success",
+  unmute: "success",
+  unwarn: "success",
+  note: "info",
+  purge: "neutral",
+};
+
+const COMPACT_DATE: Intl.DateTimeFormatOptions = {
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+};
+
 export function CasesClient({
   guildId,
   items,
@@ -57,8 +77,18 @@ export function CasesClient({
   pages: number;
 }) {
   const t = useT();
+  const format = useFormat();
   const router = useRouter();
   const [search, setSearch] = useState(user);
+  // undefined: first case, null: the person closed the detail.
+  const [selectedId, setSelectedId] = useState<string | null | undefined>(
+    undefined,
+  );
+
+  const selected =
+    selectedId === null
+      ? null
+      : (items.find((item) => item.id === selectedId) ?? items[0] ?? null);
 
   const navigate = (next: { type?: string; user?: string; page?: number }) => {
     const params = new URLSearchParams();
@@ -69,36 +99,53 @@ export function CasesClient({
     router.push(`/dashboard/${guildId}/moderation/cases?${params.toString()}`);
   };
 
+  const moderatorLabel = (id: string) =>
+    id === "AUTOMOD" ? t("moderation.cases.autoModeration") : id;
+  const sourceLabel = (value: string) =>
+    (SOURCES as readonly string[]).includes(value)
+      ? t(`moderation.cases.sources.${value as (typeof SOURCES)[number]}`)
+      : value;
+
   return (
     <Column fillWidth gap="16">
-      <RevealFx delay={300} translateY={-0.5}>
-        <Row fillWidth gap="12" vertical="center" wrap>
-          <SegmentedControl
-            buttons={TYPE_FILTERS.map((value) => ({
-              value,
-              label: t(`moderation.cases.filters.${value}`),
-            }))}
-            value={type}
-            onChange={(value) => navigate({ type: value, page: 1 })}
-          />
-          <Input
-            id="case-user"
-            label={t("moderation.cases.userFilter")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            prefix={
-              <IconButton
-                icon="search"
-                variant="ghost"
-                onClick={() => navigate({ user: search, page: 1 })}
-              />
-            }
-          />
-        </Row>
+      <RevealFx delay={100} translateY={-0.5} fillWidth>
+        <div className={styles.toolbar}>
+          <div className={styles.chips} role="group">
+            {TYPE_FILTERS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                className={styles.chip}
+                aria-pressed={type === value}
+                onClick={() => navigate({ type: value, page: 1 })}
+              >
+                {t(`moderation.cases.filters.${value}`)}
+              </button>
+            ))}
+          </div>
+          <div className={styles.search}>
+            <Input
+              id="case-user"
+              label={t("moderation.cases.userFilter")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") navigate({ user: search, page: 1 });
+              }}
+              prefix={
+                <IconButton
+                  icon="search"
+                  variant="ghost"
+                  onClick={() => navigate({ user: search, page: 1 })}
+                />
+              }
+            />
+          </div>
+        </div>
       </RevealFx>
 
       {items.length === 0 && (
-        <RevealFx delay={600} translateY={-0.5}>
+        <RevealFx delay={200} translateY={-0.5} fillWidth>
           <Feedback
             variant="info"
             title={t("moderation.cases.emptyTitle")}
@@ -107,15 +154,135 @@ export function CasesClient({
         </RevealFx>
       )}
 
-      {items.map((item, idx) => (
-        <RevealFx delay={400 + idx * 100} translateY={-0.5} key={idx}>
-          <CaseCard key={item.id} guildId={guildId} item={item} />
-        </RevealFx>
-      ))}
+      {items.length > 0 && (
+        <div
+          className={styles.board}
+          style={
+            {
+              "--rows": items.length,
+              "--span": items.length + 2,
+            } as React.CSSProperties
+          }
+        >
+          <div className={styles.head} aria-hidden>
+            {(
+              [
+                ["hnum", "number"],
+                ["htype", "type"],
+                ["huser", "user"],
+                ["hmod", "moderator"],
+                ["hreason", "reason"],
+                ["hsource", "source"],
+                ["hdate", "date"],
+                ["hstatus", "status"],
+              ] as const
+            ).map(([cls, key]) => (
+              <Text
+                key={key}
+                className={styles[cls]}
+                variant="label-default-xs"
+                onBackground="neutral-weak"
+              >
+                {t(`moderation.cases.columns.${key}`)}
+              </Text>
+            ))}
+          </div>
+
+          {items.map((item, idx) => {
+            const open = selected?.id === item.id;
+            return (
+              <div key={item.id} className={styles.entry}>
+                <RevealFx
+                  delay={Math.min(idx * 30, 400)}
+                  translateY={-0.5}
+                  fillWidth
+                  className={styles.rowWrap}
+                >
+                  <button
+                    type="button"
+                    className={styles.row}
+                    aria-expanded={open}
+                    onClick={() => setSelectedId(open ? null : item.id)}
+                  >
+                    <Text className={styles.num} variant="heading-strong-s">
+                      #{item.caseNumber}
+                    </Text>
+                    <span className={styles.type}>
+                      <Tag scheme={TYPE_SCHEME[item.type] ?? "neutral"}>
+                        {item.typeLabel}
+                      </Tag>
+                    </span>
+                    <Text
+                      className={`${styles.user} ${styles.cell}`}
+                      variant="code-default-xs"
+                      onBackground="neutral-medium"
+                    >
+                      {item.targetId}
+                    </Text>
+                    <Text
+                      className={`${styles.mod} ${styles.cell}`}
+                      variant="body-default-xs"
+                      onBackground="neutral-weak"
+                    >
+                      {moderatorLabel(item.moderatorId)}
+                    </Text>
+                    <Text
+                      className={`${styles.reason} ${styles.clamp}`}
+                      variant="body-default-s"
+                      onBackground="neutral-medium"
+                    >
+                      {item.reason}
+                    </Text>
+                    <Text
+                      className={`${styles.source} ${styles.cell}`}
+                      variant="body-default-xs"
+                      onBackground="neutral-weak"
+                    >
+                      {sourceLabel(item.source)}
+                    </Text>
+                    <Text
+                      className={`${styles.date} ${styles.cell}`}
+                      variant="body-default-xs"
+                      onBackground="neutral-weak"
+                    >
+                      {format.dateTime(item.createdAt, COMPACT_DATE)}
+                    </Text>
+                    <span className={styles.status}>
+                      <Tag scheme={item.active ? "danger" : "neutral"}>
+                        {item.active
+                          ? t("moderation.cases.active")
+                          : t("moderation.cases.closed")}
+                      </Tag>
+                    </span>
+                  </button>
+                </RevealFx>
+
+                {open && (
+                  <CaseDetail
+                    key={item.id}
+                    guildId={guildId}
+                    item={item}
+                    source={sourceLabel(item.source)}
+                    moderator={moderatorLabel(item.moderatorId)}
+                  />
+                )}
+              </div>
+            );
+          })}
+
+          {!selected && (
+            <div className={styles.placeholder}>
+              <Text variant="body-default-m" onBackground="neutral-weak">
+                {t("moderation.cases.selectHint")}
+              </Text>
+            </div>
+          )}
+        </div>
+      )}
 
       {pages > 1 && (
-        <RevealFx delay={600} translateY={-0.5}>
-          <Row fillWidth gap="8" horizontal="center" vertical="center">
+        <RevealFx delay={200} translateY={-0.5} fillWidth>
+          <div className={styles.pager}>
             <Button
               variant="secondary"
               disabled={page <= 1}
@@ -133,14 +300,24 @@ export function CasesClient({
             >
               {t("moderation.cases.next")}
             </Button>
-          </Row>
+          </div>
         </RevealFx>
       )}
     </Column>
   );
 }
 
-function CaseCard({ guildId, item }: { guildId: string; item: CaseItem }) {
+function CaseDetail({
+  guildId,
+  item,
+  source,
+  moderator,
+}: {
+  guildId: string;
+  item: CaseItem;
+  source: string;
+  moderator: string;
+}) {
   const t = useT();
   const format = useFormat();
   const router = useRouter();
@@ -148,10 +325,6 @@ function CaseCard({ guildId, item }: { guildId: string; item: CaseItem }) {
 
   const [reason, setReason] = useState("");
   const [pending, setPending] = useState(false);
-
-  const source = (SOURCES as readonly string[]).includes(item.source)
-    ? t(`moderation.cases.sources.${item.source as (typeof SOURCES)[number]}`)
-    : item.source;
 
   const canRevoke = item.active && REVOCABLE.includes(item.type);
 
@@ -180,18 +353,27 @@ function CaseCard({ guildId, item }: { guildId: string; item: CaseItem }) {
     }
   };
 
+  const facts = [
+    t("moderation.cases.user", { id: item.targetId }),
+    t("moderation.cases.moderator", { moderator }),
+    `${t("moderation.cases.columns.source")}: ${source}`,
+    ["ban", "mute"].includes(item.type)
+      ? t("moderation.cases.duration", {
+          value: item.duration
+            ? t("moderation.cases.durationSeconds", { seconds: item.duration })
+            : t("moderation.cases.permanent"),
+        })
+      : null,
+    `${t("moderation.cases.columns.date")}: ${format.dateTime(item.createdAt)}`,
+    item.expiresAt
+      ? t("moderation.cases.expires", { date: format.dateTime(item.expiresAt) })
+      : null,
+  ].filter(Boolean);
+
   return (
-    <Flex
-      direction="column"
-      fillWidth
-      gap="8"
-      padding="20"
-      radius="l"
-      border="neutral-medium"
-      background="surface"
-    >
-      <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
-        <Text variant="heading-strong-s">
+    <div className={styles.detail}>
+      <div className={styles.detailHead}>
+        <Text variant="heading-strong-m">
           {t("moderation.cases.caseTitle", {
             number: item.caseNumber,
             type: item.typeLabel,
@@ -202,44 +384,26 @@ function CaseCard({ guildId, item }: { guildId: string; item: CaseItem }) {
             ? t("moderation.cases.active")
             : t("moderation.cases.closed")}
         </Tag>
-      </Row>
+      </div>
 
-      <Text variant="body-default-s" onBackground="neutral-weak">
-        {t("moderation.cases.user", { id: item.targetId })} •{" "}
-        {t("moderation.cases.moderator", {
-          moderator:
-            item.moderatorId === "AUTOMOD"
-              ? t("moderation.cases.autoModeration")
-              : item.moderatorId,
-        })}{" "}
-        • {source}
-      </Text>
-
-      {["ban", "mute"].includes(item.type) && (
-        <Text variant="body-default-s" onBackground="neutral-weak">
-          {t("moderation.cases.duration", {
-            value: item.duration
-              ? t("moderation.cases.durationSeconds", {
-                  seconds: item.duration,
-                })
-              : t("moderation.cases.permanent"),
-          })}
-        </Text>
-      )}
-
-      <Text variant="body-default-s" onBackground="neutral-medium">
+      <Text
+        variant="body-default-m"
+        onBackground="neutral-medium"
+        className={styles.reasonText}
+      >
         {item.reason}
       </Text>
 
-      <Text variant="body-default-xs" onBackground="neutral-weak">
-        {format.dateTime(item.createdAt)}
-        {item.expiresAt
-          ? ` • ${t("moderation.cases.expires", { date: format.dateTime(item.expiresAt) })}`
-          : ""}
-      </Text>
+      <div className={styles.facts}>
+        {facts.map((fact) => (
+          <Text key={fact} variant="body-default-s" onBackground="neutral-weak">
+            {fact}
+          </Text>
+        ))}
+      </div>
 
       {canRevoke && (
-        <Row fillWidth gap="8" vertical="center" wrap>
+        <div className={styles.revoke}>
           <Input
             id={`revoke-reason-${item.id}`}
             label={t("moderation.cases.revokeReason")}
@@ -247,11 +411,13 @@ function CaseCard({ guildId, item }: { guildId: string; item: CaseItem }) {
             maxLength={400}
             onChange={(e) => setReason(e.target.value)}
           />
-          <Button variant="danger" disabled={pending} onClick={revoke}>
-            {t("moderation.cases.revoke")}
-          </Button>
-        </Row>
+          <div className={styles.revokeActions}>
+            <Button variant="danger" disabled={pending} onClick={revoke}>
+              {t("moderation.cases.revoke")}
+            </Button>
+          </div>
+        </div>
       )}
-    </Flex>
+    </div>
   );
 }

@@ -1,0 +1,77 @@
+.toolbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--static-space-12) var(--static-space-16);
+}
+
+.toolbarTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--static-space-12);
+  min-width: 0;
+}
+
+// Cards flow into as many columns as the room next to the sidebar allows.
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: var(--static-space-16);
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-12);
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  padding: var(--static-space-20);
+  border: 1px solid var(--neutral-border-medium);
+  border-radius: var(--radius-l);
+  background: var(--surface-background);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+
+  &:hover {
+    border-color: var(--neutral-border-strong);
+    background: var(--neutral-alpha-weak);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-border-strong);
+    outline-offset: 2px;
+  }
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--static-space-12);
+  min-width: 0;
+}
+
+.cardTitle {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cardActions {
+  display: flex;
+  gap: var(--static-space-8);
+  flex-shrink: 0;
+}
+
+.cardTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--static-space-8);
+  margin-top: auto;
+}

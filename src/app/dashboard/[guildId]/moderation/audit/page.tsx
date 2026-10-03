@@ -1,6 +1,7 @@
 import React from "react";
 import { getServerSession } from "next-auth";
-import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
+import { Feedback, Flex } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { authOptions } from "@/lib/auth";
 import { Guild } from "@/lib/db/Guild";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
@@ -59,12 +60,10 @@ export default async function AuditPage({
 
   return (
     <Flex direction="column" gap="24">
-      <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">{t("moderation.audit.title")}</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          {t("moderation.audit.description")}
-        </Text>
-      </RevealFx>
+      <PageHeader
+        title={t("moderation.audit.title")}
+        description={t("moderation.audit.description")}
+      />
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (

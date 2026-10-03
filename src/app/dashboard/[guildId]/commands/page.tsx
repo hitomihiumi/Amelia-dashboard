@@ -1,5 +1,6 @@
 import { Guild } from "@/lib/db/Guild";
-import { Column, Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
+import { Feedback, Flex } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
@@ -35,12 +36,7 @@ export default async function GeneralSettingsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <RevealFx direction="column" gap="8" translateY={-0.5}>
-        <Text variant="heading-strong-l">{t("settings.commands.title")}</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          {t("settings.commands.description")}
-        </Text>
-      </RevealFx>
+      <PageHeader title={t("settings.commands.title")} description={t("settings.commands.description")} />
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (
