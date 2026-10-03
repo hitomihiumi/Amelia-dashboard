@@ -28,6 +28,7 @@ import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import { Button, Column, IconButton, Row, Text } from "@once-ui-system/core";
 import type React from "react";
+import { LuLayoutTemplate } from "react-icons/lu";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import {
   ACTION_LABELS,
@@ -37,6 +38,7 @@ import {
   TRIGGER_NODE_ID,
   canvasEdge,
 } from "./scenarioGraph";
+import { LAYOUT_CAPABLE_ACTIONS } from "./scenarioValidation";
 import type { ComponentsLibrary } from "./scenariosTypes";
 
 export type ScenarioNode = Node<ScenarioNodeData>;
@@ -379,6 +381,8 @@ function describeStepTarget(
       return modal ? modal.title : null;
     }
     case "send_dm": {
+      // A layout replaces the DM's content and embed, so only the layout line says what is sent.
+      if (action.layoutId != null) return t("builder.flow.dm");
       const embed = ctx.library.embed.find((e) => e.id === action.dmEmbedId);
       return embed
         ? t("builder.flow.dmWithEmbed", {
@@ -393,6 +397,23 @@ function describeStepTarget(
   }
 }
 
+/** The layout a message step sends, if it sends one. `warn` flags a missing or unpicked layout. */
+function describeStepLayout(
+  step: ScenarioStep | undefined,
+  ctx: ScenarioFlowLibraryContextValue | null,
+  t: Translator,
+): { label: string; warn: boolean } | null {
+  const action = step?.action;
+  if (!action || !ctx || action.layoutId == null || !LAYOUT_CAPABLE_ACTIONS.has(action.type)) {
+    return null;
+  }
+  if (!action.layoutId) return { label: t("builder.flow.layoutNone"), warn: true };
+  const layout = ctx.library.layouts.find((l) => l.id === action.layoutId);
+  return layout
+    ? { label: t("builder.flow.layoutNamed", { name: layout.name }), warn: false }
+    : { label: t("builder.flow.layoutGone"), warn: true };
+}
+
 function StepNode({ data, selected }: NodeProps<ScenarioNode>) {
   const t = useT();
   const step = (data ?? {}).step as ScenarioStep | undefined;
@@ -401,6 +422,7 @@ function StepNode({ data, selected }: NodeProps<ScenarioNode>) {
   const label = actionType ? t(ACTION_LABELS[actionType]) : t("builder.flow.step");
   const libraryContext = useContext(ScenarioFlowLibraryContext);
   const target = describeStepTarget(step, libraryContext, t);
+  const layoutLine = describeStepLayout(step, libraryContext, t);
   return (
     <Row
       gap="8"
@@ -440,6 +462,18 @@ function StepNode({ data, selected }: NodeProps<ScenarioNode>) {
           >
             → {target}
           </Text>
+        )}
+        {layoutLine && (
+          <Row
+            gap="4"
+            vertical="center"
+            onBackground={layoutLine.warn ? "warning-medium" : "brand-medium"}
+          >
+            <LuLayoutTemplate size={13} aria-hidden style={{ flexShrink: 0 }} />
+            <Text variant="label-default-s" style={{ wordBreak: "break-word" }}>
+              {layoutLine.label}
+            </Text>
+          </Row>
         )}
         {hasConditions && (
           <Text variant="label-default-s" onBackground="warning-medium">

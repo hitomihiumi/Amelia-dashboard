@@ -48,6 +48,7 @@ export const builder = {
     embed: "Embed",
     selectMenu: "Select Menu",
     menu: "Menu",
+    layout: "Untitled layout",
     item: "Item",
     unnamedField: "Unnamed field",
     unnamedOption: "Unnamed option",
@@ -261,6 +262,36 @@ export const builder = {
     deleteDelay: "Delay (ms, optional)",
     noCandidates: "No candidates available — create one first in the Components page.",
     noneAvailable: "None available yet.",
+    messageType: {
+      label: "Message type",
+      classic: "Classic message",
+      layout: "Layout (Components V2)",
+      classicHint: "Text, embeds, buttons and select menus.",
+      layoutHint:
+        "The message is built only from the layout. The text, embeds, buttons and menus from classic mode are kept, but not sent.",
+    },
+    layout: {
+      label: "Layout",
+      componentsCount: "{count, plural, one {# component} other {# components}}",
+      buttonsCount: "{count, plural, one {# button} other {# buttons}}",
+      menusCount: "{count, plural, one {# select menu} other {# select menus}}",
+      imagesCount: "{count, plural, one {# image} other {# images}}",
+      noText: "No text in this layout",
+      emptyTitle: "No layouts yet",
+      emptyText:
+        "Build a layout in the Layouts tab of the Components page, then come back and pick it here.",
+      open: "Open Layouts",
+      edit: "Edit layout",
+      gone: "The selected layout no longer exists. Pick another one or switch back to a classic message.",
+      missingRefs:
+        "{count, plural, one {The layout uses # button or select menu that no longer exists.} other {The layout uses # buttons or select menus that no longer exist.}}",
+      otherIssues:
+        "{count, plural, one {The layout has # problem and may fail to send.} other {The layout has # problems and may fail to send.}}",
+      fixInLayouts: "Fix it in the Layouts tab.",
+      editRuleTitle: "Editing and layouts",
+      editRuleText:
+        "A classic message can be edited into a layout. A message that is already a layout can only be edited into a layout again, never back into a classic message.",
+    },
   },
 
   conditions: {
@@ -315,6 +346,9 @@ export const builder = {
     dm: "DM",
     dmWithEmbed: "DM + {name}",
     conditionsCount: "{count, plural, one {# condition} other {# conditions}}",
+    layoutNamed: "Layout: {name}",
+    layoutNone: "Layout: not selected",
+    layoutGone: "Layout: not found",
   },
 
   preview: {
@@ -340,6 +374,8 @@ export const builder = {
     mentionChannel: "#channel",
     message: "Message",
     editedMessage: "Edited message",
+    layoutNone: "Pick a layout to see how the message will look.",
+    layoutGone: "The selected layout no longer exists.",
     roleAdded: "Role {role} added to user.",
     roleAddedGeneric: "Role added.",
     roleRemoved: "Role {role} removed from user.",
@@ -438,6 +474,9 @@ export const builder = {
       embedsNotArray: "{ctx}: embeds must be an array",
       buttonsNotArray: "{ctx}: buttons must be an array",
       selectMenusNotArray: "{ctx}: select menus must be an array",
+      layoutNotString: "{ctx}: layoutId must be a string",
+      layoutRequired: "{ctx}: pick a layout, or switch the message back to classic",
+      layoutMissing: "{ctx}: layout \"{id}\" does not exist",
       roleRequired: "{ctx}: {type} requires a role",
       threadNameRequired: "{ctx}: create_thread requires a thread name",
       archiveInvalid: "{ctx}: invalid auto-archive duration",

@@ -8,6 +8,7 @@ import type {
   SelectMenuCustom,
 } from "@/lib/db/types";
 import type { DiscordRole } from "@/lib/discord/role-style";
+import { LAYOUT_CAPABLE_ACTIONS } from "./scenarioValidation";
 import type { ComponentsLibrary } from "./scenariosTypes";
 
 /** Build a representative Discord preview message for a single step.
@@ -21,6 +22,19 @@ export function buildPreviewForStep(
 ): PreviewMessage | null {
   const action = step.action;
   if (!action) return null;
+
+  // A layout replaces content, embeds, buttons and menus. `""` = layout mode, none picked yet.
+  if (action.layoutId != null && LAYOUT_CAPABLE_ACTIONS.has(action.type)) {
+    const asDm = action.type === "send_dm";
+    if (!action.layoutId) return { content: t("builder.preview.layoutNone"), asDm };
+    const layout = library.layouts.find((l) => l.id === action.layoutId);
+    if (!layout) return { content: t("builder.preview.layoutGone"), asDm };
+    return {
+      layout,
+      layoutLibrary: { buttons: library.buttons, selectMenus: library.selectMenus },
+      asDm,
+    };
+  }
 
   const findEmbed = (id: string): EmbedCustom | undefined => library.embed.find((e) => e.id === id);
   const findButton = (id: string): ButtonCustom | undefined =>

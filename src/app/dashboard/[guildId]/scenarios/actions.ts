@@ -2,7 +2,6 @@
 
 import { requireGuildAdmin } from "@/app/dashboard/[guildId]/actions";
 import { getT } from "@/i18n/server";
-import type { builder as enBuilder } from "@/i18n/messages/en/builder";
 import type { Translator } from "@/i18n/translate";
 import { authOptions } from "@/lib/auth";
 import { Guild } from "@/lib/db/Guild";
@@ -10,9 +9,9 @@ import { generateID } from "@/lib/db/generateID";
 import {
   type ButtonCustom,
   type EmbedCustom,
+  type LayoutCustom,
   type ModalCustom,
   SCENARIO_LIMITS,
-  type ScenarioActionType,
   type ScenarioConditionOperator,
   type ScenarioConditionType,
   type ScenarioCustom,
@@ -23,6 +22,7 @@ import {
 import type { GuildActionState } from "@/types/dashboard";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
+import { type LibraryIds, makeReporter, validateAction } from "./scenarioValidation";
 
 const TRIGGER_TYPE_TO_COLLECTION: Record<ScenarioTriggerType, keyof ComponentsLibrary> = {
   button: "buttons",
@@ -36,19 +36,6 @@ const TRIGGER_TYPE_TOKEN: Record<ScenarioTriggerType, string> = {
   modal_submit: "modal",
 };
 
-const ACTION_TYPES = new Set<ScenarioActionType>([
-  "show_modal",
-  "send_message",
-  "send_embed",
-  "reply",
-  "send_dm",
-  "add_role",
-  "remove_role",
-  "create_thread",
-  "set_variable",
-  "edit_message",
-  "delete_message",
-]);
 const CONDITION_TYPES = new Set<ScenarioConditionType>([
   "user",
   "input",
@@ -79,19 +66,11 @@ interface ComponentsLibrary {
   embed: EmbedCustom[];
   buttons: ButtonCustom[];
   selectMenus: SelectMenuCustom[];
+  layouts: LayoutCustom[];
 }
 
 function fail(error: string): GuildActionState {
   return { ok: false, error };
-}
-
-type ScenarioErrorKey = keyof (typeof enBuilder)["errors"]["scenarios"];
-
-/** Returns a function that translates a validation error and appends it to `errors`. */
-function makeReporter(errors: string[], t: Translator) {
-  return (key: ScenarioErrorKey, ctx: string, params: Record<string, string | number> = {}) => {
-    errors.push(t(`builder.errors.scenarios.${key}`, { ctx, ...params }));
-  };
 }
 
 const COLLECTION_TAB_KEY = {
@@ -140,12 +119,14 @@ export async function updateScenarios(
     selectMenus: Array.isArray(components?.selectMenus)
       ? (components.selectMenus as SelectMenuCustom[])
       : [],
+    layouts: Array.isArray(components?.layouts) ? (components.layouts as LayoutCustom[]) : [],
   };
-  const ids = {
+  const ids: LibraryIds = {
     modals: new Set(library.modals.map((m) => m.id)),
     embed: new Set(library.embed.map((e) => e.id)),
     buttons: new Set(library.buttons.map((b) => b.id)),
     selectMenus: new Set(library.selectMenus.map((s) => s.id)),
+    layouts: new Set(library.layouts.map((l) => l.id)),
   };
 
   const errors: string[] = [];
@@ -248,73 +229,6 @@ export async function updateScenarios(
   await guild.set("utils.components.scenarios", parsed);
   revalidatePath(`/dashboard/${guildId}/scenarios`);
   return { ok: true };
-}
-
-function validateAction(
-  step: ScenarioStep,
-  sctx: string,
-  errors: string[],
-  ids: { modals: Set<string>; embed: Set<string>; buttons: Set<string>; selectMenus: Set<string> },
-  t: Translator,
-) {
-  const report = makeReporter(errors, t);
-  const a = step.action;
-  if (!a || !ACTION_TYPES.has(a.type)) {
-    report("actionInvalid", sctx);
-    return;
-  }
-  const rejectMissing = (id: string, set: Set<string>, label: string) => {
-    if (!set.has(id)) report("unknownReference", sctx, { label, id });
-  };
-
-  switch (a.type) {
-    case "show_modal":
-      if (!a.modalId) report("showModalNeedsModal", sctx);
-      else rejectMissing(a.modalId, ids.modals, "modalId");
-      break;
-    case "send_message":
-    case "send_embed":
-    case "reply":
-    case "edit_message":
-      if (a.content != null && typeof a.content !== "string") report("contentNotString", sctx);
-      if (a.embeds && !Array.isArray(a.embeds)) report("embedsNotArray", sctx);
-      if (a.buttons && !Array.isArray(a.buttons)) report("buttonsNotArray", sctx);
-      if (a.selectMenus && !Array.isArray(a.selectMenus)) report("selectMenusNotArray", sctx);
-      if (Array.isArray(a.embeds)) a.embeds.forEach((e) => rejectMissing(e, ids.embed, "embeds"));
-      if (Array.isArray(a.buttons))
-        a.buttons.forEach((b) => rejectMissing(b, ids.buttons, "buttons"));
-      if (Array.isArray(a.selectMenus))
-        a.selectMenus.forEach((s) => rejectMissing(s, ids.selectMenus, "selectMenus"));
-      if (a.embedId) rejectMissing(a.embedId, ids.embed, "embedId");
-      break;
-    case "add_role":
-    case "remove_role":
-      if (!a.roleId) report("roleRequired", sctx, { type: a.type });
-      break;
-    case "create_thread":
-      if (!a.threadName) report("threadNameRequired", sctx);
-      if (a.autoArchiveDuration && ![60, 1440, 4320, 10080].includes(a.autoArchiveDuration)) {
-        report("archiveInvalid", sctx);
-      }
-      break;
-    case "send_dm":
-      if (a.dmContent != null && typeof a.dmContent !== "string")
-        report("dmContentNotString", sctx);
-      if (a.dmEmbedId) rejectMissing(a.dmEmbedId, ids.embed, "dmEmbedId");
-      break;
-    case "set_variable":
-      if (!a.variableName) report("variableNameRequired", sctx);
-      if (typeof a.variableValue !== "string") report("variableValueNotString", sctx);
-      break;
-    case "delete_message":
-      if (typeof a.deleteOriginal !== "undefined" && typeof a.deleteOriginal !== "boolean") {
-        report("deleteOriginalBool", sctx);
-      }
-      if (a.deleteDelay != null && (typeof a.deleteDelay !== "number" || a.deleteDelay < 0)) {
-        report("deleteDelayInvalid", sctx);
-      }
-      break;
-  }
 }
 
 function validateConditions(step: ScenarioStep, sctx: string, errors: string[], t: Translator) {

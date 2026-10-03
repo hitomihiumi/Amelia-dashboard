@@ -52,6 +52,7 @@ export const builder: Dict<typeof en> = {
     embed: "Ембед",
     selectMenu: "Меню вибору",
     menu: "Меню",
+    layout: "Макет без назви",
     item: "Елемент",
     unnamedField: "Поле без назви",
     unnamedOption: "Варіант без назви",
@@ -268,6 +269,40 @@ export const builder: Dict<typeof en> = {
     deleteDelay: "Затримка (мс, необов'язково)",
     noCandidates: "Немає доступних варіантів — спочатку створіть їх на сторінці «Компоненти».",
     noneAvailable: "Поки що нічого немає.",
+    messageType: {
+      label: "Тип повідомлення",
+      classic: "Звичайне повідомлення",
+      layout: "Макет (Components V2)",
+      classicHint: "Текст, ембеди, кнопки та меню вибору.",
+      layoutHint:
+        "Повідомлення складається лише з макета. Текст, ембеди, кнопки й меню зі звичайного режиму зберігаються, але не надсилаються.",
+    },
+    layout: {
+      label: "Макет",
+      componentsCount:
+        "{count, plural, one {# компонент} few {# компоненти} many {# компонентів} other {# компонента}}",
+      buttonsCount:
+        "{count, plural, one {# кнопка} few {# кнопки} many {# кнопок} other {# кнопки}}",
+      menusCount:
+        "{count, plural, one {# меню вибору} few {# меню вибору} many {# меню вибору} other {# меню вибору}}",
+      imagesCount:
+        "{count, plural, one {# зображення} few {# зображення} many {# зображень} other {# зображення}}",
+      noText: "У цьому макеті немає тексту",
+      emptyTitle: "Макетів поки немає",
+      emptyText:
+        "Створіть макет на вкладці «Макети» сторінки «Компоненти», потім поверніться й виберіть його тут.",
+      open: "Відкрити макети",
+      edit: "Змінити макет",
+      gone: "Вибраного макета більше немає. Виберіть інший або поверніться до звичайного повідомлення.",
+      missingRefs:
+        "{count, plural, one {Макет використовує # кнопку або меню вибору, яких більше немає.} few {Макет використовує # кнопки або меню вибору, яких більше немає.} many {Макет використовує # кнопок або меню вибору, яких більше немає.} other {Макет використовує # кнопки або меню вибору, яких більше немає.}}",
+      otherIssues:
+        "{count, plural, one {У макеті # помилка, через яку він може не надіслатися.} few {У макеті # помилки, через які він може не надіслатися.} many {У макеті # помилок, через які він може не надіслатися.} other {У макеті # помилки, через які він може не надіслатися.}}",
+      fixInLayouts: "Виправте це на вкладці «Макети».",
+      editRuleTitle: "Редагування та макети",
+      editRuleText:
+        "Звичайне повідомлення можна змінити на макет. Повідомлення, яке вже стало макетом, можна змінити лише на інший макет, назад у звичайне повідомлення його не повернути.",
+    },
   },
 
   conditions: {
@@ -323,6 +358,9 @@ export const builder: Dict<typeof en> = {
     dmWithEmbed: "ПП + {name}",
     conditionsCount:
       "{count, plural, one {# умова} few {# умови} many {# умов} other {# умови}}",
+    layoutNamed: "Макет: {name}",
+    layoutNone: "Макет: не вибрано",
+    layoutGone: "Макет: не знайдено",
   },
 
   preview: {
@@ -348,6 +386,8 @@ export const builder: Dict<typeof en> = {
     mentionChannel: "#канал",
     message: "Повідомлення",
     editedMessage: "Змінене повідомлення",
+    layoutNone: "Виберіть макет, щоб побачити, як виглядатиме повідомлення.",
+    layoutGone: "Вибраного макета більше немає.",
     roleAdded: "Користувачу додано роль {role}.",
     roleAddedGeneric: "Роль додано.",
     roleRemoved: "У користувача прибрано роль {role}.",
@@ -445,6 +485,9 @@ export const builder: Dict<typeof en> = {
       embedsNotArray: "{ctx}: ембеди мають бути масивом",
       buttonsNotArray: "{ctx}: кнопки мають бути масивом",
       selectMenusNotArray: "{ctx}: меню вибору мають бути масивом",
+      layoutNotString: "{ctx}: layoutId має бути рядком",
+      layoutRequired: "{ctx}: виберіть макет або поверніть повідомленню звичайний тип",
+      layoutMissing: "{ctx}: макет «{id}» не знайдено",
       roleRequired: "{ctx}: для {type} потрібно вибрати роль",
       threadNameRequired: "{ctx}: для create_thread потрібна назва гілки",
       archiveInvalid: "{ctx}: неправильний час автоархівації",

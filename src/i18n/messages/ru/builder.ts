@@ -52,6 +52,7 @@ export const builder: Dict<typeof en> = {
     embed: "Эмбед",
     selectMenu: "Меню выбора",
     menu: "Меню",
+    layout: "Макет без названия",
     item: "Элемент",
     unnamedField: "Поле без названия",
     unnamedOption: "Вариант без названия",
@@ -268,6 +269,40 @@ export const builder: Dict<typeof en> = {
     deleteDelay: "Задержка (мс, необязательно)",
     noCandidates: "Нет доступных вариантов — сначала создайте их на странице «Компоненты».",
     noneAvailable: "Пока ничего нет.",
+    messageType: {
+      label: "Тип сообщения",
+      classic: "Обычное сообщение",
+      layout: "Макет (Components V2)",
+      classicHint: "Текст, эмбеды, кнопки и меню выбора.",
+      layoutHint:
+        "Сообщение собирается только из макета. Текст, эмбеды, кнопки и меню из обычного режима сохраняются, но не отправляются.",
+    },
+    layout: {
+      label: "Макет",
+      componentsCount:
+        "{count, plural, one {# компонент} few {# компонента} many {# компонентов} other {# компонента}}",
+      buttonsCount:
+        "{count, plural, one {# кнопка} few {# кнопки} many {# кнопок} other {# кнопки}}",
+      menusCount:
+        "{count, plural, one {# меню выбора} few {# меню выбора} many {# меню выбора} other {# меню выбора}}",
+      imagesCount:
+        "{count, plural, one {# изображение} few {# изображения} many {# изображений} other {# изображения}}",
+      noText: "В этом макете нет текста",
+      emptyTitle: "Макетов пока нет",
+      emptyText:
+        "Соберите макет на вкладке «Макеты» страницы «Компоненты», затем вернитесь и выберите его здесь.",
+      open: "Открыть макеты",
+      edit: "Изменить макет",
+      gone: "Выбранного макета больше нет. Выберите другой или вернитесь к обычному сообщению.",
+      missingRefs:
+        "{count, plural, one {Макет использует # кнопку или меню выбора, которых больше нет.} few {Макет использует # кнопки или меню выбора, которых больше нет.} many {Макет использует # кнопок или меню выбора, которых больше нет.} other {Макет использует # кнопки или меню выбора, которых больше нет.}}",
+      otherIssues:
+        "{count, plural, one {В макете # ошибка, из-за неё он может не отправиться.} few {В макете # ошибки, из-за них он может не отправиться.} many {В макете # ошибок, из-за них он может не отправиться.} other {В макете # ошибки, из-за них он может не отправиться.}}",
+      fixInLayouts: "Исправьте это на вкладке «Макеты».",
+      editRuleTitle: "Редактирование и макеты",
+      editRuleText:
+        "Обычное сообщение можно изменить на макет. Сообщение, которое уже стало макетом, можно изменить только на другой макет, обратно в обычное сообщение его не вернуть.",
+    },
   },
 
   conditions: {
@@ -323,6 +358,9 @@ export const builder: Dict<typeof en> = {
     dmWithEmbed: "ЛС + {name}",
     conditionsCount:
       "{count, plural, one {# условие} few {# условия} many {# условий} other {# условия}}",
+    layoutNamed: "Макет: {name}",
+    layoutNone: "Макет: не выбран",
+    layoutGone: "Макет: не найден",
   },
 
   preview: {
@@ -348,6 +386,8 @@ export const builder: Dict<typeof en> = {
     mentionChannel: "#канал",
     message: "Сообщение",
     editedMessage: "Изменённое сообщение",
+    layoutNone: "Выберите макет, чтобы увидеть, как будет выглядеть сообщение.",
+    layoutGone: "Выбранного макета больше нет.",
     roleAdded: "Пользователю добавлена роль {role}.",
     roleAddedGeneric: "Роль добавлена.",
     roleRemoved: "У пользователя убрана роль {role}.",
@@ -445,6 +485,9 @@ export const builder: Dict<typeof en> = {
       embedsNotArray: "{ctx}: эмбеды должны быть массивом",
       buttonsNotArray: "{ctx}: кнопки должны быть массивом",
       selectMenusNotArray: "{ctx}: меню выбора должны быть массивом",
+      layoutNotString: "{ctx}: layoutId должен быть строкой",
+      layoutRequired: "{ctx}: выберите макет или верните сообщению обычный тип",
+      layoutMissing: "{ctx}: макет «{id}» не найден",
       roleRequired: "{ctx}: для {type} нужно выбрать роль",
       threadNameRequired: "{ctx}: для create_thread нужно название ветки",
       archiveInvalid: "{ctx}: неверное время автоархивации",
