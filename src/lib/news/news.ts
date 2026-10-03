@@ -3,6 +3,7 @@ import "server-only";
 import type { NewsPost } from "@prisma/client";
 import { prisma } from "@/lib/db/db";
 import { NEWS_PAGE_SIZE, type NewsCategory } from "./categories";
+import type { NewsPostDTO } from "./types";
 
 export * from "./categories";
 
@@ -40,4 +41,25 @@ export async function getPostBySlug(slug: string): Promise<NewsPost | null> {
 /** Every post, drafts included. Admin panel only. */
 export async function getAllPosts(): Promise<NewsPost[]> {
   return await prisma.newsPost.findMany({ orderBy: { updatedAt: "desc" } });
+}
+
+export async function getPostById(id: string): Promise<NewsPost | null> {
+  return await prisma.newsPost.findUnique({ where: { id } });
+}
+
+/** Serialisable copy of a post for client components. */
+export function toNewsDTO(post: NewsPost): NewsPostDTO {
+  return {
+    id: post.id,
+    slug: post.slug,
+    title: post.title,
+    summary: post.summary ?? "",
+    content: post.content,
+    category: post.category,
+    coverUrl: post.coverUrl ?? "",
+    published: post.published,
+    publishedAt: post.publishedAt?.toISOString() ?? null,
+    createdAt: post.createdAt.toISOString(),
+    updatedAt: post.updatedAt.toISOString(),
+  };
 }
