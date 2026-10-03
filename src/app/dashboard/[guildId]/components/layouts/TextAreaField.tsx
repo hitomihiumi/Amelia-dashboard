@@ -1,6 +1,8 @@
 "use client";
 
+import { EmojiPickerDropdown } from "@/components/dashboard/discord/EmojiPickerDropdown";
 import { useT } from "@/i18n/client";
+import { emojiToText } from "@/lib/discord/emojis-api";
 import type { MessageKey } from "@/i18n/messages/types";
 import { VARIABLE_PLACEHOLDERS } from "@/lib/db/types";
 import {
@@ -21,6 +23,7 @@ import {
   LuItalic,
   LuList,
   LuQuote,
+  LuSmile,
   LuStrikethrough,
   LuUnderline,
 } from "react-icons/lu";
@@ -169,6 +172,21 @@ export function TextAreaField({
                 ),
               )}
             </Column>
+          }
+        />
+        <EmojiPickerDropdown
+          placement="bottom-start"
+          onSelect={(emoji) => apply((v, s, e) => insertText(v, s, e, emojiToText(emoji)))}
+          trigger={
+            <IconButton
+              icon="text"
+              variant="ghost"
+              size="s"
+              tooltip={t("common.emoji.insert")}
+              onMouseDown={keepFocus}
+            >
+              <LuSmile size={15} />
+            </IconButton>
           }
         />
         {actions ? (

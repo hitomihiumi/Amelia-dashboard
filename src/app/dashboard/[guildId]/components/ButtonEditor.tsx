@@ -12,6 +12,7 @@ import {
   Switch,
   Text,
 } from "@once-ui-system/core";
+import { EmojiField, EmojiValueField } from "@/components/dashboard/discord/EmojiField";
 import styles from "./Editors.module.scss";
 
 export interface ButtonEditorProps {
@@ -48,15 +49,17 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
         characterCount
         maxLength={100}
       />
-      <Input
-        id="btn-label"
-        label={t("builder.buttons.label")}
-        placeholder={t("builder.buttons.labelPlaceholder")}
-        value={value.label}
-        onChange={(e) => update({ label: e.target.value })}
-        characterCount
-        maxLength={80}
-      />
+      <EmojiField id="btn-label" value={value.label} onValueChange={(label) => update({ label })}>
+        <Input
+          id="btn-label"
+          label={t("builder.buttons.label")}
+          placeholder={t("builder.buttons.labelPlaceholder")}
+          value={value.label}
+          onChange={(e) => update({ label: e.target.value })}
+          characterCount
+          maxLength={80}
+        />
+      </EmojiField>
       <Column gap="8" className={styles.full}>
         <Text variant="label-default-s">{t("builder.buttons.style")}</Text>
         <SegmentedControl
@@ -66,13 +69,14 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
           buttons={STYLES.map((s) => ({ label: t(BUTTON_STYLE_LABEL_KEY[s]), value: s }))}
         />
       </Column>
-      <Input
-        id="btn-emoji"
-        label={t("builder.shared.emoji")}
-        placeholder="🎮"
-        value={emojiToString(value.emoji)}
-        onChange={(e) => update({ emoji: e.target.value || undefined })}
-      />
+      <div className={styles.full}>
+        <EmojiValueField
+          id="btn-emoji"
+          label={t("builder.shared.emoji")}
+          value={value.emoji}
+          onChange={(emoji) => update({ emoji })}
+        />
+      </div>
       {value.style === "LINK" ? (
         <Input
           id="btn-url"
@@ -99,10 +103,4 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
       </Row>
     </div>
   );
-}
-
-function emojiToString(emoji: ButtonCustom["emoji"]): string {
-  if (!emoji) return "";
-  if (typeof emoji === "string") return emoji;
-  return emoji.id ? `<:${emoji.name || "emoji"}:${emoji.id}>` : emoji.name || "";
 }

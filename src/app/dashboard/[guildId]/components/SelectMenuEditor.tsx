@@ -16,6 +16,7 @@ import {
   Text,
 } from "@once-ui-system/core";
 import React from "react";
+import { EmojiField, EmojiValueField } from "@/components/dashboard/discord/EmojiField";
 import styles from "./Editors.module.scss";
 
 /** Discord allows at most 25 options per select menu. */
@@ -169,25 +170,37 @@ function OptionEditor({
           />
           <IconButton icon="trash" variant="danger" tooltip={t("builder.selectMenus.deleteOption")} onClick={onDelete} />
         </Row>
-        <Input
+        <EmojiField
           id={`opt-label-${option.value}`}
-          label={t("builder.selectMenus.label")}
           value={option.label}
-          onChange={(e) => onChange({ label: e.target.value })}
-          maxLength={100}
-        />
-        <Input
+          onValueChange={(label) => onChange({ label })}
+        >
+          <Input
+            id={`opt-label-${option.value}`}
+            label={t("builder.selectMenus.label")}
+            value={option.label}
+            onChange={(e) => onChange({ label: e.target.value })}
+            maxLength={100}
+          />
+        </EmojiField>
+        <EmojiField
           id={`opt-desc-${option.value}`}
-          label={t("builder.selectMenus.description")}
           value={option.description ?? ""}
-          onChange={(e) => onChange({ description: e.target.value || undefined })}
-          maxLength={100}
-        />
-        <Input
+          onValueChange={(description) => onChange({ description: description || undefined })}
+        >
+          <Input
+            id={`opt-desc-${option.value}`}
+            label={t("builder.selectMenus.description")}
+            value={option.description ?? ""}
+            onChange={(e) => onChange({ description: e.target.value || undefined })}
+            maxLength={100}
+          />
+        </EmojiField>
+        <EmojiValueField
           id={`opt-emoji-${option.value}`}
           label={t("builder.shared.emoji")}
-          value={emojiToString(option.emoji)}
-          onChange={(e) => onChange({ emoji: e.target.value || undefined })}
+          value={option.emoji}
+          onChange={(emoji) => onChange({ emoji })}
         />
         <Switch
           label={t("builder.selectMenus.defaultSelected")}
@@ -198,12 +211,3 @@ function OptionEditor({
     </Accordion>
   );
 }
-
-function emojiToString(emoji: unknown): string {
-  if (!emoji) return "";
-  if (typeof emoji === "string") return emoji;
-  const e = emoji as { name?: string; id?: string };
-  return e.id ? `<:${e.name || "emoji"}:${e.id}>` : e.name || "";
-}
-// `defaultSelect` lives in componentsTypes (DEFAULT_FACTORIES) so the manager
-// seeds a complete item before opening this editor.

@@ -1,6 +1,7 @@
 "use client";
 
 import { ColorInput } from "@/components/dashboard/ColorInput";
+import { EmojiField } from "@/components/dashboard/discord/EmojiField";
 import { useT } from "@/i18n/client";
 import type { EmbedCustom, EmbedField } from "@/lib/db/types";
 import { resolveDiscordColor } from "@/lib/discord/discord-style";
@@ -29,7 +30,8 @@ export interface EmbedEditorProps {
 
 export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
   const t = useT();
-  const update = (patch: Partial<EmbedCustom>) => onChange({ ...value, ...patch });
+  const update = (patch: Partial<EmbedCustom>) =>
+    onChange({ ...value, ...patch });
 
   const addField = () => {
     const f: EmbedField = {
@@ -41,7 +43,9 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
   };
   const updateFieldAt = (i: number, patch: Partial<EmbedField>) => {
     const fields = value.fields ?? [];
-    update({ fields: fields.map((f, idx) => (idx === i ? { ...f, ...patch } : f)) });
+    update({
+      fields: fields.map((f, idx) => (idx === i ? { ...f, ...patch } : f)),
+    });
   };
   const removeField = (i: number) => {
     update({ fields: (value.fields ?? []).filter((_, idx) => idx !== i) });
@@ -68,30 +72,49 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
 
       <Accordion title={t("builder.embeds.sectionContent")} fillWidth>
         <Column fillWidth gap="8">
-          <Input
+          <EmojiField
             id="embed-title"
-            label={t("builder.embeds.title")}
             value={value.title ?? ""}
-            onChange={(e) => update({ title: e.target.value || undefined })}
-            maxLength={256}
-            characterCount
-          />
-          <Textarea
+            onValueChange={(title) => update({ title: title || undefined })}
+          >
+            <Input
+              id="embed-title"
+              label={t("builder.embeds.title")}
+              value={value.title ?? ""}
+              onChange={(e) => update({ title: e.target.value || undefined })}
+              maxLength={256}
+              characterCount
+            />
+          </EmojiField>
+          <EmojiField
             id="embed-description"
-            label={t("builder.embeds.description")}
             value={value.description ?? ""}
-            onChange={(e) => update({ description: e.target.value || undefined })}
-            maxLength={4096}
-            lines={4}
-            characterCount
-            resize="vertical"
-          />
+            onValueChange={(description) =>
+              update({ description: description || undefined })
+            }
+            multiline
+          >
+            <Textarea
+              id="embed-description"
+              label={t("builder.embeds.description")}
+              value={value.description ?? ""}
+              onChange={(e) =>
+                update({ description: e.target.value || undefined })
+              }
+              maxLength={4096}
+              lines={4}
+              characterCount
+              resize="vertical"
+            />
+          </EmojiField>
           <ColorInput
             id="embed-color"
             label={t("builder.embeds.color")}
             value={resolveDiscordColor(value.color)}
             onChange={(e) =>
-              update({ color: (e.target.value || undefined) as EmbedCustom["color"] })
+              update({
+                color: (e.target.value || undefined) as EmbedCustom["color"],
+              })
             }
             presets={PRESERVED_COLORS}
           />
@@ -100,21 +123,35 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
 
       <Accordion title={t("builder.embeds.sectionAuthor")} fillWidth>
         <Column fillWidth gap="8">
-          <Input
+          <EmojiField
             id="embed-author-name"
-            label={t("builder.embeds.authorName")}
             value={value.author?.name ?? ""}
-            onChange={(e) =>
+            onValueChange={(name) =>
               update({
                 author: {
-                  name: e.target.value,
+                  name,
                   icon_url: value.author?.icon_url,
                   url: value.author?.url,
                 },
               })
             }
-            maxLength={256}
-          />
+          >
+            <Input
+              id="embed-author-name"
+              label={t("builder.embeds.authorName")}
+              value={value.author?.name ?? ""}
+              onChange={(e) =>
+                update({
+                  author: {
+                    name: e.target.value,
+                    icon_url: value.author?.icon_url,
+                    url: value.author?.url,
+                  },
+                })
+              }
+              maxLength={256}
+            />
+          </EmojiField>
           <Input
             id="embed-author-icon"
             label={t("builder.embeds.authorIcon")}
@@ -134,7 +171,10 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
             value={value.author?.url ?? ""}
             onChange={(e) =>
               update({
-                author: { ...(value.author ?? { name: "" }), url: e.target.value || undefined },
+                author: {
+                  ...(value.author ?? { name: "" }),
+                  url: e.target.value || undefined,
+                },
               })
             }
           />
@@ -160,22 +200,38 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
 
       <Accordion title={t("builder.embeds.sectionFooter")} fillWidth>
         <Column fillWidth gap="8">
-          <Input
+          <EmojiField
             id="embed-footer-text"
-            label={t("builder.embeds.footerText")}
             value={value.footer?.text ?? ""}
-            onChange={(e) =>
-              update({ footer: { text: e.target.value, icon_url: value.footer?.icon_url } })
+            onValueChange={(text) =>
+              update({ footer: { text, icon_url: value.footer?.icon_url } })
             }
-            maxLength={2048}
-          />
+          >
+            <Input
+              id="embed-footer-text"
+              label={t("builder.embeds.footerText")}
+              value={value.footer?.text ?? ""}
+              onChange={(e) =>
+                update({
+                  footer: {
+                    text: e.target.value,
+                    icon_url: value.footer?.icon_url,
+                  },
+                })
+              }
+              maxLength={2048}
+            />
+          </EmojiField>
           <Input
             id="embed-footer-icon"
             label={t("builder.embeds.footerIcon")}
             value={value.footer?.icon_url ?? ""}
             onChange={(e) =>
               update({
-                footer: { text: value.footer?.text ?? "", icon_url: e.target.value || undefined },
+                footer: {
+                  text: value.footer?.text ?? "",
+                  icon_url: e.target.value || undefined,
+                },
               })
             }
           />
@@ -190,9 +246,16 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
 
       <Row fillWidth horizontal="between" vertical="center" gap="8">
         <Text variant="label-default-s">
-          {t("builder.embeds.fieldsCount", { count: value.fields?.length ?? 0, max: MAX_FIELDS })}
+          {t("builder.embeds.fieldsCount", {
+            count: value.fields?.length ?? 0,
+            max: MAX_FIELDS,
+          })}
         </Text>
-        <Button prefixIcon="plus" onClick={addField} disabled={(value.fields?.length ?? 0) >= MAX_FIELDS}>
+        <Button
+          prefixIcon="plus"
+          onClick={addField}
+          disabled={(value.fields?.length ?? 0) >= MAX_FIELDS}
+        >
           {t("builder.embeds.addField")}
         </Button>
       </Row>
@@ -236,7 +299,12 @@ function FieldEditor({
       fillWidth
     >
       <Column fillWidth gap="8" border="neutral-weak" radius="m">
-        <Row gap="4" horizontal="end" vertical="center" onClick={(e) => e.stopPropagation()}>
+        <Row
+          gap="4"
+          horizontal="end"
+          vertical="center"
+          onClick={(e) => e.stopPropagation()}
+        >
           <IconButton
             icon="chevronUp"
             variant="secondary"
@@ -249,24 +317,42 @@ function FieldEditor({
             onClick={() => onMove(1)}
             tooltip={t("builder.shared.moveDown")}
           />
-          <IconButton icon="trash" variant="danger" tooltip={t("builder.embeds.deleteField")} onClick={onDelete} />
+          <IconButton
+            icon="trash"
+            variant="danger"
+            tooltip={t("builder.embeds.deleteField")}
+            onClick={onDelete}
+          />
         </Row>
-        <Input
+        <EmojiField
           id={`field-name-${field.name}`}
-          label={t("builder.embeds.fieldName")}
           value={field.name}
-          onChange={(e) => onChange({ name: e.target.value })}
-          maxLength={256}
-        />
-        <Textarea
+          onValueChange={(name) => onChange({ name })}
+        >
+          <Input
+            id={`field-name-${field.name}`}
+            label={t("builder.embeds.fieldName")}
+            value={field.name}
+            onChange={(e) => onChange({ name: e.target.value })}
+            maxLength={256}
+          />
+        </EmojiField>
+        <EmojiField
           id={`field-value-${field.name}`}
-          label={t("builder.embeds.fieldValue")}
           value={field.value}
-          onChange={(e) => onChange({ value: e.target.value })}
-          maxLength={1024}
-          lines={2}
-          resize="vertical"
-        />
+          onValueChange={(v) => onChange({ value: v })}
+          multiline
+        >
+          <Textarea
+            id={`field-value-${field.name}`}
+            label={t("builder.embeds.fieldValue")}
+            value={field.value}
+            onChange={(e) => onChange({ value: e.target.value })}
+            maxLength={1024}
+            lines={2}
+            resize="vertical"
+          />
+        </EmojiField>
         <Switch
           label={t("builder.embeds.inline")}
           checked={!!field.inline}

@@ -1,5 +1,6 @@
 "use client";
 
+import { EmojiField } from "@/components/dashboard/discord/EmojiField";
 import { LabelSelect } from "@/components/dashboard/discord/LabelSelect";
 import { useT } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/messages";
@@ -390,16 +391,23 @@ function ClassicMessageFields({
   if (action.type === "send_dm") {
     return (
       <>
-        <Textarea
+        <EmojiField
           id={`${guildId}-dm-content`}
-          label={t("builder.actions.dmContent")}
           value={action.dmContent ?? ""}
-          onChange={(e) => update({ dmContent: e.target.value })}
-          lines={3}
-          maxLength={2000}
-          characterCount
-          resize="vertical"
-        />
+          onValueChange={(dmContent) => update({ dmContent })}
+          multiline
+        >
+          <Textarea
+            id={`${guildId}-dm-content`}
+            label={t("builder.actions.dmContent")}
+            value={action.dmContent ?? ""}
+            onChange={(e) => update({ dmContent: e.target.value })}
+            lines={3}
+            maxLength={2000}
+            characterCount
+            resize="vertical"
+          />
+        </EmojiField>
         <ReferenceField
           label={t("builder.actions.dmEmbed")}
           options={library.embed.map((e) => ({
@@ -423,16 +431,23 @@ function ClassicMessageFields({
 
   return (
     <>
-      <Textarea
+      <EmojiField
         id={`${guildId}-${action.type}-content`}
-        label={contentLabel}
         value={action.content ?? ""}
-        onChange={(e) => update({ content: e.target.value })}
-        lines={compact ? 2 : 3}
-        maxLength={2000}
-        characterCount={!compact}
-        resize="vertical"
-      />
+        onValueChange={(content) => update({ content })}
+        multiline
+      >
+        <Textarea
+          id={`${guildId}-${action.type}-content`}
+          label={contentLabel}
+          value={action.content ?? ""}
+          onChange={(e) => update({ content: e.target.value })}
+          lines={compact ? 2 : 3}
+          maxLength={2000}
+          characterCount={!compact}
+          resize="vertical"
+        />
+      </EmojiField>
       {ephemeral}
       <MultiReferences
         label={t("builder.actions.embeds")}

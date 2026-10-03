@@ -1,5 +1,6 @@
 "use client";
 
+import { EmojiField } from "@/components/dashboard/discord/EmojiField";
 import { LabelSelect } from "@/components/dashboard/discord/LabelSelect";
 import {
   DiscordPreview,
@@ -221,17 +222,25 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
             ) : (
               <>
                 <div className={styles.full}>
-                  <Textarea
+                  <EmojiField
                     id={`${guildId}-send-content`}
-                    label={t("send.classic.content")}
                     value={content}
-                    onChange={(event) => setContent(event.target.value)}
-                    lines={4}
-                    maxLength={CLASSIC_LIMITS.CONTENT}
-                    characterCount
-                    resize="vertical"
-                    description={t("send.classic.contentHint")}
-                  />
+                    onValueChange={setContent}
+                    guildId={guildId}
+                    multiline
+                  >
+                    <Textarea
+                      id={`${guildId}-send-content`}
+                      label={t("send.classic.content")}
+                      value={content}
+                      onChange={(event) => setContent(event.target.value)}
+                      lines={4}
+                      maxLength={CLASSIC_LIMITS.CONTENT}
+                      characterCount
+                      resize="vertical"
+                      description={t("send.classic.contentHint")}
+                    />
+                  </EmojiField>
                 </div>
                 <div className={`${styles.full} ${styles.pickers}`}>
                   <div className={styles.field}>

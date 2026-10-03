@@ -21,7 +21,7 @@ import { GuildActionState } from "@/types/dashboard";
 import type { GuildSchema } from "@/lib/db/types";
 import { useRouter } from "next/navigation";
 import { EmojiPickerDropdown } from "@/components/dashboard/discord/EmojiPickerDropdown";
-import { emojiFromString, formatCustomEmojiString, isUnicodeEmoji } from "@/lib/discord/emojis-api";
+import { emojiFromString, emojiToText, isUnicodeEmoji } from "@/lib/discord/emojis-api";
 import { Section } from "@/components/dashboard/Section";
 import { useT } from "@/i18n/client";
 import styles from "./EconomyForm.module.scss";
@@ -140,8 +140,8 @@ export function EconomyForm({
                 guildId={guildId}
                 onSelect={(emoji) =>
                   setCurrency({
-                    id: emoji.id,
-                    emoji: formatCustomEmojiString(emoji),
+                    id: emoji.type === "custom" ? emoji.id : null,
+                    emoji: emojiToText(emoji),
                   })
                 }
               />

@@ -1,107 +1,76 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  DropdownWrapper,
-  StyleProps,
-  GridSize,
-  Button,
-  Spinner,
-  Column,
-} from "@once-ui-system/core";
-import { EmojiPicker } from "./EmojiPicker";
-import { DiscordGuildEmoji } from "@/lib/discord/emojis-api";
 import { useT } from "@/i18n/client";
+import type { PickedEmoji } from "@/lib/discord/emojis-api";
+import { Button, DropdownWrapper, IconButton } from "@once-ui-system/core";
+import type { ReactNode } from "react";
+import { useState } from "react";
+import { LuSmilePlus } from "react-icons/lu";
+import { EmojiPicker } from "./EmojiPicker";
 
 export interface EmojiPickerDropdownProps {
-  guildId: string;
-  onSelect: (emoji: DiscordGuildEmoji) => void;
-  onOpenChange?: (isOpen: boolean) => void;
-  background?: StyleProps["background"];
-  columns?: GridSize;
-  closeAfterClick?: boolean;
+  /** Defaults to the guild of the dashboard page. */
+  guildId?: string;
+  onSelect: (emoji: PickedEmoji) => void;
+  /** The element that opens the picker; a text button when omitted. */
+  trigger?: ReactNode;
+  /** Offer only standard emojis. */
+  unicodeOnly?: boolean;
+  placement?: React.ComponentProps<typeof DropdownWrapper>["placement"];
+  onOpenChange?: (open: boolean) => void;
 }
 
-const EmojiPickerDropdown: React.FC<EmojiPickerDropdownProps> = ({
+/** A button that opens the emoji panel in a popover and closes it after a pick. */
+export function EmojiPickerDropdown({
   guildId,
   onSelect,
-  closeAfterClick = true,
-  background = "surface",
-  columns = "8",
-  ...dropdownProps
-}) => {
+  trigger,
+  unicodeOnly,
+  placement = "bottom-end",
+  onOpenChange,
+}: EmojiPickerDropdownProps) {
   const t = useT();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [emojiData, setEmojiData] = useState<DiscordGuildEmoji[]>([]);
+  const [open, setOpen] = useState(false);
 
-  const load = useCallback(async () => {
-    if (emojiData.length === 0) {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`/api/dashboard/${guildId}/emojis`);
-        const j = (await res.json()) as {
-          ok?: boolean;
-          emojis?: DiscordGuildEmoji[];
-          error?: string;
-        };
-        if (!res.ok || !j.ok) {
-          setError(j.error ?? t("common.emoji.loadFailed"));
-          setEmojiData([]);
-          return;
-        }
-        setEmojiData(j.emojis ?? []);
-      } catch {
-        setError(t("common.emoji.networkError"));
-        setEmojiData([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-  }, [guildId, emojiData, t]);
-
-  const handleEmojiSelect = (emoji: DiscordGuildEmoji) => {
-    onSelect(emoji);
-    if (closeAfterClick) {
-      dropdownProps.onOpenChange?.(false);
-    }
+  const change = (next: boolean) => {
+    setOpen(next);
+    onOpenChange?.(next);
   };
 
   return (
     <DropdownWrapper
-      {...dropdownProps}
-      trigger={<Button onClick={load}>{t("common.emoji.change")}</Button>}
+      open={open}
+      onOpenChange={change}
+      placement={placement}
       handleArrowNavigation={false}
-      placement={"bottom"}
+      trigger={trigger ?? <Button variant="secondary" size="m">{t("common.emoji.change")}</Button>}
       dropdown={
-        <>
-          {loading ? (
-            <Column
-              gap="16"
-              background={background}
-              data-testid="emoji-picker"
-              height={24}
-              width={18}
-              center
-            >
-              <Spinner />
-            </Column>
-          ) : (
-            <EmojiPicker
-              guildId={guildId}
-              emojiData={emojiData}
-              columns={columns}
-              padding="8"
-              onSelect={handleEmojiSelect}
-              onClose={closeAfterClick ? () => dropdownProps.onOpenChange?.(false) : undefined}
-              background={background}
-            />
-          )}
-        </>
+        // The panel brings its own chrome, so the wrapper must not add padding around it.
+        open ? (
+          <EmojiPicker
+            guildId={guildId}
+            unicodeOnly={unicodeOnly}
+            onSelect={onSelect}
+            onClose={() => change(false)}
+          />
+        ) : null
       }
     />
   );
-};
+}
 
-export { EmojiPickerDropdown };
+/** Compact icon trigger for a picker (smiley with a plus). */
+export function EmojiPickerIconButton({ label, ...props }: Omit<EmojiPickerDropdownProps, "trigger"> & { label?: string }) {
+  const t = useT();
+  const text = label ?? t("common.emoji.pick");
+  return (
+    <EmojiPickerDropdown
+      {...props}
+      trigger={
+        <IconButton variant="tertiary" size="m" tooltip={text} aria-label={text} type="button">
+          <LuSmilePlus size={18} />
+        </IconButton>
+      }
+    />
+  );
+}
