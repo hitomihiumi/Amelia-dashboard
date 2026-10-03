@@ -250,23 +250,19 @@ export function AuditForm({
           ).map((event) => (
             <Accordion
               key={event}
-              title={t(`moderation.audit.events.${event}`)}
-            >
-              <Column fillWidth gap="12">
-                <Row fillWidth gap="12" vertical="center">
-                  <Switch
+              title={<Row fillWidth gap="12" horizontal="between" marginRight={'12'}>
+                {t(`moderation.audit.events.${event}`)}
+                <Switch
                     checked={eventConfig(event).enabled}
                     onToggle={() =>
-                      updateEvent(event, {
-                        enabled: !eventConfig(event).enabled,
-                      })
+                        updateEvent(event, {
+                          enabled: !eventConfig(event).enabled,
+                        })
                     }
-                  />
-                  <Text variant="label-default-s">
-                    {t("moderation.audit.event.log")}
-                  </Text>
-                </Row>
-
+                />
+            </Row>}
+            >
+              <Column fillWidth gap="12">
                 <ChannelSelect
                   fillWidth
                   id={`audit-channel-${event}`}
