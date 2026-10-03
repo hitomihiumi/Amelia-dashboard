@@ -99,6 +99,15 @@ export function Header() {
                   label={t("common.nav.dashboard")}
                   value={"dashboard"}
                 />
+                {session.user?.isAdmin && (
+                  <Option
+                    fillWidth
+                    prefix={<Icon size="xs" onBackground="neutral-weak" name="navAdminPanel" />}
+                    href={"/admin"}
+                    label={t("common.nav.admin")}
+                    value={"admin"}
+                  />
+                )}
                 <Option
                   fillWidth
                   prefix={<Icon size="xs" onBackground="neutral-weak" name="logout" />}

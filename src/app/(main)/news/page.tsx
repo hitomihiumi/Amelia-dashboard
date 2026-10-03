@@ -5,7 +5,6 @@ import {
   Column,
   Flex,
   Grid,
-  Media,
   Row,
   Tag,
   Text,
@@ -117,7 +116,14 @@ export default async function NewsPage({
                 href={`/news/${post.slug}`}
               >
                 {post.coverUrl && (
-                  <Media src={post.coverUrl} radius="m" aspectRatio="16 / 9" alt={post.title} />
+                  // A plain <img>: covers can live on any host, which next/image would refuse.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={post.coverUrl}
+                    alt={post.title}
+                    loading="lazy"
+                    style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "cover", borderRadius: "var(--radius-m)" }}
+                  />
                 )}
                 <Row gap="8" vertical="center" wrap>
                   <Tag scheme="neutral">

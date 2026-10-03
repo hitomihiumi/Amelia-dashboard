@@ -65,6 +65,12 @@ import {
   IoShieldCheckmarkOutline,
   IoTerminalOutline,
   IoWalletOutline,
+  IoHomeOutline,
+  IoNewspaperOutline,
+  IoSettingsOutline,
+  IoShieldHalfOutline,
+  IoSpeedometerOutline,
+  IoWarningOutline,
 } from "react-icons/io5";
 
 import { FaDiscord, FaGithub, FaHashtag } from "react-icons/fa";
@@ -145,6 +151,12 @@ export const iconLibrary = {
   navComponents: IoToggleOutline,
   navScenarios: IoGitNetworkOutline,
   navBack: IoArrowBackOutline,
+  navOverview: IoSpeedometerOutline,
+  navNews: IoNewspaperOutline,
+  navIncidents: IoWarningOutline,
+  navSiteSettings: IoSettingsOutline,
+  navAdminPanel: IoShieldHalfOutline,
+  navHome: IoHomeOutline,
 } satisfies Record<string, IconType>;
 
 declare module "@once-ui-system/core" {
@@ -223,6 +235,12 @@ declare module "@once-ui-system/core" {
     navComponents: true;
     navScenarios: true;
     navBack: true;
+    navOverview: true;
+    navNews: true;
+    navIncidents: true;
+    navSiteSettings: true;
+    navAdminPanel: true;
+    navHome: true;
   }
 }
 

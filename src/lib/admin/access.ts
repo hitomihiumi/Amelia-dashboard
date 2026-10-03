@@ -3,23 +3,9 @@ import "server-only";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getT } from "@/i18n/server";
+import { isSiteAdmin } from "./ids";
 
-/**
- * Site administrators, configured through `ADMIN_USER_IDS` — a comma separated
- * list of Discord user ids. They own the news, the incidents and the global
- * configuration; guild permissions have nothing to do with it.
- */
-export function siteAdminIds(): string[] {
-  return (process.env.ADMIN_USER_IDS ?? "")
-    .split(",")
-    .map((id) => id.trim())
-    .filter(Boolean);
-}
-
-export function isSiteAdmin(userId: string | null | undefined): boolean {
-  if (!userId) return false;
-  return siteAdminIds().includes(userId);
-}
+export { isSiteAdmin, siteAdminIds } from "./ids";
 
 /** The signed in administrator, or `null` for everyone else. */
 export async function getSiteAdmin(): Promise<{ id: string; name: string } | null> {

@@ -52,6 +52,7 @@ export const common: Dict<typeof en> = {
     terms: "Умови користування",
     privacy: "Політика конфіденційності",
     dashboard: "Панель керування",
+    admin: "Адмін-панель",
     login: "Увійти",
     logout: "Вийти",
     user: "Користувач",

@@ -1,9 +1,9 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { Button, Column, Flex, Media, Row, Tag, Text, Meta } from "@once-ui-system/core";
+import { Button, Column, Flex, Row, Tag, Text, Meta } from "@once-ui-system/core";
 import type { Metadata } from "next";
 import { baseURL, schema } from "@/resources";
-import { CustomMDX } from "@/components/docs/mdx";
+import { Markdown } from "@/components/content/Markdown";
 import { getFormatters, getT } from "@/i18n/server";
 import { getPostBySlug, isNewsCategory } from "@/lib/news/news";
 
@@ -69,11 +69,17 @@ export default async function NewsPostPage({ params }: { params: Promise<{ slug:
         </Column>
 
         {post.coverUrl && (
-          <Media src={post.coverUrl} radius="l" aspectRatio="16 / 9" alt={post.title} />
+          // A plain <img>: the cover can live on any host, which next/image would refuse.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={post.coverUrl}
+            alt={post.title}
+            style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "cover", borderRadius: "var(--radius-l)" }}
+          />
         )}
 
         <Column fillWidth gap="16">
-          <CustomMDX source={post.content} />
+          <Markdown source={post.content} />
         </Column>
       </Column>
     </Flex>

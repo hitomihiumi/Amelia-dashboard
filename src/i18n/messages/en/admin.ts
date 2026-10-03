@@ -1,13 +1,17 @@
 export const admin = {
+  nav: {
+    panelTitle: "Admin panel",
+    overview: "Overview",
+    content: "Content",
+    news: "News",
+    incidents: "Incidents",
+    site: "Site",
+    siteSettings: "Site settings",
+    backToSite: "Back to site",
+  },
   layout: {
     title: "Administration",
     signedInAs: "Signed in as {name}",
-  },
-  nav: {
-    overview: "Overview",
-    news: "News",
-    incidents: "Incidents",
-    config: "Global config",
   },
   serviceStatus: {
     operational: "Operational",

@@ -1,16 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Avatar, Column, Flex, Icon, NavIcon, Row, Text } from "@once-ui-system/core";
-import classNames from "classnames";
+import { Avatar, Column, Text } from "@once-ui-system/core";
 import { getGuildAccessForDashboard } from "@/lib/discord/guilds-api";
 import { useT } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/messages";
 import type { IconName } from "@/resources/icons";
-import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
-import styles from "./SettingsBar.module.scss";
+import { AppSidebar, type SidebarGroup } from "@/components/layout/AppSidebar";
+import styles from "@/components/layout/AppSidebar.module.scss";
 
 interface SettingsBarProps {
   access: Awaited<ReturnType<typeof getGuildAccessForDashboard>>;
@@ -22,10 +18,6 @@ interface NavEntry {
   path: string;
   icon: IconName;
   label: MessageKey;
-  /**
-   * Highlight only on this exact path. Everything else also stays highlighted on its
-   * sub-pages, e.g. a scenario being edited keeps "Scenarios" active.
-   */
   exact?: boolean;
 }
 
@@ -80,127 +72,38 @@ const NAV: NavGroup[] = [
 
 export const SettingsBar = ({ access, guildId }: SettingsBarProps) => {
   const t = useT();
-  const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
-
   const base = `/dashboard/${guildId}`;
 
-  const isActive = (entry: NavEntry) => {
-    const href = base + entry.path;
-    return entry.exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
-  };
-
-  useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
+  const groups: SidebarGroup[] = NAV.map((group) => ({
+    id: group.label,
+    label: t(group.label),
+    items: group.items.map((entry) => ({
+      href: base + entry.path,
+      icon: entry.icon,
+      label: t(entry.label),
+      exact: entry.exact,
+    })),
+  }));
 
   return (
-    <>
-      <Flex hide m={{ hide: false }} fillWidth paddingY={"m"} paddingX={"l"}>
-        <Flex
-          fillWidth
-          padding={"s"}
-          vertical={"center"}
-          gap={"12"}
-          background={"surface"}
-          border={"neutral-medium"}
-          radius={"xl"}
-        >
-          <NavIcon onClick={() => setIsOpen(true)} />
-          <Text
-            variant="heading-strong-s"
-            style={{
-              marginLeft: "12px",
-              flex: 1,
-              minWidth: 0,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {access.guildName}
-          </Text>
-          <LanguageSwitcher />
-        </Flex>
-      </Flex>
-
-      <Flex
-        hide
-        m={{ hide: false }}
-        className={classNames(styles.overlay, isOpen && styles.open)}
-        onClick={() => setIsOpen(false)}
-      />
-
-      <Flex className={classNames(styles.sidebarWrapper, isOpen && styles.open)}>
-        <Flex
-          direction="column"
-          radius={"l"}
-          border={"neutral-medium"}
-          background="surface"
-          className={styles.sidebarContent}
-          as={"aside"}
-        >
-          <Row gap={"12"} vertical={"center"} className={styles.guild}>
-            <Avatar src={access.guildIconUrl || undefined} size={"l"} border={false} />
-            <Column style={{ minWidth: 0 }} gap="2">
-              <Text variant="heading-strong-s" className={styles.truncate}>
-                {access.guildName}
-              </Text>
-              <Text variant="body-default-xs" onBackground="neutral-weak" className={styles.truncate}>
-                {guildId}
-              </Text>
-            </Column>
-          </Row>
-
-          <nav className={styles.nav} aria-label={access.guildName ?? undefined}>
-            {NAV.map((group) => (
-              <div className={styles.group} key={group.label}>
-                <p className={classNames(styles.groupLabel, "font-label", "font-strong")}>
-                  {t(group.label)}
-                </p>
-                <ul className={styles.list}>
-                  {group.items.map((entry) => {
-                    const active = isActive(entry);
-
-                    return (
-                      <li key={entry.path}>
-                        <Link
-                          href={base + entry.path}
-                          aria-current={active ? "page" : undefined}
-                          className={classNames(
-                            styles.item,
-                            active && styles.active,
-                            "font-body",
-                            "font-default",
-                          )}
-                        >
-                          <Icon name={entry.icon} size="s" className={styles.itemIcon} />
-                          <span className={styles.itemLabel}>{t(entry.label)}</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </nav>
-
-          <div className={styles.footer}>
-            <Link href="/dashboard" className={classNames(styles.back, "font-body", "font-default")}>
-              <Icon name="navBack" size="s" />
-              <span className={styles.itemLabel}>{t("settings.nav.backToList")}</span>
-            </Link>
-            <LanguageSwitcher />
-          </div>
-        </Flex>
-      </Flex>
-    </>
+    <AppSidebar
+      mobileTitle={access.guildName ?? guildId}
+      navLabel={access.guildName ?? guildId}
+      groups={groups}
+      footerLink={{ href: "/dashboard", icon: "navBack", label: t("settings.nav.backToList") }}
+      header={
+        <>
+          <Avatar src={access.guildIconUrl || undefined} size={"l"} border={false} />
+          <Column style={{ minWidth: 0 }} gap="2">
+            <Text variant="heading-strong-s" className={styles.truncate}>
+              {access.guildName}
+            </Text>
+            <Text variant="body-default-xs" onBackground="neutral-weak" className={styles.truncate}>
+              {guildId}
+            </Text>
+          </Column>
+        </>
+      }
+    />
   );
 };

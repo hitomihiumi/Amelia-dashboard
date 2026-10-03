@@ -2,15 +2,19 @@ import type { Dict } from "../types";
 import type { admin as en } from "../en/admin";
 
 export const admin: Dict<typeof en> = {
+  nav: {
+    panelTitle: "Админ-панель",
+    overview: "Обзор",
+    content: "Контент",
+    news: "Новости",
+    incidents: "Инциденты",
+    site: "Сайт",
+    siteSettings: "Настройки сайта",
+    backToSite: "Вернуться на сайт",
+  },
   layout: {
     title: "Администрирование",
     signedInAs: "Вы вошли как {name}",
-  },
-  nav: {
-    overview: "Обзор",
-    news: "Новости",
-    incidents: "Инциденты",
-    config: "Глобальные настройки",
   },
   serviceStatus: {
     operational: "Работает",
