@@ -2,10 +2,17 @@
 "use client";
 
 import { useT } from "@/i18n/client";
-import type { ButtonCustom, EmbedCustom, SelectMenuCustom } from "@/lib/db/types";
+import type {
+  ButtonCustom,
+  EmbedCustom,
+  LayoutCustom,
+  LayoutLibrary,
+  SelectMenuCustom,
+} from "@/lib/db/types";
 import { cn } from "@/lib/utils";
 import { DiscordButton } from "./DiscordButton";
 import { DiscordEmbed } from "./DiscordEmbed";
+import { DiscordLayout } from "./DiscordLayout";
 import { DiscordSelectMenu } from "./DiscordSelectMenu";
 import { DiscordText } from "./DiscordText";
 
@@ -17,6 +24,10 @@ export interface DiscordMessageRowProps {
   embeds?: EmbedCustom[];
   buttons?: ButtonCustom[];
   selectMenus?: SelectMenuCustom[];
+  /** A Components V2 message: replaces content, embeds and the classic component rows. */
+  layout?: LayoutCustom | null;
+  /** The buttons and select menus the layout points at. */
+  layoutLibrary?: LayoutLibrary;
   buttonSize?: "sm" | "md";
   /** Highlight on hover, matching Discord's own message-row hover affordance. */
   hoverable?: boolean;
@@ -32,6 +43,8 @@ export function DiscordMessageRow({
   embeds = [],
   buttons = [],
   selectMenus = [],
+  layout,
+  layoutLibrary,
   buttonSize = "md",
   hoverable = false,
   showEmptyHint = false,
@@ -42,6 +55,18 @@ export function DiscordMessageRow({
   const visibleEmbeds = embeds.slice(0, 10);
   const hasComponents = buttons.length > 0 || selectMenus.length > 0;
   const isEmpty = !text && visibleEmbeds.length === 0 && !hasComponents;
+
+  if (layout) {
+    return (
+      <div>
+        <DiscordLayout
+          layout={layout}
+          library={layoutLibrary ?? { buttons: [], selectMenus: [] }}
+          buttonSize={buttonSize}
+        />
+      </div>
+    );
+  }
 
   return (
     <div>

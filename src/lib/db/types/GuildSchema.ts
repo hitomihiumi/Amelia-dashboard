@@ -7,6 +7,7 @@ import {
   SelectMenuCustom,
   ScenarioCustom,
 } from "./Action";
+import type { LayoutCustom } from "./Layout";
 import { SchemaKey, LiteralSchemaKey } from "./SchemaKeys";
 import { ModerationForm, Punishment, WarnThreshold } from "./Moderation";
 import { AuditSettings } from "./Audit";
@@ -53,6 +54,7 @@ export interface GuildSchema {
       buttons: Array<ButtonCustom>;
       selectMenus: Array<SelectMenuCustom>;
       scenarios: Array<ScenarioCustom>;
+      layouts: Array<LayoutCustom>;
     };
     giveaways: Giveaway[];
   };

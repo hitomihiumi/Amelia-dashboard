@@ -3,7 +3,14 @@
 
 import { useDiscordPreviewOptional } from "@/contexts/DiscordPreviewContext";
 import { useT } from "@/i18n/client";
-import type { ButtonCustom, EmbedCustom, ModalCustom, SelectMenuCustom } from "@/lib/db/types";
+import type {
+  ButtonCustom,
+  EmbedCustom,
+  LayoutCustom,
+  LayoutLibrary,
+  ModalCustom,
+  SelectMenuCustom,
+} from "@/lib/db/types";
 import { DiscordMessageRow } from "./DiscordMessageRow";
 import { DiscordModal } from "./DiscordModal";
 import { cn } from "@/lib/utils";
@@ -18,6 +25,10 @@ export interface PreviewMessage {
   embeds?: EmbedCustom[];
   buttons?: ButtonCustom[];
   selectMenus?: SelectMenuCustom[];
+  /** A Components V2 layout. Replaces content/embeds/buttons/selectMenus when set. */
+  layout?: LayoutCustom | null;
+  /** The stored buttons and select menus the layout references. */
+  layoutLibrary?: LayoutLibrary;
   /** If set, renders a Discord modal overlay on top of the channel frame instead of a message. */
   modal?: ModalCustom | null;
   /** If true, renders as a private DM card instead of the guild channel. */
@@ -101,6 +112,8 @@ export function DiscordPreview({ message }: DiscordPreviewProps) {
         embeds={message.embeds}
         buttons={message.buttons}
         selectMenus={message.selectMenus}
+        layout={message.layout}
+        layoutLibrary={message.layoutLibrary}
       />
     );
   }
@@ -112,6 +125,8 @@ export function DiscordPreview({ message }: DiscordPreviewProps) {
         embeds={message.embeds}
         buttons={message.buttons}
         selectMenus={message.selectMenus}
+        layout={message.layout}
+        layoutLibrary={message.layoutLibrary}
         hoverable
         showEmptyHint
         className="bg-discord-bg-primary"
@@ -127,6 +142,8 @@ function DiscordDMFrame({
   embeds,
   buttons,
   selectMenus,
+  layout,
+  layoutLibrary,
 }: {
   botName?: string;
   botAvatarUrl?: string | null;
@@ -134,6 +151,8 @@ function DiscordDMFrame({
   embeds?: EmbedCustom[];
   buttons?: ButtonCustom[];
   selectMenus?: SelectMenuCustom[];
+  layout?: LayoutCustom | null;
+  layoutLibrary?: LayoutLibrary;
 }) {
   const t = useT();
   const ctx = useDiscordPreviewOptional();
@@ -163,6 +182,8 @@ function DiscordDMFrame({
           embeds={embeds}
           buttons={buttons}
           selectMenus={selectMenus}
+          layout={layout}
+          layoutLibrary={layoutLibrary}
           buttonSize="sm"
           showEmptyHint
           className="p-0 -mx-0 px-0"

@@ -8,6 +8,7 @@ import type {
   ModalCustom,
   ScenarioCustom,
   SelectMenuCustom,
+  LayoutCustom,
 } from "@/lib/db/types";
 import { fetchGuildTextChannels } from "@/lib/discord/channels-api";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
@@ -57,6 +58,7 @@ export default async function ScenarioEditorRoute({
     scenarios: Array.isArray(components?.scenarios)
       ? (components.scenarios as ScenarioCustom[])
       : [],
+    layouts: Array.isArray(components?.layouts) ? (components.layouts as LayoutCustom[]) : [],
   };
 
   const scenario = library.scenarios.find((s) => s.id === scenarioId) ?? null;
