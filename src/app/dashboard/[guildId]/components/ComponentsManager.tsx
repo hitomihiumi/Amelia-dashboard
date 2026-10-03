@@ -3,6 +3,7 @@
 import { CommandAccordion } from "@/components/dashboard/CommandAccordion";
 import { ConfirmIconButton } from "@/components/dashboard/ConfirmIconButton";
 import { DiscordPreview } from "@/components/dashboard/discord/preview/DiscordPreview";
+import { LayoutPreviewSelectionProvider } from "@/components/dashboard/discord/preview/layoutPreviewContext";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { useT } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/messages";
@@ -11,10 +12,13 @@ import { generateID } from "@/lib/db/generateID";
 import type {
   ButtonCustom,
   EmbedCustom,
+  LayoutCustom,
   ModalCustom,
   ScenarioCustom,
   SelectMenuCustom,
 } from "@/lib/db/types";
+import { LAYOUT_LIMITS, countLayoutComponents } from "@/lib/db/types";
+import { copyLayout } from "@/lib/layouts/blocks";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import type { GuildActionState } from "@/types/dashboard";
@@ -31,12 +35,14 @@ import {
   useToast,
 } from "@once-ui-system/core";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { BUTTON_STYLE_LABEL_KEY, ButtonEditor } from "./ButtonEditor";
 import { EmbedEditor } from "./EmbedEditor";
 import { ModalEditor } from "./ModalEditor";
 import { SelectMenuEditor } from "./SelectMenuEditor";
 import { updateComponents } from "./actions";
+import { BudgetBar } from "./layouts/BudgetBar";
+import { LayoutEditor, type LayoutSelection } from "./layouts/LayoutEditor";
 import {
   COMPONENT_ID_TYPE,
   type ComponentsState,
@@ -51,6 +57,7 @@ const TAB_LABEL_KEYS: Record<TabValue, MessageKey> = {
   modals: "builder.components.tabs.modals",
   embed: "builder.components.tabs.embed",
   selectMenus: "builder.components.tabs.selectMenus",
+  layouts: "layouts.tab.label",
 };
 
 const NEW_ITEM_KEYS: Record<TabValue, MessageKey> = {
@@ -58,6 +65,7 @@ const NEW_ITEM_KEYS: Record<TabValue, MessageKey> = {
   modals: "builder.components.newItem.modals",
   embed: "builder.components.newItem.embed",
   selectMenus: "builder.components.newItem.selectMenus",
+  layouts: "layouts.tab.newItem",
 };
 
 const EMPTY_TEXT_KEYS: Record<TabValue, MessageKey> = {
@@ -65,6 +73,7 @@ const EMPTY_TEXT_KEYS: Record<TabValue, MessageKey> = {
   modals: "builder.components.emptyText.modals",
   embed: "builder.components.emptyText.embed",
   selectMenus: "builder.components.emptyText.selectMenus",
+  layouts: "layouts.tab.emptyText",
 };
 
 export interface ComponentsManagerProps {
@@ -73,6 +82,8 @@ export interface ComponentsManagerProps {
   roles: DiscordRole[];
   channels: GuildChannelOption[];
   scenarios: ScenarioCustom[];
+  /** Tab to open first, e.g. from a `?tab=layouts` link. */
+  initialTab?: ComponentsTab | null;
 }
 
 export function ComponentsManager({
@@ -81,6 +92,7 @@ export function ComponentsManager({
   roles,
   channels,
   scenarios,
+  initialTab,
 }: ComponentsManagerProps) {
   // roles/channels reserved for future restrictions UI on components (currently unused here).
   void roles;
@@ -92,7 +104,7 @@ export function ComponentsManager({
 
   const [state, setState] = useState<ComponentsState>(initialState);
   const [baseline, setBaseline] = useState<ComponentsState>(initialState);
-  const [tab, setTab] = useState<TabValue>("buttons");
+  const [tab, setTab] = useState<TabValue>(initialTab ?? "buttons");
   // Edit/create are tracked by id so the editor and preview always resolve a
   // live item from `state` (no more out-of-bounds indices).
   const [editing, setEditing] = useState<{ kind: TabValue; id: string } | null>(null);
@@ -103,6 +115,7 @@ export function ComponentsManager({
       modals: state.modals,
       embed: state.embed,
       selectMenus: state.selectMenus,
+      layouts: state.layouts,
     }),
     [state],
   );
@@ -123,6 +136,7 @@ export function ComponentsManager({
           ...(a.embeds ?? []),
           ...(a.buttons ?? []),
           ...(a.selectMenus ?? []),
+          a.layoutId,
         ];
         for (const id of refs) {
           if (id) ids.add(id);
@@ -174,6 +188,13 @@ export function ComponentsManager({
   }, [setIsDirty]);
 
   const startCreate = (kind: TabValue) => {
+    if (kind === "layouts" && state.layouts.length >= LAYOUT_LIMITS.MAX_LAYOUTS_PER_GUILD) {
+      addToast({
+        variant: "danger",
+        message: t("layouts.tab.limitReached", { max: LAYOUT_LIMITS.MAX_LAYOUTS_PER_GUILD }),
+      });
+      return;
+    }
     const id = generateID(guildId, COMPONENT_ID_TYPE[kind]);
     const item = DEFAULT_FACTORIES[kind](id, t);
     // Seed the new item into state immediately so the editor + preview see it.
@@ -217,7 +238,13 @@ export function ComponentsManager({
         const list = listOf(prev, kind);
         const original = list.find((it) => it.id === id);
         if (!original) return prev;
+        if (kind === "layouts" && list.length >= LAYOUT_LIMITS.MAX_LAYOUTS_PER_GUILD) return prev;
         const newId = generateID(guildId, COMPONENT_ID_TYPE[kind]);
+        if (kind === "layouts") {
+          const source = original as LayoutCustom;
+          const name = t("builder.shared.copyName", { name: source.name || t("layouts.fallbackName") });
+          return { ...prev, layouts: [...prev.layouts, copyLayout(source, newId, name)] };
+        }
         const copy = {
           ...JSON.parse(JSON.stringify(original)),
           id: newId,
@@ -246,8 +273,53 @@ export function ComponentsManager({
 
   const previewMsg = useMemo(() => {
     if (!editing || !liveItem) return null;
-    return previewForItem(editing.kind, liveItem, t);
-  }, [editing, liveItem, t]);
+    return previewForItem(editing.kind, liveItem, t, {
+      buttons: state.buttons,
+      selectMenus: state.selectMenus,
+    });
+  }, [editing, liveItem, t, state.buttons, state.selectMenus]);
+
+  // Stable between keystrokes of other tabs, so the layout editor does not re-validate for nothing.
+  const library = useMemo(
+    () => ({ buttons: state.buttons, selectMenus: state.selectMenus }),
+    [state.buttons, state.selectMenus],
+  );
+
+  // The preview may lag a frame behind the keyboard: typing in the editor comes first.
+  const deferredPreviewMsg = useDeferredValue(previewMsg);
+
+  // ---- layouts: block selection shared by the editor and the preview ----
+  const [layoutSelection, setLayoutSelection] = useState<LayoutSelection | null>(null);
+  const previewPaneRef = useRef<HTMLDivElement>(null);
+  const layoutEditing = editing?.kind === "layouts" ? (liveItem as LayoutCustom | null) : null;
+
+  const selectFromEditor = useCallback((blockId: string) => {
+    setLayoutSelection((cur) => ({ blockId, source: "editor", nonce: (cur?.nonce ?? 0) + 1 }));
+  }, []);
+  const selectFromPreview = useCallback((blockId: string) => {
+    setLayoutSelection((cur) => ({ blockId, source: "preview", nonce: (cur?.nonce ?? 0) + 1 }));
+  }, []);
+  const previewSelection = useMemo(
+    () => ({ selectedId: layoutSelection?.blockId ?? null, onSelect: selectFromPreview }),
+    [layoutSelection?.blockId, selectFromPreview],
+  );
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a new layout starts without a selection
+  useEffect(() => {
+    setLayoutSelection(null);
+  }, [editing?.id]);
+
+  // Keep the block picked in the editor visible inside the (scrollable) preview pane.
+  useEffect(() => {
+    if (!layoutSelection || layoutSelection.source !== "editor") return;
+    const pane = previewPaneRef.current;
+    const el = pane?.querySelector<HTMLElement>(`[data-layout-block="${layoutSelection.blockId}"]`);
+    if (!pane || !el) return;
+    const paneBox = pane.getBoundingClientRect();
+    const box = el.getBoundingClientRect();
+    if (box.top < paneBox.top) pane.scrollTop -= paneBox.top - box.top + 8;
+    else if (box.bottom > paneBox.bottom) pane.scrollTop += box.bottom - paneBox.bottom + 8;
+  }, [layoutSelection]);
 
   return (
     <Flex
@@ -278,6 +350,7 @@ export function ComponentsManager({
               { label: t(TAB_LABEL_KEYS.modals), value: "modals" },
               { label: t(TAB_LABEL_KEYS.embed), value: "embed" },
               { label: t(TAB_LABEL_KEYS.selectMenus), value: "selectMenus" },
+              { label: t(TAB_LABEL_KEYS.layouts), value: "layouts" },
             ]}
           />
 
@@ -310,6 +383,10 @@ export function ComponentsManager({
                   subtitle={componentSubtitle(tab, item, t)}
                   usageNames={usageByComponentId.get(item.id)}
                   guildId={guildId}
+                  library={library}
+                  layoutSelection={layoutSelection}
+                  onLayoutSelect={selectFromEditor}
+                  onGotoTab={setTab}
                   open={editing?.kind === tab && editing.id === item.id}
                   onToggle={() => toggleEdit(tab, item.id)}
                   onChange={(next) => updateItemById(tab, item.id, next)}
@@ -334,10 +411,27 @@ export function ComponentsManager({
       </RevealFx>
 
       {/* Preview */}
-      <RevealFx delay={600} translateY={-0.5}>
-        <Flex direction="column" fill>
-          <Flex fillHeight fillWidth>
-            <DiscordPreview message={previewMsg} />
+      <RevealFx delay={600} translateY={-0.5} style={layoutEditing ? { alignSelf: "stretch" } : undefined}>
+        <Flex
+          direction="column"
+          fill
+          gap="8"
+          style={
+            layoutEditing
+              ? { position: "sticky", top: 16, maxHeight: "calc(100vh - 32px)" }
+              : undefined
+          }
+        >
+          {layoutEditing ? <BudgetBar layout={layoutEditing} compact /> : null}
+          <Flex fillHeight fillWidth style={{ minHeight: 0 }}>
+            <LayoutPreviewSelectionProvider value={layoutEditing ? previewSelection : null}>
+              <div
+                ref={previewPaneRef}
+                style={{ width: "100%", overflowY: layoutEditing ? "auto" : undefined, minHeight: 0 }}
+              >
+                <DiscordPreview message={deferredPreviewMsg} />
+              </div>
+            </LayoutPreviewSelectionProvider>
           </Flex>
         </Flex>
       </RevealFx>
@@ -347,7 +441,7 @@ export function ComponentsManager({
 
 // ---------------- helpers ----------------
 
-type AnyComponent = ButtonCustom | ModalCustom | EmbedCustom | SelectMenuCustom;
+type AnyComponent = ButtonCustom | ModalCustom | EmbedCustom | SelectMenuCustom | LayoutCustom;
 
 /** Type-safe accessor that returns a collection as the union of all component kinds. */
 function listOf(state: ComponentsState, kind: TabValue): AnyComponent[] {
@@ -364,6 +458,8 @@ function tabIcon(tab: TabValue) {
       return "embedIcon" as const;
     case "selectMenus":
       return "selectIcon" as const;
+    case "layouts":
+      return "boxes" as const;
   }
 }
 
@@ -373,6 +469,7 @@ function componentName(tab: TabValue, item: AnyComponent, t: Translator): string
   if (tab === "modals") return o.title || t("builder.fallback.modal");
   if (tab === "embed") return o.name || o.title || t("builder.fallback.embed");
   if (tab === "selectMenus") return o.name || o.placeholder || t("builder.fallback.selectMenu");
+  if (tab === "layouts") return o.name || t("layouts.fallbackName");
   return t("builder.fallback.item");
 }
 
@@ -389,17 +486,29 @@ function componentSubtitle(tab: TabValue, item: AnyComponent, t: Translator): st
     return t("builder.shared.fieldsCount", { count: o.fields?.length ?? 0 });
   if (tab === "selectMenus")
     return t("builder.shared.optionsCount", { count: o.options?.length ?? 0 });
+  if (tab === "layouts") {
+    return t("layouts.tab.componentsCount", {
+      count: countLayoutComponents(item as LayoutCustom),
+      max: LAYOUT_LIMITS.MAX_COMPONENTS,
+    });
+  }
   return "";
 }
 
 // No hardcoded author: the preview resolves the guild's real bot identity from
 // DiscordPreviewContext (provided by the guild layout).
-function previewForItem(tab: TabValue, item: AnyComponent, t: Translator) {
+function previewForItem(
+  tab: TabValue,
+  item: AnyComponent,
+  t: Translator,
+  library: { buttons: ButtonCustom[]; selectMenus: SelectMenuCustom[] },
+) {
   const preview = t("builder.scenarios.preview");
   if (tab === "buttons") return { content: preview, buttons: [item as ButtonCustom] };
   if (tab === "embed") return { content: undefined, embeds: [item as EmbedCustom] };
   if (tab === "selectMenus") return { content: preview, selectMenus: [item as SelectMenuCustom] };
   if (tab === "modals") return { modal: item as ModalCustom };
+  if (tab === "layouts") return { layout: item as LayoutCustom, layoutLibrary: library };
   return null;
 }
 
@@ -410,6 +519,10 @@ function ComponentItem({
   subtitle,
   usageNames,
   guildId,
+  library,
+  layoutSelection,
+  onLayoutSelect,
+  onGotoTab,
   open,
   onToggle,
   onChange,
@@ -423,6 +536,10 @@ function ComponentItem({
   subtitle?: string;
   usageNames?: string[];
   guildId: string;
+  library: { buttons: ButtonCustom[]; selectMenus: SelectMenuCustom[] };
+  layoutSelection: LayoutSelection | null;
+  onLayoutSelect: (blockId: string) => void;
+  onGotoTab: (tab: TabValue) => void;
   open: boolean;
   onToggle: () => void;
   onChange: (next: AnyComponent) => void;
@@ -447,7 +564,9 @@ function ComponentItem({
           {subtitle && <Row>{subtitle}</Row>}
           {usage && (
             <Row onBackground="brand-medium">
-              {t("builder.components.usedIn", { count: usage.length })}
+              {tab === "layouts"
+                ? t("layouts.tab.usedIn", { count: usage.length })
+                : t("builder.components.usedIn", { count: usage.length })}
             </Row>
           )}
         </Column>
@@ -476,7 +595,18 @@ function ComponentItem({
           onClick={() => onMove(1)}
           tooltip={t("builder.shared.moveDown")}
         />
-        <IconButton icon="trash" variant="danger" tooltip={t("builder.components.deleteComponent")} onClick={onDelete} />
+        {tab === "layouts" ? (
+          <ConfirmIconButton
+            variant="confirm"
+            tooltip={t("builder.components.deleteComponent")}
+            onConfirm={onDelete}
+            confirmMessage={
+              usage ? t("layouts.tab.deleteUsedConfirm", { count: usage.length }) : undefined
+            }
+          />
+        ) : (
+          <IconButton icon="trash" variant="danger" tooltip={t("builder.components.deleteComponent")} onClick={onDelete} />
+        )}
       </Row>
       {tab === "buttons" && (
         <ButtonEditor guildId={guildId} value={item as ButtonCustom} onChange={onChange} />
@@ -489,6 +619,17 @@ function ComponentItem({
       )}
       {tab === "selectMenus" && (
         <SelectMenuEditor guildId={guildId} value={item as SelectMenuCustom} onChange={onChange} />
+      )}
+      {/* Only mounted while open: a layout editor is a big tree and a closed one must not slow typing elsewhere. */}
+      {tab === "layouts" && open && (
+        <LayoutEditor
+          value={item as LayoutCustom}
+          onChange={onChange}
+          library={library}
+          selection={open ? layoutSelection : null}
+          onSelect={onLayoutSelect}
+          onGotoTab={onGotoTab}
+        />
       )}
     </CommandAccordion>
   );

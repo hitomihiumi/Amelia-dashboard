@@ -360,6 +360,26 @@ function renderLine(line: string, key: number): ReactNode {
       </span>
     );
   }
+  const subtext = /^-#\s+(.+)$/.exec(line);
+  if (subtext) {
+    return (
+      <span key={key} className="block text-xs text-discord-text-muted">
+        {renderInline(subtext[1])}
+      </span>
+    );
+  }
+  const listItem = /^(\s*)(?:([-*])|(\d{1,2})\.)\s+(.*)$/.exec(line);
+  if (listItem) {
+    const depth = Math.min(3, Math.floor(listItem[1].length / 2));
+    return (
+      <span key={key} className="flex gap-2" style={{ paddingLeft: `${1 + depth}rem` }}>
+        <span aria-hidden className="shrink-0">
+          {listItem[3] ? `${listItem[3]}.` : depth > 0 ? "◦" : "•"}
+        </span>
+        <span className="min-w-0">{renderInline(listItem[4])}</span>
+      </span>
+    );
+  }
   const quote = /^>\s?(.*)$/.exec(line);
   if (quote) {
     return (
