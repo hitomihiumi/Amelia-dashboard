@@ -10,6 +10,7 @@ import {
   type ButtonCustom,
   type EmbedCustom,
   type IModalField,
+  type LayoutCustom,
   type ModalCustom,
   SCENARIO_LIMITS,
   type SelectMenuCustom,
@@ -17,6 +18,7 @@ import {
 } from "@/lib/db/types";
 import type { GuildActionState } from "@/types/dashboard";
 import { getServerSession } from "next-auth";
+import { validateLayouts } from "./layouts/validate";
 import { revalidatePath } from "next/cache";
 
 const BUTTON_STYLES = new Set(["PRIMARY", "SECONDARY", "SUCCESS", "DANGER", "LINK"]);
@@ -63,6 +65,7 @@ export async function updateComponents(
     embed?: EmbedCustom[];
     buttons?: ButtonCustom[];
     selectMenus?: SelectMenuCustom[];
+    layouts?: unknown[];
   };
 
   const errors: string[] = [];
@@ -71,6 +74,7 @@ export async function updateComponents(
   const embeds = Array.isArray(data.embed) ? data.embed : [];
   const buttons = Array.isArray(data.buttons) ? data.buttons : [];
   const selectMenus = Array.isArray(data.selectMenus) ? data.selectMenus : [];
+  const layouts = Array.isArray(data.layouts) ? data.layouts : [];
 
   checkUniqueIds("modal", modals, errors, t);
   checkUniqueIds("embed", embeds, errors, t);
@@ -81,17 +85,20 @@ export async function updateComponents(
   embeds.forEach((e, i) => validateEmbed(e, i, errors, t));
   buttons.forEach((b, i) => validateButton(b, i, errors, t));
   selectMenus.forEach((s, i) => validateSelectMenu(s, i, errors, t));
+  // Layouts point at the buttons and select menus of this very payload, so one save can create both.
+  errors.push(...validateLayouts(layouts, { buttons, selectMenus }, t));
 
   if (errors.length > 0) {
     return fail(`${t("builder.errors.validationFailed")}\n${errors.join("\n")}`);
   }
 
   const guild = new Guild(guildId);
-  // Only touch the four custom-component collections; preserve scenarios untouched.
+  // Only touch the custom-component collections; preserve scenarios untouched.
   await guild.set("utils.components.modals", modals);
   await guild.set("utils.components.embed", embeds);
   await guild.set("utils.components.buttons", buttons);
   await guild.set("utils.components.selectMenus", selectMenus);
+  await guild.set("utils.components.layouts", layouts as LayoutCustom[]);
   revalidatePath(`/dashboard/${guildId}/components`);
   return { ok: true };
 }

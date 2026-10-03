@@ -16,16 +16,20 @@ import { fetchGuildRoles } from "@/lib/discord/roles-api";
 import { Feedback, Flex, RevealFx, Text } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import { ComponentsManager } from "./ComponentsManager";
-import type { ComponentsState } from "./componentsTypes";
+import { type ComponentsState, parseComponentsTab } from "./componentsTypes";
 
 export type { ComponentsState };
 
 export default async function ComponentsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ guildId: string }>;
+  searchParams: Promise<{ tab?: string | string[] }>;
 }) {
   const { guildId } = await params;
+  const { tab } = await searchParams;
+  const initialTab = parseComponentsTab(Array.isArray(tab) ? tab[0] : tab);
   const t = await getT();
   const session = await getServerSession(authOptions);
 
@@ -54,6 +58,7 @@ export default async function ComponentsPage({
     embed: Array.isArray(components?.embed) ? components.embed : [],
     buttons: Array.isArray(components?.buttons) ? components.buttons : [],
     selectMenus: Array.isArray(components?.selectMenus) ? components.selectMenus : [],
+    layouts: Array.isArray(components?.layouts) ? components.layouts : [],
   };
   const scenarios: ScenarioCustom[] = Array.isArray(components?.scenarios)
     ? components.scenarios
@@ -85,6 +90,7 @@ export default async function ComponentsPage({
         roles={roles}
         channels={channels}
         scenarios={scenarios}
+        initialTab={initialTab}
       />
     </Flex>
   );
