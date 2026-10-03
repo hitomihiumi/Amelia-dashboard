@@ -1,5 +1,6 @@
 import { Flex, Text, Column, Line, List, ListItem, RevealFx } from "@once-ui-system/core";
 import { getFormatters, getT } from "@/i18n/server";
+import { CookieSettingsButton } from "@/components/consent/CookieSettingsButton";
 
 export default async function PrivacyPolicyPage() {
   const t = await getT();
@@ -13,7 +14,7 @@ export default async function PrivacyPolicyPage() {
             <Text variant="heading-strong-xl">{t("common.nav.privacy")}</Text>
             <Text variant="body-default-m" onBackground="neutral-weak">
               {t("site.legal.lastUpdated", {
-                date: format.date("2026-05-09", { dateStyle: "long", timeZone: "UTC" }),
+                date: format.date("2026-10-03", { dateStyle: "long", timeZone: "UTC" }),
               })}
             </Text>
           </Column>
@@ -86,6 +87,50 @@ export default async function PrivacyPolicyPage() {
         </RevealFx>
 
         <RevealFx delay={1600} translateY={-0.5}>
+          <Column gap="16" id="cookies" style={{ scrollMarginTop: "6rem" }}>
+            <Text variant="heading-strong-m">{t("site.legal.privacy.cookies.title")}</Text>
+            <Text variant="body-default-m" onBackground="neutral-medium">
+              {t("site.legal.privacy.cookies.intro")}
+            </Text>
+            <List as={"ul"} textVariant="body-default-m" gap="4">
+              <ListItem>
+                <strong>{t("site.legal.privacy.cookies.items.session.label")}</strong>{" "}
+                {t("site.legal.privacy.cookies.items.session.text")}
+              </ListItem>
+              <ListItem>
+                <strong>{t("site.legal.privacy.cookies.items.language.label")}</strong>{" "}
+                {t("site.legal.privacy.cookies.items.language.text")}
+              </ListItem>
+              <ListItem>
+                <strong>{t("site.legal.privacy.cookies.items.consent.label")}</strong>{" "}
+                {t("site.legal.privacy.cookies.items.consent.text")}
+              </ListItem>
+              <ListItem>
+                <strong>{t("site.legal.privacy.cookies.items.analytics.label")}</strong>{" "}
+                {t("site.legal.privacy.cookies.items.analytics.text")}
+              </ListItem>
+              <ListItem>
+                <strong>{t("site.legal.privacy.cookies.items.drafts.label")}</strong>{" "}
+                {t("site.legal.privacy.cookies.items.drafts.text")}
+              </ListItem>
+            </List>
+            <CookieSettingsButton
+              style={{
+                alignSelf: "flex-start",
+                padding: 0,
+                border: "none",
+                background: "none",
+                color: "var(--brand-on-background-strong)",
+                textDecoration: "underline",
+                textUnderlineOffset: 2,
+                cursor: "pointer",
+                font: "inherit",
+              }}
+            />
+          </Column>
+        </RevealFx>
+
+        <RevealFx delay={1900} translateY={-0.5}>
           <Column gap="16">
             <Text variant="heading-strong-m">{t("site.legal.privacy.s5.title")}</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">

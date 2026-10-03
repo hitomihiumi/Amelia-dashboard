@@ -14,7 +14,11 @@ import { authOptions } from "@/lib/auth";
 import { baseURL, meta, schema } from "@/resources";
 import { Metadata } from "next";
 
-import { Analytics } from "@vercel/analytics/next";
+import { cookies } from "next/headers";
+import { CONSENT_COOKIE, parseConsent } from "@/lib/consent";
+import { CookieConsentProvider } from "@/components/consent/CookieConsent";
+import { ConsentAnalytics } from "@/components/consent/ConsentAnalytics";
+import { CookieBanner } from "@/components/consent/CookieBanner";
 import { LOCALE_META } from "@/i18n/config";
 import { getLocale, loadMessages } from "@/i18n/server";
 
@@ -56,6 +60,7 @@ export default async function RootLayout({
 }>) {
   const session = await getServerSession(authOptions);
   const locale = await getLocale();
+  const consent = parseConsent((await cookies()).get(CONSENT_COOKIE)?.value);
 
   return (
     <Flex
@@ -91,24 +96,27 @@ export default async function RootLayout({
         />
       </head>
       <Providers session={session} locale={locale} messages={loadMessages(locale)}>
-        <Column
-          as="body"
-          background="page"
-          fillWidth
-          margin="0"
-          padding="0"
-          style={
-            {
-              minHeight: "100vh",
-              // Cyrillic companions for the heading and body faces, see once-ui.config.js.
-              "--font-heading": fontStacks.heading,
-              "--font-body": fontStacks.body,
-            } as React.CSSProperties
-          }
-        >
-          {children}
-        </Column>
-        <Analytics />
+        <CookieConsentProvider initial={consent}>
+          <Column
+            as="body"
+            background="page"
+            fillWidth
+            margin="0"
+            padding="0"
+            style={
+              {
+                minHeight: "100vh",
+                // Cyrillic companions for the heading and body faces, see once-ui.config.js.
+                "--font-heading": fontStacks.heading,
+                "--font-body": fontStacks.body,
+              } as React.CSSProperties
+            }
+          >
+            {children}
+            <ConsentAnalytics />
+            <CookieBanner />
+          </Column>
+        </CookieConsentProvider>
       </Providers>
     </Flex>
   );

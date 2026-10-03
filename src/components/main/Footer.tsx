@@ -14,6 +14,7 @@ import {
 
 import styles from "./Footer.module.scss";
 import { useT } from "@/i18n/client";
+import { CookieSettingsButton } from "@/components/consent/CookieSettingsButton";
 
 export function Footer() {
   const t = useT();
@@ -47,7 +48,8 @@ export function Footer() {
             <SmartLink href={"/news"}>{t("common.nav.news")}</SmartLink> /{" "}
             <SmartLink href={"/status"}>{t("common.nav.status")}</SmartLink> /{" "}
             <SmartLink href={"/terms"}>{t("common.nav.terms")}</SmartLink> /{" "}
-            <SmartLink href={"/privacy"}>{t("common.nav.privacy")}</SmartLink>
+            <SmartLink href={"/privacy"}>{t("common.nav.privacy")}</SmartLink> /{" "}
+            <CookieSettingsButton style={{ padding: 0, border: "none", background: "none", color: "inherit", cursor: "pointer", font: "inherit", textDecoration: "underline", textUnderlineOffset: 2 }} />
           </Text>
         </Row>
       </Row>

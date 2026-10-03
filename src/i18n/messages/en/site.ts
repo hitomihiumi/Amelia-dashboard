@@ -218,8 +218,34 @@ export const site = {
         title: "4. Data Retention and Deletion",
         text: "We retain your data for as long as the Bot is present in your Discord server or as long as your account is active. If the Bot is removed from a server, related configuration data may be deleted. You have the right to request the complete deletion of your personal data by contacting the developer team.",
       },
+      cookies: {
+        title: "5. Cookies and Local Storage",
+        intro: "The website stores a small amount of data in your browser:",
+        items: {
+          session: {
+            label: "Sign-in session (necessary):",
+            text: "keeps you signed in with Discord. Removed when you log out or when it expires.",
+          },
+          language: {
+            label: "Language (necessary):",
+            text: "remembers the language you picked in the language switcher, for one year.",
+          },
+          consent: {
+            label: "Cookie choice (necessary):",
+            text: "remembers your answer to the cookie banner for 180 days.",
+          },
+          analytics: {
+            label: "Analytics (optional):",
+            text: "anonymous page view statistics from Vercel Web Analytics. Only loaded if you accept it, and you can withdraw your consent at any time.",
+          },
+          drafts: {
+            label: "Editor drafts (local storage):",
+            text: "administrators’ unsaved drafts are kept in the browser until they are saved.",
+          },
+        },
+      },
       s5: {
-        title: "5. Contact Us",
+        title: "6. Contact Us",
         text: "If you have any questions or concerns about this Privacy Policy, please contact us via our Support Discord Server or reach out to the developer directly.",
       },
     },

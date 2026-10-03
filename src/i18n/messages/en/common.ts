@@ -94,6 +94,26 @@ export const common = {
     loading: "Loading avatar",
     empty: "Empty avatar",
   },
+  cookies: {
+    title: "Cookies on Amelia",
+    description:
+      "We use cookies that are necessary to sign you in and to remember your language. With your permission we also use anonymous analytics to see which pages are used and to improve the site.",
+    learnMore: "Learn more",
+    acceptAll: "Accept all",
+    necessaryOnly: "Necessary only",
+    customize: "Customize",
+    save: "Save choices",
+    alwaysOn: "Always on",
+    settings: "Cookie settings",
+    necessary: {
+      title: "Necessary",
+      text: "Your sign-in session, your language and this cookie choice. The site cannot work without them.",
+    },
+    analytics: {
+      title: "Analytics",
+      text: "Anonymous page view statistics (Vercel Web Analytics) that help us improve the site.",
+    },
+  },
   confirmDelete: {
     tooltip: "Delete",
     question: "Delete?",
