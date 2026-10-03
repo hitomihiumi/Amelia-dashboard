@@ -7,5 +7,6 @@ import { moderation } from "./moderation";
 import { docs } from "./docs";
 import { adminNews } from "./adminNews";
 import { adminIncidents } from "./adminIncidents";
+import { layouts } from "./layouts";
 
-export const en = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, };
+export const en = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, layouts, };
