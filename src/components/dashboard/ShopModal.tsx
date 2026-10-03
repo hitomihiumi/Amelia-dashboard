@@ -6,7 +6,7 @@ import {
   DateRangeInput,
   Dialog,
   Input,
-  NumberInput,
+  NumberInput, Row,
   Text,
 } from "@once-ui-system/core";
 import { RoleSelect } from "@/components/dashboard/discord/RoleSelect";
@@ -121,20 +121,22 @@ export const ShopModal: React.FC<ShopModalProps> = ({
             max={100}
             step={1}
           />
-          <DateRangeInput
-            id="basic-date-range-example"
-            startLabel={t("settings.shop.startDate")}
-            endLabel={t("settings.shop.endDate")}
-            value={{
-              startDate: shopRole.discount.starts_at
-                ? new Date(shopRole.discount.starts_at)
-                : undefined,
-              endDate: shopRole.discount.expires_at
-                ? new Date(shopRole.discount.expires_at)
-                : undefined,
-            }}
-            onChange={handleChange}
-          />
+          <Row center gap={"8"} fillWidth>
+            <DateRangeInput
+                id="basic-date-range-example"
+                startLabel={t("settings.shop.startDate")}
+                endLabel={t("settings.shop.endDate")}
+                value={{
+                  startDate: shopRole.discount.starts_at
+                      ? new Date(shopRole.discount.starts_at)
+                      : undefined,
+                  endDate: shopRole.discount.expires_at
+                      ? new Date(shopRole.discount.expires_at)
+                      : undefined,
+                }}
+                onChange={handleChange}
+            />
+          </Row>
         </Column>
       </Column>
     </Dialog>
