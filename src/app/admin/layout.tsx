@@ -1,6 +1,6 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { Flex } from "@once-ui-system/core";
+import { AppShell } from "@/components/layout/AppShell";
 import { prisma } from "@/lib/db/db";
 import { getSiteAdmin } from "@/lib/admin/access";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -23,15 +23,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <UnsavedChangesProvider>
       <UnsavedNavigationGuard />
-      {/* Grows with the page so the sticky sidebar stays in view while the content scrolls. */}
-      <Flex fillWidth direction="row" m={{ direction: "column" }} style={{ minHeight: "100vh" }}>
-        <AdminSidebar adminName={admin.name} counts={{ drafts, openIncidents }} />
-        <Flex fill horizontal="center" style={{ minWidth: 0 }}>
-          <Flex direction="column" fillWidth padding="24" gap="24" style={{ minWidth: 0 }}>
-            {children}
-          </Flex>
-        </Flex>
-      </Flex>
+      <AppShell sidebar={<AdminSidebar adminName={admin.name} counts={{ drafts, openIncidents }} />}>
+        {children}
+      </AppShell>
       <UnsavedBar />
     </UnsavedChangesProvider>
   );

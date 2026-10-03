@@ -50,6 +50,7 @@ export const common = {
     privacy: "Privacy Policy",
     dashboard: "Dashboard",
     admin: "Admin panel",
+    menu: "Menu",
     login: "Login",
     logout: "Log out",
     user: "User",

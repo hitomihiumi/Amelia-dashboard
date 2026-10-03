@@ -65,7 +65,7 @@ export function AppSidebar({ header, mobileTitle, navLabel, groups, footerLink }
 
   return (
     <>
-      <Flex hide m={{ hide: false }} fillWidth paddingY={"m"} paddingX={"l"}>
+      <div className={styles.mobileBar}>
         <Flex
           fillWidth
           padding={"s"}
@@ -91,13 +91,12 @@ export function AppSidebar({ header, mobileTitle, navLabel, groups, footerLink }
           </Text>
           <LanguageSwitcher />
         </Flex>
-      </Flex>
+      </div>
 
-      <Flex
-        hide
-        m={{ hide: false }}
+      <div
         className={classNames(styles.overlay, isOpen && styles.open)}
         onClick={() => setIsOpen(false)}
+        aria-hidden="true"
       />
 
       <Flex className={classNames(styles.sidebarWrapper, isOpen && styles.open)}>

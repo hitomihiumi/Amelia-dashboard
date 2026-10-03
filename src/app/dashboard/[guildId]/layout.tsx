@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Flex } from "@once-ui-system/core";
+import { AppShell } from "@/components/layout/AppShell";
 import { UnsavedChangesProvider } from "@/contexts/UnsavedChangesContext";
 import { DiscordPreviewProvider } from "@/contexts/DiscordPreviewContext";
 import { UnsavedNavigationGuard } from "@/components/layout/UnsavedNavigationGuard";
@@ -50,15 +50,12 @@ export default async function GuildDashboardLayout({
         }}
       >
         <UnsavedNavigationGuard />
-        {/* Grows with the page (instead of being pinned to the viewport height) so the sticky sidebar has room to stay in view. */}
-        <Flex fillWidth direction={"row"} m={{ direction: "column" }} style={{ minHeight: "100vh" }}>
-          <SettingsBar access={access} guildId={guildId} />
-          <Flex fill horizontal={"center"}>
-            <Flex direction="column" fillWidth padding="24" overflow="auto" maxWidth={"m"}>
-              {children}
-            </Flex>
-          </Flex>
-        </Flex>
+        <AppShell
+          sidebar={<SettingsBar access={access} guildId={guildId} />}
+          contentMaxWidth="var(--responsive-width-m)"
+        >
+          {children}
+        </AppShell>
         <UnsavedBar />
       </DiscordPreviewProvider>
     </UnsavedChangesProvider>
