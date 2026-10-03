@@ -39,6 +39,7 @@ export const settings = {
     interactions: "Interactions",
     components: "Components",
     scenarios: "Scenarios",
+    send: "Send message",
     backToList: "All servers",
   },
   guilds: {

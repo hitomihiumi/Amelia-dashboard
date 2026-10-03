@@ -66,6 +66,7 @@ const NAV: NavGroup[] = [
     items: [
       { path: "/components", icon: "navComponents", label: "settings.nav.components" },
       { path: "/scenarios", icon: "navScenarios", label: "settings.nav.scenarios" },
+      { path: "/send", icon: "navSend", label: "settings.nav.send" },
     ],
   },
 ];

@@ -59,6 +59,7 @@ import {
   IoCartOutline,
   IoFileTrayFullOutline,
   IoGitNetworkOutline,
+  IoSendOutline,
   IoMicOutline,
   IoOptionsOutline,
   IoRibbonOutline,
@@ -150,6 +151,7 @@ export const iconLibrary = {
   navPrivate: IoMicOutline,
   navComponents: IoToggleOutline,
   navScenarios: IoGitNetworkOutline,
+  navSend: IoSendOutline,
   navBack: IoArrowBackOutline,
   navOverview: IoSpeedometerOutline,
   navNews: IoNewspaperOutline,
@@ -234,6 +236,7 @@ declare module "@once-ui-system/core" {
     navPrivate: true;
     navComponents: true;
     navScenarios: true;
+    navSend: true;
     navBack: true;
     navOverview: true;
     navNews: true;

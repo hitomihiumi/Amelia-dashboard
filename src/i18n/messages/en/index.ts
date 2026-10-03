@@ -8,5 +8,6 @@ import { docs } from "./docs";
 import { adminNews } from "./adminNews";
 import { adminIncidents } from "./adminIncidents";
 import { layouts } from "./layouts";
+import { send } from "./send";
 
-export const en = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, layouts, };
+export const en = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, layouts, send, };

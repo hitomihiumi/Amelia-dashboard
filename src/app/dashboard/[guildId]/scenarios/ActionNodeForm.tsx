@@ -463,7 +463,7 @@ function ClassicMessageFields({
 }
 
 /** Picker for the layout a message sends, with a compact summary and warnings about broken references. */
-function LayoutPicker({
+export function LayoutPicker({
   guildId,
   layoutId,
   library,
@@ -665,7 +665,7 @@ function ReferenceField({
   );
 }
 
-function MultiReferences({
+export function MultiReferences({
   label,
   options,
   selected,

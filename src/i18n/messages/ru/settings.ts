@@ -43,6 +43,7 @@ export const settings: Dict<typeof en> = {
     interactions: "Взаимодействия",
     components: "Компоненты",
     scenarios: "Сценарии",
+    send: "Отправка сообщения",
     backToList: "Все серверы",
   },
   guilds: {
