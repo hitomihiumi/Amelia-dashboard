@@ -199,6 +199,13 @@ export async function getIncidents(take = 20): Promise<IncidentWithUpdates[]> {
   });
 }
 
+export async function getIncidentById(id: string): Promise<IncidentWithUpdates | null> {
+  return await prisma.incident.findUnique({
+    where: { id },
+    include: { updates: { orderBy: { createdAt: "asc" } } },
+  });
+}
+
 /**
  * Open an incident for every service that broke, and close the automatic ones
  * whose service recovered. Writes only when the state actually changed, so it

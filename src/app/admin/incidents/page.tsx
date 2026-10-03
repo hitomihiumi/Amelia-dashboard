@@ -1,25 +1,36 @@
 import React from "react";
-import { Column, Text } from "@once-ui-system/core";
+import { Button } from "@once-ui-system/core";
+import { AdminPage } from "@/components/admin/AdminPage";
+import { IncidentsList } from "@/components/admin/incidents/IncidentsList";
 import { getIncidents } from "@/lib/status/status";
 import { getT } from "@/i18n/server";
-import { IncidentsManager } from "./IncidentsManager";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminIncidentsPage() {
+export default async function AdminIncidentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string | string[] }>;
+}) {
   const t = await getT();
-  const incidents = await getIncidents(50);
+  const { tab } = await searchParams;
+  const incidents = await getIncidents(200);
 
   return (
-    <Column fillWidth gap="16">
-      <Column gap="4">
-        <Text variant="heading-strong-m">{t("admin.incidents.title")}</Text>
-        <Text variant="body-default-s" onBackground="neutral-weak">
-          {t("admin.incidents.description")}
-        </Text>
-      </Column>
-
-      <IncidentsManager incidents={incidents} />
-    </Column>
+    <AdminPage
+      title={t("adminIncidents.list.title")}
+      description={t("adminIncidents.list.description")}
+      actions={
+        <Button href="/admin/incidents/new" prefixIcon="plus">
+          {t("adminIncidents.list.report")}
+        </Button>
+      }
+    >
+      <IncidentsList
+        incidents={incidents}
+        now={Date.now()}
+        initialTab={tab === "history" ? "history" : "active"}
+      />
+    </AdminPage>
   );
 }
