@@ -286,9 +286,9 @@ function AddStepPanel({
           </Row>
         )}
         {open === "settings" && (
-          <div className="nowheel" style={{ maxHeight: 600, overflowY: "auto" }}>
+          <Column className="nowheel" overflowY="auto" style={{ maxHeight: 600 }}>
             {children}
-          </div>
+          </Column>
         )}
       </Column>
     </Panel>

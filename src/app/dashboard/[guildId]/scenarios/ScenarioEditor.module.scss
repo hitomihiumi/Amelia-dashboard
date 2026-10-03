@@ -1,36 +1,9 @@
 // The flow canvas fills its own card; scenario and step settings live in the inspector next to it.
 
 .canvas {
-  position: relative;
-  display: flex;
-  flex-direction: column;
   height: clamp(480px, 76vh, 900px);
-  min-width: 0;
-  overflow: hidden;
-  border: 1px solid var(--neutral-border-medium);
-  border-radius: var(--radius-l);
-  background: var(--surface-background);
 
   @container page (max-width: 640px) {
     height: clamp(400px, 62vh, 560px);
   }
-}
-
-.inspectorTabs {
-  display: block;
-  width: 100%;
-}
-
-.stepSection {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-8);
-  min-width: 0;
-}
-
-.divider {
-  height: 1px;
-  background: var(--neutral-border-weak);
-  border: 0;
-  margin: 0;
 }

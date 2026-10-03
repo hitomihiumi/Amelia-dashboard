@@ -22,6 +22,7 @@ import {
   Column,
   IconButton,
   Input,
+  Line,
   NumberInput,
   RevealFx,
   Row,
@@ -361,13 +362,13 @@ export function ScenarioEditor({
         settingsPanel
       ) : selectedStep ? (
         <>
-          <div className={styles.stepSection}>
+          <Column gap="8" minWidth={0}>
             <Text variant="label-default-s" onBackground="neutral-weak">
               {t("builder.workspace.stepPreview")}
             </Text>
             <DiscordPreview message={previewMessage} />
-          </div>
-          <hr className={styles.divider} />
+          </Column>
+          <Line style={{ background: "var(--neutral-border-weak)" }} />
           <ActionNodeForm
             guildId={guildId}
             step={selectedStep}
@@ -391,7 +392,15 @@ export function ScenarioEditor({
   return (
     <RevealFx delay={300} translateY={-0.5} fillWidth>
       <Workspace aside={inspectorPane} asideSize="narrow">
-        <div className={styles.canvas}>
+        <Column
+          fillWidth
+          minWidth={0}
+          overflow="hidden"
+          border="neutral-medium"
+          radius="l"
+          background="surface"
+          className={styles.canvas}
+        >
           <ScenarioFlow
             guildId={guildId}
             nodes={nodes}
@@ -407,7 +416,7 @@ export function ScenarioEditor({
             roles={roles}
             channels={channels}
           />
-        </div>
+        </Column>
       </Workspace>
     </RevealFx>
   );

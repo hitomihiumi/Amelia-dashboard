@@ -10,8 +10,19 @@ import type { ScenarioCustom, ScenarioTriggerType } from "@/lib/db/types";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import type { GuildActionState } from "@/types/dashboard";
-import { Button, Feedback, Flex, IconButton, RevealFx, Tag, Text, useToast } from "@once-ui-system/core";
-import Link from "next/link";
+import {
+  Button,
+  Card,
+  Feedback,
+  Flex,
+  Grid,
+  IconButton,
+  RevealFx,
+  Row,
+  Tag,
+  Text,
+  useToast,
+} from "@once-ui-system/core";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createScenarioAction, deleteScenarioAction, updateScenarios } from "./actions";
@@ -139,14 +150,21 @@ export function ScenariosManager({
   return (
     <Flex direction="column" gap="16" fillWidth>
       <RevealFx delay={300} translateY={-0.5} fillWidth>
-        <div className={styles.toolbar}>
-          <span className={styles.toolbarTitle}>
+        <Row
+          fillWidth
+          vertical="center"
+          horizontal="between"
+          wrap
+          gap="12"
+          style={{ columnGap: "var(--static-space-16)" }}
+        >
+          <Row vertical="center" gap="12" minWidth={0}>
             <DashIcon name="gitnet" />
             <Text variant="heading-strong-s">{t("builder.scenarios.title")}</Text>
             <Text variant="body-default-s" onBackground="neutral-weak">
               {scenarios.length}/{MAX_SCENARIOS}
             </Text>
-          </span>
+          </Row>
           <Button
             prefixIcon="plus"
             onClick={createScenario}
@@ -154,7 +172,7 @@ export function ScenariosManager({
           >
             {t("builder.scenarios.newScenario")}
           </Button>
-        </div>
+        </Row>
       </RevealFx>
 
       {scenarios.length === 0 ? (
@@ -166,7 +184,12 @@ export function ScenariosManager({
           />
         </RevealFx>
       ) : (
-        <div className={styles.grid}>
+        <Grid
+          fillWidth
+          minWidth={0}
+          gap="16"
+          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))" }}
+        >
           {scenarios.map((scenario, idx) => (
             <RevealFx delay={400 + idx * 100} translateY={-0.5} key={scenario.id} fillWidth>
               <ScenarioCard
@@ -177,7 +200,7 @@ export function ScenariosManager({
               />
             </RevealFx>
           ))}
-        </div>
+        </Grid>
       )}
     </Flex>
   );
@@ -197,12 +220,22 @@ function ScenarioCard({
   const t = useT();
   const triggerMissing = scenario.trigger == null;
   return (
-    <Link href={`/dashboard/${guildId}/scenarios/${scenario.id}`} className={styles.card}>
-      <div className={styles.cardHead}>
-        <Text variant="body-strong-m" className={styles.cardTitle}>
+    <Card
+      href={`/dashboard/${guildId}/scenarios/${scenario.id}`}
+      fillWidth
+      fillHeight
+      direction="column"
+      gap="12"
+      padding="20"
+      radius="l"
+      minWidth={0}
+      className={styles.card}
+    >
+      <Row fillWidth vertical="start" horizontal="between" gap="12" minWidth={0}>
+        <Text variant="body-strong-m" style={{ minWidth: 0, overflowWrap: "anywhere" }}>
           {scenario.name || t("builder.scenarios.untitled")}
         </Text>
-        <div className={styles.cardActions}>
+        <Row gap="8" style={{ flexShrink: 0 }}>
           <IconButton
             icon="copy"
             variant="secondary"
@@ -225,14 +258,14 @@ function ScenarioCard({
               onDelete();
             }}
           />
-        </div>
-      </div>
+        </Row>
+      </Row>
       {scenario.description && (
         <Text variant="body-default-s" onBackground="neutral-weak" style={{ maxWidth: "100%" }}>
           {scenario.description}
         </Text>
       )}
-      <div className={styles.cardTags}>
+      <Row wrap gap="8" style={{ marginTop: "auto" }}>
         {triggerMissing ? (
           <Tag label={t("builder.scenarios.noTrigger")} scheme="warning" />
         ) : (
@@ -255,8 +288,8 @@ function ScenarioCard({
           label={scenario.enabled ? t("common.state.enabled") : t("common.state.disabled")}
           scheme={scenario.enabled ? "success" : "danger"}
         />
-      </div>
-    </Link>
+      </Row>
+    </Card>
   );
 }
 

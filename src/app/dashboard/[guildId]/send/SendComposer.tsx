@@ -15,6 +15,7 @@ import {
   Button,
   Column,
   Feedback,
+  Grid,
   RevealFx,
   Row,
   SegmentedControl,
@@ -22,7 +23,7 @@ import {
   Text,
   Textarea,
 } from "@once-ui-system/core";
-import { useDeferredValue, useMemo, useState, useTransition } from "react";
+import { type CSSProperties, useDeferredValue, useMemo, useState, useTransition } from "react";
 import { PreviewPane, Workspace, WorkspaceCard } from "../components/Workspace";
 import { LayoutPicker, MultiReferences } from "../scenarios/ActionNodeForm";
 import type { ComponentsLibrary } from "../scenarios/scenariosTypes";
@@ -33,6 +34,20 @@ const EXAMPLE_TOKENS = "{user.name}, {user.mention}, {channel.mention}, {guild.n
 const INTERACTIVE_TOKENS = "{input.0}, {selected.value}, {var.name}";
 
 type Mode = "classic" | "layout";
+
+// Composer fields flow into columns by the room the editor pane has (it varies with the preview
+// pane next to it), so the grids size themselves instead of following the viewport.
+const FIELDS_GRID: CSSProperties = {
+  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
+  alignItems: "start",
+};
+// Channel and message type need more room than a plain field (the type switch has long labels).
+const PAIR_GRID: CSSProperties = {
+  gridColumn: "1 / -1",
+  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))",
+  alignItems: "start",
+};
+const FULL_ROW: CSSProperties = { gridColumn: "1 / -1" };
 
 interface SendComposerProps {
   guildId: string;
@@ -163,9 +178,9 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
     <RevealFx delay={300} translateY={-0.5} fillWidth>
       <Workspace aside={previewPane}>
         <WorkspaceCard>
-          <div className={styles.fields}>
-            <div className={`${styles.full} ${styles.pair}`}>
-              <div className={styles.field}>
+          <Grid fillWidth minWidth={0} gap="16" style={FIELDS_GRID}>
+            <Grid minWidth={0} gap="16" style={PAIR_GRID}>
+              <Column gap="8" minWidth={0}>
                 {channels.length === 0 ? (
                   <Column gap="4">
                     <Text variant="label-default-s">{t("send.channel.label")}</Text>
@@ -185,9 +200,9 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
                     }))}
                   />
                 )}
-              </div>
+              </Column>
 
-              <div className={styles.field}>
+              <Column gap="8" minWidth={0}>
                 <Text variant="label-default-s">{t("send.mode.label")}</Text>
                 <SegmentedControl
                   fillWidth
@@ -204,11 +219,11 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
                 <Text variant="body-default-xs" onBackground="neutral-weak">
                   {t(mode === "layout" ? "send.mode.layoutHint" : "send.mode.classicHint")}
                 </Text>
-              </div>
-            </div>
+              </Column>
+            </Grid>
 
             {mode === "layout" ? (
-              <div className={styles.full}>
+              <Column minWidth={0} style={FULL_ROW}>
                 <LayoutPicker
                   guildId={guildId}
                   layoutId={layoutId}
@@ -218,10 +233,10 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
                     setResult(null);
                   }}
                 />
-              </div>
+              </Column>
             ) : (
               <>
-                <div className={styles.full}>
+                <Column minWidth={0} style={FULL_ROW}>
                   <EmojiField
                     id={`${guildId}-send-content`}
                     value={content}
@@ -241,9 +256,9 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
                       description={t("send.classic.contentHint")}
                     />
                   </EmojiField>
-                </div>
-                <div className={`${styles.full} ${styles.pickers}`}>
-                  <div className={styles.field}>
+                </Column>
+                <Grid minWidth={0} gap="16" className={styles.pickers} style={FULL_ROW}>
+                  <Column gap="8" minWidth={0}>
                     <MultiReferences
                       label={t("send.classic.embeds")}
                       options={library.embed.map((embed) => ({
@@ -253,8 +268,8 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
                       selected={embedIds}
                       onToggle={setEmbedIds}
                     />
-                  </div>
-                  <div className={styles.field}>
+                  </Column>
+                  <Column gap="8" minWidth={0}>
                     <MultiReferences
                       label={t("send.classic.buttons")}
                       options={library.buttons.map((button) => ({
@@ -264,8 +279,8 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
                       selected={buttonIds}
                       onToggle={setButtonIds}
                     />
-                  </div>
-                  <div className={styles.field}>
+                  </Column>
+                  <Column gap="8" minWidth={0}>
                     <MultiReferences
                       label={t("send.classic.selectMenus")}
                       options={library.selectMenus.map((menu) => ({
@@ -275,10 +290,10 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
                       selected={selectMenuIds}
                       onToggle={setSelectMenuIds}
                     />
-                  </div>
-                </div>
+                  </Column>
+                </Grid>
                 {(buttonIds.length > 0 || selectMenuIds.length > 0) && (
-                  <div className={styles.full}>
+                  <Column minWidth={0} style={FULL_ROW}>
                     <Text
                       variant="body-default-xs"
                       onBackground={tooManyRows ? "danger-medium" : "neutral-weak"}
@@ -287,21 +302,21 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
                       {" · "}
                       {t("send.classic.rowsHint", { max: CLASSIC_LIMITS.ROWS })}
                     </Text>
-                  </div>
+                  </Column>
                 )}
               </>
             )}
 
-            <div className={styles.full}>
+            <Column minWidth={0} style={FULL_ROW}>
               <Switch
                 label={t("send.mentions.label")}
                 description={t("send.mentions.description")}
                 checked={allowEveryone}
                 onToggle={() => setAllowEveryone((value) => !value)}
               />
-            </div>
+            </Column>
 
-            <div className={`${styles.full} ${styles.field}`}>
+            <Column gap="8" minWidth={0} style={FULL_ROW}>
               <Text variant="label-default-s">{t("send.placeholders.title")}</Text>
               <Text variant="body-default-xs" onBackground="neutral-weak">
                 {t("send.placeholders.text", { tokens: EXAMPLE_TOKENS })}
@@ -311,10 +326,10 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
                   {t("send.placeholders.interactive", { tokens: INTERACTIVE_TOKENS })}
                 </Text>
               )}
-            </div>
-          </div>
+            </Column>
+          </Grid>
 
-          <div className={styles.footer}>
+          <Column fillWidth gap="12" paddingTop="16" borderTop="neutral-weak">
             {result?.ok === false && <Feedback variant="danger" description={result.error} />}
             {result?.ok === true && (
               <Feedback
@@ -332,11 +347,16 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
               >
                 <Column gap="8" paddingTop="8">
                   {result.warnings.length > 0 && (
-                    <Column as="ul" gap="4" style={{ paddingLeft: 16, margin: 0 }}>
+                    <Column as="ul" gap="4" paddingLeft="16" margin="0">
                       {result.warnings.map((warning) => (
-                        <li key={warning} style={{ wordBreak: "break-word" }}>
-                          <Text variant="body-default-xs">{warning}</Text>
-                        </li>
+                        <Text
+                          as="li"
+                          key={warning}
+                          variant="body-default-xs"
+                          style={{ wordBreak: "break-word" }}
+                        >
+                          {warning}
+                        </Text>
                       ))}
                     </Column>
                   )}
@@ -355,7 +375,7 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
               </Feedback>
             )}
 
-            <div className={styles.actions}>
+            <Row wrap horizontal="end" gap="8" className={styles.actions}>
               <Button variant="tertiary" onClick={reset} disabled={pending}>
                 {t("send.action.reset")}
               </Button>
@@ -368,13 +388,13 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
               >
                 {pending ? t("send.action.sending") : t("send.action.send")}
               </Button>
-            </div>
+            </Row>
             {!channelId && channels.length > 0 && hasMessage && (
               <Text variant="body-default-xs" onBackground="neutral-weak" align="right">
                 {t("send.channel.required")}
               </Text>
             )}
-          </div>
+          </Column>
         </WorkspaceCard>
       </Workspace>
     </RevealFx>
