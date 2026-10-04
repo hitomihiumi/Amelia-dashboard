@@ -1,12 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import classNames from "classnames";
-import { Button, Flex, IconButton, Input, Tag, Text } from "@once-ui-system/core";
+import { Button, Column, Grid, IconButton, Input, Line, Row, Tag, Text } from "@once-ui-system/core";
 import {
-  IoArrowBack,
   IoCheckmark,
   IoChatbubbleEllipsesOutline,
   IoHourglassOutline,
@@ -178,13 +176,12 @@ export function IncidentDetail({
 
   return (
     <>
-      <Flex direction="column" fillWidth gap="24" style={{ minWidth: 0 }}>
-        <Flex fillWidth horizontal="between" vertical="center" gap="16" wrap>
-          <Link href={basePath} className={styles.backLink}>
-            <IoArrowBack aria-hidden />
+      <Column fillWidth gap="24">
+        <Row fillWidth horizontal="between" vertical="center" gap="16" wrap>
+          <Button href={basePath} variant="tertiary" size="m" prefixIcon="arrowLeft">
             {t("adminIncidents.detail.back")}
-          </Link>
-          <div className={styles.buttons}>
+          </Button>
+          <Row wrap vertical="center" horizontal="end" gap="8" fitWidth>
             {resolved ? (
               <Button size="m" variant="secondary" prefixIcon="refresh" onClick={reopen}>
                 {t("adminIncidents.detail.composer.reopen")}
@@ -210,139 +207,153 @@ export function IncidentDetail({
             >
               {t("adminIncidents.detail.viewOnStatus")}
             </Button>
-          </div>
-        </Flex>
+          </Row>
+        </Row>
 
-        <div className={styles.layout}>
-          <div className={styles.main}>
-            <div className={styles.orderHeader}>
-                <Flex
-                  as="header"
-                  direction="column"
-                  fillWidth
-                  gap="20"
-                  padding="24"
-                  radius="l"
-                  border="neutral-medium"
-                  background="surface"
-                  className={classNames(styles.header, tones[severityTone(incident.severity)])}
-                >
-                  {editing ? (
-                    <div className={styles.editGrid}>
-                      <div>
-                        <Input
-                          id="incident-edit-title"
-                          label={t("adminIncidents.detail.titleLabel")}
-                          value={draftTitle}
-                          maxLength={TITLE_MAX}
-                          autoFocus
-                          autoComplete="off"
-                          onChange={(event) => setDraftTitle(event.target.value)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Escape") setEditing(false);
-                            if (event.key === "Enter" && titleValid && !pending) {
-                              event.preventDefault();
-                              void saveDetails();
-                            }
-                          }}
-                        />
-                        <div className={styles.fieldFoot}>
-                          <CharCounter count={draftTitle.length} max={TITLE_MAX} />
-                        </div>
-                      </div>
+        <Grid fillWidth className={styles.layout}>
+          <Column fillWidth className={styles.main}>
+            <Column fillWidth className={styles.orderHeader}>
+              <Column
+                as="header"
+                fillWidth
+                gap="20"
+                padding="24"
+                radius="l"
+                border="neutral-medium"
+                background="surface"
+                overflow="hidden"
+                className={classNames(styles.header, tones[severityTone(incident.severity)])}
+              >
+                {editing ? (
+                  <Column fillWidth gap="20">
+                    <Column fillWidth>
+                      <Input
+                        id="incident-edit-title"
+                        label={t("adminIncidents.detail.titleLabel")}
+                        value={draftTitle}
+                        maxLength={TITLE_MAX}
+                        autoFocus
+                        autoComplete="off"
+                        onChange={(event) => setDraftTitle(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Escape") setEditing(false);
+                          if (event.key === "Enter" && titleValid && !pending) {
+                            event.preventDefault();
+                            void saveDetails();
+                          }
+                        }}
+                      />
+                      <Row fillWidth horizontal="end" marginTop="4">
+                        <CharCounter count={draftTitle.length} max={TITLE_MAX} />
+                      </Row>
+                    </Column>
 
-                      <Flex direction="column" gap="8">
-                        <Text variant="label-default-s" onBackground="neutral-weak">
-                          {t("adminIncidents.form.severity")}
+                    <Column gap="8">
+                      <Text variant="label-default-s" onBackground="neutral-weak">
+                        {t("adminIncidents.form.severity")}
+                      </Text>
+                      <SeverityPicker value={draftSeverity} onChange={setDraftSeverity} compact />
+                    </Column>
+
+                    <Column gap="8">
+                      <Text variant="label-default-s" onBackground="neutral-weak">
+                        {t("adminIncidents.form.component")}
+                      </Text>
+                      <ComponentPicker
+                        value={draftComponent}
+                        onChange={setDraftComponent}
+                        disabled={incident.auto}
+                      />
+                      {incident.auto && (
+                        <Text variant="body-default-xs" onBackground="neutral-weak">
+                          {t("adminIncidents.detail.autoComponentLocked")}
                         </Text>
-                        <SeverityPicker value={draftSeverity} onChange={setDraftSeverity} compact />
-                      </Flex>
+                      )}
+                    </Column>
 
-                      <Flex direction="column" gap="8">
-                        <Text variant="label-default-s" onBackground="neutral-weak">
-                          {t("adminIncidents.form.component")}
+                    <Row fillWidth wrap vertical="center" horizontal="end" gap="8">
+                      <Button variant="tertiary" onClick={() => setEditing(false)} disabled={pending}>
+                        {t("common.actions.cancel")}
+                      </Button>
+                      <Button onClick={saveDetails} loading={pending} disabled={!titleValid || pending}>
+                        {t("adminIncidents.detail.saveDetails")}
+                      </Button>
+                    </Row>
+                  </Column>
+                ) : (
+                  <>
+                    <Row fillWidth vertical="start" horizontal="between" gap="12">
+                      <Text
+                        variant="heading-strong-l"
+                        as="h1"
+                        style={{ minWidth: 0, overflowWrap: "anywhere" }}
+                      >
+                        {shown.title}
+                      </Text>
+                      <IconButton
+                        icon="edit"
+                        variant="ghost"
+                        tooltip={t("adminIncidents.detail.editDetails")}
+                        aria-label={t("adminIncidents.detail.editDetails")}
+                        onClick={startEditing}
+                      />
+                    </Row>
+
+                    <Row fillWidth wrap vertical="center" gap="8">
+                      <Tag scheme={severityTone(incident.severity)}>{labels.severity(incident.severity)}</Tag>
+                      <StatusChip status={current} ongoing={!resolved} />
+                      {incident.component && (
+                        <Tag scheme="neutral">{labels.component(incident.component)}</Tag>
+                      )}
+                      {incident.auto && <AutoBadge />}
+                    </Row>
+
+                    <Row
+                      fillWidth
+                      wrap
+                      vertical="center"
+                      gap="4"
+                      textVariant="body-default-s"
+                      onBackground="neutral-weak"
+                      style={{ columnGap: "var(--static-space-20)" }}
+                    >
+                      <Row
+                        fitWidth
+                        vertical="center"
+                        gap="8"
+                        title={format.dateTime(incident.startedAt, { dateStyle: "long", timeStyle: "short" })}
+                      >
+                        <IoTimeOutline aria-hidden />
+                        {t("adminIncidents.meta.started", {
+                          time: relativeAgo(format, incident.startedAt, now),
+                        })}
+                        <Text as="span" aria-hidden>
+                          ·
                         </Text>
-                        <ComponentPicker
-                          value={draftComponent}
-                          onChange={setDraftComponent}
-                          disabled={incident.auto}
-                        />
-                        {incident.auto && (
-                          <span className={styles.hint}>{t("adminIncidents.detail.autoComponentLocked")}</span>
-                        )}
-                      </Flex>
+                        {format.dateTime(incident.startedAt)}
+                      </Row>
+                      <Row fitWidth vertical="center" gap="8">
+                        <IoHourglassOutline aria-hidden />
+                        {t(resolved ? "adminIncidents.meta.lasted" : "adminIncidents.meta.ongoing", {
+                          duration: formatDuration(t, durationMs),
+                        })}
+                      </Row>
+                      <Row fitWidth vertical="center" gap="8">
+                        <IoChatbubbleEllipsesOutline aria-hidden />
+                        {incident.updates.length > 0
+                          ? t("adminIncidents.list.updates", { count: incident.updates.length })
+                          : t("adminIncidents.list.noUpdates")}
+                      </Row>
+                    </Row>
+                  </>
+                )}
 
-                      <div className={styles.buttons}>
-                        <Button variant="tertiary" onClick={() => setEditing(false)} disabled={pending}>
-                          {t("common.actions.cancel")}
-                        </Button>
-                        <Button
-                          onClick={saveDetails}
-                          loading={pending}
-                          disabled={!titleValid || pending}
-                        >
-                          {t("adminIncidents.detail.saveDetails")}
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className={styles.titleRow}>
-                        <Text variant="heading-strong-l" as="h1" className={styles.title}>
-                          {shown.title}
-                        </Text>
-                        <IconButton
-                          icon="edit"
-                          variant="ghost"
-                          tooltip={t("adminIncidents.detail.editDetails")}
-                          aria-label={t("adminIncidents.detail.editDetails")}
-                          onClick={startEditing}
-                        />
-                      </div>
+                <Line background="neutral-alpha-weak" />
+                <ProgressStepper current={current} label={t("adminIncidents.detail.progressLabel")} />
+              </Column>
+            </Column>
 
-                      <div className={styles.badges}>
-                        <Tag scheme={severityTone(incident.severity)}>{labels.severity(incident.severity)}</Tag>
-                        <StatusChip status={current} ongoing={!resolved} />
-                        {incident.component && (
-                          <Tag scheme="neutral">{labels.component(incident.component)}</Tag>
-                        )}
-                        {incident.auto && <AutoBadge />}
-                      </div>
-
-                      <div className={styles.meta}>
-                        <span
-                          className={styles.metaItem}
-                          title={format.dateTime(incident.startedAt, { dateStyle: "long", timeStyle: "short" })}
-                        >
-                          <IoTimeOutline aria-hidden />
-                          {t("adminIncidents.meta.started", {
-                            time: relativeAgo(format, incident.startedAt, now),
-                          })}
-                          <span aria-hidden>·</span>
-                          {format.dateTime(incident.startedAt)}
-                        </span>
-                        <span className={styles.metaItem}>
-                          <IoHourglassOutline aria-hidden />
-                          {t(resolved ? "adminIncidents.meta.lasted" : "adminIncidents.meta.ongoing", {
-                            duration: formatDuration(t, durationMs),
-                          })}
-                        </span>
-                        <span className={styles.metaItem}>
-                          <IoChatbubbleEllipsesOutline aria-hidden />
-                          {incident.updates.length > 0
-                            ? t("adminIncidents.list.updates", { count: incident.updates.length })
-                            : t("adminIncidents.list.noUpdates")}
-                        </span>
-                      </div>
-                    </>
-                  )}
-
-                  <div className={styles.divider} />
-                  <ProgressStepper current={current} label={t("adminIncidents.detail.progressLabel")} />
-                </Flex>
-            </div>
-
-            <div className={styles.orderTimeline}>
+            <Column fillWidth className={styles.orderTimeline}>
               <IncidentTimeline
                 incident={incident}
                 now={now}
@@ -350,31 +361,31 @@ export function IncidentDetail({
                 run={run}
                 pending={pending}
               />
-            </div>
+            </Column>
 
-            <div className={styles.orderDanger}>
-            <AdminCard padding="20" gap="16">
-              <div className={styles.dangerRow}>
-                <Flex direction="column" gap="2" style={{ minWidth: 0, flex: 1 }}>
-                  <Text variant="heading-strong-s" as="h2">
-                    {t("adminIncidents.detail.danger.title")}
-                  </Text>
-                  <Text variant="body-default-xs" onBackground="neutral-weak">
-                    {t("adminIncidents.detail.danger.text")}
-                  </Text>
-                </Flex>
-                <ConfirmIconButton
-                  variant="confirm"
-                  tooltip={t("adminIncidents.detail.danger.title")}
-                  onConfirm={() => void removeIncident()}
-                />
-              </div>
-            </AdminCard>
-            </div>
-          </div>
+            <Column fillWidth className={styles.orderDanger}>
+              <AdminCard padding="20" gap="16">
+                <Row fillWidth wrap vertical="center" horizontal="between" gap="12">
+                  <Column flex={1} gap="2" style={{ minWidth: 0 }}>
+                    <Text variant="heading-strong-s" as="h2">
+                      {t("adminIncidents.detail.danger.title")}
+                    </Text>
+                    <Text variant="body-default-xs" onBackground="neutral-weak">
+                      {t("adminIncidents.detail.danger.text")}
+                    </Text>
+                  </Column>
+                  <ConfirmIconButton
+                    variant="confirm"
+                    tooltip={t("adminIncidents.detail.danger.title")}
+                    onConfirm={() => void removeIncident()}
+                  />
+                </Row>
+              </AdminCard>
+            </Column>
+          </Column>
 
-          <div className={styles.aside}>
-            <div className={styles.composerSticky}>
+          <Column fillWidth className={styles.aside}>
+            <Column fillWidth className={styles.composerSticky}>
               <UpdateComposer
                 status={status}
                 body={body}
@@ -388,10 +399,10 @@ export function IncidentDetail({
                 resolvedAgo={incident.resolvedAt ? relativeAgo(format, incident.resolvedAt, now) : null}
                 auto={incident.auto}
               />
-            </div>
-          </div>
-        </div>
-      </Flex>
+            </Column>
+          </Column>
+        </Grid>
+      </Column>
     </>
   );
 }
@@ -401,13 +412,17 @@ function ProgressStepper({ current, label }: { current: IncidentStatus; label: s
   const currentIndex = INCIDENT_STATUSES.indexOf(current);
 
   return (
-    <ol className={styles.stepper} aria-label={label}>
+    <Row as="ol" fillWidth margin="0" padding="0" aria-label={label}>
       {INCIDENT_STATUSES.map((step, index) => {
         const state = index < currentIndex ? "done" : index === currentIndex ? "current" : "todo";
 
         return (
-          <li
+          <Column
+            as="li"
             key={step}
+            flex={1}
+            horizontal="center"
+            gap="8"
             aria-current={state === "current" ? "step" : undefined}
             className={classNames(
               styles.step,
@@ -416,18 +431,32 @@ function ProgressStepper({ current, label }: { current: IncidentStatus; label: s
               state === "current" && styles.stepCurrent,
               step === "resolved" && styles.stepFinal,
             )}
+            style={{ minWidth: 0, textAlign: "center" }}
           >
-            <span aria-hidden className={styles.stepMarker}>
+            <Row
+              center
+              width={2.25}
+              height={2.25}
+              radius="full"
+              border="neutral-alpha-strong"
+              borderWidth={2}
+              background="surface"
+              onBackground="neutral-weak"
+              aria-hidden
+              className={styles.stepMarker}
+            >
               {state === "done" || (state === "current" && step === "resolved") ? (
                 <IoCheckmark />
               ) : (
                 STATUS_ICON[step]
               )}
-            </span>
-            <span className={styles.stepLabel}>{labels.status(step)}</span>
-          </li>
+            </Row>
+            <Text variant="label-default-s" onBackground="neutral-weak" truncate className={styles.stepLabel}>
+              {labels.status(step)}
+            </Text>
+          </Column>
         );
       })}
-    </ol>
+    </Row>
   );
 }

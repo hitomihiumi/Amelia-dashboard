@@ -1,5 +1,5 @@
 import React, { type ReactNode } from "react";
-import { Column, Flex, Icon, Line, Row, Text } from "@once-ui-system/core";
+import { Card, Column, Flex, Icon, Line, Row, StatusIndicator, Tag, Text } from "@once-ui-system/core";
 import type { IconName } from "@/resources/icons";
 import type { Tone } from "@/lib/admin/defaults";
 import { AdminCard } from "@/components/admin/AdminPage";
@@ -30,15 +30,44 @@ export function IconTile({
   );
 }
 
+export const TONE_COLOR = {
+  success: "green",
+  warning: "orange",
+  danger: "red",
+  info: "blue",
+  neutral: "gray",
+} as const;
+
 export function StatusDot({ tone }: { tone: Tone }) {
-  return <span aria-hidden className={styles.dot} data-tone={tone} />;
+  return <StatusIndicator aria-hidden ariaLabel="" size="m" color={TONE_COLOR[tone]} />;
 }
 
 export function StatusPill({ tone, children }: { tone: Tone; children: ReactNode }) {
   return (
-    <span className={styles.pill} data-tone={tone}>
+    <Tag scheme={tone} size="m" radius="full">
+      <Text variant="label-strong-s">{children}</Text>
+    </Tag>
+  );
+}
+
+/** A clickable row inside a panel: incident, draft, post. */
+export function RowLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Card
+      href={href}
+      fillWidth
+      radius="m"
+      background="transparent"
+      border="transparent"
+      paddingX="12"
+      paddingY="8"
+      gap="12"
+      vertical="center"
+      minHeight={2.75}
+      className={styles.row}
+    >
       {children}
-    </span>
+    </Card>
   );
 }
 
@@ -60,7 +89,7 @@ export function Panel({
     <AdminCard padding="20">
       <Row fillWidth gap="12" vertical="center" wrap>
         <IconTile name={icon} />
-        <Column className={styles.grow} gap="2" style={{ minWidth: "11rem" }}>
+        <Column flex={1} gap="2" style={{ minWidth: "11rem" }}>
           <Text variant="body-strong-l" as="h2">
             {title}
           </Text>

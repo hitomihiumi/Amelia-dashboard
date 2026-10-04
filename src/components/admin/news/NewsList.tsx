@@ -1,10 +1,23 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button, IconButton, Tag, Text, useToast } from "@once-ui-system/core";
-import { LuFilePlus, LuSearch, LuX } from "react-icons/lu";
+import {
+  Button,
+  Column,
+  Grid,
+  Icon,
+  IconButton,
+  Input,
+  Media,
+  Row,
+  SegmentedControl,
+  SmartLink,
+  Tag,
+  Text,
+  useToast,
+} from "@once-ui-system/core";
+import { LuFilePlus } from "react-icons/lu";
 import { AdminCard, AdminPage } from "@/components/admin/AdminPage";
 import { ConfirmIconButton } from "@/components/dashboard/ConfirmIconButton";
 import { useFormat, useT } from "@/i18n/client";
@@ -129,69 +142,86 @@ export function NewsList({
     >
       {posts.length === 0 ? (
         <AdminCard padding="32">
-          <div className={`${styles.empty} ${styles.root}`}>
-            <span className={styles.emptyIcon} aria-hidden>
-              <LuFilePlus />
-            </span>
-            <Text variant="heading-strong-m">{t("adminNews.list.empty.title")}</Text>
-            <Text variant="body-default-m" onBackground="neutral-weak" className={styles.emptyText}>
-              {t("adminNews.list.empty.text")}
-            </Text>
+          <EmptyState
+            icon={<LuFilePlus size={24} aria-hidden />}
+            title={<Text variant="heading-strong-m">{t("adminNews.list.empty.title")}</Text>}
+            text={
+              <Text variant="body-default-m" onBackground="neutral-weak" align="center" style={{ maxWidth: "28rem" }}>
+                {t("adminNews.list.empty.text")}
+              </Text>
+            }
+          >
             <Button href="/admin/news/new" prefixIcon="plus">
               {t("adminNews.list.empty.cta")}
             </Button>
-          </div>
+          </EmptyState>
         </AdminCard>
       ) : (
-        <div className={styles.root}>
-          <div className={styles.toolbar}>
-            <div className={styles.filters} role="group" aria-label={t("adminNews.list.filters.label")}>
-              {filters.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  aria-pressed={filter === item.id}
-                  className={`${styles.filter} ${filter === item.id ? styles.filterActive : ""}`}
-                  onClick={() => setFilter(item.id)}
-                >
-                  {item.label}
-                  <span className={styles.filterCount}>{item.count}</span>
-                </button>
-              ))}
-            </div>
+        <Column fillWidth gap="16">
+          <Row fillWidth wrap horizontal="between" vertical="center" gap="12">
+            <SegmentedControl
+              fillWidth={false}
+              aria-label={t("adminNews.list.filters.label")}
+              value={filter}
+              onChange={(value) => setFilter(value as Filter)}
+              buttons={filters.map((item) => ({
+                value: item.id,
+                size: "m",
+                weight: "strong",
+                label: (
+                  <Row vertical="center" gap="8">
+                    {item.label}
+                    <Row
+                      minWidth={1.25}
+                      paddingX="4"
+                      radius="full"
+                      center
+                      background="neutral-alpha-medium"
+                    >
+                      <Text variant="label-strong-xs" style={{ fontVariantNumeric: "tabular-nums" }}>
+                        {item.count}
+                      </Text>
+                    </Row>
+                  </Row>
+                ),
+              }))}
+            />
 
-            <div className={styles.search}>
-              <LuSearch className={styles.searchIcon} aria-hidden />
-              <input
+            <Row className={styles.search}>
+              <Input
+                id="news-search"
                 type="search"
-                className={styles.searchInput}
+                size="s"
                 placeholder={t("adminNews.list.searchPlaceholder")}
                 aria-label={t("adminNews.list.searchLabel")}
                 value={query}
+                prefix={<Icon name="search" size="s" onBackground="neutral-weak" />}
+                suffix={
+                  query ? (
+                    <IconButton
+                      icon="close"
+                      variant="ghost"
+                      size="s"
+                      aria-label={t("common.actions.clear")}
+                      onClick={() => setQuery("")}
+                    />
+                  ) : undefined
+                }
                 onChange={(event) => setQuery(event.target.value)}
               />
-              {query && (
-                <button
-                  type="button"
-                  className={styles.searchClear}
-                  aria-label={t("common.actions.clear")}
-                  onClick={() => setQuery("")}
-                >
-                  <LuX aria-hidden />
-                </button>
-              )}
-            </div>
-          </div>
+            </Row>
+          </Row>
 
           {visible.length === 0 ? (
-            <div className={styles.empty}>
-              <span className={styles.emptyIcon} aria-hidden>
-                <LuSearch />
-              </span>
-              <Text variant="heading-strong-s">{t("adminNews.list.noMatches.title")}</Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">
-                {t("adminNews.list.noMatches.text")}
-              </Text>
+            <EmptyState
+              icon={<Icon name="search" size="m" />}
+              title={<Text variant="heading-strong-s">{t("adminNews.list.noMatches.title")}</Text>}
+              text={
+                <Text variant="body-default-s" onBackground="neutral-weak" align="center">
+                  {t("adminNews.list.noMatches.text")}
+                </Text>
+              }
+            >
               <Button
                 size="s"
                 variant="secondary"
@@ -202,9 +232,16 @@ export function NewsList({
               >
                 {t("adminNews.list.noMatches.reset")}
               </Button>
-            </div>
+            </EmptyState>
           ) : (
-            <ul className={styles.list} aria-label={t("adminNews.list.title")}>
+            <Grid
+              as="ul"
+              fillWidth
+              margin="0"
+              padding="0"
+              aria-label={t("adminNews.list.title")}
+              className={styles.list}
+            >
               {visible.map((post) => {
                 const tokens = categoryTokens(post.category);
                 const when = whenLabel(post);
@@ -212,8 +249,10 @@ export function NewsList({
                 const busy = busyId === post.id;
 
                 return (
-                  <li
+                  <Column
+                    as="li"
                     key={post.id}
+                    fillWidth
                     className={styles.cell}
                     style={
                       {
@@ -223,47 +262,80 @@ export function NewsList({
                       } as React.CSSProperties
                     }
                   >
-                    <div className={styles.row}>
-                      <Link href={editHref} className={styles.thumb} tabIndex={-1} aria-hidden>
-                        {post.coverUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={post.coverUrl} alt="" loading="lazy" className={styles.thumbImg} />
-                        ) : (
-                          <span className={styles.thumbPlaceholder}>
-                            <CategoryIcon category={post.category} size={24} />
-                          </span>
-                        )}
-                      </Link>
+                    <Grid
+                      fillWidth
+                      fillHeight
+                      padding="12"
+                      radius="l"
+                      border="neutral-alpha-medium"
+                      background="surface"
+                      className={styles.row}
+                    >
+                      <Row
+                        border="neutral-alpha-weak"
+                        radius="m"
+                        overflow="hidden"
+                        className={styles.thumb}
+                      >
+                        <SmartLink href={editHref} unstyled fillWidth tabIndex={-1} aria-hidden>
+                          {post.coverUrl ? (
+                            <Media fill stretch unoptimized src={post.coverUrl} alt="" />
+                          ) : (
+                            <Row fill center className={styles.thumbPlaceholder}>
+                              <CategoryIcon category={post.category} size={24} />
+                            </Row>
+                          )}
+                        </SmartLink>
+                      </Row>
 
-                      <div className={styles.body}>
-                        <div className={styles.tags}>
+                      <Column fillWidth gap="4">
+                        <Row wrap vertical="center" gap="8">
                           <Tag scheme={post.published ? "success" : "neutral"} size="s">
                             {post.published ? t("adminNews.status.published") : t("adminNews.status.draft")}
                           </Tag>
-                          <span className={styles.category}>
+                          <Row vertical="center" gap="4" style={{ color: "var(--cat-text)" }}>
                             <CategoryIcon category={post.category} size={13} />
-                            {categoryLabel(post.category)}
-                          </span>
-                        </div>
+                            <Text variant="label-default-s">{categoryLabel(post.category)}</Text>
+                          </Row>
+                        </Row>
 
-                        <Link href={editHref} className={styles.title}>
-                          {post.title.trim() || t("adminNews.untitled")}
-                        </Link>
+                        <SmartLink href={editHref} unstyled className={styles.title}>
+                          <Text variant="heading-strong-s" onBackground="neutral-strong" className={styles.wrapText}>
+                            {post.title.trim() || t("adminNews.untitled")}
+                          </Text>
+                        </SmartLink>
 
-                        <p className={styles.summary}>
+                        <Text
+                          as="p"
+                          variant="body-default-s"
+                          onBackground="neutral-medium"
+                          className={styles.summary}
+                        >
                           {post.summary.trim() || (
-                            <span className={styles.noSummary}>{t("adminNews.list.noSummary")}</span>
+                            <Text as="span" onBackground="neutral-weak" style={{ fontStyle: "italic" }}>
+                              {t("adminNews.list.noSummary")}
+                            </Text>
                           )}
-                        </p>
+                        </Text>
 
-                        <p className={styles.date} title={when.full}>
+                        <Text
+                          as="p"
+                          variant="label-default-s"
+                          onBackground="neutral-weak"
+                          marginTop="2"
+                          title={when.full}
+                          className={styles.wrapText}
+                        >
                           {when.text}
-                          {when.absolute && <span className={styles.dateAbs}> · {when.absolute}</span>}
-                          <span className={styles.slug}> · /news/{post.slug}</span>
-                        </p>
-                      </div>
+                          {when.absolute && ` · ${when.absolute}`}
+                          <Text as="span" family="code">
+                            {" "}
+                            · /news/{post.slug}
+                          </Text>
+                        </Text>
+                      </Column>
 
-                      <div className={styles.actions}>
+                      <Row wrap vertical="center" gap="8" className={styles.actions}>
                         <Button href={editHref} size="m" variant="secondary" prefixIcon="edit">
                           {t("common.actions.edit")}
                         </Button>
@@ -295,15 +367,48 @@ export function NewsList({
                           onConfirm={() => remove(post)}
                           tooltip={t("adminNews.list.delete")}
                         />
-                      </div>
-                    </div>
-                  </li>
+                      </Row>
+                    </Grid>
+                  </Column>
                 );
               })}
-            </ul>
+            </Grid>
           )}
-        </div>
+        </Column>
       )}
     </AdminPage>
+  );
+}
+
+/** Icon, headline, text and a call to action, centred; used for "no posts" and "no matches". */
+function EmptyState({
+  icon,
+  title,
+  text,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: React.ReactNode;
+  text: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Column fillWidth horizontal="center" gap="12" paddingX="16" paddingY="32">
+      <Row
+        width={3.5}
+        height={3.5}
+        center
+        radius="l"
+        background="brand-alpha-weak"
+        border="brand-alpha-medium"
+        onBackground="brand-strong"
+        aria-hidden
+      >
+        {icon}
+      </Row>
+      {title}
+      {text}
+      {children}
+    </Column>
   );
 }

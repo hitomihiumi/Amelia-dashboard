@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button, Media, Text } from "@once-ui-system/core";
+import { Button, Column, Flex, Media, Row, Text } from "@once-ui-system/core";
 import { CONFIG_DEFAULTS } from "@/lib/admin/defaults";
 import { useT } from "@/i18n/client";
 import { isDefaultCopy } from "./form";
@@ -32,9 +32,21 @@ export function HeroPreview({ tagline, text }: { tagline: string; text: string }
   const shownText = isDefaultCopy(text, "heroText") ? t("site.landing.hero.text") : text.trim();
 
   return (
-    <div className={styles.heroFrame} aria-hidden>
-      <div className={styles.heroGlow} />
-      <div className={styles.heroContent}>
+    <Row
+      fillWidth
+      center
+      gap="24"
+      paddingX="24"
+      paddingY="32"
+      overflow="hidden"
+      border="neutral-alpha-medium"
+      radius="l"
+      background="page"
+      pointerEvents="none"
+      aria-hidden
+    >
+      <Flex position="absolute" top="0" left="0" fill pointerEvents="none" className={styles.heroGlow} />
+      <Column center gap="8" maxWidth={28} style={{ minWidth: 0, textAlign: "center" }}>
         <Text variant="heading-strong-xs" onBackground="brand-medium" className={styles.wrapText}>
           {words[0] ?? CONFIG_DEFAULTS.heroTagline}
         </Text>
@@ -44,18 +56,27 @@ export function HeroPreview({ tagline, text }: { tagline: string; text: string }
         <Text align="center" onBackground="neutral-medium" className={styles.wrapText}>
           {shownText}
         </Text>
-        <div style={{ display: "flex", gap: 12, paddingTop: 8, flexWrap: "wrap", justifyContent: "center" }}>
+        <Row wrap center gap="12" paddingTop="8">
           <Button prefixIcon="discord" variant="primary" tabIndex={-1}>
             {t("common.nav.login")}
           </Button>
           <Button prefixIcon="plus" variant="secondary" tabIndex={-1}>
             {t("site.landing.hero.inviteBot")}
           </Button>
-        </div>
-      </div>
-      <div className={styles.heroAvatar}>
+        </Row>
+      </Column>
+      <Row
+        width={7}
+        height={7}
+        radius="full"
+        border="brand-alpha-strong"
+        borderWidth={2}
+        padding="2"
+        overflow="hidden"
+        s={{ hide: true }}
+      >
         <Media fill src="/images/avatar.jpg" radius="full" alt="" />
-      </div>
-    </div>
+      </Row>
+    </Row>
   );
 }

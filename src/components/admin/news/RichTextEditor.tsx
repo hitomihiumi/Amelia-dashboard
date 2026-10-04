@@ -9,6 +9,7 @@ import React, {
   useState,
 } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
+import { Column } from "@once-ui-system/core";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown } from "@tiptap/markdown";
 import Image from "@tiptap/extension-image";
@@ -163,12 +164,18 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
     }, [editor]);
 
     return (
-      <div className={styles.root}>
+      <Column fillWidth horizontal="center">
         {editor && <EditorToolbar editor={editor} popover={popover} setPopover={setPopover} />}
         {header}
-        <div className={styles.body}>
+        <Column
+          fillWidth
+          maxWidth="s"
+          paddingX="24"
+          paddingBottom="40"
+          s={{ paddingX: "16", paddingBottom: "24" }}
+        >
           <EditorContent editor={editor} className={styles.content} />
-        </div>
+        </Column>
         {editor && (
           <>
             <SlashMenu editor={editor} keyHandler={slashKeys} onImage={() => setPopover("image")} />
@@ -176,7 +183,7 @@ export const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorPro
             <PlusButton editor={editor} />
           </>
         )}
-      </div>
+      </Column>
     );
   },
 );

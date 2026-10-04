@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { Editor } from "@tiptap/core";
 import { useEditorState } from "@tiptap/react";
+import { Button, Column, IconButton, Input, Row, Text } from "@once-ui-system/core";
 import {
   LuBold,
   LuCodeXml,
@@ -21,6 +22,8 @@ import {
   LuCode,
 } from "react-icons/lu";
 import { useT } from "@/i18n/client";
+import { Eyebrow } from "@/components/admin/Eyebrow";
+import { MenuSelect } from "@/components/admin/MenuSelect";
 import { ImageUrlPreview } from "./ImageUrlPreview";
 import styles from "./RichTextEditor.module.scss";
 
@@ -38,19 +41,21 @@ interface ToolButtonProps {
 
 function ToolButton({ label, shortcut, active, disabled, onClick, children }: ToolButtonProps) {
   return (
-    <button
+    <IconButton
       type="button"
-      className={`${styles.tool} ${active ? styles.toolActive : ""}`}
-      data-tip={shortcut ? `${label} (${shortcut})` : label}
+      variant={active ? "secondary" : "ghost"}
+      size="m"
+      tooltip={shortcut ? `${label} (${shortcut})` : label}
+      tooltipPosition="bottom"
       aria-label={label}
       aria-pressed={active === undefined ? undefined : active}
       disabled={disabled}
       // Keep the selection in the editor while a toolbar button is pressed.
-      onMouseDown={(event) => event.preventDefault()}
+      onMouseDown={(event: React.MouseEvent) => event.preventDefault()}
       onClick={onClick}
     >
       {children}
-    </button>
+    </IconButton>
   );
 }
 
@@ -153,30 +158,46 @@ export function EditorToolbar({
   };
 
   return (
-    <div
+    <Column
       ref={toolbarRef}
-      className={styles.toolbar}
+      fillWidth
+      position="sticky"
+      zIndex={3}
+      gap="8"
+      paddingX="12"
+      paddingY="8"
+      borderBottom="neutral-alpha-weak"
+      background="surface"
       role="toolbar"
       aria-label={t("adminNews.toolbar.label")}
+      style={{ top: "var(--news-sticky-top, 4rem)" }}
     >
-      <div className={styles.toolbarRow}>
-        <div className={styles.group}>
-          <select
-            className={styles.headingSelect}
-            aria-label={t("adminNews.toolbar.textStyle")}
+      <Row fillWidth wrap vertical="center" gap="4" style={{ columnGap: "var(--static-space-8)" }}>
+        <Row vertical="center" gap="2" className={styles.group}>
+          <MenuSelect
             value={state.heading}
-            onChange={(event) => setHeading(event.target.value)}
-          >
-            {state.heading === "other" && <option value="other">{t("adminNews.toolbar.otherHeading")}</option>}
-            {HEADING_VALUES.map((value) => (
-              <option key={value} value={value}>
-                {headingLabels[value]}
-              </option>
-            ))}
-          </select>
-        </div>
+            minWidth={10}
+            onSelect={setHeading}
+            options={HEADING_VALUES.map((value) => ({ value, label: headingLabels[value] }))}
+            trigger={
+              <Button
+                type="button"
+                variant="secondary"
+                size="m"
+                suffixIcon="chevronDown"
+                aria-label={t("adminNews.toolbar.textStyle")}
+                style={{ minWidth: "7.5rem" }}
+                onMouseDown={(event: React.MouseEvent) => event.preventDefault()}
+              >
+                {state.heading === "other"
+                  ? t("adminNews.toolbar.otherHeading")
+                  : headingLabels[state.heading as (typeof HEADING_VALUES)[number]]}
+              </Button>
+            }
+          />
+        </Row>
 
-        <div className={styles.group}>
+        <Row vertical="center" gap="2" className={styles.group}>
           <ToolButton
             label={t("adminNews.toolbar.bold")}
             shortcut={`${mod}+B`}
@@ -209,9 +230,9 @@ export function EditorToolbar({
           >
             <LuCode />
           </ToolButton>
-        </div>
+        </Row>
 
-        <div className={styles.group}>
+        <Row vertical="center" gap="2" className={styles.group}>
           <ToolButton
             label={t("adminNews.toolbar.link")}
             active={state.link || popover === "link"}
@@ -226,9 +247,9 @@ export function EditorToolbar({
           >
             <LuImage />
           </ToolButton>
-        </div>
+        </Row>
 
-        <div className={styles.group}>
+        <Row vertical="center" gap="2" className={styles.group}>
           <ToolButton
             label={t("adminNews.toolbar.bulletList")}
             shortcut={`${mod}+Shift+8`}
@@ -267,9 +288,9 @@ export function EditorToolbar({
           >
             <LuMinus />
           </ToolButton>
-        </div>
+        </Row>
 
-        <div className={styles.group}>
+        <Row vertical="center" gap="2" className={styles.group}>
           <ToolButton
             label={t("adminNews.toolbar.table")}
             active={state.table}
@@ -280,9 +301,9 @@ export function EditorToolbar({
           >
             <LuTable />
           </ToolButton>
-        </div>
+        </Row>
 
-        <div className={`${styles.group} ${styles.groupEnd}`}>
+        <Row vertical="center" gap="2" className={`${styles.group} ${styles.groupEnd}`}>
           <ToolButton
             label={t("adminNews.toolbar.undo")}
             shortcut={`${mod}+Z`}
@@ -299,45 +320,40 @@ export function EditorToolbar({
           >
             <LuRedo2 />
           </ToolButton>
-        </div>
-      </div>
+        </Row>
+      </Row>
 
       {state.table && (
-        <div className={styles.tableRow} role="group" aria-label={t("adminNews.toolbar.tableTools")}>
-          <span className={styles.tableLabel}>{t("adminNews.toolbar.tableTools")}</span>
-          <button type="button" className={styles.chip} onMouseDown={(e) => e.preventDefault()} onClick={() => run((c) => c.addRowAfter())}>
+        <Row
+          fillWidth
+          wrap
+          vertical="center"
+          gap="8"
+          paddingTop="8"
+          borderTop="neutral-alpha-weak"
+          borderStyle="dashed"
+          role="group"
+          aria-label={t("adminNews.toolbar.tableTools")}
+        >
+          <Eyebrow style={{ marginRight: "var(--static-space-4)", fontWeight: 400 }}>
+            {t("adminNews.toolbar.tableTools")}
+          </Eyebrow>
+          <TableButton onClick={() => run((c) => c.addRowAfter())}>
             {t("adminNews.toolbar.addRow")}
-          </button>
-          <button type="button" className={styles.chip} onMouseDown={(e) => e.preventDefault()} onClick={() => run((c) => c.addColumnAfter())}>
+          </TableButton>
+          <TableButton onClick={() => run((c) => c.addColumnAfter())}>
             {t("adminNews.toolbar.addColumn")}
-          </button>
-          <button
-            type="button"
-            className={styles.chip}
-            disabled={!state.canDeleteRow}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => run((c) => c.deleteRow())}
-          >
+          </TableButton>
+          <TableButton disabled={!state.canDeleteRow} onClick={() => run((c) => c.deleteRow())}>
             {t("adminNews.toolbar.deleteRow")}
-          </button>
-          <button
-            type="button"
-            className={styles.chip}
-            disabled={!state.canDeleteColumn}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => run((c) => c.deleteColumn())}
-          >
+          </TableButton>
+          <TableButton disabled={!state.canDeleteColumn} onClick={() => run((c) => c.deleteColumn())}>
             {t("adminNews.toolbar.deleteColumn")}
-          </button>
-          <button
-            type="button"
-            className={`${styles.chip} ${styles.chipDanger}`}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => run((c) => c.deleteTable())}
-          >
+          </TableButton>
+          <TableButton danger onClick={() => run((c) => c.deleteTable())}>
             {t("adminNews.toolbar.deleteTable")}
-          </button>
-        </div>
+          </TableButton>
+        </Row>
       )}
 
       {popover === "link" && (
@@ -346,7 +362,64 @@ export function EditorToolbar({
       {popover === "image" && (
         <ImagePopover editor={editor} onClose={() => setPopover(null)} />
       )}
-    </div>
+    </Column>
+  );
+}
+
+function TableButton({
+  danger,
+  disabled,
+  onClick,
+  children,
+}: {
+  danger?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button
+      type="button"
+      size="s"
+      rounded
+      variant={danger ? "danger" : "secondary"}
+      disabled={disabled}
+      onMouseDown={(event: React.MouseEvent) => event.preventDefault()}
+      onClick={onClick}
+    >
+      {children}
+    </Button>
+  );
+}
+
+/** The floating panel under the toolbar that holds the link and image forms. */
+function Popover({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Column
+      gap="8"
+      padding="12"
+      radius="m"
+      border="neutral-alpha-strong"
+      background="page"
+      shadow="l"
+      zIndex={6}
+      position="absolute"
+      role="dialog"
+      aria-label={label}
+      style={{
+        top: "calc(100% + 6px)",
+        left: "var(--static-space-12)",
+        width: "min(22rem, calc(100% - var(--static-space-24)))",
+      }}
+    >
+      {children}
+    </Column>
   );
 }
 
@@ -389,18 +462,19 @@ function LinkPopover({ editor, onClose }: { editor: Editor; onClose: () => void 
   };
 
   return (
-    <div className={styles.popover} role="dialog" aria-label={t("adminNews.toolbar.link")}>
-      <label className={styles.popLabel} htmlFor="news-link-url">
+    <Popover label={t("adminNews.toolbar.link")}>
+      <Text as="label" variant="label-default-s" onBackground="neutral-weak" htmlFor="news-link-url">
         {t("adminNews.toolbar.linkUrl")}
-      </label>
-      <input
+      </Text>
+      <Input
         id="news-link-url"
         ref={inputRef}
-        className={`${styles.popInput} ${invalid ? styles.popInputInvalid : ""}`}
+        size="s"
         type="text"
         inputMode="url"
         placeholder="https://"
         value={url}
+        error={invalid}
         aria-invalid={invalid}
         onChange={(event) => {
           setUrl(event.target.value);
@@ -413,22 +487,26 @@ function LinkPopover({ editor, onClose }: { editor: Editor; onClose: () => void 
           }
         }}
       />
-      {invalid && <p className={styles.popError}>{t("adminNews.toolbar.linkInvalid")}</p>}
-      <div className={styles.popActions}>
+      {invalid && (
+        <Text as="p" variant="label-default-s" onBackground="danger-strong">
+          {t("adminNews.toolbar.linkInvalid")}
+        </Text>
+      )}
+      <Row fillWidth vertical="center" gap="8">
         {existing && (
-          <button type="button" className={`${styles.popBtn} ${styles.popBtnDanger}`} onClick={remove}>
+          <Button type="button" size="s" variant="danger" onClick={remove}>
             {t("adminNews.toolbar.linkRemove")}
-          </button>
+          </Button>
         )}
-        <span className={styles.popSpacer} />
-        <button type="button" className={styles.popBtn} onClick={onClose}>
+        <Row flex={1} />
+        <Button type="button" size="s" variant="secondary" onClick={onClose}>
           {t("common.actions.cancel")}
-        </button>
-        <button type="button" className={`${styles.popBtn} ${styles.popBtnPrimary}`} onClick={apply} disabled={!url.trim()}>
+        </Button>
+        <Button type="button" size="s" variant="primary" onClick={apply} disabled={!url.trim()}>
           {t("adminNews.toolbar.linkApply")}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Row>
+    </Popover>
   );
 }
 
@@ -459,14 +537,14 @@ function ImagePopover({ editor, onClose }: { editor: Editor; onClose: () => void
   };
 
   return (
-    <div className={styles.popover} role="dialog" aria-label={t("adminNews.toolbar.image")}>
-      <label className={styles.popLabel} htmlFor="news-image-url">
+    <Popover label={t("adminNews.toolbar.image")}>
+      <Text as="label" variant="label-default-s" onBackground="neutral-weak" htmlFor="news-image-url">
         {t("adminNews.toolbar.imageUrl")}
-      </label>
-      <input
+      </Text>
+      <Input
         id="news-image-url"
         ref={inputRef}
-        className={styles.popInput}
+        size="s"
         type="text"
         inputMode="url"
         placeholder="https://"
@@ -479,12 +557,12 @@ function ImagePopover({ editor, onClose }: { editor: Editor; onClose: () => void
           }
         }}
       />
-      <label className={styles.popLabel} htmlFor="news-image-alt">
+      <Text as="label" variant="label-default-s" onBackground="neutral-weak" htmlFor="news-image-alt">
         {t("adminNews.toolbar.imageAlt")}
-      </label>
-      <input
+      </Text>
+      <Input
         id="news-image-alt"
-        className={styles.popInput}
+        size="s"
         type="text"
         value={alt}
         onChange={(event) => setAlt(event.target.value)}
@@ -501,20 +579,21 @@ function ImagePopover({ editor, onClose }: { editor: Editor; onClose: () => void
         hint={t("adminNews.toolbar.imageHint")}
         errorText={t("adminNews.toolbar.imageBroken")}
       />
-      <div className={styles.popActions}>
-        <span className={styles.popSpacer} />
-        <button type="button" className={styles.popBtn} onClick={onClose}>
+      <Row fillWidth vertical="center" gap="8">
+        <Row flex={1} />
+        <Button type="button" size="s" variant="secondary" onClick={onClose}>
           {t("common.actions.cancel")}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={`${styles.popBtn} ${styles.popBtnPrimary}`}
+          size="s"
+          variant="primary"
           onClick={insert}
           disabled={!valid || status === "loading"}
         >
           {t("adminNews.toolbar.imageInsert")}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Row>
+    </Popover>
   );
 }

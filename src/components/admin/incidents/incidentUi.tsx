@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, type ReactNode } from "react";
 import classNames from "classnames";
+import { Chip, Column, Grid, Row, StatusIndicator, Tag, Text, ToggleButton } from "@once-ui-system/core";
 import {
   IoAppsOutline,
   IoCheckmark,
@@ -19,6 +20,7 @@ import {
   IoSparklesOutline,
   IoWarningOutline,
 } from "react-icons/io5";
+import { TONE_COLOR } from "@/components/admin/overview/primitives";
 import { useT } from "@/i18n/client";
 import type { Formatters } from "@/i18n/format";
 import type { Translator } from "@/i18n/translate";
@@ -141,17 +143,13 @@ interface RadioCardsProps<V extends string> {
   disabled?: boolean;
 }
 
-const GROUP_CLASS = {
-  card: styles.groupCard,
-  tile: styles.groupTile,
-  chip: styles.groupChip,
-} as const;
-
 const OPTION_CLASS = {
   card: styles.optionCard,
   tile: styles.optionTile,
   chip: styles.optionChip,
 } as const;
+
+const OPTION_RADIUS = { card: "l", tile: "m", chip: "full" } as const;
 
 /** A radio group drawn as cards, tiles or pills, with roving focus and arrow-key navigation. */
 export function RadioCards<V extends string>({
@@ -162,7 +160,7 @@ export function RadioCards<V extends string>({
   variant,
   disabled,
 }: RadioCardsProps<V>) {
-  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const refs = useRef<(HTMLElement | null)[]>([]);
 
   const move = (from: number, step: number) => {
     const next = (from + step + options.length) % options.length;
@@ -198,44 +196,69 @@ export function RadioCards<V extends string>({
     options.findIndex((option) => option.value === value),
   );
 
+  const items = options.map((option, index) => (
+    <ToggleButton
+      key={option.value}
+      ref={(node) => {
+        refs.current[index] = node;
+      }}
+      type="button"
+      role="radio"
+      variant="outline"
+      size="l"
+      radius={OPTION_RADIUS[variant]}
+      horizontal="start"
+      fillWidth={variant !== "chip"}
+      aria-checked={option.value === value}
+      tabIndex={index === selectedIndex ? 0 : -1}
+      disabled={disabled}
+      onClick={() => onChange(option.value)}
+      onKeyDown={(event: React.KeyboardEvent) => onKeyDown(event, index)}
+      className={classNames(styles.option, OPTION_CLASS[variant], tones[option.tone])}
+    >
+      <Row fillWidth vertical={variant === "card" ? "start" : "center"} gap={variant === "card" ? "12" : "8"}>
+        <Row center aria-hidden className={styles.optionIcon}>
+          {option.icon}
+        </Row>
+        <Column flex={1} gap="2" align="start" style={{ minWidth: 0 }}>
+          <Text variant="body-strong-s" className={styles.optionLabel}>
+            {option.label}
+          </Text>
+          {option.description && (
+            <Text variant="body-default-xs" onBackground="neutral-weak" align="left">
+              {option.description}
+            </Text>
+          )}
+        </Column>
+        {variant === "card" && (
+          <Row center aria-hidden className={styles.optionCheck}>
+            <IoCheckmark />
+          </Row>
+        )}
+      </Row>
+    </ToggleButton>
+  ));
+
+  if (variant === "chip") {
+    return (
+      <Row role="radiogroup" aria-label={label} fillWidth wrap gap="8">
+        {items}
+      </Row>
+    );
+  }
+
   return (
-    <div
+    <Grid
       role="radiogroup"
       aria-label={label}
-      className={classNames(styles.group, GROUP_CLASS[variant])}
+      fillWidth
+      gap="8"
+      columns={variant === "card" ? "2" : undefined}
+      xs={variant === "card" ? { columns: "1" } : undefined}
+      style={variant === "tile" ? { gridTemplateColumns: "repeat(auto-fill, minmax(9.75rem, 1fr))" } : undefined}
     >
-      {options.map((option, index) => (
-        <button
-          key={option.value}
-          ref={(node) => {
-            refs.current[index] = node;
-          }}
-          type="button"
-          role="radio"
-          aria-checked={option.value === value}
-          tabIndex={index === selectedIndex ? 0 : -1}
-          disabled={disabled}
-          onClick={() => onChange(option.value)}
-          onKeyDown={(event) => onKeyDown(event, index)}
-          className={classNames(styles.option, OPTION_CLASS[variant], tones[option.tone])}
-        >
-          <span aria-hidden className={styles.optionIcon}>
-            {option.icon}
-          </span>
-          <span className={styles.optionText}>
-            <span className={styles.optionLabel}>{option.label}</span>
-            {option.description && (
-              <span className={styles.optionDescription}>{option.description}</span>
-            )}
-          </span>
-          {variant === "card" && (
-            <span aria-hidden className={styles.optionCheck}>
-              <IoCheckmark />
-            </span>
-          )}
-        </button>
-      ))}
-    </div>
+      {items}
+    </Grid>
   );
 }
 
@@ -350,18 +373,21 @@ export function StatusChip({
   ongoing?: boolean;
 }) {
   const labels = useIncidentLabels();
+  const tone = statusTone(status);
 
   return (
-    <span
-      className={classNames(
-        styles.statusChip,
-        ongoing && styles.statusChipOngoing,
-        tones[statusTone(status)],
-      )}
-    >
-      <span aria-hidden className={styles.statusDot} />
-      {labels.status(status)}
-    </span>
+    <Tag scheme={tone === "brand" ? "brand" : tone} size="m" radius="full">
+      <Row vertical="center" gap="8" paddingRight="4">
+        <StatusIndicator
+          aria-hidden
+          ariaLabel=""
+          size="m"
+          color={tone === "brand" ? "magenta" : TONE_COLOR[tone]}
+          className={classNames(ongoing && styles.pulse, tones[tone])}
+        />
+        <Text variant="label-strong-s">{labels.status(status)}</Text>
+      </Row>
+    </Tag>
   );
 }
 
@@ -369,10 +395,14 @@ export function AutoBadge() {
   const t = useT();
 
   return (
-    <span className={styles.autoBadge} title={t("adminIncidents.meta.autoHint")}>
-      <IoSparklesOutline aria-hidden />
-      {t("adminIncidents.meta.auto")}
-    </span>
+    <Tag scheme="brand" size="s" title={t("adminIncidents.meta.autoHint")}>
+      <Row vertical="center" gap="4">
+        <IoSparklesOutline aria-hidden />
+        <Text variant="label-strong-xs" style={{ letterSpacing: "0.04em", textTransform: "uppercase" }}>
+          {t("adminIncidents.meta.auto")}
+        </Text>
+      </Row>
+    </Tag>
   );
 }
 
@@ -380,13 +410,13 @@ export function CharCounter({ count, max }: { count: number; max: number }) {
   const t = useT();
 
   return (
-    <span
-      className={styles.counter}
-      data-near={count >= max * 0.9 && count <= max}
-      data-over={count > max}
+    <Text
+      variant="body-default-xs"
+      onBackground={count > max ? "danger-strong" : count >= max * 0.9 ? "warning-strong" : "neutral-weak"}
+      style={{ flexShrink: 0, fontVariantNumeric: "tabular-nums" }}
     >
       {t("adminIncidents.counter", { count, max })}
-    </span>
+    </Text>
   );
 }
 
@@ -410,20 +440,20 @@ export function TemplateChips({
   onPick: (key: string) => void;
 }) {
   return (
-    <div className={styles.templates} role="group" aria-label={label}>
-      <span className={styles.counter}>{label}</span>
+    <Row fillWidth wrap vertical="center" gap="8" role="group" aria-label={label}>
+      <Text variant="body-default-xs" onBackground="neutral-weak">
+        {label}
+      </Text>
       {templates.map((template) => (
-        <button
+        <Chip
           key={template.key}
-          type="button"
-          className={styles.templateButton}
-          onClick={() => onPick(template.key)}
+          selected={false}
+          prefixIcon="sparkle"
+          label={template.label}
           title={template.text}
-        >
-          <IoSparklesOutline aria-hidden />
-          {template.label}
-        </button>
+          onClick={() => onPick(template.key)}
+        />
       ))}
-    </div>
+    </Row>
   );
 }

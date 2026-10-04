@@ -1,20 +1,7 @@
-@use "../../styles/breakpoints.scss" as breakpoints;
-
 // Two columns of cards once the page has room (`page` container of AppShell), a sticky
 // index of the sections on the right when there is room for that as well. Phones and
 // tablets get one column, in the same order.
-.layout {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--static-space-24);
-  // Room for the floating unsaved-changes bar.
-  padding-bottom: 7rem;
-}
-
 .sections {
-  flex: 1;
-  min-width: 0;
-  display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--static-space-24);
 
@@ -45,209 +32,54 @@
   }
 }
 
-.index {
-  position: sticky;
-  top: var(--static-space-24);
-  flex-shrink: 0;
-  width: 13.5rem;
+// Shown only when the page is wide enough. `.index.index` outranks the `display` utility of
+// the Column it sits on.
+.index.index {
   display: none;
-  flex-direction: column;
-  gap: var(--static-space-8);
+  flex-shrink: 0;
 
   @container page (min-width: 1480px) {
     display: flex;
   }
 }
 
-.indexLabel {
-  margin: 0;
-  padding: 0 var(--static-space-12);
-  color: var(--neutral-on-background-weak);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+// `[aria-current]` (always set) lifts the rule above the size class of the ToggleButton.
+.indexItem[aria-current] {
+  padding-inline: var(--static-space-12);
 }
 
-.indexList {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.indexItem {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--static-space-12);
-  width: 100%;
-  min-height: 2.25rem;
-  padding: 0 var(--static-space-12);
-  border: 0;
-  border-radius: var(--radius-m);
-  background: transparent;
-  color: var(--neutral-on-background-medium);
-  font: inherit;
-  font-size: var(--font-size-body-s, 0.875rem);
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
-
-  &:hover {
-    background: var(--neutral-alpha-weak);
-    color: var(--neutral-on-background-strong);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--brand-solid-strong);
-    outline-offset: 1px;
-  }
-
-  &[aria-current="true"] {
-    background: color-mix(in srgb, var(--brand-alpha-medium) 55%, transparent);
-    color: var(--neutral-on-background-strong);
-    font-weight: 600;
-
-    &::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 22%;
-      bottom: 22%;
-      width: 3px;
-      border-radius: 0 3px 3px 0;
-      background: var(--brand-solid-strong);
-    }
-  }
-}
-
-.indexText {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.unsavedDot {
-  flex-shrink: 0;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--warning-solid-strong);
+// The accent bar of the current section.
+.indexItem[aria-current="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--brand-solid-strong);
 }
 
 .section {
-  min-width: 0;
   // Anchors from the index and from the overview land below the top edge.
   scroll-margin-top: var(--static-space-24);
-
-  // Cards of one row share the height.
-  > * {
-    height: 100%;
-  }
-}
-
-.sectionTitle {
-  display: flex;
-  align-items: center;
-  gap: var(--static-space-8);
 }
 
 // ---------------------------------------------------------------------------
-// Fields
+// Choice chips (banner style, service status). The selected chip takes the colour of its tone.
+// The second selector outranks the hover rule of the ToggleButton underneath.
 // ---------------------------------------------------------------------------
 
-.fieldMeta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--static-space-4) var(--static-space-12);
-  padding: 0 var(--static-space-4);
-  min-height: 1.5rem;
-}
-
-.metaText {
-  flex: 1 1 14rem;
-  min-width: 0;
-  color: var(--neutral-on-background-weak);
-  font-size: 0.8125rem;
-  line-height: 1.35;
-}
-
-.metaTools {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  margin-left: auto;
-  gap: var(--static-space-8);
-}
-
-.counter {
-  color: var(--neutral-on-background-weak);
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-
-  &[data-level="near"] {
-    color: var(--warning-on-background-strong);
-  }
-
-  &[data-level="full"] {
-    color: var(--danger-on-background-strong);
-  }
-}
-
-.valid {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--static-space-4);
-  color: var(--success-on-background-strong);
-}
-
-// ---------------------------------------------------------------------------
-// Choice chips (banner style, service status)
-// ---------------------------------------------------------------------------
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--static-space-8);
+.chip[data-tone] {
+  height: 2.25rem;
+  min-height: 2.25rem;
+  padding-inline: var(--static-space-12);
 }
 
 .chip {
   --tone: var(--neutral-solid-strong);
   --tone-bg: var(--neutral-alpha-weak);
   --tone-border: var(--neutral-alpha-strong);
-
-  display: inline-flex;
-  align-items: center;
-  gap: var(--static-space-8);
-  min-height: 2.25rem;
-  padding: 0 var(--static-space-12);
-  border: 1px solid var(--neutral-alpha-medium);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--neutral-on-background-medium);
-  font: inherit;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-
-  &:hover {
-    background: var(--neutral-alpha-weak);
-    color: var(--neutral-on-background-strong);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--brand-solid-strong);
-    outline-offset: 2px;
-  }
 
   &[data-tone="success"] {
     --tone: var(--success-solid-strong);
@@ -270,20 +102,15 @@
     --tone-border: var(--info-alpha-strong);
   }
 
-  &[aria-checked="true"] {
+  &[aria-checked="true"],
+  &[aria-checked="true"]:hover:not([data-disabled]) {
     border-color: var(--tone-border);
     background: var(--tone-bg);
-    color: var(--neutral-on-background-strong);
     font-weight: 600;
   }
 }
 
 .chipDot {
-  flex-shrink: 0;
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--tone);
   opacity: 0.55;
 
   .chip[aria-checked="true"] & {
@@ -293,155 +120,21 @@
 }
 
 // ---------------------------------------------------------------------------
-// Preview frame
+// Previews
 // ---------------------------------------------------------------------------
-
-.previewLabel {
-  display: flex;
-  align-items: center;
-  gap: var(--static-space-8);
-  margin: 0;
-  color: var(--neutral-on-background-weak);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.frame {
-  overflow: hidden;
-  border: 1px solid var(--neutral-alpha-medium);
-  border-radius: var(--radius-l);
-  background: var(--page-background);
-  // The preview mirrors the public site, it is not interactive.
-  pointer-events: none;
-  user-select: none;
-}
 
 .faded {
   opacity: 0.35;
   filter: saturate(0.6);
 }
 
-.fakeHeader {
-  display: flex;
-  align-items: center;
-  gap: var(--static-space-12);
-  padding: var(--static-space-12) var(--static-space-16);
-}
-
-.fakeLine {
-  height: 0.5rem;
-  border-radius: 999px;
-  background: var(--neutral-alpha-medium);
-}
-
-.fakeBody {
-  padding: var(--static-space-4) var(--static-space-16) var(--static-space-16);
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-8);
-}
-
-.heroFrame {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--static-space-24);
-  padding: var(--static-space-32) var(--static-space-24);
-  overflow: hidden;
-  border: 1px solid var(--neutral-alpha-medium);
-  border-radius: var(--radius-l);
-  background: var(--page-background);
-  pointer-events: none;
-  user-select: none;
-}
-
 .heroGlow {
-  position: absolute;
-  inset: 0;
   background:
     radial-gradient(60% 80% at 20% 110%, var(--brand-alpha-medium), transparent 70%),
     linear-gradient(var(--neutral-alpha-weak) 1px, transparent 1px) 0 0 / 1rem 1rem,
     linear-gradient(90deg, var(--neutral-alpha-weak) 1px, transparent 1px) 0 0 / 1rem 1rem;
 }
 
-.heroContent {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--static-space-8);
-  min-width: 0;
-  max-width: 28rem;
-  text-align: center;
-}
-
-.heroAvatar {
-  position: relative;
-  flex-shrink: 0;
-  width: 7rem;
-  height: 7rem;
-  border: 2px solid var(--brand-alpha-strong);
-  border-radius: 50%;
-  padding: var(--static-space-2);
-  overflow: hidden;
-
-  @include breakpoints.s {
-    display: none;
-  }
-}
-
 .wrapText {
   overflow-wrap: anywhere;
-}
-
-// ---------------------------------------------------------------------------
-// Status rows
-// ---------------------------------------------------------------------------
-
-.serviceRow {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-12);
-  padding: var(--static-space-16);
-  border: 1px solid var(--neutral-alpha-medium);
-  border-radius: var(--radius-l);
-  background: var(--neutral-alpha-weak);
-  transition: opacity 0.2s ease;
-
-  &[data-muted="true"] {
-    opacity: 0.55;
-  }
-}
-
-.callout {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--static-space-12);
-  padding: var(--static-space-16);
-  border: 1px solid var(--warning-alpha-strong);
-  border-radius: var(--radius-l);
-  background: var(--warning-alpha-weak);
-}
-
-.switchRow {
-  display: flex;
-  align-items: center;
-  gap: var(--static-space-16);
-  padding: var(--static-space-12) var(--static-space-16);
-  border: 1px solid var(--neutral-alpha-medium);
-  border-radius: var(--radius-l);
-  background: var(--neutral-alpha-weak);
-
-  &[data-on="true"][data-tone="warning"] {
-    border-color: var(--warning-alpha-strong);
-    background: var(--warning-alpha-weak);
-  }
-}
-
-.grow {
-  flex: 1;
-  min-width: 0;
 }

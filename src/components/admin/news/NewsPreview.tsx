@@ -1,11 +1,10 @@
 "use client";
 
 import React from "react";
-import { Column, Tag, Text, Row } from "@once-ui-system/core";
+import { Column, Media, Row, Tag, Text } from "@once-ui-system/core";
 import { Markdown } from "@/components/content/Markdown";
 import { useFormat, useT } from "@/i18n/client";
 import { isNewsCategory } from "@/lib/news/categories";
-import styles from "./NewsPreview.module.scss";
 
 interface NewsPreviewProps {
   title: string;
@@ -24,8 +23,16 @@ export function NewsPreview({ title, summary, content, category, coverUrl, date 
   const cover = /^https?:\/\/\S+$/i.test(coverUrl.trim()) ? coverUrl.trim() : "";
 
   return (
-    <div className={styles.frame}>
-      <Column maxWidth="s" fillWidth gap="24" className={styles.article}>
+    <Row
+      fillWidth
+      horizontal="center"
+      paddingX="24"
+      paddingY="40"
+      s={{ paddingX: "16", paddingY: "24" }}
+      background="page"
+      bottomRadius="l"
+    >
+      <Column maxWidth="s" fillWidth gap="24">
         <Column gap="12">
           <Row gap="8" vertical="center" wrap>
             <Tag scheme="neutral">
@@ -44,19 +51,8 @@ export function NewsPreview({ title, summary, content, category, coverUrl, date 
         </Column>
 
         {cover && (
-          // A plain <img>: the cover can live on any host, which next/image would refuse.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={cover}
-            src={cover}
-            alt={title}
-            style={{
-              width: "100%",
-              aspectRatio: "16 / 9",
-              objectFit: "cover",
-              borderRadius: "var(--radius-l)",
-            }}
-          />
+          // The cover can live on any host, so the image is not optimised.
+          <Media key={cover} unoptimized src={cover} alt={title} aspectRatio="16 / 9" radius="l" />
         )}
 
         <Column fillWidth gap="16">
@@ -69,6 +65,6 @@ export function NewsPreview({ title, summary, content, category, coverUrl, date 
           )}
         </Column>
       </Column>
-    </div>
+    </Row>
   );
 }

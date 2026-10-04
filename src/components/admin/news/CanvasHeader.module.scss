@@ -1,172 +1,41 @@
-@use "../../styles/breakpoints.scss" as breakpoints;
+// The title and the summary are edited in place, so their fields take the typography of the
+// published article instead of the look of a form field.
+// The field chrome of the Textarea (minimum height, insets) is stripped so the text sits flush.
+.titleField,
+.summaryField {
+  [data-surface="field"] {
+    min-height: 0;
 
-// Same column and rhythm as src/app/(main)/news/[slug]/page.tsx: 768px wide, 24px between blocks.
-.header {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-12);
-  width: 100%;
-  max-width: var(--responsive-width-s, 768px);
-  margin: 0 auto;
-  padding: var(--static-space-32) var(--static-space-24) var(--static-space-24);
-  font-family: var(--font-body);
+    > div {
+      padding: 0;
+    }
 
-  @include breakpoints.s {
-    padding: var(--static-space-24) var(--static-space-16) var(--static-space-16);
+    textarea {
+      overflow: hidden;
+      padding: var(--static-space-2) 0;
+    }
   }
-}
-
-.meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--static-space-8);
-}
-
-.tagPick {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--static-space-4);
-  padding-right: var(--static-space-4);
-  border-radius: var(--radius-s);
-  cursor: pointer;
-
-  &:focus-within {
-    outline: 2px solid var(--brand-solid-strong);
-    outline-offset: 2px;
-  }
-
-  &:hover {
-    filter: brightness(1.15);
-  }
-}
-
-.tagChevron {
-  width: 0.8rem;
-  height: 0.8rem;
-  color: var(--neutral-on-background-weak);
-}
-
-.tagSelect {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-  // Dark option list in dark theme.
-  color-scheme: light dark;
-}
-
-.date {
-  color: var(--neutral-on-background-weak);
-  font-size: calc(var(--font-size-body-xs, 0.75rem) * var(--font-size-body-multiplier, 1));
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-4);
 }
 
 // display-strong-xs, like the published title.
-.title {
-  display: block;
-  width: 100%;
-  margin: 0;
-  padding: var(--static-space-2) 0;
-  border: none;
-  border-radius: var(--radius-s);
-  background: transparent;
-  color: var(--neutral-on-background-strong);
+.titleField [data-surface="field"] textarea {
   font-family: var(--font-heading);
   font-size: calc(var(--font-size-display-xs) * var(--font-size-display-multiplier, 1));
   font-weight: var(--font-weight-display-strong);
   line-height: calc(var(--line-height-display-xs) * var(--line-height-display-multiplier, 1));
-  resize: none;
-  overflow: hidden;
-  outline: none;
-
-  &::placeholder {
-    color: var(--neutral-on-background-weak);
-    opacity: 0.6;
-  }
 }
 
 // body-default-m in neutral-medium, like the published summary.
-.summary {
-  display: block;
-  width: 100%;
-  margin: 0;
-  padding: var(--static-space-2) 0;
-  border: none;
-  border-radius: var(--radius-s);
-  background: transparent;
+.summaryField [data-surface="field"] textarea {
   color: var(--neutral-on-background-medium);
   font-family: var(--font-body);
   font-size: calc(var(--font-size-body-m) * var(--font-size-body-multiplier, 1));
   line-height: calc(var(--line-height-body-m) * var(--line-height-body-multiplier, 1));
-  resize: none;
-  overflow: hidden;
-  outline: none;
-
-  &::placeholder {
-    color: var(--neutral-on-background-weak);
-    opacity: 0.7;
-  }
 }
 
-.title,
-.summary {
-  transition: box-shadow 0.15s ease;
-
-  // A hairline under the field in focus: in-place editing without a "form" look.
-  &:focus-visible {
-    box-shadow: 0 1px 0 0 var(--brand-alpha-strong);
-  }
-}
-
-.invalid,
-.invalid:focus-visible {
-  box-shadow: 0 1px 0 0 var(--danger-solid-strong);
-}
-
-.summaryMeta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 0;
-}
-
-.counter {
-  margin-left: auto;
-  color: var(--neutral-on-background-weak);
-  font-size: var(--font-size-label-s, 0.75rem);
-  font-variant-numeric: tabular-nums;
-
-  &[data-level="near"] {
-    color: var(--warning-on-background-strong);
-  }
-
-  &[data-level="max"] {
-    color: var(--danger-on-background-strong);
-  }
-}
-
-.error {
-  margin: 0;
-  color: var(--danger-on-background-strong);
-  font-size: var(--font-size-label-s, 0.75rem);
-}
-
-/* Cover */
-
+// The published cover has no border and a larger radius; the edit buttons appear on hover.
 .cover {
-  position: relative;
-  margin-top: var(--static-space-12);
 
-  // The published cover has no border and a larger radius.
   > :first-child {
     border: none;
     border-radius: var(--radius-l);
@@ -179,11 +48,6 @@
 }
 
 .coverActions {
-  position: absolute;
-  top: var(--static-space-12);
-  right: var(--static-space-12);
-  display: flex;
-  gap: var(--static-space-8);
   opacity: 0;
   transition: opacity 0.15s ease;
 
@@ -192,135 +56,14 @@
   }
 }
 
-.coverBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--static-space-4);
-  height: 2rem;
-  padding: 0 var(--static-space-12);
-  border: 1px solid var(--neutral-alpha-strong);
-  border-radius: var(--radius-s);
+// Buttons over the picture: translucent and blurred. The doubled class outranks the variant.
+.coverBtn.coverBtn {
   background: color-mix(in srgb, var(--page-background) 82%, transparent);
   backdrop-filter: blur(8px);
-  color: var(--neutral-on-background-strong);
-  font: inherit;
-  font-size: var(--font-size-label-m, 0.8125rem);
-  cursor: pointer;
-
-  svg {
-    width: 0.9rem;
-    height: 0.9rem;
-  }
-
-  &:hover {
-    background: var(--page-background);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--brand-solid-strong);
-    outline-offset: 2px;
-  }
 }
 
-.coverEmptyWrap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-4);
-  margin-top: var(--static-space-4);
-}
-
-.addCover {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--static-space-8);
-  width: 100%;
-  height: 3.5rem;
-  border: 1px dashed var(--neutral-alpha-strong);
-  border-radius: var(--radius-l);
-  background: transparent;
-  color: var(--neutral-on-background-weak);
-  font: inherit;
-  font-size: var(--font-size-body-s, 0.875rem);
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-
-  svg {
-    width: 1.1rem;
-    height: 1.1rem;
-  }
-
-  &:hover {
-    border-color: var(--brand-alpha-strong);
-    background: var(--brand-alpha-weak);
-    color: var(--brand-on-background-strong);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--brand-solid-strong);
-    outline-offset: 2px;
-  }
-}
-
-.coverForm {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-8);
-  margin-top: var(--static-space-4);
-  padding: var(--static-space-12);
-  border: 1px solid var(--neutral-alpha-medium);
-  border-radius: var(--radius-l);
-  background: var(--neutral-alpha-weak);
-}
-
-.coverRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--static-space-8);
-}
-
-.coverInput {
-  flex: 1 1 14rem;
-  min-width: 0;
-  height: 2.25rem;
-  padding: 0 var(--static-space-12);
-  border: 1px solid var(--neutral-alpha-medium);
-  border-radius: var(--radius-s);
-  background: var(--page-background);
-  color: var(--neutral-on-background-strong);
-  font: inherit;
-  font-size: var(--font-size-body-s, 0.875rem);
-
-  &:focus {
-    outline: 2px solid var(--brand-solid-strong);
-  }
-}
-
-.coverApply,
-.coverCancel {
-  height: 2.25rem;
-  padding: 0 var(--static-space-16);
-  border: 1px solid var(--neutral-alpha-medium);
-  border-radius: var(--radius-s);
-  background: var(--neutral-alpha-weak);
-  color: var(--neutral-on-background-strong);
-  font: inherit;
-  font-size: var(--font-size-label-m, 0.8125rem);
-  cursor: pointer;
-
-  &:focus-visible {
-    outline: 2px solid var(--brand-solid-strong);
-    outline-offset: 2px;
-  }
-}
-
-.coverApply {
-  border-color: var(--brand-solid-strong);
-  background: var(--brand-solid-strong);
-  color: var(--brand-on-solid-strong);
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
+.addCover[class]:hover {
+  border-color: var(--brand-alpha-strong);
+  background: var(--brand-alpha-weak);
+  color: var(--brand-on-background-strong);
 }

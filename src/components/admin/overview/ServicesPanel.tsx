@@ -3,8 +3,8 @@ import { Column, Row, Text } from "@once-ui-system/core";
 import type { StatusSnapshot } from "@/lib/status/status";
 import { STATUS_TONE } from "@/lib/admin/defaults";
 import { getFormatters, getT } from "@/i18n/server";
+import { PlainItem, PlainList } from "@/components/admin/PlainList";
 import { Panel, StatusDot, StatusPill } from "./primitives";
-import styles from "./Overview.module.scss";
 
 /** Every service with its state, note and the time of the last check. */
 export async function ServicesPanel({ snapshot }: { snapshot: StatusSnapshot }) {
@@ -23,7 +23,7 @@ export async function ServicesPanel({ snapshot }: { snapshot: StatusSnapshot }) 
         </Text>
       }
     >
-      <ul className={styles.list}>
+      <PlainList gap="4">
         {snapshot.services.map((service) => {
           const tone = STATUS_TONE[service.status];
           // The shard counter comes from the metrics so it can be translated.
@@ -39,12 +39,21 @@ export async function ServicesPanel({ snapshot }: { snapshot: StatusSnapshot }) 
               : null);
 
           return (
-            <li key={service.key} className={styles.serviceRow}>
+            <PlainItem
+              key={service.key}
+              vertical="center"
+              gap="12"
+              paddingX="12"
+              paddingY="8"
+              radius="m"
+              background="neutral-alpha-weak"
+              minHeight={2.75}
+            >
               <StatusDot tone={tone} />
-              <Column className={styles.grow} gap="2">
+              <Column flex={1} gap="2">
                 <Text variant="body-strong-s">{t(`admin.components.${service.key}`)}</Text>
                 {note && (
-                  <Text variant="body-default-xs" onBackground="neutral-weak" className={styles.truncate}>
+                  <Text variant="body-default-xs" onBackground="neutral-weak" truncate>
                     {note}
                   </Text>
                 )}
@@ -52,10 +61,10 @@ export async function ServicesPanel({ snapshot }: { snapshot: StatusSnapshot }) 
               <Row>
                 <StatusPill tone={tone}>{t(`admin.serviceStatus.${service.status}`)}</StatusPill>
               </Row>
-            </li>
+            </PlainItem>
           );
         })}
-      </ul>
+      </PlainList>
     </Panel>
   );
 }

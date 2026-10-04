@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Banner, Icon, Row, Text } from "@once-ui-system/core";
+import { Banner, Column, Icon, Row, Text } from "@once-ui-system/core";
 import { useT } from "@/i18n/client";
 import styles from "./Config.module.scss";
 
@@ -38,39 +38,45 @@ export function BannerPreview({
       : t("admin.config.banner.empty");
 
   return (
-    <div>
-      <div className={styles.frame} aria-hidden>
+    <Column fillWidth>
+      <Column
+        fillWidth
+        overflow="hidden"
+        border="neutral-alpha-medium"
+        radius="l"
+        background="page"
+        pointerEvents="none"
+        aria-hidden
+      >
         {/* Not live: still draw the strip, faded, so the colours can be judged. */}
-        <div className={live ? undefined : styles.faded}>
+        <Column fillWidth className={live ? undefined : styles.faded}>
           <Banner solid={banner.solid as never} onSolid={banner.onSolid as never}>
             <Icon name={variant === "success" ? "check" : "warning"} size="s" />
-            <span className={styles.wrapText}>{trimmed || t("admin.config.banner.sample")}</span>
+            <Text className={styles.wrapText}>{trimmed || t("admin.config.banner.sample")}</Text>
           </Banner>
-        </div>
+        </Column>
 
-        <div className={styles.fakeHeader}>
-          <span
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: "50%",
-              background: "var(--brand-alpha-medium)",
-              border: "1px solid var(--brand-alpha-strong)",
-            }}
+        <Row fillWidth vertical="center" gap="12" paddingX="16" paddingY="12">
+          <Row
+            width={1.5}
+            height={1.5}
+            radius="full"
+            background="brand-alpha-medium"
+            border="brand-alpha-strong"
           />
           <Text variant="label-strong-s">Amelia</Text>
-          <Row gap="8" style={{ marginLeft: "auto" }}>
-            <span className={styles.fakeLine} style={{ width: 36 }} />
-            <span className={styles.fakeLine} style={{ width: 28 }} />
-            <span className={styles.fakeLine} style={{ width: 44 }} />
+          <Row fitWidth gap="8" style={{ marginLeft: "auto" }}>
+            <FakeLine width={2.25} />
+            <FakeLine width={1.75} />
+            <FakeLine width={2.75} />
           </Row>
-        </div>
+        </Row>
 
-        <div className={styles.fakeBody}>
-          <span className={styles.fakeLine} style={{ width: "55%" }} />
-          <span className={styles.fakeLine} style={{ width: "38%" }} />
-        </div>
-      </div>
+        <Column fillWidth gap="8" paddingX="16" paddingTop="4" paddingBottom="16">
+          <FakeLine width="55%" />
+          <FakeLine width="38%" />
+        </Column>
+      </Column>
 
       {note && (
         <Row gap="8" vertical="center" paddingTop="8">
@@ -80,6 +86,11 @@ export function BannerPreview({
           </Text>
         </Row>
       )}
-    </div>
+    </Column>
   );
+}
+
+/** A grey bar standing in for text in the sketch of the site. */
+function FakeLine({ width }: { width: number | `${number}%` }) {
+  return <Row width={width} height={0.5} radius="full" background="neutral-alpha-medium" />;
 }

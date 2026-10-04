@@ -1,5 +1,5 @@
 import React from "react";
-import { Column, RevealFx, Row, Text } from "@once-ui-system/core";
+import { Column, Grid, RevealFx, Row, Text } from "@once-ui-system/core";
 import type { StatusMetrics } from "@/lib/status/status";
 import type { IconName } from "@/resources/icons";
 import { getFormatters, getT } from "@/i18n/server";
@@ -80,7 +80,7 @@ export async function StatTiles({ metrics }: { metrics: StatusMetrics }) {
   ];
 
   return (
-    <div className={styles.tiles}>
+    <Grid className={styles.tiles}>
       {tiles.map((tile, index) => (
         <RevealFx key={tile.key} fillWidth delay={index * 60} speed="fast" translateY="8">
           <Column
@@ -93,7 +93,7 @@ export async function StatTiles({ metrics }: { metrics: StatusMetrics }) {
           >
             <Row fillWidth vertical="center" gap="12">
               <IconTile name={tile.icon} size={32} tone={tile.tone} />
-              <Text variant="label-default-s" onBackground="neutral-weak" className={styles.truncate}>
+              <Text variant="label-default-s" onBackground="neutral-weak" truncate>
                 {tile.label}
               </Text>
             </Row>
@@ -106,6 +106,6 @@ export async function StatTiles({ metrics }: { metrics: StatusMetrics }) {
           </Column>
         </RevealFx>
       ))}
-    </div>
+    </Grid>
   );
 }

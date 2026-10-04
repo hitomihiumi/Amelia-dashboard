@@ -1,26 +1,10 @@
-.layout,
-.backLink,
-.header,
-.buttons,
-.stepper,
-.editor,
-.notice,
-.noticeInfo,
-.dangerRow,
-.empty,
-.timeline {
-  font-family: var(--font-body);
-}
-
 // Two panes (incident + timeline | composer) once the page has room next to the sidebar;
 // below that the composer comes first, it is the thing you open this page for.
 .layout {
-  display: flex;
-  flex-direction: column;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--static-space-24);
 
   @container page (min-width: 980px) {
-    display: grid;
     grid-template-columns: minmax(0, 1fr) 24rem;
     align-items: start;
   }
@@ -34,17 +18,13 @@
   }
 }
 
-.aside {
-  min-width: 0;
-}
-
 // Narrow: the main column dissolves so the composer can sit between the header and the timeline.
-.main {
+// The doubled classes outrank the `display` / `position` utilities of the Columns they sit on.
+.main.main {
   display: contents;
 
   @container page (min-width: 980px) {
     display: flex;
-    flex-direction: column;
     gap: var(--static-space-24);
     min-width: 0;
   }
@@ -52,7 +32,6 @@
 
 .orderHeader {
   order: 0;
-  min-width: 0;
 }
 
 .aside {
@@ -61,12 +40,10 @@
 
 .orderTimeline {
   order: 2;
-  min-width: 0;
 }
 
 .orderDanger {
   order: 3;
-  min-width: 0;
 }
 
 @container page (min-width: 980px) {
@@ -78,137 +55,28 @@
   }
 }
 
-.composerSticky {
+.composerSticky.composerSticky {
   @container page (min-width: 980px) {
     position: sticky;
     top: var(--static-space-24);
   }
 }
 
-.backLink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--static-space-8);
-  min-height: 2rem;
-  color: var(--neutral-on-background-medium);
-  font-size: var(--font-size-body-s, 0.875rem);
-  text-decoration: none;
-  transition: color 0.15s ease;
-
-  &:hover {
-    color: var(--neutral-on-background-strong);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--brand-solid-strong);
-    outline-offset: 2px;
-    border-radius: var(--radius-s);
-  }
+// The severity bar down the left edge of the header card.
+.header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: var(--tone);
 }
 
 // ---------------------------------------------------------------------------
-// Header card
+// Progress stepper: the marker and label take the colour of their step's tone once reached.
 // ---------------------------------------------------------------------------
-.header {
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 4px;
-    background: var(--tone);
-  }
-}
-
-.titleRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--static-space-12);
-}
-
-.title {
-  min-width: 0;
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
-.badges {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--static-space-8);
-}
-
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--static-space-4) var(--static-space-20);
-  color: var(--neutral-on-background-weak);
-  font-size: var(--font-size-body-s, 0.875rem);
-}
-
-.metaItem {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--static-space-8);
-}
-
-.divider {
-  height: 1px;
-  background: var(--neutral-alpha-weak);
-}
-
-.editGrid {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-20);
-}
-
-.hint {
-  color: var(--neutral-on-background-weak);
-  font-size: var(--font-size-body-xs, 0.75rem);
-}
-
-.fieldFoot {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--static-space-4);
-}
-
-.buttons {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--static-space-8);
-}
-
-// ---------------------------------------------------------------------------
-// Progress stepper
-// ---------------------------------------------------------------------------
-.stepper {
-  display: flex;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
 .step {
-  position: relative;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--static-space-8);
-  min-width: 0;
-  text-align: center;
-
   // The segment that leads into this step.
   &::before {
     content: "";
@@ -232,15 +100,6 @@
 
 .stepMarker {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 2px solid var(--neutral-alpha-strong);
-  border-radius: 50%;
-  background: var(--surface-background);
-  color: var(--neutral-on-background-weak);
   font-size: 1.125rem;
   transition:
     background-color 0.2s ease,
@@ -266,14 +125,9 @@
   color: var(--page-background);
 }
 
-.stepLabel {
+.step .stepLabel {
   max-width: 100%;
-  overflow: hidden;
   padding: 0 var(--static-space-4);
-  color: var(--neutral-on-background-weak);
-  font-size: var(--font-size-label-s, 0.8125rem);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 
   @container page (max-width: 480px) {
     padding: 0;
@@ -289,157 +143,4 @@
 .stepCurrent .stepLabel {
   color: var(--neutral-on-background-strong);
   font-weight: 600;
-}
-
-// ---------------------------------------------------------------------------
-// Timeline
-// ---------------------------------------------------------------------------
-.timeline {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.entry {
-  display: grid;
-  grid-template-columns: 2.25rem minmax(0, 1fr);
-  column-gap: var(--static-space-16);
-}
-
-.rail {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.dot {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid var(--tone-line);
-  border-radius: 50%;
-  background: var(--tone-soft);
-  color: var(--tone);
-  font-size: 1.125rem;
-}
-
-.dotOpened {
-  border-style: dashed;
-  background: transparent;
-}
-
-.line {
-  flex: 1;
-  width: 2px;
-  min-height: var(--static-space-16);
-  margin: var(--static-space-4) 0;
-  border-radius: 1px;
-  background: var(--neutral-alpha-medium);
-}
-
-.entryContent {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-8);
-  min-width: 0;
-  padding-bottom: var(--static-space-24);
-}
-
-.entry:last-child .entryContent {
-  padding-bottom: 0;
-}
-
-.entryHead {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--static-space-4) var(--static-space-12);
-  min-height: 2.25rem;
-}
-
-.time {
-  color: var(--neutral-on-background-weak);
-  font-size: var(--font-size-body-xs, 0.75rem);
-}
-
-.entryActions {
-  display: flex;
-  align-items: center;
-  gap: var(--static-space-2);
-  margin-left: auto;
-}
-
-.entryText {
-  margin: 0;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-  color: var(--neutral-on-background-medium);
-  font-size: var(--font-size-body-m, 1rem);
-  line-height: 1.55;
-}
-
-.editor {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-12);
-  padding: var(--static-space-16);
-  border: 1px solid var(--neutral-alpha-medium);
-  border-radius: var(--radius-m);
-  background: var(--neutral-alpha-weak);
-}
-
-.empty {
-  padding: var(--static-space-16);
-  border: 1px dashed var(--neutral-alpha-strong);
-  border-radius: var(--radius-m);
-  color: var(--neutral-on-background-weak);
-  font-size: var(--font-size-body-s, 0.875rem);
-}
-
-// ---------------------------------------------------------------------------
-// Composer
-// ---------------------------------------------------------------------------
-.notice {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--static-space-8) var(--static-space-12);
-  padding: var(--static-space-12) var(--static-space-16);
-  border: 1px solid var(--tone-line);
-  border-radius: var(--radius-m);
-  background: var(--tone-soft);
-  color: var(--neutral-on-background-strong);
-  font-size: var(--font-size-body-s, 0.875rem);
-}
-
-.noticeInfo {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--static-space-8);
-  padding: var(--static-space-12);
-  border-radius: var(--radius-m);
-  background: var(--neutral-alpha-weak);
-  color: var(--neutral-on-background-medium);
-  font-size: var(--font-size-body-xs, 0.75rem);
-  line-height: 1.5;
-
-  svg {
-    flex-shrink: 0;
-    margin-top: 0.1rem;
-    font-size: 0.875rem;
-  }
-}
-
-.dangerRow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--static-space-12);
 }

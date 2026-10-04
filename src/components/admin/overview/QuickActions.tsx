@@ -1,8 +1,8 @@
 import React from "react";
-import Link from "next/link";
-import { Column, Icon, Text } from "@once-ui-system/core";
+import { Card, Column, Icon, Text } from "@once-ui-system/core";
 import type { IconName } from "@/resources/icons";
 import { getT } from "@/i18n/server";
+import { PlainItem, PlainList } from "@/components/admin/PlainList";
 import { IconTile, Panel } from "./primitives";
 import styles from "./Overview.module.scss";
 
@@ -39,22 +39,32 @@ export async function QuickActions() {
 
   return (
     <Panel icon="bolt" title={t("admin.overview.actions.title")}>
-      <ul className={styles.list} style={{ gap: "var(--static-space-8)" }}>
+      <PlainList gap="8">
         {actions.map((action) => (
-          <li key={action.href}>
-            <Link href={action.href} className={styles.action}>
+          <PlainItem key={action.href}>
+            <Card
+              href={action.href}
+              fillWidth
+              vertical="center"
+              gap="12"
+              padding="12"
+              radius="l"
+              background="neutral-alpha-weak"
+              border="neutral-alpha-medium"
+              className={styles.action}
+            >
               <IconTile name={action.icon} tone={action.tone} />
-              <Column className={styles.grow} gap="2">
+              <Column flex={1} gap="2">
                 <Text variant="body-strong-s">{action.title}</Text>
                 <Text variant="body-default-xs" onBackground="neutral-weak">
                   {action.hint}
                 </Text>
               </Column>
               <Icon name="chevronRight" size="xs" className={styles.chevron} />
-            </Link>
-          </li>
+            </Card>
+          </PlainItem>
         ))}
-      </ul>
+      </PlainList>
     </Panel>
   );
 }

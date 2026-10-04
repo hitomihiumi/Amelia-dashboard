@@ -1,16 +1,13 @@
 "use client";
 
 import React from "react";
-import classNames from "classnames";
-import { Button, Column, Text, Textarea } from "@once-ui-system/core";
+import { Button, Column, Row, Text, Textarea } from "@once-ui-system/core";
 import { IoInformationCircleOutline } from "react-icons/io5";
 import { AdminCard } from "@/components/admin/AdminPage";
 import { useT } from "@/i18n/client";
 import type { IncidentStatus } from "@/components/status/incidentMeta";
-import tones from "@/components/status/tones.module.scss";
 import { applyTemplate, CharCounter, StatusPicker, TemplateChips } from "./incidentUi";
 import { BODY_MAX } from "./types";
-import styles from "./IncidentDetail.module.scss";
 
 export const MESSAGE_FIELD_ID = "incident-update-message";
 
@@ -59,14 +56,28 @@ export function UpdateComposer({
       </Text>
 
       {resolved && (
-        <div className={classNames(styles.notice, tones.success)}>
-          <span>
+        <Row
+          fillWidth
+          wrap
+          vertical="center"
+          horizontal="between"
+          gap="8"
+          paddingX="16"
+          paddingY="12"
+          radius="m"
+          border="success-alpha-strong"
+          background="success-alpha-weak"
+          onBackground="neutral-strong"
+          textVariant="body-default-s"
+          style={{ columnGap: "var(--static-space-12)" }}
+        >
+          <Text as="span">
             {t("adminIncidents.detail.composer.resolvedNotice", { time: resolvedAgo ?? "" })}
-          </span>
+          </Text>
           <Button size="s" variant="secondary" prefixIcon="refresh" onClick={onReopen} disabled={pending}>
             {t("adminIncidents.detail.composer.reopen")}
           </Button>
-        </div>
+        </Row>
       )}
 
       <Column gap="8">
@@ -96,9 +107,9 @@ export function UpdateComposer({
             }
           }}
         />
-        <div className={styles.fieldFoot}>
+        <Row fillWidth horizontal="end" marginTop="4">
           <CharCounter count={body.length} max={BODY_MAX} />
-        </div>
+        </Row>
       </Column>
 
       <TemplateChips
@@ -134,10 +145,18 @@ export function UpdateComposer({
       </Column>
 
       {auto && (
-        <div className={styles.noticeInfo}>
-          <IoInformationCircleOutline aria-hidden />
-          <span>{t("adminIncidents.detail.autoNotice")}</span>
-        </div>
+        <Row
+          fillWidth
+          vertical="start"
+          gap="8"
+          padding="12"
+          radius="m"
+          background="neutral-alpha-weak"
+          onBackground="neutral-medium"
+        >
+          <IoInformationCircleOutline aria-hidden size={14} style={{ flexShrink: 0, marginTop: "0.1rem" }} />
+          <Text variant="body-default-xs">{t("adminIncidents.detail.autoNotice")}</Text>
+        </Row>
       )}
     </AdminCard>
   );

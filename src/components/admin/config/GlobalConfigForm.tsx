@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useToast } from "@once-ui-system/core";
+import { Grid, Row, useToast } from "@once-ui-system/core";
 import { useRouter } from "next/navigation";
 import type { ServiceOverride } from "@/lib/admin/defaults";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
@@ -105,14 +105,14 @@ export function GlobalConfigForm({ config, overrides, save = updateGlobalConfig 
   );
 
   return (
-    <div className={styles.layout}>
-      <div className={styles.sections}>
+    <Row vertical="start" gap="24" paddingBottom={7}>
+      <Grid fillWidth className={styles.sections}>
         <BannerSection state={state} update={update} />
         <LinksSection state={state} update={update} />
         <LandingSection state={state} update={update} />
         <StatusSection state={state} update={update} />
-      </div>
+      </Grid>
       <SectionIndex entries={entries} dirty={dirty} />
-    </div>
+    </Row>
   );
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { RevealFx, Row, Tag } from "@once-ui-system/core";
+import { Column, RevealFx, Row, Tag } from "@once-ui-system/core";
 import type { StatusSnapshot } from "@/lib/status/status";
 import { STATUS_TONE } from "@/lib/admin/defaults";
 import { AdminPage } from "@/components/admin/AdminPage";
@@ -34,7 +34,6 @@ export async function OverviewDashboard({ data }: { data: OverviewData }) {
 
   return (
     <AdminPage
-     
       title={t("admin.overview.welcome", { name: data.adminName })}
       description={t("admin.overview.subtitle")}
       actions={
@@ -48,16 +47,16 @@ export async function OverviewDashboard({ data }: { data: OverviewData }) {
     >
       <StatTiles metrics={data.snapshot.metrics} />
 
-      <div className={styles.body}>
-        <div className={styles.column}>
+      <Column gap="16" className={styles.body}>
+        <Column className={styles.column}>
           <RevealFx fillWidth className={styles.orderServices} delay={reveal(0)} speed="fast" translateY="8">
             <ServicesPanel snapshot={data.snapshot} />
           </RevealFx>
           <RevealFx fillWidth className={styles.orderRecent} delay={reveal(2)} speed="fast" translateY="8">
             <RecentPosts posts={data.recent} />
           </RevealFx>
-        </div>
-        <div className={styles.column}>
+        </Column>
+        <Column className={styles.column}>
           <RevealFx fillWidth className={styles.orderAttention} delay={reveal(1)} speed="fast" translateY="8">
             <AttentionPanel
               maintenance={data.maintenance}
@@ -70,8 +69,8 @@ export async function OverviewDashboard({ data }: { data: OverviewData }) {
           <RevealFx fillWidth className={styles.orderActions} delay={reveal(3)} speed="fast" translateY="8">
             <QuickActions />
           </RevealFx>
-        </div>
-      </div>
+        </Column>
+      </Column>
     </AdminPage>
   );
 }

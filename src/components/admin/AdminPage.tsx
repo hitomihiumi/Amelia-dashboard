@@ -1,5 +1,5 @@
 import React, { type ReactNode } from "react";
-import { Flex } from "@once-ui-system/core";
+import { Column } from "@once-ui-system/core";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 interface AdminPageProps {
@@ -29,23 +29,25 @@ export function AdminCard({
   children,
   padding = "24",
   gap = "16",
+  fillHeight,
 }: {
   children: ReactNode;
   padding?: "16" | "20" | "24" | "32";
   gap?: "8" | "12" | "16" | "24";
+  /** Grow to the height of the parent column, so cards of one grid row share a height. */
+  fillHeight?: boolean;
 }) {
   return (
-    <Flex
-      direction="column"
+    <Column
       fillWidth
+      flex={fillHeight ? 1 : undefined}
       gap={gap}
       padding={padding}
       radius="l"
       border="neutral-medium"
       background="surface"
-      style={{ minWidth: 0 }}
     >
       {children}
-    </Flex>
+    </Column>
   );
 }

@@ -1,10 +1,23 @@
 "use client";
 
 import React, { memo, useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button, Dialog, Row, Tag, Text, useToast } from "@once-ui-system/core";
-import { LuArrowLeft, LuCode, LuColumns2, LuEye, LuPencilLine } from "react-icons/lu";
+import {
+  Button,
+  Column,
+  Dialog,
+  Grid,
+  IconButton,
+  Line,
+  Row,
+  SegmentedControl,
+  Tag,
+  Text,
+  Textarea,
+  ToggleButton,
+  useToast,
+} from "@once-ui-system/core";
+import { LuCode, LuColumns2, LuEye, LuPencilLine } from "react-icons/lu";
 import { useFormat, useT } from "@/i18n/client";
 import { toSlug, transliterate, NEWS_SLUG_MAX } from "@/lib/news/categories";
 import type { NewsActions, NewsField, NewsPostDTO } from "@/lib/news/types";
@@ -29,6 +42,13 @@ import styles from "./NewsEditor.module.scss";
 type Tab = "visual" | "markdown" | "preview";
 type Busy = "draft" | "publish" | "update" | "unpublish" | null;
 type Side = "settings" | "preview";
+
+const DOT_SOLID = {
+  new: "neutral-medium",
+  unsaved: "warning-strong",
+  saved: "success-strong",
+  saving: "brand-strong",
+} as const;
 
 const SIDE_KEY = "amelia:news-side";
 
@@ -502,17 +522,6 @@ export function NewsEditor({ post, actions }: { post: NewsPostDTO | null; action
     { id: "preview", label: t("adminNews.editor.tabs.preview"), icon: <LuEye aria-hidden /> },
   ];
 
-  const onTabKeyDown = (event: React.KeyboardEvent) => {
-    const index = tabs.findIndex((item) => item.id === tab);
-    let next = index;
-    if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
-    else if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
-    else return;
-    event.preventDefault();
-    setTab(tabs[next].id);
-    document.getElementById(`news-tab-${tabs[next].id}`)?.focus();
-  };
-
   const onCategory = useCallback((category: string) => update({ category }), []);
   const onSlugReset = useCallback(() => update({ slug: "", slugTouched: false }), []);
   const onCover = useCallback((coverUrl: string) => update({ coverUrl }), []);
@@ -535,28 +544,62 @@ export function NewsEditor({ post, actions }: { post: NewsPostDTO | null; action
   );
 
   return (
-    <div className={styles.page}>
+    <Column fillWidth className={styles.page}>
       {/* ───── Sticky top bar ───── */}
-      <header className={styles.topbar}>
-        <div className={styles.topLeft}>
-          <Link href="/admin/news" className={styles.back}>
-            <LuArrowLeft aria-hidden />
-            <span className={styles.backLabel}>{t("adminNews.editor.back")}</span>
-          </Link>
-          <span className={styles.divider} aria-hidden />
-          <div className={styles.state} role="status" aria-live="polite">
-            <span className={styles.dot} data-state={stateKey} aria-hidden />
-            <span className={styles.stateText}>
+      <Row
+        as="header"
+        position="sticky"
+        zIndex={4}
+        vertical="center"
+        horizontal="between"
+        gap="12"
+        s={{ gap: "8" }}
+        height={3.5}
+        borderBottom="neutral-alpha-weak"
+        className={styles.topbar}
+      >
+        <Row vertical="center" gap="12" style={{ minWidth: 0 }}>
+          <Row s={{ hide: true }}>
+            <Button href="/admin/news" variant="tertiary" size="m" prefixIcon="arrowLeft">
+              {t("adminNews.editor.back")}
+            </Button>
+          </Row>
+          <Row hide s={{ hide: false }}>
+            <IconButton
+              href="/admin/news"
+              icon="arrowLeft"
+              variant="tertiary"
+              size="m"
+              aria-label={t("adminNews.editor.back")}
+            />
+          </Row>
+          <Line vert height={1.25} s={{ hide: true }} background="neutral-alpha-medium" aria-hidden />
+          <Row vertical="center" gap="8" role="status" aria-live="polite" style={{ minWidth: 0 }}>
+            <Row
+              width={0.5}
+              height={0.5}
+              radius="full"
+              solid={DOT_SOLID[stateKey]}
+              className={styles.dot}
+              data-state={stateKey}
+              aria-hidden
+            />
+            <Text variant="body-default-s" onBackground="neutral-medium" truncate className={styles.stateText}>
               {t(`adminNews.editor.state.${stateKey}`)}
-              {savedAgo && <span className={styles.stateSub}> · {savedAgo}</span>}
-            </span>
-          </div>
-          <Tag scheme={meta.published ? "success" : "neutral"} size="s" className={styles.statusTag}>
+              {savedAgo && (
+                <Text as="span" onBackground="neutral-weak">
+                  {" "}
+                  · {savedAgo}
+                </Text>
+              )}
+            </Text>
+          </Row>
+          <Tag scheme={meta.published ? "success" : "neutral"} size="s" s={{ hide: true }}>
             {meta.published ? t("adminNews.status.published") : t("adminNews.status.draft")}
           </Tag>
-        </div>
+        </Row>
 
-        <Row gap="8" vertical="center" className={styles.topRight}>
+        <Row gap="8" vertical="center" fitWidth style={{ flexShrink: 0 }}>
           {meta.published ? (
             <Button
               variant="secondary"
@@ -600,11 +643,29 @@ export function NewsEditor({ post, actions }: { post: NewsPostDTO | null; action
             </Button>
           )}
         </Row>
-      </header>
+      </Row>
 
       {restorable && (
-        <div className={styles.banner} role="alert">
-          <Text variant="body-default-s" onBackground="neutral-strong" className={styles.bannerText}>
+        <Row
+          fillWidth
+          wrap
+          vertical="center"
+          horizontal="between"
+          gap="12"
+          marginBottom="16"
+          paddingY="8"
+          paddingRight="8"
+          paddingLeft="16"
+          radius="l"
+          border="warning-alpha-medium"
+          background="warning-alpha-weak"
+          role="alert"
+        >
+          <Text
+            variant="body-default-s"
+            onBackground="neutral-strong"
+            style={{ flex: "1 1 16rem", minWidth: 0 }}
+          >
             {t("adminNews.restore.text", {
               time: now !== null ? format.relative(restorable.savedAt, now) : format.dateTime(restorable.savedAt),
             })}
@@ -617,64 +678,86 @@ export function NewsEditor({ post, actions }: { post: NewsPostDTO | null; action
               {t("adminNews.restore.restore")}
             </Button>
           </Row>
-        </div>
+        </Row>
       )}
 
-      <div className={styles.grid}>
-        <div className={styles.main}>
+      <Grid fillWidth gap="24" className={styles.grid}>
+        <Column fillWidth gap="12">
           {/* Mode bar */}
-          <div className={styles.modeBar}>
-            <div
-              className={styles.tabs}
-              role="tablist"
+          <Row
+            fillWidth
+            wrap
+            horizontal="between"
+            vertical="center"
+            gap="8"
+            style={{ columnGap: "var(--static-space-16)" }}
+          >
+            <SegmentedControl
+              fillWidth={false}
               aria-label={t("adminNews.editor.tabsLabel")}
-              onKeyDown={onTabKeyDown}
-            >
-              {tabs.map((item) => (
-                <button
-                  key={item.id}
-                  id={`news-tab-${item.id}`}
-                  type="button"
-                  role="tab"
-                  aria-selected={tab === item.id}
-                  aria-controls={`news-panel-${item.id}`}
-                  aria-label={item.label}
-                  tabIndex={tab === item.id ? 0 : -1}
-                  className={`${styles.tab} ${tab === item.id ? styles.tabActive : ""}`}
-                  onClick={() => setTab(item.id)}
-                >
-                  {item.icon}
-                  <span className={styles.tabLabel}>{item.label}</span>
-                </button>
-              ))}
-            </div>
+              value={tab}
+              onChange={(value) => setTab(value as Tab)}
+              buttons={tabs.map((item) => ({
+                value: item.id,
+                id: `news-tab-${item.id}`,
+                "aria-controls": `news-panel-${item.id}`,
+                "aria-label": item.label,
+                size: "m",
+                weight: "strong",
+                className: styles.tab,
+                label: (
+                  <Row vertical="center" gap="8">
+                    {item.icon}
+                    <Text className={styles.tabLabel}>{item.label}</Text>
+                  </Row>
+                ),
+              }))}
+            />
 
-            <div className={styles.modeEnd}>
-              <div className={styles.stats}>
-                <span>{t("adminNews.editor.words", { count: words })}</span>
-                <span className={tooLong ? styles.statsDanger : undefined}>
+            <Row vertical="center" wrap gap="12" fitWidth>
+              <Row
+                gap="12"
+                fitWidth
+                textVariant="label-default-s"
+                onBackground="neutral-weak"
+                s={{ hide: true }}
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                <Text as="span">{t("adminNews.editor.words", { count: words })}</Text>
+                <Text as="span" onBackground={tooLong ? "danger-strong" : undefined}>
                   {t("adminNews.editor.chars", {
                     count: format.number(chars),
                     max: format.number(CONTENT_MAX),
                   })}
-                </span>
-              </div>
-              <button
+                </Text>
+              </Row>
+              <ToggleButton
                 type="button"
-                className={`${styles.liveToggle} ${side === "preview" ? styles.liveOn : ""}`}
+                variant="outline"
+                size="l"
+                radius="m"
+                weight="strong"
+                selected={side === "preview"}
                 aria-pressed={side === "preview"}
+                className={styles.liveToggle}
                 onClick={() => changeSide(side === "preview" ? "settings" : "preview")}
               >
-                <LuColumns2 aria-hidden />
-                <span>{t("adminNews.editor.livePreview")}</span>
-              </button>
-            </div>
-          </div>
+                <Row vertical="center" gap="8">
+                  <LuColumns2 aria-hidden />
+                  <Text>{t("adminNews.editor.livePreview")}</Text>
+                </Row>
+              </ToggleButton>
+            </Row>
+          </Row>
 
-          <div
+          <Column
             id={`news-panel-${tab}`}
             role="tabpanel"
             aria-labelledby={`news-tab-${tab}`}
+            fillWidth
+            radius="l"
+            border="neutral-alpha-medium"
+            background="surface"
             className={`${styles.canvas} ${errors.content ? styles.canvasInvalid : ""}`}
           >
             {tab === "visual" && (
@@ -697,15 +780,19 @@ export function NewsEditor({ post, actions }: { post: NewsPostDTO | null; action
             {tab === "markdown" && (
               <>
                 {header}
-                <textarea
-                  className={styles.markdown}
-                  spellCheck={false}
-                  rows={22}
-                  placeholder={t("adminNews.markdown.placeholder")}
-                  aria-label={t("adminNews.markdown.ariaLabel")}
-                  value={form.content}
-                  onChange={(event) => update({ content: event.target.value })}
-                />
+                <Column fillWidth borderTop="neutral-alpha-weak" padding="8">
+                  <Textarea
+                    id="news-markdown"
+                    variant="ghost"
+                    lines={22}
+                    spellCheck={false}
+                    placeholder={t("adminNews.markdown.placeholder")}
+                    aria-label={t("adminNews.markdown.ariaLabel")}
+                    value={form.content}
+                    className={styles.markdown}
+                    onChange={(event) => update({ content: event.target.value })}
+                  />
+                </Column>
               </>
             )}
 
@@ -719,31 +806,34 @@ export function NewsEditor({ post, actions }: { post: NewsPostDTO | null; action
                 date={previewDate}
               />
             )}
-          </div>
-          {errors.content && <p className={styles.error}>{errors.content}</p>}
-        </div>
+          </Column>
+          {errors.content && (
+            <Text as="p" variant="label-default-s" onBackground="danger-strong">
+              {errors.content}
+            </Text>
+          )}
+        </Column>
 
-        <aside className={styles.aside} data-side={side} aria-label={t("adminNews.inspector.label")}>
-          <div className={styles.sideSwitch} role="group" aria-label={t("adminNews.editor.sideLabel")}>
-            <button
-              type="button"
-              aria-pressed={side === "settings"}
-              className={`${styles.sideBtn} ${side === "settings" ? styles.sideOn : ""}`}
-              onClick={() => changeSide("settings")}
-            >
-              {t("adminNews.editor.settings")}
-            </button>
-            <button
-              type="button"
-              aria-pressed={side === "preview"}
-              className={`${styles.sideBtn} ${side === "preview" ? styles.sideOn : ""}`}
-              onClick={() => changeSide("preview")}
-            >
-              {t("adminNews.editor.livePreview")}
-            </button>
-          </div>
+        <Column
+          as="aside"
+          fillWidth
+          data-side={side}
+          aria-label={t("adminNews.inspector.label")}
+          className={styles.aside}
+        >
+          <Row marginBottom="12" className={styles.sideSwitch}>
+            <SegmentedControl
+              aria-label={t("adminNews.editor.sideLabel")}
+              value={side}
+              onChange={(value) => changeSide(value as Side)}
+              buttons={[
+                { value: "settings", size: "m", weight: "strong", label: t("adminNews.editor.settings") },
+                { value: "preview", size: "m", weight: "strong", label: t("adminNews.editor.livePreview") },
+              ]}
+            />
+          </Row>
 
-          <div className={styles.settingsPane} hidden={side !== "settings"} data-pane="settings">
+          <Column fillWidth hidden={side !== "settings"} className={styles.settingsPane} data-pane="settings">
             <Inspector
               form={form}
               meta={meta}
@@ -759,10 +849,17 @@ export function NewsEditor({ post, actions }: { post: NewsPostDTO | null; action
               onTogglePublished={togglePublished}
               onDelete={deletePost}
             />
-          </div>
+          </Column>
 
           {side === "preview" && (
-            <div className={styles.livePane} data-pane="live">
+            <Column
+              fillWidth
+              overflow="hidden"
+              radius="l"
+              border="neutral-alpha-medium"
+              className={styles.livePane}
+              data-pane="live"
+            >
               <PreviewPane
                 title={deferred.title}
                 summary={deferred.summary}
@@ -771,10 +868,10 @@ export function NewsEditor({ post, actions }: { post: NewsPostDTO | null; action
                 coverUrl={deferred.coverUrl}
                 date={previewDate}
               />
-            </div>
+            </Column>
           )}
-        </aside>
-      </div>
+        </Column>
+      </Grid>
 
       <Dialog
         open={leaveHref !== null}
@@ -810,6 +907,6 @@ export function NewsEditor({ post, actions }: { post: NewsPostDTO | null; action
           </Row>
         }
       />
-    </div>
+    </Column>
   );
 }

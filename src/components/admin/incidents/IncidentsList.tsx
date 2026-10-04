@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import classNames from "classnames";
-import { Button, Row, Tag, Text } from "@once-ui-system/core";
+import { Button, Card, Column, Grid, Row, SegmentedControl, Tag, Text } from "@once-ui-system/core";
 import {
   IoCheckmarkCircleOutline,
   IoChevronForward,
@@ -81,38 +80,51 @@ export function IncidentsList({
 
   return (
     <>
-      <div className={styles.tabs} role="tablist" aria-label={t("adminIncidents.list.tabsLabel")}>
-        {tabs.map(({ id, label, count }) => (
-          <button
-            key={id}
-            id={`incidents-tab-${id}`}
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            aria-controls="incidents-panel"
-            className={styles.tab}
-            onClick={() => selectTab(id)}
-          >
-            {label}
-            <span className={classNames(styles.count, id === "active" && count > 0 && styles.countAlert)}>
-              {count}
-            </span>
-          </button>
-        ))}
-      </div>
+      <Row>
+        <SegmentedControl
+          fillWidth={false}
+          aria-label={t("adminIncidents.list.tabsLabel")}
+          value={tab}
+          onChange={(value) => selectTab(value as Tab)}
+          buttons={tabs.map(({ id, label, count }) => ({
+            value: id,
+            id: `incidents-tab-${id}`,
+            "aria-controls": "incidents-panel",
+            size: "l",
+            weight: "strong",
+            label: (
+              <Row vertical="center" gap="8">
+                {label}
+                <Row
+                  minWidth={1.5}
+                  paddingX="8"
+                  radius="full"
+                  center
+                  background={id === "active" && count > 0 ? "danger-alpha-medium" : "neutral-alpha-weak"}
+                  onBackground={id === "active" && count > 0 ? "danger-strong" : "neutral-medium"}
+                >
+                  <Text variant="label-default-xs" style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {count}
+                  </Text>
+                </Row>
+              </Row>
+            ),
+          }))}
+        />
+      </Row>
 
-      <div id="incidents-panel" role="tabpanel" aria-labelledby={`incidents-tab-${tab}`}>
+      <Column id="incidents-panel" role="tabpanel" aria-labelledby={`incidents-tab-${tab}`} fillWidth>
         {shown.length === 0 ? (
           <EmptyState tab={tab} basePath={basePath} />
         ) : (
           <>
-            <ul className={styles.list}>
+            <Grid as="ul" fillWidth margin="0" padding="0" className={styles.list}>
               {shown.slice(0, visible).map((incident) => (
-                <li key={incident.id}>
+                <Row as="li" key={incident.id} fillWidth>
                   <IncidentRow incident={incident} now={now} basePath={basePath} />
-                </li>
+                </Row>
               ))}
-            </ul>
+            </Grid>
 
             {shown.length > visible && (
               <Row fillWidth horizontal="center" paddingTop="16">
@@ -123,7 +135,7 @@ export function IncidentsList({
             )}
           </>
         )}
-      </div>
+      </Column>
     </>
   );
 }
@@ -131,16 +143,35 @@ export function IncidentsList({
 function EmptyState({ tab, basePath }: { tab: Tab; basePath: string }) {
   const t = useT();
   const isActive = tab === "active";
+  const tone = isActive ? "success" : "neutral";
 
   return (
-    <div className={classNames(styles.empty, tones[isActive ? "success" : "neutral"])}>
-      <span aria-hidden className={styles.emptyIcon}>
-        {isActive ? <IoCheckmarkCircleOutline /> : <IoArchiveOutline />}
-      </span>
-      <Text variant="heading-strong-m">
+    <Column
+      fillWidth
+      horizontal="center"
+      gap="12"
+      paddingX="24"
+      paddingY="48"
+      radius="l"
+      border="neutral-alpha-strong"
+      borderStyle="dashed"
+    >
+      <Row
+        width={4}
+        height={4}
+        center
+        radius="full"
+        border={`${tone}-alpha-strong`}
+        background={`${tone}-alpha-weak`}
+        onBackground={`${tone}-strong`}
+        aria-hidden
+      >
+        {isActive ? <IoCheckmarkCircleOutline size={32} /> : <IoArchiveOutline size={32} />}
+      </Row>
+      <Text variant="heading-strong-m" align="center">
         {t(isActive ? "adminIncidents.list.empty.activeTitle" : "adminIncidents.list.empty.historyTitle")}
       </Text>
-      <Text variant="body-default-s" onBackground="neutral-weak" style={{ maxWidth: "26rem" }}>
+      <Text variant="body-default-s" onBackground="neutral-weak" align="center" style={{ maxWidth: "26rem" }}>
         {t(isActive ? "adminIncidents.list.empty.activeText" : "adminIncidents.list.empty.historyText")}
       </Text>
       {isActive && (
@@ -148,7 +179,7 @@ function EmptyState({ tab, basePath }: { tab: Tab; basePath: string }) {
           {t("adminIncidents.list.report")}
         </Button>
       )}
-    </div>
+    </Column>
   );
 }
 
@@ -168,6 +199,7 @@ function IncidentRow({
   const shown = localizeAutoIncident(t, incident);
   const status = effectiveStatus(incident);
   const resolved = Boolean(incident.resolvedAt);
+  const tone = severityTone(incident.severity);
 
   const startedMs = toMs(incident.startedAt);
   const durationMs = (incident.resolvedAt ? toMs(incident.resolvedAt) : now) - startedMs;
@@ -179,59 +211,77 @@ function IncidentRow({
   );
 
   return (
-    <Link
+    <Card
       href={`${basePath}/${incident.id}`}
       aria-label={t("adminIncidents.list.openIncident", { title: shown.title })}
-      className={classNames(
-        styles.item,
-        resolved && styles.itemResolved,
-        tones[severityTone(incident.severity)],
-      )}
+      fillWidth
+      overflow="hidden"
+      radius="l"
+      border="neutral-alpha-medium"
+      className={classNames(styles.item, tones[tone])}
     >
-      <span aria-hidden className={styles.bar} />
+      <Row
+        aria-hidden
+        width="4"
+        solid={`${tone}-strong`}
+        opacity={resolved ? 60 : 100}
+        style={{ flexShrink: 0 }}
+      />
 
-      <span className={styles.itemBody}>
-        <span className={styles.itemHead}>
+      <Column fillWidth flex={1} gap="12" paddingX="20" paddingY="16">
+        <Row fillWidth vertical="start" horizontal="between" gap="12">
           <Text variant="heading-strong-s" className={styles.itemTitle}>
             {shown.title}
           </Text>
           <IoChevronForward aria-hidden className={styles.chevron} />
-        </span>
+        </Row>
 
-        <span className={styles.badges}>
-          <Tag scheme={severityTone(incident.severity)}>{labels.severity(incident.severity)}</Tag>
+        <Row wrap vertical="center" gap="8">
+          <Tag scheme={tone}>{labels.severity(incident.severity)}</Tag>
           <StatusChip status={status} ongoing={!resolved} />
           {incident.component && <Tag scheme="neutral">{labels.component(incident.component)}</Tag>}
           {incident.auto && <AutoBadge />}
-        </span>
+        </Row>
 
-        <span className={styles.meta}>
-          <span
-            className={styles.metaItem}
+        <Row
+          wrap
+          vertical="center"
+          gap="4"
+          textVariant="body-default-xs"
+          onBackground="neutral-weak"
+          style={{ columnGap: "var(--static-space-16)" }}
+        >
+          <Row
+            fitWidth
+            vertical="center"
+            gap="4"
             title={format.dateTime(incident.startedAt, { dateStyle: "long", timeStyle: "short" })}
+            style={{ whiteSpace: "nowrap" }}
           >
             <IoTimeOutline aria-hidden />
             {t("adminIncidents.meta.started", { time: relativeAgo(format, incident.startedAt, now) })}
-            <span aria-hidden>·</span>
+            <Text as="span" aria-hidden>
+              ·
+            </Text>
             {format.dateTime(incident.startedAt)}
-          </span>
-          <span className={styles.metaItem}>
+          </Row>
+          <Row fitWidth vertical="center" gap="4" style={{ whiteSpace: "nowrap" }}>
             <IoHourglassOutline aria-hidden />
             {t(resolved ? "adminIncidents.meta.lasted" : "adminIncidents.meta.ongoing", { duration })}
-          </span>
-          <span className={styles.metaItem}>
+          </Row>
+          <Row fitWidth vertical="center" gap="4" style={{ whiteSpace: "nowrap" }}>
             <IoChatbubbleEllipsesOutline aria-hidden />
             {incident.updates.length > 0
               ? t("adminIncidents.list.updates", { count: incident.updates.length })
               : t("adminIncidents.list.noUpdates")}
-          </span>
-        </span>
+          </Row>
+        </Row>
 
         {last && (
           <LastUpdate status={last.status} body={localizeAutoUpdate(t, incident.auto, last.body)} />
         )}
-      </span>
-    </Link>
+      </Column>
+    </Card>
   );
 }
 
@@ -239,8 +289,11 @@ function LastUpdate({ status, body }: { status: string; body: string }) {
   const labels = useIncidentLabels();
 
   return (
-    <span className={styles.preview}>
-      <strong>{labels.status(status)}:</strong> {body}
-    </span>
+    <Text variant="body-default-s" onBackground="neutral-medium" className={styles.preview}>
+      <Text as="span" weight="strong">
+        {labels.status(status)}:
+      </Text>{" "}
+      {body}
+    </Text>
   );
 }

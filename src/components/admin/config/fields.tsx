@@ -1,9 +1,10 @@
 "use client";
 
 import React, { type KeyboardEvent, type ReactNode, useRef } from "react";
-import { Button, Column, Input, Textarea } from "@once-ui-system/core";
+import { Button, Column, Input, Row, StatusIndicator, Text, Textarea, ToggleButton } from "@once-ui-system/core";
 import type { Tone } from "@/lib/admin/defaults";
 import { useT } from "@/i18n/client";
+import { TONE_COLOR } from "@/components/admin/overview/primitives";
 import styles from "./Config.module.scss";
 
 export function Counter({ count, max }: { count: number; max: number }) {
@@ -11,9 +12,14 @@ export function Counter({ count, max }: { count: number; max: number }) {
   const level = count >= max ? "full" : count >= max * 0.9 ? "near" : "ok";
 
   return (
-    <span className={styles.counter} data-level={level} aria-hidden>
+    <Text
+      variant="body-default-xs"
+      onBackground={level === "full" ? "danger-strong" : level === "near" ? "warning-strong" : "neutral-weak"}
+      aria-hidden
+      style={{ fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}
+    >
       {t("admin.config.counter", { count, max })}
-    </span>
+    </Text>
   );
 }
 
@@ -85,9 +91,24 @@ export function TextField({
           onChange={(event) => onChange(event.target.value)}
         />
       )}
-      <div className={styles.fieldMeta}>
-        <span className={styles.metaText}>{hint}</span>
-        <span className={styles.metaTools}>
+      <Row
+        fillWidth
+        wrap
+        horizontal="between"
+        vertical="center"
+        gap="4"
+        paddingX="4"
+        minHeight={1.5}
+        style={{ columnGap: "var(--static-space-12)" }}
+      >
+        <Text
+          variant="label-default-s"
+          onBackground="neutral-weak"
+          style={{ flex: "1 1 14rem", minWidth: 0 }}
+        >
+          {hint}
+        </Text>
+        <Row fitWidth vertical="center" gap="8" style={{ marginLeft: "auto" }}>
           {onReset && (
             <Button
               variant="tertiary"
@@ -100,8 +121,8 @@ export function TextField({
             </Button>
           )}
           <Counter count={value.length} max={max} />
-        </span>
-      </div>
+        </Row>
+      </Row>
     </Column>
   );
 }
@@ -127,7 +148,7 @@ export function ChipPicker({
   options: ChipOption[];
   onChange: (value: string) => void;
 }) {
-  const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const refs = useRef<(HTMLElement | null)[]>([]);
   const selected = Math.max(
     0,
     options.findIndex((option) => option.value === value),
@@ -149,15 +170,19 @@ export function ChipPicker({
   };
 
   return (
-    <div role="radiogroup" aria-label={label} className={styles.chips}>
+    <Row role="radiogroup" aria-label={label} fillWidth wrap gap="8">
       {options.map((option, index) => (
-        <button
+        <ToggleButton
           key={option.value}
           ref={(node) => {
             refs.current[index] = node;
           }}
           type="button"
           role="radio"
+          variant="outline"
+          size="m"
+          radius="full"
+          weight={option.value === value ? "strong" : "default"}
           aria-checked={option.value === value}
           tabIndex={index === selected ? 0 : -1}
           className={styles.chip}
@@ -165,10 +190,18 @@ export function ChipPicker({
           onClick={() => onChange(option.value)}
           onKeyDown={(event) => move(event, index)}
         >
-          <span aria-hidden className={styles.chipDot} />
-          {option.label}
-        </button>
+          <Row vertical="center" gap="8">
+            <StatusIndicator
+              aria-hidden
+              ariaLabel=""
+              size="m"
+              color={TONE_COLOR[option.tone]}
+              className={styles.chipDot}
+            />
+            {option.label}
+          </Row>
+        </ToggleButton>
       ))}
-    </div>
+    </Row>
   );
 }

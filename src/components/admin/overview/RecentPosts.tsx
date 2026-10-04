@@ -1,10 +1,9 @@
 import React from "react";
-import Link from "next/link";
 import { Button, Column, IconButton, Text } from "@once-ui-system/core";
 import { getFormatters, getT } from "@/i18n/server";
-import { Panel } from "./primitives";
+import { PlainItem, PlainList } from "@/components/admin/PlainList";
+import { Panel, RowLink } from "./primitives";
 import type { PublishedPost } from "./types";
-import styles from "./Overview.module.scss";
 
 export async function RecentPosts({ posts }: { posts: PublishedPost[] }) {
   const t = await getT();
@@ -33,12 +32,12 @@ export async function RecentPosts({ posts }: { posts: PublishedPost[] }) {
           </Button>
         </Column>
       ) : (
-        <ul className={styles.list}>
+        <PlainList gap="4">
           {posts.map((post) => (
-            <li key={post.id} className={styles.rowWrap}>
-              <Link href={`/admin/news/${post.id}`} className={styles.row}>
-                <Column className={styles.grow} gap="2">
-                  <Text variant="body-strong-s" className={styles.truncate}>
+            <PlainItem key={post.id} vertical="center" gap="4">
+              <RowLink href={`/admin/news/${post.id}`}>
+                <Column flex={1} gap="2">
+                  <Text variant="body-strong-s" truncate>
                     {post.title || t("admin.overview.attention.untitled")}
                   </Text>
                   <Text variant="body-default-xs" onBackground="neutral-weak">
@@ -46,7 +45,7 @@ export async function RecentPosts({ posts }: { posts: PublishedPost[] }) {
                     {post.publishedAt ? ` · ${relative(post.publishedAt)}` : ""}
                   </Text>
                 </Column>
-              </Link>
+              </RowLink>
               <IconButton
                 icon="arrowUpRight"
                 variant="tertiary"
@@ -55,9 +54,9 @@ export async function RecentPosts({ posts }: { posts: PublishedPost[] }) {
                 tooltip={t("admin.overview.recent.openOnSite")}
                 aria-label={t("admin.overview.recent.openOnSite")}
               />
-            </li>
+            </PlainItem>
           ))}
-        </ul>
+        </PlainList>
       )}
     </Panel>
   );

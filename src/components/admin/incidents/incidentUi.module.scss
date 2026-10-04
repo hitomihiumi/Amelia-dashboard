@@ -1,106 +1,42 @@
-@use "../../styles/breakpoints.scss" as breakpoints;
-
-.group,
-.templates,
-.statusChip,
-.autoBadge,
-.counter {
-  font-family: var(--font-body);
-}
-
 // ---------------------------------------------------------------------------
-// Selectable options: severity cards, component tiles, status chips.
-// Colours come from the tone class (see components/status/tones.module.scss).
+// Selectable options: severity cards, component tiles, status chips (ToggleButtons).
+// Colours come from the tone class (see components/status/tones.module.scss). The `[role]`
+// selectors outrank the size and variant classes of the ToggleButton underneath, and the
+// `:hover:not([data-disabled])` ones outrank its hover rule.
 // ---------------------------------------------------------------------------
-.group {
-  display: grid;
-  gap: var(--static-space-8);
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.groupCard {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-
-  @include breakpoints.xs {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.groupTile {
-  grid-template-columns: repeat(auto-fill, minmax(9.75rem, 1fr));
-}
-
-.groupChip {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.option {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--static-space-12);
-  min-width: 0;
+.option[role] {
+  height: auto;
   padding: var(--static-space-12) var(--static-space-16);
-  border: 1px solid var(--neutral-alpha-medium);
-  border-radius: var(--radius-l);
-  background: transparent;
-  color: var(--neutral-on-background-strong);
-  font-family: var(--font-body);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
-
-  &:hover {
-    background: var(--neutral-alpha-weak);
-    border-color: var(--tone-line);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--brand-solid-strong);
-    outline-offset: 2px;
-  }
-
-  &[aria-checked="true"] {
-    background: var(--tone-soft);
-    border-color: var(--tone);
-    box-shadow: 0 0 0 1px var(--tone);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  border-color: var(--neutral-alpha-medium);
+  white-space: normal;
 }
 
-.optionCard {
+.option:hover:not([data-disabled]) {
+  border-color: var(--tone-line);
+}
+
+.option[aria-checked="true"],
+.option[aria-checked="true"]:hover:not([data-disabled]) {
+  background: var(--tone-soft);
+  border-color: var(--tone);
+  box-shadow: 0 0 0 1px var(--tone);
+}
+
+.optionCard[role] {
   align-items: flex-start;
-  padding-right: var(--static-space-40);
 }
 
-.optionTile {
+.optionTile[role] {
   padding: var(--static-space-8) var(--static-space-12);
-  border-radius: var(--radius-m);
-  gap: var(--static-space-8);
 }
 
-.optionChip {
-  padding: var(--static-space-4) var(--static-space-12) var(--static-space-4) var(--static-space-8);
-  border-radius: 999px;
-  gap: var(--static-space-8);
+.optionChip[role] {
   min-height: 2rem;
+  padding: var(--static-space-4) var(--static-space-12) var(--static-space-4) var(--static-space-8);
 }
 
 .optionIcon {
-  display: inline-flex;
   flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
   border-radius: var(--radius-m);
@@ -122,20 +58,10 @@
   font-size: 0.875rem;
 }
 
-.optionText {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-2);
-  min-width: 0;
-}
-
 .optionLabel {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--font-size-body-s, 0.875rem);
-  font-weight: 600;
-  line-height: 1.25;
 }
 
 .optionCard .optionLabel,
@@ -144,19 +70,9 @@
   overflow-wrap: anywhere;
 }
 
-.optionDescription {
-  color: var(--neutral-on-background-weak);
-  font-size: var(--font-size-body-xs, 0.75rem);
-  line-height: 1.4;
-}
-
+// The tick in the corner of a severity card.
 .optionCheck {
-  position: absolute;
-  top: var(--static-space-12);
-  right: var(--static-space-12);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  flex-shrink: 0;
   width: 1.25rem;
   height: 1.25rem;
   border: 1px solid var(--neutral-alpha-strong);
@@ -175,94 +91,8 @@
   color: var(--page-background);
 }
 
-// ---------------------------------------------------------------------------
-// Field furniture
-// ---------------------------------------------------------------------------
-.fieldHead {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--static-space-12);
-}
-
-.counter {
-  flex-shrink: 0;
-  color: var(--neutral-on-background-weak);
-  font-size: var(--font-size-body-xs, 0.75rem);
-  font-variant-numeric: tabular-nums;
-
-  &[data-near="true"] {
-    color: var(--warning-on-background-strong);
-  }
-
-  &[data-over="true"] {
-    color: var(--danger-on-background-strong);
-  }
-}
-
-.templates {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--static-space-8);
-}
-
-.templateButton {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--static-space-4);
-  min-height: 1.75rem;
-  padding: 0 var(--static-space-12);
-  border: 1px dashed var(--neutral-alpha-strong);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--neutral-on-background-medium);
-  font-family: var(--font-body);
-  font-size: var(--font-size-body-xs, 0.75rem);
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-
-  &:hover {
-    background: var(--brand-alpha-weak);
-    border-color: var(--brand-solid-strong);
-    color: var(--neutral-on-background-strong);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--brand-solid-strong);
-    outline-offset: 2px;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Status chip (read only)
-// ---------------------------------------------------------------------------
-.statusChip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--static-space-8);
-  min-height: 1.5rem;
-  padding: 0 var(--static-space-12) 0 var(--static-space-8);
-  border: 1px solid var(--tone-line);
-  border-radius: 999px;
-  background: var(--tone-soft);
-  color: var(--tone-text);
-  font-size: var(--font-size-label-s, 0.8125rem);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.statusDot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--tone);
-}
-
-.statusChipOngoing .statusDot {
+// The dot of an open incident pulses.
+.pulse {
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -278,24 +108,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .statusChipOngoing .statusDot {
+  .pulse {
     animation: none;
   }
-}
-
-.autoBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--static-space-4);
-  min-height: 1.5rem;
-  padding: 0 var(--static-space-8);
-  border: 1px solid var(--brand-alpha-medium);
-  border-radius: var(--radius-s);
-  background: var(--brand-alpha-weak);
-  color: var(--brand-on-background-strong);
-  font-size: var(--font-size-label-xs, 0.6875rem);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
 }

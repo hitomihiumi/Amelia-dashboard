@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import type { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { useEditorState } from "@tiptap/react";
+import { Button, Column, IconButton, Input, Line, Row, Text, ToggleButton } from "@once-ui-system/core";
 import {
   LuBold,
   LuCode,
@@ -16,6 +17,7 @@ import {
   LuStrikethrough,
   LuUnlink,
 } from "react-icons/lu";
+import { Eyebrow } from "@/components/admin/Eyebrow";
 import { useT } from "@/i18n/client";
 import { normalizeLinkUrl } from "./EditorToolbar";
 import { SLASH_ITEMS, type SlashItem } from "./slashItems";
@@ -196,46 +198,74 @@ export function SlashMenu({
 
   return (
     <Portal>
-      <div
-        className={styles.slash}
+      <Column
+        ref={listRef}
+        position="fixed"
+        gap="2"
+        padding="4"
+        radius="m"
+        border="neutral-alpha-strong"
+        background="page"
+        shadow="xl"
+        overflowY="auto"
+        textType="body"
+        role="listbox"
+        aria-label={t("adminNews.slash.title")}
         style={{
           left,
           width,
           maxHeight,
+          zIndex: 60,
           ...(below
             ? { top: pos.bottom + 6 }
             : { top: pos.y - 6, transform: "translateY(-100%)" }),
         }}
-        role="listbox"
-        aria-label={t("adminNews.slash.title")}
-        ref={listRef}
         onMouseDown={(event) => event.preventDefault()}
       >
-        <p className={styles.slashTitle}>{t("adminNews.slash.title")}</p>
+        <Eyebrow as="p" paddingX="8" style={{ paddingBlock: "var(--static-space-4)", fontWeight: 400 }}>
+          {t("adminNews.slash.title")}
+        </Eyebrow>
         {items.map((item, i) => {
-          const Icon = item.icon;
+          const ItemIcon = item.icon;
           return (
-            <button
+            <ToggleButton
               key={item.id}
               type="button"
               role="option"
               aria-selected={i === index}
               data-index={i}
-              className={`${styles.slashItem} ${i === index ? styles.slashActive : ""}`}
+              fillWidth
+              horizontal="start"
+              size="l"
+              radius="s"
+              selected={i === index}
+              className={styles.slashItem}
               onMouseEnter={() => setIndex(i)}
               onClick={() => run(item)}
             >
-              <span className={styles.slashIcon}>
-                <Icon aria-hidden />
-              </span>
-              <span className={styles.slashText}>
-                <span className={styles.slashLabel}>{label(item)}</span>
-                <span className={styles.slashHint}>{t(`adminNews.slash.hints.${item.id}`)}</span>
-              </span>
-            </button>
+              <Row fillWidth vertical="center" gap="12">
+                <Row
+                  width={2}
+                  height={2}
+                  center
+                  radius="s"
+                  border="neutral-alpha-medium"
+                  background="neutral-alpha-weak"
+                  onBackground="neutral-medium"
+                >
+                  <ItemIcon size={16} aria-hidden />
+                </Row>
+                <Column flex={1} align="start">
+                  <Text variant="label-strong-s">{label(item)}</Text>
+                  <Text variant="label-default-s" onBackground="neutral-weak" truncate>
+                    {t(`adminNews.slash.hints.${item.id}`)}
+                  </Text>
+                </Column>
+              </Row>
+            </ToggleButton>
           );
         })}
-      </div>
+      </Column>
     </Portal>
   );
 }
@@ -359,44 +389,58 @@ export function BubbleToolbar({ editor }: Props) {
     action: () => void,
     icon: React.ReactNode,
   ) => (
-    <button
+    <IconButton
       type="button"
-      className={`${styles.bubbleBtn} ${on ? styles.bubbleOn : ""}`}
+      variant={on ? "secondary" : "ghost"}
+      size="m"
       aria-label={label}
       aria-pressed={on}
       title={label}
-      onMouseDown={(event) => event.preventDefault()}
+      onMouseDown={(event: React.MouseEvent) => event.preventDefault()}
       onClick={action}
     >
       {icon}
-    </button>
+    </IconButton>
   );
 
   return (
     <Portal>
-      <div
+      <Row
         ref={ref}
-        className={styles.bubble}
+        position="fixed"
+        vertical="center"
+        gap="2"
+        padding="4"
+        radius="m"
+        border="neutral-alpha-strong"
+        background="page"
+        shadow="xl"
+        textType="body"
         role="toolbar"
         aria-label={t("adminNews.toolbar.label")}
         style={{
           left,
+          zIndex: 60,
+          ...(linkMode ? { width } : {}),
           ...(above
             ? { top: anchor.top - 8, transform: "translate(-50%, -100%)" }
             : { top: anchor.bottom + 8, transform: "translateX(-50%)" }),
         }}
       >
         {linkMode ? (
-          <div className={styles.bubbleLink}>
-            <input
+          <Row fillWidth vertical="center" gap="4">
+            <Input
               ref={inputRef}
-              className={`${styles.bubbleInput} ${invalid ? styles.bubbleInvalid : ""}`}
+              id="news-bubble-link"
+              size="s"
               type="text"
               inputMode="url"
               placeholder="https://"
               aria-label={t("adminNews.toolbar.linkUrl")}
               aria-invalid={invalid}
+              error={invalid}
               value={url}
+              style={{ flex: 1, minWidth: 0 }}
               onChange={(event) => {
                 setUrl(event.target.value);
                 setInvalid(false);
@@ -411,35 +455,36 @@ export function BubbleToolbar({ editor }: Props) {
                 }
               }}
             />
-            <button type="button" className={styles.bubbleApply} onClick={applyLink} disabled={!url.trim()}>
+            <Button type="button" size="m" variant="primary" onClick={applyLink} disabled={!url.trim()}>
               {t("adminNews.toolbar.linkApply")}
-            </button>
+            </Button>
             {active.link && (
-              <button
+              <IconButton
                 type="button"
-                className={styles.bubbleBtn}
+                variant="ghost"
+                size="m"
                 aria-label={t("adminNews.toolbar.linkRemove")}
                 title={t("adminNews.toolbar.linkRemove")}
                 onClick={removeLink}
               >
                 <LuUnlink aria-hidden />
-              </button>
+              </IconButton>
             )}
-          </div>
+          </Row>
         ) : (
           <>
             {btn(t("adminNews.toolbar.bold"), active.bold, () => editor.chain().focus().toggleBold().run(), <LuBold aria-hidden />)}
             {btn(t("adminNews.toolbar.italic"), active.italic, () => editor.chain().focus().toggleItalic().run(), <LuItalic aria-hidden />)}
             {btn(t("adminNews.toolbar.strike"), active.strike, () => editor.chain().focus().toggleStrike().run(), <LuStrikethrough aria-hidden />)}
             {btn(t("adminNews.toolbar.code"), active.code, () => editor.chain().focus().toggleCode().run(), <LuCode aria-hidden />)}
-            <span className={styles.bubbleSep} aria-hidden />
+            <Line vert height={1.25} marginX="2" background="neutral-alpha-medium" aria-hidden />
             {btn(t("adminNews.toolbar.link"), active.link, openLink, <LuLink aria-hidden />)}
-            <span className={styles.bubbleSep} aria-hidden />
+            <Line vert height={1.25} marginX="2" background="neutral-alpha-medium" aria-hidden />
             {btn(t("adminNews.toolbar.heading2"), active.h2, () => editor.chain().focus().toggleHeading({ level: 2 }).run(), <LuHeading2 aria-hidden />)}
             {btn(t("adminNews.toolbar.heading3"), active.h3, () => editor.chain().focus().toggleHeading({ level: 3 }).run(), <LuHeading3 aria-hidden />)}
           </>
         )}
-      </div>
+      </Row>
     </Portal>
   );
 }
@@ -486,17 +531,19 @@ export function PlusButton({ editor }: Props) {
 
   return (
     <Portal>
-      <button
+      <IconButton
         type="button"
-        className={styles.plus}
-        style={{ left: pos.x, top: pos.y }}
+        variant="secondary"
+        size="s"
+        rounded
+        style={{ position: "fixed", left: pos.x, top: pos.y, zIndex: 40 }}
         aria-label={t("adminNews.slash.add")}
         title={t("adminNews.slash.add")}
-        onMouseDown={(event) => event.preventDefault()}
+        onMouseDown={(event: React.MouseEvent) => event.preventDefault()}
         onClick={() => editor.chain().focus().insertContent("/").run()}
       >
         <LuPlus aria-hidden />
-      </button>
+      </IconButton>
     </Portal>
   );
 }

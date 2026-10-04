@@ -1,9 +1,10 @@
 import React from "react";
-import Link from "next/link";
 import { Button, Column, Icon, Row, Tag, Text } from "@once-ui-system/core";
 import type { Tone } from "@/lib/admin/defaults";
 import { getFormatters, getT } from "@/i18n/server";
-import { Panel, StatusDot } from "./primitives";
+import { Eyebrow } from "@/components/admin/Eyebrow";
+import { PlainItem, PlainList } from "@/components/admin/PlainList";
+import { Panel, RowLink, StatusDot } from "./primitives";
 import type { DraftPost, OpenIncident } from "./types";
 import styles from "./Overview.module.scss";
 
@@ -53,18 +54,36 @@ export async function AttentionPanel({
       }
     >
       {total === 0 ? (
-        <div className={styles.clear}>
+        <Row
+          fillWidth
+          vertical="center"
+          gap="12"
+          padding="16"
+          radius="l"
+          background="success-alpha-weak"
+          border="success-alpha-strong"
+          borderStyle="dashed"
+        >
           <Icon name="check" size="m" onBackground="success-strong" />
           <Text variant="body-default-s" onBackground="neutral-medium">
             {t("admin.overview.attention.allClearText")}
           </Text>
-        </div>
+        </Row>
       ) : (
         <Column fillWidth gap="16">
           {maintenance && (
-            <div className={styles.notice} role="status">
+            <Row
+              fillWidth
+              vertical="start"
+              gap="12"
+              padding="12"
+              radius="l"
+              background="warning-alpha-weak"
+              border="warning-alpha-strong"
+              role="status"
+            >
               <Icon name="warning" size="m" onBackground="warning-strong" />
-              <Column className={styles.grow} gap="2">
+              <Column flex={1} gap="2">
                 <Text variant="body-strong-s">{t("admin.overview.attention.maintenanceTitle")}</Text>
                 <Text variant="body-default-xs" onBackground="neutral-medium">
                   {t("admin.overview.attention.maintenanceText")}
@@ -77,26 +96,26 @@ export async function AttentionPanel({
               >
                 {t("admin.overview.attention.maintenanceAction")}
               </Button>
-            </div>
+            </Row>
           )}
 
           {incidentCount > 0 && (
             <Column fillWidth gap="4">
               <Row fillWidth horizontal="between" vertical="center">
-                <h3 className={styles.subHeading}>
+                <Eyebrow as="h3" paddingX="12">
                   {t("admin.overview.attention.incidents", { count: incidentCount })}
-                </h3>
+                </Eyebrow>
                 <Button variant="tertiary" size="s" href="/admin/incidents" suffixIcon="chevronRight">
                   {t("admin.overview.attention.viewAll")}
                 </Button>
               </Row>
-              <ul className={styles.list}>
+              <PlainList gap="4">
                 {incidents.map((incident) => (
-                  <li key={incident.id} className={styles.rowWrap}>
-                    <Link href={`/admin/incidents/${incident.id}`} className={styles.row}>
+                  <PlainItem key={incident.id} vertical="center" gap="4">
+                    <RowLink href={`/admin/incidents/${incident.id}`}>
                       <StatusDot tone={SEVERITY_TONE[incident.severity] ?? "info"} />
-                      <Column className={styles.grow} gap="2">
-                        <Text variant="body-strong-s" className={styles.truncate}>
+                      <Column flex={1} gap="2">
+                        <Text variant="body-strong-s" truncate>
                           {incident.title || t("admin.overview.attention.untitled")}
                         </Text>
                         <Text variant="body-default-xs" onBackground="neutral-weak">
@@ -109,10 +128,10 @@ export async function AttentionPanel({
                         </Text>
                       </Column>
                       <Icon name="chevronRight" size="xs" className={styles.chevron} />
-                    </Link>
-                  </li>
+                    </RowLink>
+                  </PlainItem>
                 ))}
-              </ul>
+              </PlainList>
               {incidentCount > incidents.length && (
                 <Text variant="body-default-xs" onBackground="neutral-weak" paddingX="12">
                   {t("admin.overview.attention.more", { count: incidentCount - incidents.length })}
@@ -124,20 +143,20 @@ export async function AttentionPanel({
           {draftCount > 0 && (
             <Column fillWidth gap="4">
               <Row fillWidth horizontal="between" vertical="center">
-                <h3 className={styles.subHeading}>
+                <Eyebrow as="h3" paddingX="12">
                   {t("admin.overview.attention.drafts", { count: draftCount })}
-                </h3>
+                </Eyebrow>
                 <Button variant="tertiary" size="s" href="/admin/news" suffixIcon="chevronRight">
                   {t("admin.overview.attention.viewAll")}
                 </Button>
               </Row>
-              <ul className={styles.list}>
+              <PlainList gap="4">
                 {drafts.map((draft) => (
-                  <li key={draft.id} className={styles.rowWrap}>
-                    <Link href={`/admin/news/${draft.id}`} className={styles.row}>
+                  <PlainItem key={draft.id} vertical="center" gap="4">
+                    <RowLink href={`/admin/news/${draft.id}`}>
                       <Icon name="edit" size="s" onBackground="neutral-weak" />
-                      <Column className={styles.grow} gap="2">
-                        <Text variant="body-strong-s" className={styles.truncate}>
+                      <Column flex={1} gap="2">
+                        <Text variant="body-strong-s" truncate>
                           {draft.title || t("admin.overview.attention.untitled")}
                         </Text>
                         <Text variant="body-default-xs" onBackground="neutral-weak">
@@ -147,10 +166,10 @@ export async function AttentionPanel({
                         </Text>
                       </Column>
                       <Icon name="chevronRight" size="xs" className={styles.chevron} />
-                    </Link>
-                  </li>
+                    </RowLink>
+                  </PlainItem>
                 ))}
-              </ul>
+              </PlainList>
               {draftCount > drafts.length && (
                 <Text variant="body-default-xs" onBackground="neutral-weak" paddingX="12">
                   {t("admin.overview.attention.more", { count: draftCount - drafts.length })}

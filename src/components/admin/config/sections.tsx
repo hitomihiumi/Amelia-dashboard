@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Column, Icon, IconButton, Row, Switch, Text } from "@once-ui-system/core";
+import { Column, Flex, Icon, IconButton, Row, Switch, Text } from "@once-ui-system/core";
 import {
   BANNER_VARIANTS,
   CONFIG_DEFAULTS,
@@ -14,6 +14,7 @@ import {
   type Tone,
 } from "@/lib/admin/defaults";
 import { useT } from "@/i18n/client";
+import { Eyebrow } from "@/components/admin/Eyebrow";
 import { StatusDot } from "@/components/admin/overview/primitives";
 import { BannerPreview } from "./BannerPreview";
 import { ChipPicker, TextField, type ChipOption } from "./fields";
@@ -26,7 +27,6 @@ import {
   type FormState,
   type LinkField,
 } from "./form";
-import styles from "./Config.module.scss";
 
 interface SectionProps {
   state: FormState;
@@ -42,10 +42,10 @@ const BANNER_TONE: Record<BannerVariant, Tone> = {
 
 function PreviewLabel({ children }: { children: string }) {
   return (
-    <p className={styles.previewLabel}>
-      <Icon name="eye" size="xs" />
-      {children}
-    </p>
+    <Row gap="8" vertical="center">
+      <Icon name="eye" size="xs" onBackground="neutral-weak" />
+      <Eyebrow as="p">{children}</Eyebrow>
+    </Row>
   );
 }
 
@@ -141,10 +141,10 @@ function LinkInput({
 
   const message =
     status === "valid" ? (
-      <span className={styles.valid}>
+      <Row gap="4" vertical="center" onBackground="success-strong">
         <Icon name="check" size="xs" />
         {t("admin.config.links.valid", { host: linkHost(value) })}
-      </span>
+      </Row>
     ) : (
       hint
     );
@@ -316,8 +316,17 @@ export function StatusSection({ state, update }: SectionProps) {
       title={t("admin.config.status.title")}
       description={t("admin.config.status.description")}
     >
-      <div className={styles.switchRow} data-on={state.maintenance} data-tone="warning">
-        <Column className={styles.grow} gap="2">
+      <Row
+        fillWidth
+        vertical="center"
+        gap="16"
+        paddingX="16"
+        paddingY="12"
+        radius="l"
+        background={state.maintenance ? "warning-alpha-weak" : "neutral-alpha-weak"}
+        border={state.maintenance ? "warning-alpha-strong" : "neutral-alpha-medium"}
+      >
+        <Column flex={1} gap="2">
           <Text variant="body-strong-s" as="span">
             {t("admin.config.status.maintenance")}
           </Text>
@@ -330,18 +339,27 @@ export function StatusSection({ state, update }: SectionProps) {
           checked={state.maintenance}
           onToggle={() => update({ maintenance: !state.maintenance })}
         />
-      </div>
+      </Row>
 
       {state.maintenance && (
-        <div className={styles.callout} role="status">
+        <Row
+          fillWidth
+          vertical="start"
+          gap="12"
+          padding="16"
+          radius="l"
+          background="warning-alpha-weak"
+          border="warning-alpha-strong"
+          role="status"
+        >
           <Icon name="warning" size="m" onBackground="warning-strong" />
-          <Column className={styles.grow} gap="2">
+          <Column flex={1} gap="2">
             <Text variant="body-strong-s">{t("admin.config.status.maintenanceWarningTitle")}</Text>
             <Text variant="body-default-s" onBackground="neutral-medium">
               {t("admin.config.status.maintenanceWarning")}
             </Text>
           </Column>
-        </div>
+        </Row>
       )}
 
       <TextField
@@ -373,18 +391,24 @@ export function StatusSection({ state, update }: SectionProps) {
               : "neutral";
 
           return (
-            <div key={key} className={styles.serviceRow}>
+            <Column
+              key={key}
+              fillWidth
+              gap="12"
+              padding="16"
+              radius="l"
+              background="neutral-alpha-weak"
+              border="neutral-alpha-medium"
+            >
               <Row fillWidth vertical="center" gap="12" wrap>
-                <Row className={styles.grow} gap="12" vertical="center">
+                <Row flex={1} gap="12" vertical="center">
                   {tone === "neutral" ? (
-                    <span
+                    <Flex
                       aria-hidden
-                      style={{
-                        width: "0.5rem",
-                        height: "0.5rem",
-                        borderRadius: "50%",
-                        border: "1px solid var(--neutral-solid-strong)",
-                      }}
+                      width={0.5}
+                      height={0.5}
+                      radius="full"
+                      border="neutral-strong"
                     />
                   ) : (
                     <StatusDot tone={tone} />
@@ -398,14 +422,14 @@ export function StatusSection({ state, update }: SectionProps) {
                 </Row>
               </Row>
 
-              <div data-muted={state.maintenance} style={{ opacity: state.maintenance ? 0.55 : 1 }}>
+              <Column fillWidth style={{ opacity: state.maintenance ? 0.55 : 1 }}>
                 <ChipPicker
                   label={t("admin.config.status.statusOf", { service })}
                   value={status}
                   options={options}
                   onChange={(value) => setOverride(key, { status: value })}
                 />
-              </div>
+              </Column>
 
               {status && (
                 <TextField
@@ -418,7 +442,7 @@ export function StatusSection({ state, update }: SectionProps) {
                   onChange={(note) => setOverride(key, { note })}
                 />
               )}
-            </div>
+            </Column>
           );
         })}
       </Column>

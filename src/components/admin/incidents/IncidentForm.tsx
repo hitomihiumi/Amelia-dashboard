@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Column, Input, Row, Text, Textarea, useToast } from "@once-ui-system/core";
+import { Button, Column, Grid, Input, Row, Tag, Text, Textarea, useToast } from "@once-ui-system/core";
 import { AdminCard } from "@/components/admin/AdminPage";
 import { IncidentCard } from "@/components/status/IncidentCard";
 import type { IncidentComponent, IncidentSeverity } from "@/components/status/incidentMeta";
@@ -100,7 +100,7 @@ export function IncidentForm({ actions, basePath = INCIDENTS_PATH }: IncidentFor
   );
 
   return (
-    <div className={styles.layout}>
+    <Grid fillWidth className={styles.layout}>
       <AdminCard padding="24" gap="24">
         <Column gap="12">
           <Text variant="label-default-s" onBackground="neutral-weak">
@@ -132,10 +132,10 @@ export function IncidentForm({ actions, basePath = INCIDENTS_PATH }: IncidentFor
               }
             }}
           />
-          <div className={styles.fieldFoot}>
-            <span />
+          <Row fillWidth vertical="start" horizontal="between" gap="12" marginTop="4">
+            <Row />
             <CharCounter count={title.length} max={TITLE_MAX} />
-          </div>
+          </Row>
         </Column>
 
         <Column gap="12">
@@ -155,12 +155,12 @@ export function IncidentForm({ actions, basePath = INCIDENTS_PATH }: IncidentFor
                 }
               }}
             />
-            <div className={styles.fieldFoot}>
+            <Row fillWidth vertical="start" horizontal="between" gap="12" marginTop="4">
               <Text variant="body-default-xs" onBackground="neutral-weak">
                 {t("adminIncidents.form.messageHint")}
               </Text>
               <CharCounter count={body.length} max={BODY_MAX} />
-            </div>
+            </Row>
           </Column>
 
           <TemplateChips
@@ -175,17 +175,17 @@ export function IncidentForm({ actions, basePath = INCIDENTS_PATH }: IncidentFor
           />
         </Column>
 
-        <div className={styles.actions}>
+        <Row fillWidth wrap vertical="center" horizontal="end" gap="8">
           <Button variant="tertiary" href={basePath}>
             {t("common.actions.cancel")}
           </Button>
           <Button onClick={submit} loading={pending} disabled={!canSubmit || pending}>
             {t("adminIncidents.form.submit")}
           </Button>
-        </div>
+        </Row>
       </AdminCard>
 
-      <div className={styles.preview}>
+      <Column fillWidth className={styles.preview}>
         <AdminCard padding="20" gap="16">
           <Row fillWidth horizontal="between" vertical="center" gap="12" wrap>
             <Column gap="2">
@@ -194,22 +194,32 @@ export function IncidentForm({ actions, basePath = INCIDENTS_PATH }: IncidentFor
                 {t("adminIncidents.form.previewHint")}
               </Text>
             </Column>
-            <span className={styles.previewBadge}>
-              <span aria-hidden className={styles.previewDot} />
-              /status
-            </span>
+            <Tag scheme="brand" size="m" radius="full">
+              <Row vertical="center" gap="8">
+                <Row width={0.5} height={0.5} radius="full" solid="brand-strong" aria-hidden />
+                <Text variant="label-strong-s">/status</Text>
+              </Row>
+            </Tag>
           </Row>
 
-          <div className={styles.previewFrame}>
+          <Column
+            fillWidth
+            gap="16"
+            padding="16"
+            radius="l"
+            border="neutral-alpha-strong"
+            borderStyle="dashed"
+            background="page"
+          >
             <Text variant="heading-strong-m">{t("site.status.history.title")}</Text>
             <IncidentCard
               incident={previewIncident}
               updates={previewUpdates}
               titleMuted={!trimmedTitle}
             />
-          </div>
+          </Column>
         </AdminCard>
-      </div>
-    </div>
+      </Column>
+    </Grid>
   );
 }

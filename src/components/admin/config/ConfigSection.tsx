@@ -1,9 +1,11 @@
 "use client";
 
 import React, { type ReactNode, useEffect, useState } from "react";
-import { Column, Line, Row, Text } from "@once-ui-system/core";
+import { Column, Line, Row, Text, ToggleButton } from "@once-ui-system/core";
 import type { IconName } from "@/resources/icons";
 import { useT } from "@/i18n/client";
+import { Eyebrow } from "@/components/admin/Eyebrow";
+import { PlainItem, PlainList } from "@/components/admin/PlainList";
 import { AdminCard } from "@/components/admin/AdminPage";
 import { IconTile } from "@/components/admin/overview/primitives";
 import type { SectionId } from "./form";
@@ -26,11 +28,11 @@ export function ConfigSection({
   children: ReactNode;
 }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className={styles.section}>
-      <AdminCard padding="20">
+    <Column as="section" id={id} aria-labelledby={`${id}-title`} fillWidth className={styles.section}>
+      <AdminCard padding="20" fillHeight>
         <Row fillWidth gap="12" vertical="center" wrap>
           <IconTile name={icon} />
-          <Column className={styles.grow} gap="2" style={{ minWidth: "11rem" }}>
+          <Column flex={1} gap="2" style={{ minWidth: "11rem" }}>
             <Text variant="body-strong-l" as="h2" id={`${id}-title`}>
               {title}
             </Text>
@@ -43,7 +45,7 @@ export function ConfigSection({
         <Line />
         {children}
       </AdminCard>
-    </section>
+    </Column>
   );
 }
 
@@ -84,32 +86,55 @@ export function SectionIndex({ entries, dirty }: { entries: IndexEntry[]; dirty:
   };
 
   return (
-    <nav className={styles.index} aria-label={t("admin.config.index")}>
-      <h2 className={styles.indexLabel}>{t("admin.config.index")}</h2>
-      <ul className={styles.indexList}>
+    <Column
+      as="nav"
+      position="sticky"
+      top="24"
+      width={13.5}
+      gap="8"
+      aria-label={t("admin.config.index")}
+      className={styles.index}
+    >
+      <Eyebrow as="h2" paddingX="12">
+        {t("admin.config.index")}
+      </Eyebrow>
+      <PlainList gap="2">
         {entries.map((entry) => (
-          <li key={entry.id}>
-            <button
+          <PlainItem key={entry.id}>
+            <ToggleButton
               type="button"
-              className={styles.indexItem}
+              fillWidth
+              horizontal="start"
+              size="l"
+              radius="m"
+              selected={active === entry.id}
+              weight={active === entry.id ? "strong" : "default"}
               aria-current={active === entry.id}
+              className={styles.indexItem}
               onClick={() => jump(entry.id)}
             >
-              <IndexIcon name={entry.icon} />
-              <span className={styles.indexText}>{entry.label}</span>
-              {dirty.has(entry.id) && (
-                <span
-                  className={styles.unsavedDot}
-                  role="img"
-                  aria-label={t("admin.config.unsavedSection")}
-                  title={t("admin.config.unsavedSection")}
-                />
-              )}
-            </button>
-          </li>
+              <Row fillWidth vertical="center" gap="12">
+                <IndexIcon name={entry.icon} />
+                <Text variant="body-default-s" truncate style={{ flex: 1, textAlign: "left" }}>
+                  {entry.label}
+                </Text>
+                {dirty.has(entry.id) && (
+                  <Row
+                    width={0.5}
+                    height={0.5}
+                    radius="full"
+                    solid="warning-strong"
+                    role="img"
+                    aria-label={t("admin.config.unsavedSection")}
+                    title={t("admin.config.unsavedSection")}
+                  />
+                )}
+              </Row>
+            </ToggleButton>
+          </PlainItem>
         ))}
-      </ul>
-    </nav>
+      </PlainList>
+    </Column>
   );
 }
 

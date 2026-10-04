@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { LuImage, LuImageOff } from "react-icons/lu";
+import { Flex, Row } from "@once-ui-system/core";
 import styles from "./ImageUrlPreview.module.scss";
 
 export type ImageStatus = "idle" | "loading" | "ok" | "error";
@@ -32,12 +33,22 @@ export function ImageUrlPreview({ url, hint, errorText, onStatus, ratio = "compa
   }, [status, onStatus]);
 
   return (
-    <div
-      className={`${styles.frame} ${ratio === "cover" ? styles.cover : styles.compact}`}
+    <Row
+      fillWidth
+      center
+      overflow="hidden"
+      radius="m"
+      border={status === "error" ? "danger-alpha-medium" : "neutral-alpha-medium"}
+      borderStyle={status === "ok" ? "solid" : "dashed"}
+      background={status === "error" ? "danger-alpha-weak" : "neutral-alpha-weak"}
+      onBackground="neutral-weak"
+      aspectRatio={ratio === "cover" ? "16 / 9" : undefined}
+      height={ratio === "cover" ? undefined : 7}
       data-status={status}
       aria-live="polite"
     >
       {url && status !== "error" && (
+        // A plain <img>: the load / error events decide the status above, and Media does not expose them.
         // eslint-disable-next-line @next/next/no-img-element
         <img
           key={url}
@@ -49,16 +60,26 @@ export function ImageUrlPreview({ url, hint, errorText, onStatus, ratio = "compa
         />
       )}
       {status === "idle" && (
-        <span className={styles.note}>
+        <Row center gap="8" paddingX="12" paddingY="8" textVariant="body-default-s" align="center">
           <LuImage aria-hidden /> {hint}
-        </span>
+        </Row>
       )}
       {status === "error" && (
-        <span className={`${styles.note} ${styles.noteError}`}>
+        <Row
+          center
+          gap="8"
+          paddingX="12"
+          paddingY="8"
+          textVariant="body-default-s"
+          align="center"
+          onBackground="danger-strong"
+        >
           <LuImageOff aria-hidden /> {errorText}
-        </span>
+        </Row>
       )}
-      {status === "loading" && <span className={styles.shimmer} aria-hidden />}
-    </div>
+      {status === "loading" && (
+        <Flex position="absolute" top="0" left="0" fill pointerEvents="none" aria-hidden className={styles.shimmer} />
+      )}
+    </Row>
   );
 }

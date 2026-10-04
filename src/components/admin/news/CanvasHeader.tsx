@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useLayoutEffect, useState } from "react";
-import { Tag } from "@once-ui-system/core";
-import { LuChevronDown, LuImagePlus, LuPencil, LuTrash2 } from "react-icons/lu";
+import { Button, Card, Column, Input, Row, Text, Textarea } from "@once-ui-system/core";
+import { LuImagePlus, LuPencil, LuTrash2 } from "react-icons/lu";
+import { MenuSelect } from "@/components/admin/MenuSelect";
 import { useFormat, useT } from "@/i18n/client";
 import { NEWS_CATEGORIES, isNewsCategory } from "@/lib/news/categories";
 import { ImageUrlPreview } from "./ImageUrlPreview";
@@ -65,37 +66,53 @@ export function CanvasHeader({
   const showCounter = summaryFocused || summary.length > SUMMARY_MAX * 0.75;
 
   return (
-    <header className={styles.header}>
-      <div className={styles.meta}>
-        <label className={styles.tagPick}>
-          <Tag scheme="neutral">{categoryLabel(category)}</Tag>
-          <LuChevronDown className={styles.tagChevron} aria-hidden />
-          <select
-            className={styles.tagSelect}
-            value={category}
-            aria-label={t("adminNews.inspector.category")}
-            onChange={(event) => onCategory(event.target.value)}
-          >
-            {NEWS_CATEGORIES.map((item) => (
-              <option key={item} value={item}>
-                {categoryLabel(item)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <span className={styles.date}>{format.date(date, { dateStyle: "long" })}</span>
-      </div>
+    <Column
+      as="header"
+      fillWidth
+      maxWidth="s"
+      gap="12"
+      paddingX="24"
+      paddingTop="32"
+      paddingBottom="24"
+      s={{ paddingX: "16", paddingTop: "24", paddingBottom: "16" }}
+    >
+      <Row wrap vertical="center" gap="8">
+        <MenuSelect
+          value={category}
+          minWidth={10}
+          onSelect={onCategory}
+          options={NEWS_CATEGORIES.map((item) => ({ value: item, label: categoryLabel(item) }))}
+          trigger={
+            <Button
+              type="button"
+              variant="tertiary"
+              size="s"
+              suffixIcon="chevronDown"
+              aria-label={t("adminNews.inspector.category")}
+            >
+              {categoryLabel(category)}
+            </Button>
+          }
+        />
+        <Text variant="body-default-xs" onBackground="neutral-weak">
+          {format.date(date, { dateStyle: "long" })}
+        </Text>
+      </Row>
 
-      <div className={styles.field}>
-        <textarea
+      <Column fillWidth gap="4">
+        <Textarea
+          id="news-title"
           ref={titleRef}
-          className={`${styles.title} ${errors.title ? styles.invalid : ""}`}
-          rows={1}
+          variant="ghost"
+          lines={1}
+          resize="none"
           maxLength={TITLE_MAX}
           placeholder={t("adminNews.editor.titlePlaceholder")}
           aria-label={t("adminNews.editor.titleLabel")}
           aria-invalid={Boolean(errors.title)}
+          error={Boolean(errors.title)}
           value={title}
+          className={styles.titleField}
           onChange={(event) => onTitle(event.target.value.replace(/\n/g, " "))}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
@@ -104,38 +121,59 @@ export function CanvasHeader({
             }
           }}
         />
-        {errors.title && <p className={styles.error}>{errors.title}</p>}
-      </div>
+        {errors.title && (
+          <Text as="p" variant="label-default-s" onBackground="danger-strong">
+            {errors.title}
+          </Text>
+        )}
+      </Column>
 
-      <div className={styles.field}>
-        <textarea
+      <Column fillWidth gap="4">
+        <Textarea
+          id="news-summary"
           ref={summaryRef}
-          className={`${styles.summary} ${errors.summary ? styles.invalid : ""}`}
-          rows={1}
+          variant="ghost"
+          lines={1}
+          resize="none"
           maxLength={SUMMARY_MAX}
           placeholder={t("adminNews.editor.summaryPlaceholder")}
           aria-label={t("adminNews.editor.summaryLabel")}
           aria-invalid={Boolean(errors.summary)}
+          error={Boolean(errors.summary)}
           value={summary}
+          className={styles.summaryField}
           onFocus={() => setSummaryFocused(true)}
           onBlur={() => setSummaryFocused(false)}
           onChange={(event) => onSummary(event.target.value.replace(/\n/g, " "))}
         />
-        <div className={styles.summaryMeta}>
-          {errors.summary ? <p className={styles.error}>{errors.summary}</p> : <span />}
+        <Row fillWidth vertical="center" horizontal="between">
+          {errors.summary ? (
+            <Text as="p" variant="label-default-s" onBackground="danger-strong">
+              {errors.summary}
+            </Text>
+          ) : (
+            <Row />
+          )}
           {showCounter && (
-            <span
-              className={styles.counter}
-              data-level={summary.length >= SUMMARY_MAX ? "max" : summary.length > SUMMARY_MAX * 0.9 ? "near" : "ok"}
+            <Text
+              variant="label-default-s"
+              onBackground={
+                summary.length >= SUMMARY_MAX
+                  ? "danger-strong"
+                  : summary.length > SUMMARY_MAX * 0.9
+                    ? "warning-strong"
+                    : "neutral-weak"
+              }
+              style={{ marginLeft: "auto", fontVariantNumeric: "tabular-nums" }}
             >
               {summary.length} / {SUMMARY_MAX}
-            </span>
+            </Text>
           )}
-        </div>
-      </div>
+        </Row>
+      </Column>
 
       <CoverBlock url={coverUrl} error={errors.coverUrl} onChange={onCover} />
-    </header>
+    </Column>
   );
 }
 
@@ -168,16 +206,26 @@ function CoverBlock({
 
   if (editing) {
     return (
-      <div className={styles.coverForm}>
-        <div className={styles.coverRow}>
-          <input
+      <Column
+        fillWidth
+        gap="8"
+        marginTop="4"
+        padding="12"
+        radius="l"
+        border="neutral-alpha-medium"
+        background="neutral-alpha-weak"
+      >
+        <Row fillWidth wrap gap="8">
+          <Input
+            id="news-cover-draft"
             autoFocus
-            className={styles.coverInput}
+            size="s"
             type="text"
             inputMode="url"
             placeholder="https://…"
             aria-label={t("adminNews.inspector.cover")}
             value={draft}
+            style={{ flex: "1 1 14rem", minWidth: 0 }}
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
@@ -188,55 +236,67 @@ function CoverBlock({
               }
             }}
           />
-          <button type="button" className={styles.coverApply} disabled={!valid(draft)} onClick={apply}>
+          <Button type="button" variant="primary" size="m" disabled={!valid(draft)} onClick={apply}>
             {t("adminNews.canvas.coverApply")}
-          </button>
-          <button type="button" className={styles.coverCancel} onClick={() => setEditing(false)}>
+          </Button>
+          <Button type="button" variant="secondary" size="m" onClick={() => setEditing(false)}>
             {t("common.actions.cancel")}
-          </button>
-        </div>
+          </Button>
+        </Row>
         <ImageUrlPreview
           ratio="cover"
           url={valid(draft) ? draft.trim() : ""}
           hint={t("adminNews.inspector.coverHint")}
           errorText={t("adminNews.inspector.coverBroken")}
         />
-      </div>
+      </Column>
     );
   }
 
   if (!trimmed || !valid(trimmed)) {
     return (
-      <div className={styles.coverEmptyWrap}>
-        <button type="button" className={styles.addCover} onClick={open}>
+      <Column fillWidth gap="4" marginTop="4">
+        <Card
+          fillWidth
+          center
+          gap="8"
+          height={3.5}
+          radius="l"
+          background="transparent"
+          border="neutral-alpha-strong"
+          borderStyle="dashed"
+          onBackground="neutral-weak"
+          className={styles.addCover}
+          onClick={open}
+        >
           <LuImagePlus aria-hidden />
-          <span>{t("adminNews.canvas.addCover")}</span>
-        </button>
+          <Text variant="body-default-s">{t("adminNews.canvas.addCover")}</Text>
+        </Card>
         {(error || (trimmed && !valid(trimmed))) && (
-          <p className={styles.error}>{error ?? t("adminNews.errors.coverInvalid")}</p>
+          <Text as="p" variant="label-default-s" onBackground="danger-strong">
+            {error ?? t("adminNews.errors.coverInvalid")}
+          </Text>
         )}
-      </div>
+      </Column>
     );
   }
 
   return (
-    <div className={styles.cover}>
+    <Column fillWidth marginTop="12" className={styles.cover}>
       <ImageUrlPreview
         ratio="cover"
         url={trimmed}
         hint={t("adminNews.inspector.coverHint")}
         errorText={t("adminNews.inspector.coverBroken")}
       />
-      <div className={styles.coverActions}>
-        <button type="button" className={styles.coverBtn} onClick={open}>
-          <LuPencil aria-hidden />
-          {t("adminNews.canvas.changeCover")}
-        </button>
-        <button type="button" className={styles.coverBtn} onClick={() => onChange("")}>
-          <LuTrash2 aria-hidden />
-          {t("adminNews.inspector.coverRemove")}
-        </button>
-      </div>
-    </div>
+      <Row position="absolute" top="12" right="12" gap="8" className={styles.coverActions}>
+        <Button type="button" variant="secondary" size="s" className={styles.coverBtn} onClick={open}>
+          <LuPencil aria-hidden /> {t("adminNews.canvas.changeCover")}
+        </Button>
+        <Button type="button" variant="secondary" size="s" className={styles.coverBtn} onClick={() => onChange("")}>
+          <LuTrash2 aria-hidden /> {t("adminNews.inspector.coverRemove")}
+        </Button>
+      </Row>
+    </Column>
   );
 }

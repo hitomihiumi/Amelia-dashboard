@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import classNames from "classnames";
-import { Button, IconButton, Text, Textarea } from "@once-ui-system/core";
+import { Button, Column, Grid, IconButton, Row, Text, Textarea } from "@once-ui-system/core";
 import { AdminCard } from "@/components/admin/AdminPage";
 import { ConfirmIconButton } from "@/components/dashboard/ConfirmIconButton";
 import { useT } from "@/i18n/client";
@@ -16,6 +16,7 @@ import {
   severityTone,
   statusTone,
   toMs,
+  type ToneScheme,
 } from "@/components/status/incidentMeta";
 import { useStableFormat } from "@/components/status/useStableFormat";
 import tones from "@/components/status/tones.module.scss";
@@ -29,7 +30,6 @@ import {
 } from "./incidentUi";
 import { BODY_MAX, type IncidentActions } from "./types";
 import type { useActionRunner } from "./useActionRunner";
-import styles from "./IncidentDetail.module.scss";
 
 interface IncidentTimelineProps {
   incident: IncidentView;
@@ -56,20 +56,24 @@ export function IncidentTimeline({ incident, now, actions, run, pending }: Incid
       </Text>
 
       {updates.length === 0 && (
-        <p className={styles.empty}>{t("adminIncidents.detail.timeline.empty")}</p>
+        <Column fillWidth padding="16" radius="m" border="neutral-alpha-strong" borderStyle="dashed">
+          <Text as="p" variant="body-default-s" onBackground="neutral-weak">
+            {t("adminIncidents.detail.timeline.empty")}
+          </Text>
+        </Column>
       )}
 
-      <ol className={styles.timeline}>
-        {updates.map((update) => (
-          <li key={update.id} className={classNames(styles.entry, tones[statusTone(update.status)])}>
-            <div className={styles.rail}>
-              <span aria-hidden className={styles.dot}>
-                {isIncidentStatus(update.status) ? STATUS_ICON[update.status] : null}
-              </span>
-              <span aria-hidden className={styles.line} />
-            </div>
+      <Column as="ol" fillWidth margin="0" padding="0">
+        {updates.map((update) => {
+          const tone = statusTone(update.status);
 
-            <div className={styles.entryContent}>
+          return (
+            <TimelineEntry
+              key={update.id}
+              tone={tone}
+              icon={isIncidentStatus(update.status) ? STATUS_ICON[update.status] : null}
+              line
+            >
               {editingId === update.id ? (
                 <UpdateEditor
                   update={update}
@@ -86,12 +90,12 @@ export function IncidentTimeline({ incident, now, actions, run, pending }: Incid
                 />
               ) : (
                 <>
-                  <div className={styles.entryHead}>
+                  <EntryHead>
                     <StatusChip status={update.status} />
-                    <span className={styles.time} title={absolute(update.createdAt)}>
+                    <Text variant="body-default-xs" onBackground="neutral-weak" title={absolute(update.createdAt)}>
                       {relativeAgo(format, update.createdAt, now)} · {absolute(update.createdAt)}
-                    </span>
-                    <span className={styles.entryActions}>
+                    </Text>
+                    <Row fitWidth gap="2" vertical="center" style={{ marginLeft: "auto" }}>
                       <IconButton
                         icon="edit"
                         variant="ghost"
@@ -110,34 +114,109 @@ export function IncidentTimeline({ incident, now, actions, run, pending }: Incid
                           )
                         }
                       />
-                    </span>
-                  </div>
-                  <p className={styles.entryText}>
+                    </Row>
+                  </EntryHead>
+                  <Text
+                    as="p"
+                    variant="body-default-m"
+                    onBackground="neutral-medium"
+                    style={{ overflowWrap: "anywhere", whiteSpace: "pre-wrap", lineHeight: 1.55 }}
+                  >
                     {localizeAutoUpdate(t, incident.auto, update.body)}
-                  </p>
+                  </Text>
                 </>
               )}
-            </div>
-          </li>
-        ))}
+            </TimelineEntry>
+          );
+        })}
 
-        <li className={classNames(styles.entry, tones[severityTone(incident.severity)])}>
-          <div className={styles.rail}>
-            <span aria-hidden className={classNames(styles.dot, styles.dotOpened)}>
-              {isSeverity(incident.severity) ? SEVERITY_ICON[incident.severity] : SEVERITY_ICON.minor}
-            </span>
-          </div>
-          <div className={styles.entryContent}>
-            <div className={styles.entryHead}>
-              <Text variant="label-default-s">{t("adminIncidents.detail.timeline.opened")}</Text>
-              <span className={styles.time} title={absolute(incident.startedAt)}>
-                {relativeAgo(format, incident.startedAt, now)} · {absolute(incident.startedAt)}
-              </span>
-            </div>
-          </div>
-        </li>
-      </ol>
+        <TimelineEntry
+          tone={severityTone(incident.severity)}
+          icon={isSeverity(incident.severity) ? SEVERITY_ICON[incident.severity] : SEVERITY_ICON.minor}
+          opened
+        >
+          <EntryHead>
+            <Text variant="label-default-s">{t("adminIncidents.detail.timeline.opened")}</Text>
+            <Text variant="body-default-xs" onBackground="neutral-weak" title={absolute(incident.startedAt)}>
+              {relativeAgo(format, incident.startedAt, now)} · {absolute(incident.startedAt)}
+            </Text>
+          </EntryHead>
+        </TimelineEntry>
+      </Column>
     </AdminCard>
+  );
+}
+
+/** One row of the timeline: a dot on the rail on the left, the content on the right. */
+function TimelineEntry({
+  tone,
+  icon,
+  line,
+  opened,
+  children,
+}: {
+  tone: ToneScheme;
+  icon: React.ReactNode;
+  /** Draw the rail down to the next entry. */
+  line?: boolean;
+  /** The first event of the incident: a dashed, empty dot and no content padding. */
+  opened?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Grid
+      as="li"
+      fillWidth
+      className={tones[tone]}
+      style={{ gridTemplateColumns: "2.25rem minmax(0, 1fr)", columnGap: "var(--static-space-16)" }}
+    >
+      <Column horizontal="center">
+        <Row
+          center
+          width={2.25}
+          height={2.25}
+          radius="full"
+          border={`${tone}-strong`}
+          borderStyle={opened ? "dashed" : "solid"}
+          background={opened ? "transparent" : `${tone}-alpha-weak`}
+          onBackground={`${tone}-strong`}
+          aria-hidden
+          style={{ flexShrink: 0, fontSize: "1.125rem" }}
+        >
+          {icon}
+        </Row>
+        {line && (
+          <Row
+            flex={1}
+            width="2"
+            minHeight="16"
+            marginY="4"
+            radius="xs"
+            background="neutral-alpha-medium"
+            aria-hidden
+          />
+        )}
+      </Column>
+
+      <Column fillWidth gap="8" paddingBottom={opened ? undefined : "24"}>
+        {children}
+      </Column>
+    </Grid>
+  );
+}
+
+function EntryHead({ children }: { children: React.ReactNode }) {
+  return (
+    <Row
+      fillWidth
+      wrap
+      vertical="center"
+      gap="4"
+      minHeight={2.25}
+      style={{ columnGap: "var(--static-space-12)" }}
+    >
+      {children}
+    </Row>
   );
 }
 
@@ -163,13 +242,20 @@ function UpdateEditor({
   const valid = body.trim().length > 0 && body.length <= BODY_MAX;
 
   return (
-    <div className={styles.editor}>
+    <Column
+      fillWidth
+      gap="12"
+      padding="16"
+      radius="m"
+      border="neutral-alpha-medium"
+      background="neutral-alpha-weak"
+    >
       <StatusPicker
         label={t("adminIncidents.detail.timeline.status")}
         value={status}
         onChange={setStatus}
       />
-      <div>
+      <Column fillWidth>
         <Textarea
           id={`edit-update-${update.id}`}
           label={t("adminIncidents.detail.timeline.message")}
@@ -186,11 +272,11 @@ function UpdateEditor({
             }
           }}
         />
-        <div className={styles.fieldFoot}>
+        <Row fillWidth horizontal="end" marginTop="4">
           <CharCounter count={body.length} max={BODY_MAX} />
-        </div>
-      </div>
-      <div className={styles.buttons}>
+        </Row>
+      </Column>
+      <Row fillWidth wrap vertical="center" horizontal="end" gap="8">
         <Button size="s" variant="tertiary" onClick={onCancel} disabled={pending}>
           {t("common.actions.cancel")}
         </Button>
@@ -202,7 +288,7 @@ function UpdateEditor({
         >
           {t("common.actions.save")}
         </Button>
-      </div>
-    </div>
+      </Row>
+    </Column>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { Column, Row, Switch, Tag, Text } from "@once-ui-system/core";
-import { LuX } from "react-icons/lu";
+import { Button, Column, IconButton, Input, Media, Row, Switch, Tag, Text, ToggleButton } from "@once-ui-system/core";
 import { AdminCard } from "@/components/admin/AdminPage";
+import { Eyebrow } from "@/components/admin/Eyebrow";
 import { ConfirmIconButton } from "@/components/dashboard/ConfirmIconButton";
 import { useFormat, useT } from "@/i18n/client";
 import { NEWS_CATEGORIES, isNewsCategory } from "@/lib/news/categories";
@@ -28,14 +28,6 @@ interface InspectorProps {
   onCover: (url: string) => void;
   onTogglePublished: (next: boolean) => void;
   onDelete: () => void;
-}
-
-function Eyebrow({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) {
-  return (
-    <label className={styles.eyebrow} htmlFor={htmlFor}>
-      {children}
-    </label>
-  );
 }
 
 export function NewsInspector({
@@ -65,12 +57,12 @@ export function NewsInspector({
   const auto = !form.slugTouched;
 
   return (
-    <div className={styles.stack}>
+    <Column fillWidth gap="16">
       {/* Status */}
       <AdminCard padding="20" gap="12">
         <Row horizontal="between" vertical="center" gap="12">
           <Column gap="4" style={{ minWidth: 0 }}>
-            <Eyebrow>{t("adminNews.inspector.status")}</Eyebrow>
+            <Eyebrow as="label">{t("adminNews.inspector.status")}</Eyebrow>
             <Row gap="8" vertical="center">
               <Tag scheme={meta.published ? "success" : "neutral"} size="m">
                 {meta.published ? t("adminNews.status.published") : t("adminNews.status.draft")}
@@ -95,7 +87,7 @@ export function NewsInspector({
               : t("adminNews.inspector.statusDraft")}
         </Text>
         {meta.id && (
-          <Row horizontal="between" vertical="center" className={styles.danger}>
+          <Row horizontal="between" vertical="center" paddingTop="12" borderTop="neutral-alpha-weak">
             <Text variant="body-default-s" onBackground="neutral-weak">
               {t("adminNews.inspector.deletePost")}
             </Text>
@@ -111,18 +103,23 @@ export function NewsInspector({
 
       {/* Category */}
       <AdminCard padding="20" gap="12">
-        <Eyebrow>{t("adminNews.inspector.category")}</Eyebrow>
-        <div className={styles.chips} role="radiogroup" aria-label={t("adminNews.inspector.category")}>
+        <Eyebrow as="label">{t("adminNews.inspector.category")}</Eyebrow>
+        <Column fillWidth gap="8" role="radiogroup" aria-label={t("adminNews.inspector.category")}>
           {NEWS_CATEGORIES.map((category) => {
             const tokens = categoryTokens(category);
             const selected = form.category === category;
             return (
-              <button
+              <ToggleButton
                 key={category}
                 type="button"
                 role="radio"
                 aria-checked={selected}
-                className={`${styles.chip} ${selected ? styles.chipSelected : ""}`}
+                fillWidth
+                horizontal="start"
+                size="l"
+                radius="m"
+                variant="outline"
+                className={styles.chip}
                 style={
                   {
                     "--cat-solid": tokens.solid,
@@ -133,89 +130,106 @@ export function NewsInspector({
                 }
                 onClick={() => onCategory(category)}
               >
-                <span className={styles.chipIcon}>
-                  <CategoryIcon category={category} size={16} />
-                </span>
-                <span className={styles.chipText}>
-                  <span className={styles.chipLabel}>{categoryLabel(category)}</span>
-                  <span className={styles.chipHint}>{t(`adminNews.categoryHints.${category}`)}</span>
-                </span>
-              </button>
+                <Row fillWidth vertical="center" gap="12">
+                  <Row width={2} height={2} center radius="s" className={styles.chipIcon}>
+                    <CategoryIcon category={category} size={16} />
+                  </Row>
+                  <Column flex={1} align="start">
+                    <Text variant="body-strong-s">{categoryLabel(category)}</Text>
+                    <Text variant="label-default-xs" onBackground="neutral-weak" align="left">
+                      {t(`adminNews.categoryHints.${category}`)}
+                    </Text>
+                  </Column>
+                </Row>
+              </ToggleButton>
             );
           })}
-        </div>
-        {errors.category && <p className={styles.error}>{errors.category}</p>}
+        </Column>
+        {errors.category && (
+          <Text as="p" variant="label-default-s" onBackground="danger-strong">
+            {errors.category}
+          </Text>
+        )}
       </AdminCard>
 
       {/* Slug */}
       <AdminCard padding="20" gap="12">
         <Row horizontal="between" vertical="center" gap="8">
-          <Eyebrow htmlFor="news-slug">{t("adminNews.inspector.slug")}</Eyebrow>
+          <Eyebrow as="label" htmlFor="news-slug">
+            {t("adminNews.inspector.slug")}
+          </Eyebrow>
           {auto ? (
             <Tag scheme="brand" size="s">
               {t("adminNews.inspector.slugAuto")}
             </Tag>
           ) : (
-            <button type="button" className={styles.link} onClick={onSlugReset}>
+            <Button type="button" variant="link" size="s" onClick={onSlugReset}>
               {t("adminNews.inspector.slugReset")}
-            </button>
+            </Button>
           )}
         </Row>
-        <div className={`${styles.slugField} ${errors.slug ? styles.slugInvalid : ""}`}>
-          <span className={styles.slugPrefix} aria-hidden>
-            /news/
-          </span>
-          <input
-            id="news-slug"
-            className={styles.slugInput}
-            type="text"
-            value={effectiveSlug}
-            maxLength={80}
-            spellCheck={false}
-            autoCapitalize="none"
-            autoCorrect="off"
-            placeholder={t("adminNews.inspector.slugPlaceholder")}
-            aria-invalid={Boolean(errors.slug)}
-            aria-describedby="news-slug-url"
-            onChange={(event) => onSlugInput(event.target.value)}
-          />
-        </div>
-        {errors.slug && <p className={styles.error}>{errors.slug}</p>}
-        <p id="news-slug-url" className={styles.url}>
-          <span className={styles.urlLabel}>{t("adminNews.inspector.publicUrl")}</span>
-          <span className={styles.urlValue}>
+        <Input
+          id="news-slug"
+          size="s"
+          type="text"
+          value={effectiveSlug}
+          maxLength={80}
+          spellCheck={false}
+          autoCapitalize="none"
+          autoCorrect="off"
+          placeholder={t("adminNews.inspector.slugPlaceholder")}
+          prefix={
+            <Text variant="body-default-s" onBackground="neutral-weak" family="code" aria-hidden>
+              /news/
+            </Text>
+          }
+          error={Boolean(errors.slug)}
+          errorMessage={errors.slug}
+          aria-invalid={Boolean(errors.slug)}
+          aria-describedby="news-slug-url"
+          className={styles.code}
+          onChange={(event) => onSlugInput(event.target.value)}
+        />
+        <Column id="news-slug-url" gap="2">
+          <Text variant="label-default-xs" onBackground="neutral-weak">
+            {t("adminNews.inspector.publicUrl")}
+          </Text>
+          <Text variant="label-default-s" onBackground="neutral-medium" family="code" className={styles.wrap}>
             {origin}/news/{effectiveSlug || "…"}
-          </span>
-        </p>
+          </Text>
+        </Column>
       </AdminCard>
 
       {/* Cover */}
       <AdminCard padding="20" gap="12">
-        <Eyebrow htmlFor="news-cover">{t("adminNews.inspector.cover")}</Eyebrow>
-        <div className={`${styles.coverField} ${coverError ? styles.slugInvalid : ""}`}>
-          <input
-            id="news-cover"
-            className={styles.slugInput}
-            type="url"
-            inputMode="url"
-            maxLength={500}
-            placeholder="https://…"
-            value={form.coverUrl}
-            aria-invalid={Boolean(coverError)}
-            onChange={(event) => onCover(event.target.value)}
-          />
-          {form.coverUrl && (
-            <button
-              type="button"
-              className={styles.clear}
-              aria-label={t("adminNews.inspector.coverRemove")}
-              onClick={() => onCover("")}
-            >
-              <LuX aria-hidden />
-            </button>
-          )}
-        </div>
-        {coverError && <p className={styles.error}>{coverError}</p>}
+        <Eyebrow as="label" htmlFor="news-cover">
+          {t("adminNews.inspector.cover")}
+        </Eyebrow>
+        <Input
+          id="news-cover"
+          size="s"
+          type="url"
+          inputMode="url"
+          maxLength={500}
+          placeholder="https://…"
+          value={form.coverUrl}
+          error={Boolean(coverError)}
+          errorMessage={coverError || undefined}
+          aria-invalid={Boolean(coverError)}
+          suffix={
+            form.coverUrl ? (
+              <IconButton
+                type="button"
+                icon="close"
+                variant="ghost"
+                size="s"
+                aria-label={t("adminNews.inspector.coverRemove")}
+                onClick={() => onCover("")}
+              />
+            ) : undefined
+          }
+          onChange={(event) => onCover(event.target.value)}
+        />
         <ImageUrlPreview
           ratio="cover"
           url={coverValid ? cover : ""}
@@ -226,11 +240,10 @@ export function NewsInspector({
 
       {/* List preview */}
       <AdminCard padding="20" gap="12">
-        <Eyebrow>{t("adminNews.inspector.listPreview")}</Eyebrow>
-        <div className={styles.miniCard}>
+        <Eyebrow as="label">{t("adminNews.inspector.listPreview")}</Eyebrow>
+        <Column fillWidth gap="12" padding="16" radius="l" border="neutral-alpha-medium" background="page">
           {cover && coverValid && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={cover} src={cover} alt="" className={styles.miniCover} />
+            <Media key={cover} unoptimized src={cover} alt="" aspectRatio="16 / 9" radius="m" />
           )}
           <Row gap="8" vertical="center" wrap>
             <Tag scheme="neutral">{categoryLabel(form.category)}</Tag>
@@ -246,8 +259,8 @@ export function NewsInspector({
               {form.summary.trim()}
             </Text>
           )}
-        </div>
+        </Column>
       </AdminCard>
-    </div>
+    </Column>
   );
 }
