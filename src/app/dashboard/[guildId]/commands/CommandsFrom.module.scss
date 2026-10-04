@@ -1,0 +1,23 @@
+// One column next to a narrow sidebar, two when each card can be at least ~460px wide.
+.grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-12);
+  align-items: start;
+}
+
+@container page (min-width: 980px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--static-space-16);
+  }
+}
+
+// The permission select takes a row, whitelist and blacklist share the next one when the card
+// is wide enough for two comfortable columns.
+.fields {
+  align-items: start;
+
+  > :first-child {
+    grid-column: 1 / -1;
+  }
+}

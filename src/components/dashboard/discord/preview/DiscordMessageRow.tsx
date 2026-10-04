@@ -1,10 +1,18 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import type { ButtonCustom, EmbedCustom, SelectMenuCustom } from "@/lib/db/types";
+import { useT } from "@/i18n/client";
+import type {
+  ButtonCustom,
+  EmbedCustom,
+  LayoutCustom,
+  LayoutLibrary,
+  SelectMenuCustom,
+} from "@/lib/db/types";
 import { cn } from "@/lib/utils";
 import { DiscordButton } from "./DiscordButton";
 import { DiscordEmbed } from "./DiscordEmbed";
+import { DiscordLayout } from "./DiscordLayout";
 import { DiscordSelectMenu } from "./DiscordSelectMenu";
 import { DiscordText } from "./DiscordText";
 
@@ -16,6 +24,10 @@ export interface DiscordMessageRowProps {
   embeds?: EmbedCustom[];
   buttons?: ButtonCustom[];
   selectMenus?: SelectMenuCustom[];
+  /** A Components V2 message: replaces content, embeds and the classic component rows. */
+  layout?: LayoutCustom | null;
+  /** The buttons and select menus the layout points at. */
+  layoutLibrary?: LayoutLibrary;
   buttonSize?: "sm" | "md";
   /** Highlight on hover, matching Discord's own message-row hover affordance. */
   hoverable?: boolean;
@@ -31,47 +43,62 @@ export function DiscordMessageRow({
   embeds = [],
   buttons = [],
   selectMenus = [],
+  layout,
+  layoutLibrary,
   buttonSize = "md",
   hoverable = false,
   showEmptyHint = false,
   className,
 }: DiscordMessageRowProps) {
+  const t = useT();
   const text = (content ?? "").trim();
   const visibleEmbeds = embeds.slice(0, 10);
   const hasComponents = buttons.length > 0 || selectMenus.length > 0;
   const isEmpty = !text && visibleEmbeds.length === 0 && !hasComponents;
 
+  if (layout) {
+    return (
+      <div>
+        <DiscordLayout
+          layout={layout}
+          library={layoutLibrary ?? { buttons: [], selectMenus: [] }}
+          buttonSize={buttonSize}
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
-        {text ? (
-          <div className="mt-1 text-discord-text-normal">
-            <DiscordText text={content ?? ""} />
-          </div>
-        ) : null}
+      {text ? (
+        <div className="mt-1 text-discord-text-normal">
+          <DiscordText text={content ?? ""} />
+        </div>
+      ) : null}
 
-        {visibleEmbeds.length > 0 ? (
-          <div className="mt-1 space-y-2">
-            {visibleEmbeds.map((embed, i) => (
-              <DiscordEmbed key={i} embed={embed} />
-            ))}
-          </div>
-        ) : null}
+      {visibleEmbeds.length > 0 ? (
+        <div className="mt-1 space-y-2">
+          {visibleEmbeds.map((embed, i) => (
+            <DiscordEmbed key={i} embed={embed} />
+          ))}
+        </div>
+      ) : null}
 
-        {hasComponents ? (
-          <div className="mt-1 flex flex-col gap-2">
-            {selectMenus.map((menu, i) => (
-              <DiscordSelectMenu key={i} menu={menu} />
-            ))}
-            {renderActionRows(buttons, buttonSize)}
-          </div>
-        ) : null}
+      {hasComponents ? (
+        <div className="mt-1 flex flex-col gap-2">
+          {selectMenus.map((menu, i) => (
+            <DiscordSelectMenu key={i} menu={menu} />
+          ))}
+          {renderActionRows(buttons, buttonSize)}
+        </div>
+      ) : null}
 
-        {isEmpty && showEmptyHint ? (
-          <p className="mt-1 text-sm italic text-discord-text-muted">
-            Empty message — add text or an embed.
-          </p>
-        ) : null}
-      </div>
+      {isEmpty && showEmptyHint ? (
+        <p className="mt-1 text-sm italic text-discord-text-muted">
+          {t("builder.preview.emptyMessage")}
+        </p>
+      ) : null}
+    </div>
   );
 }
 

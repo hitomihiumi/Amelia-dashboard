@@ -5,13 +5,15 @@ import {
   DateRange,
   DateRangeInput,
   Dialog,
-  Input, NumberInput,
+  Input,
+  NumberInput, Row,
   Text,
 } from "@once-ui-system/core";
 import { RoleSelect } from "@/components/dashboard/discord/RoleSelect";
 import { DiscordRole } from "@/lib/discord/role-style";
 import type { ShopRole } from "@/lib/db/types";
 import { RolePill } from "@/components/dashboard/discord/RolePill";
+import { useT } from "@/i18n/client";
 
 export interface ShopModalProps {
   open: boolean;
@@ -34,6 +36,8 @@ export const ShopModal: React.FC<ShopModalProps> = ({
   setShopRole,
   onConfirm,
 }) => {
+  const t = useT();
+
   const handleChange = (dateRange: DateRange) => {
     const { startDate, endDate } = dateRange;
 
@@ -64,16 +68,16 @@ export const ShopModal: React.FC<ShopModalProps> = ({
 
   return (
     <Dialog
-      isOpen={open}
+      open={open}
       onClose={() => handleClose()}
-      title="Shop Modal"
-      description="This is a modal for the shop. You can put any content you want here."
+      title={t("settings.shop.modalTitle")}
+      description={t("settings.shop.modalDescription")}
       footer={
         <>
           <Button variant="secondary" onClick={() => handleClose()}>
-            Cancel
+            {t("common.actions.cancel")}
           </Button>
-          <Button onClick={() => onConfirm()}>Confirm</Button>
+          <Button onClick={() => onConfirm()}>{t("common.actions.confirm")}</Button>
         </>
       }
     >
@@ -81,18 +85,17 @@ export const ShopModal: React.FC<ShopModalProps> = ({
         <Column gap={"8"} fillWidth>
           <RoleSelect
             id={"role-select"}
-            label={"Select a role"}
+            label={t("common.select.selectRole")}
             options={roles.map((role) => ({
               label: <RolePill roleColor={role.color} label={role.name} />,
               value: role.id,
             }))}
-            max={1}
             selectedRole={role}
             setSelectedRole={(role) => setRole(role as string)}
           />
           <NumberInput
             id={"price-set"}
-            label={"Price"}
+            label={t("settings.shop.priceLabel")}
             value={shopRole.price}
             onChange={(value) => setShopRole((prev) => ({ ...prev, price: Number(value) }))}
             min={0}
@@ -102,12 +105,11 @@ export const ShopModal: React.FC<ShopModalProps> = ({
         </Column>
         <Column gap={"8"} fillWidth>
           <Text variant={"body-default-s"} onBackground={"neutral-weak"}>
-            You can set a discount for this role. You can set the discount amount and the start and
-            end date of the discount.
+            {t("settings.shop.discountHint")}
           </Text>
           <NumberInput
             id={"discount-amount"}
-            label={"Discount amount (%)"}
+            label={t("settings.shop.discountAmount")}
             value={shopRole.discount.amount}
             onChange={(value) =>
               setShopRole((prev) => ({
@@ -119,20 +121,22 @@ export const ShopModal: React.FC<ShopModalProps> = ({
             max={100}
             step={1}
           />
-          <DateRangeInput
-            id="basic-date-range-example"
-            startLabel="Start date"
-            endLabel="End date"
-            value={{
-              startDate: shopRole.discount.starts_at
-                ? new Date(shopRole.discount.starts_at)
-                : undefined,
-              endDate: shopRole.discount.expires_at
-                ? new Date(shopRole.discount.expires_at)
-                : undefined,
-            }}
-            onChange={handleChange}
-          />
+          <Row center gap={"8"} fillWidth>
+            <DateRangeInput
+                id="basic-date-range-example"
+                startLabel={t("settings.shop.startDate")}
+                endLabel={t("settings.shop.endDate")}
+                value={{
+                  startDate: shopRole.discount.starts_at
+                      ? new Date(shopRole.discount.starts_at)
+                      : undefined,
+                  endDate: shopRole.discount.expires_at
+                      ? new Date(shopRole.discount.expires_at)
+                      : undefined,
+                }}
+                onChange={handleChange}
+            />
+          </Row>
         </Column>
       </Column>
     </Dialog>

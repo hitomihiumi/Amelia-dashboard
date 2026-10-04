@@ -1,6 +1,14 @@
 "use client";
 
-import React, { useState, useRef, useEffect, forwardRef, ReactNode, useId } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  forwardRef,
+  ReactNode,
+  useId,
+} from "react";
 import classNames from "classnames";
 import {
   DropdownWrapper,
@@ -15,16 +23,50 @@ import {
   useArrowNavigationContext,
   Input,
   InputProps,
+  Row,
+  Text,
 } from "@once-ui-system/core";
 import inputStyles from "./DummyInput.module.scss";
-import { Placement } from "@floating-ui/react-dom";
+import styles from "./SelectReact.module.scss";
+import { SelectDisplayContext, nodeText } from "./selectDisplay";
+import { useT } from "@/i18n/client";
+import type { Translator } from "@/i18n/translate";
 
 import { DummyInput } from "./DummyInput";
 
 type SelectOptionType = Omit<OptionProps, "selected">;
 
+// Derived from once-ui so this file does not depend on @floating-ui directly.
+type Placement = NonNullable<DropdownWrapperProps["placement"]>;
+
+/** A focus this soon after the list closed is the dropdown restoring focus, not a click. */
+const FOCUS_RESTORE_WINDOW_MS = 250;
+
+/** Chips shown inside the closed field before the rest collapses into "+N more". */
+const MAX_VISIBLE_CHIPS = 10;
+
+/** Saved ids whose channel or role no longer exists should not render as blanks. */
+function unknownLabel(value: string, t: Translator): string {
+  return /^\d{15,}$/.test(value) ? t("common.select.unknownId", { id: value.slice(-4) }) : value;
+}
+
 export interface SelectProps
-  extends Omit<InputProps, "onSelect" | "value">,
+  extends Pick<
+      InputProps,
+      | "id"
+      | "label"
+      | "size"
+      | "error"
+      | "errorMessage"
+      | "description"
+      | "corners"
+      | "prefix"
+      | "suffix"
+      | "validate"
+      | "characterCount"
+      | "placeholder"
+    >,
+    Omit<React.HTMLAttributes<HTMLDivElement>, "onSelect" | "prefix" | "placeholder" | "content" | "id">,
     Pick<DropdownWrapperProps, "minHeight" | "minWidth" | "maxWidth"> {
   options: SelectOptionType[];
   value?: string | string[];
@@ -56,18 +98,19 @@ const SearchInput: React.FC<{
   handleBlur,
   selectRef,
 }) => {
+  const t = useT();
   const { handleKeyDown: navKeyDown } = useArrowNavigationContext();
 
   return (
     <Input
       data-scaling="90"
       id={`select-search-${searchInputId}`}
-      placeholder="Search"
-      height="s"
-      hasSuffix={
+      placeholder={t("common.select.search")}
+      size="s"
+      suffix={
         searchQuery ? (
           <IconButton
-            tooltip="Clear"
+            tooltip={t("common.select.clearSearch")}
             tooltipPosition="left"
             icon="close"
             variant="ghost"
@@ -76,7 +119,7 @@ const SearchInput: React.FC<{
           />
         ) : undefined
       }
-      hasPrefix={<Icon name="search" size="xs" />}
+      prefix={<Icon name="search" size="xs" />}
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
       onClick={(e) => {
@@ -100,10 +143,7 @@ const SearchInput: React.FC<{
           e.stopPropagation();
           setIsDropdownOpen(false);
           setSearchQuery("");
-          const mainInput = selectRef.current?.querySelector("input:not([id^='select-search'])");
-          if (mainInput instanceof HTMLInputElement) {
-            mainInput.focus();
-          }
+          // The dropdown hands focus back to the field when it closes.
         }
       }}
       onBlur={(e) => {
@@ -124,7 +164,8 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
       value = "",
       onSelect,
       searchable = false,
-      emptyState = "No results",
+      placeholder,
+      emptyState,
       minHeight,
       minWidth,
       maxWidth,
@@ -138,6 +179,7 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
     },
     ref,
   ) => {
+    const t = useT();
     const [isFocused, setIsFocused] = useState(false);
     const [isFilled, setIsFilled] = useState(false);
 
@@ -148,7 +190,20 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
         setInternalValue(value);
       }
     }, [value]);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpenRaw] = useState(false);
+    // The dropdown traps focus while it is open and hands it back to the field when it closes.
+    // That returning focus would hit handleFocus and open the list again, so closings are
+    // timestamped and a focus right after one is not read as the user asking to open it.
+    const closedAtRef = useRef(0);
+    const setIsDropdownOpen = (open: boolean) => {
+      if (!open) {
+        closedAtRef.current = Date.now();
+        // A stale filter would reopen the list already narrowed down.
+        setSearchQuery("");
+      }
+      setIsDropdownOpenRaw(open);
+    };
+    const [triggerWidth, setTriggerWidth] = useState(0);
     const searchInputId = useId();
     const [searchQuery, setSearchQuery] = useState("");
     const selectRef = useRef<HTMLDivElement | null>(null);
@@ -160,6 +215,10 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
     const justSelectedRef = useRef(false);
 
     const handleFocus = () => {
+      if (Date.now() - closedAtRef.current < FOCUS_RESTORE_WINDOW_MS) {
+        setIsFocused(true);
+        return;
+      }
       // Allow reopening the dropdown even after selection
       setIsFocused(true);
       setIsDropdownOpen(true);
@@ -205,54 +264,133 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
       e.preventDefault();
       e.stopPropagation();
       setSearchQuery("");
-      const input = selectRef.current?.querySelector("input");
-      if (input) {
-        input.focus();
-      }
+      document.getElementById(`select-search-${searchInputId}`)?.focus();
     };
 
     const currentValue = value !== undefined ? value : internalValue;
     const selectedOption = options.find((opt) => opt.value === currentValue) || null;
 
-    // For multiple mode, get display text
-    const getDisplayText = () => {
-      if (multiple) {
-        const selectedValues = Array.isArray(currentValue) ? currentValue : [];
-        if (selectedValues.length === 0) return "";
-        if (selectedValues.length === 1) {
-          const option = options.find((opt) => opt.value === selectedValues[0]);
-          return option?.label || selectedValues[0];
-        }
-        return `${selectedValues.length} options selected`;
-      } else {
-        return selectedOption?.label ? selectedOption.label : <></>;
-      }
+    const selectedValues: string[] = multiple
+      ? Array.isArray(currentValue)
+        ? currentValue
+        : []
+      : currentValue
+        ? [String(currentValue)]
+        : [];
+
+    const removeValue = (removed: string) => {
+      const next = selectedValues.filter((value) => value !== removed);
+      setInternalValue(next);
+      onSelect?.(next);
     };
+
+    const clearAll = () => {
+      setInternalValue([]);
+      onSelect?.([]);
+    };
+
+    /** What the closed field shows: the value, chips for several, or a hint. */
+    const renderContent = (): ReactNode => {
+      if (selectedValues.length === 0) {
+        return placeholder ? (
+          <Text variant="body-default-m" onBackground="neutral-weak">
+            {placeholder}
+          </Text>
+        ) : undefined;
+      }
+
+      const labelOf = (value: string): ReactNode => {
+        const option = options.find((candidate) => candidate.value === value);
+        return option?.label ?? <Text onBackground="neutral-weak">{unknownLabel(value, t)}</Text>;
+      };
+
+      if (!multiple) {
+        return (
+          <SelectDisplayContext.Provider value="plain">
+            {labelOf(selectedValues[0])}
+          </SelectDisplayContext.Provider>
+        );
+      }
+
+      const visible = selectedValues.slice(0, MAX_VISIBLE_CHIPS);
+      const hidden = selectedValues.length - visible.length;
+
+      return (
+        <SelectDisplayContext.Provider value="plain">
+          <div className={styles.chips}>
+            {visible.map((value) => (
+              <span key={value} className={styles.chip}>
+                <span className={styles.chipLabel}>{labelOf(value)}</span>
+                <button
+                  type="button"
+                  aria-label={t("common.select.remove")}
+                  className={styles.chipRemove}
+                  // Keep focus where it is, otherwise removing a chip would reopen the list.
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    removeValue(value);
+                  }}
+                >
+                  <Icon name="close" size="xs" />
+                </button>
+              </span>
+            ))}
+            {hidden > 0 && (
+              <span className={`${styles.chip} ${styles.chipStatic}`}>
+                <Text variant="label-default-s" onBackground="neutral-weak">
+                  {t("common.select.more", { count: hidden })}
+                </Text>
+              </span>
+            )}
+          </div>
+        </SelectDisplayContext.Provider>
+      );
+    };
+
+    // once-ui sizes the floating surface to its content, which leaves a short
+    // list far narrower than the field it belongs to. Match the field instead.
+    useLayoutEffect(() => {
+      if (isDropdownOpen && selectRef.current) {
+        setTriggerWidth(selectRef.current.getBoundingClientRect().width);
+      }
+    }, [isDropdownOpen]);
 
     useEffect(() => {
       if (isDropdownOpen) {
         // Reset skip flag when dropdown opens
         skipNextFocusRef.current = false;
 
-        // If searchable is true, focus the search input
+        // If searchable is true, focus the search input. The list renders in a portal and is
+        // only mounted and positioned a frame or two after opening, so wait for it.
         if (searchable) {
-          setTimeout(() => {
-            const searchInput = selectRef.current?.querySelector(
-              `#select-search-${searchInputId}`,
-            ) as HTMLInputElement;
-            if (searchInput) {
-              searchInput.focus();
+          let frames = 0;
+          let steady = 0;
+          let raf = 0;
+          const focusSearch = () => {
+            const searchInput = document.getElementById(
+              `select-search-${searchInputId}`,
+            ) as HTMLInputElement | null;
+            if (searchInput && document.activeElement !== searchInput) {
+              searchInput.focus({ preventScroll: true });
+              steady = 0;
+            } else if (searchInput) {
+              steady++;
             }
-          }, 0);
+            // Keep going until focus has held for a few frames: the dropdown's own focus
+            // handling runs once it is positioned and can move focus away again.
+            if (steady < 3 && frames++ < 30) raf = requestAnimationFrame(focusSearch);
+          };
+          raf = requestAnimationFrame(focusSearch);
+          return () => cancelAnimationFrame(raf);
         }
       }
     }, [isDropdownOpen, searchable, searchInputId]);
 
     // Filter options based on search query
-    const filteredOptions = options.filter((option) =>
-      searchable
-        ? option.label?.toString().toLowerCase().includes(searchQuery.toLowerCase())
-        : true,
+    const query = searchQuery.trim().toLowerCase();
+    const filteredOptions = options.filter(
+      (option) => !searchable || !query || nodeText(option.label).toLowerCase().includes(query),
     );
 
     return (
@@ -265,10 +403,13 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
           if (typeof ref === "function") ref(node);
           else if (ref) ref.current = node;
         }}
-        isOpen={isDropdownOpen}
+        open={isDropdownOpen}
         onOpenChange={setIsDropdownOpen}
         placement={placement}
         closeAfterClick={false}
+        // The list below runs its own ArrowNavigation; a second one from the wrapper
+        // would steal focus from the search field once the panel is positioned.
+        handleArrowNavigation={false}
         disableTriggerClick={true}
         style={{
           ...style,
@@ -281,11 +422,15 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
               ...style,
             }}
             cursor="interactive"
-            content={getDisplayText()}
+            content={renderContent()}
+            placeholder={placeholder}
             onFocus={handleFocus}
+            // Focus is handed back to the field when the list closes, so a second click lands on
+            // a field that is already focused and never raises a focus event of its own.
+            onClick={() => {
+              if (!isDropdownOpen) setIsDropdownOpen(true);
+            }}
             className={classNames("fill-width", {
-              [inputStyles.filled]: isFilled,
-              [inputStyles.focused]: isFocused,
               className,
             })}
             aria-haspopup="listbox"
@@ -293,66 +438,103 @@ const SelectReact = forwardRef<HTMLDivElement, SelectProps>(
           />
         }
         dropdown={
-          <Column fillWidth padding="4" data-dropdown="true">
-            <ArrowNavigation
-              layout="column"
-              itemCount={filteredOptions.length}
-              onSelect={(index) => {
-                if (index >= 0 && index < filteredOptions.length) {
-                  handleSelect(filteredOptions[index].value);
-                }
-              }}
-              onEscape={() => setIsDropdownOpen(false)}
-              autoFocus={!searchable}
-              disabled={false}
+          <SelectDisplayContext.Provider value="plain">
+            <Column
+              fillWidth
+              padding="4"
+              data-dropdown="true"
+              style={{ minWidth: triggerWidth || undefined }}
             >
-              {searchable && (
-                <SearchInput
-                  searchInputId={searchInputId}
-                  searchQuery={searchQuery}
-                  setSearchQuery={setSearchQuery}
-                  setIsDropdownOpen={setIsDropdownOpen}
-                  handleClearSearch={handleClearSearch}
-                  handleBlur={handleBlur}
-                  selectRef={selectRef}
-                />
-              )}
-
-              <Column fillWidth paddingTop="4" gap="2">
-                {filteredOptions.map((option, index) => (
-                  <Option
-                    key={option.value}
-                    {...option}
-                    onClick={() => {
-                      option.onClick?.(option.value);
-                      handleSelect(option.value);
-                      setIsDropdownOpen(false);
-                    }}
-                    selected={
-                      multiple
-                        ? Array.isArray(currentValue) && currentValue.includes(option.value)
-                        : option.value === currentValue
-                    }
-                    tabIndex={-1}
-                    hasPrefix={
-                      multiple ? (
-                        Array.isArray(currentValue) && currentValue.includes(option.value) ? (
-                          <Icon name="check" size="xs" onBackground="neutral-weak" />
-                        ) : Array.isArray(currentValue) && currentValue.length > 0 ? (
-                          <Flex minWidth="20" />
-                        ) : undefined
-                      ) : undefined
-                    }
+              <ArrowNavigation
+                layout="column"
+                itemCount={filteredOptions.length}
+                onSelect={(index) => {
+                  if (index >= 0 && index < filteredOptions.length) {
+                    handleSelect(filteredOptions[index].value);
+                  }
+                }}
+                onEscape={() => setIsDropdownOpen(false)}
+                autoFocus={!searchable}
+                disabled={false}
+              >
+                {searchable && (
+                  <SearchInput
+                    searchInputId={searchInputId}
+                    searchQuery={searchQuery}
+                    setSearchQuery={setSearchQuery}
+                    setIsDropdownOpen={setIsDropdownOpen}
+                    handleClearSearch={handleClearSearch}
+                    handleBlur={handleBlur}
+                    selectRef={selectRef}
                   />
-                ))}
-                {searchQuery && filteredOptions.length === 0 && (
-                  <Flex fillWidth center paddingX="16" paddingY="32">
-                    {emptyState}
-                  </Flex>
                 )}
-              </Column>
-            </ArrowNavigation>
-          </Column>
+
+                <Column fillWidth paddingTop="4" gap="2" className={styles.list}>
+                  {filteredOptions.map((option) => {
+                    const isSelected = selectedValues.includes(option.value);
+
+                    return (
+                      <Option
+                        key={option.value}
+                        {...option}
+                        onClick={() => {
+                          option.onClick?.(option.value);
+                          // A single select closes itself in handleSelect; a multiple
+                          // one stays open so several options can be picked in a row.
+                          handleSelect(option.value);
+                        }}
+                        selected={isSelected}
+                        // once-ui marks highlighted rows as aria-selected too, so the stylesheet
+                        // needs its own reliable hook to tell a chosen option from a hovered one.
+                        data-selected={isSelected ? "true" : undefined}
+                        tabIndex={-1}
+                        prefix={
+                          multiple ? (
+                            // A fixed slot, so the labels do not shift once something is selected.
+                            <span className={styles.checkSlot}>
+                              {isSelected && (
+                                <Icon name="check" size="xs" onBackground="brand-medium" />
+                              )}
+                            </span>
+                          ) : undefined
+                        }
+                      />
+                    );
+                  })}
+
+                  {filteredOptions.length === 0 && (
+                    <Flex fillWidth center paddingX="16" paddingY="32">
+                      {emptyState ?? t("common.state.noResults")}
+                    </Flex>
+                  )}
+                </Column>
+              </ArrowNavigation>
+
+              {multiple && selectedValues.length > 0 && (
+                <Row
+                  fillWidth
+                  horizontal="between"
+                  vertical="center"
+                  paddingX="8"
+                  paddingY="4"
+                  marginTop="4"
+                  className={styles.footer}
+                >
+                  <Text variant="body-default-xs" onBackground="neutral-weak">
+                    {t("common.select.selectedCount", { count: selectedValues.length })}
+                  </Text>
+                  <button
+                    type="button"
+                    className={styles.clear}
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={clearAll}
+                  >
+                    {t("common.select.clearAll")}
+                  </button>
+                </Row>
+              )}
+            </Column>
+          </SelectDisplayContext.Provider>
         }
       />
     );

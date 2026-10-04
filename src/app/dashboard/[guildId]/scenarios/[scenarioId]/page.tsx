@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import { authOptions } from "@/lib/auth";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import { Guild } from "@/lib/db/Guild";
@@ -7,12 +8,14 @@ import type {
   ModalCustom,
   ScenarioCustom,
   SelectMenuCustom,
+  LayoutCustom,
 } from "@/lib/db/types";
 import { fetchGuildTextChannels } from "@/lib/discord/channels-api";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
-import { Button, Feedback, Flex, Text } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Button, Feedback, Flex } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import type { ComponentsLibrary } from "../scenariosTypes";
 import { ScenarioEditorPage } from "./ScenarioEditorPage";
@@ -23,6 +26,7 @@ export default async function ScenarioEditorRoute({
   params: Promise<{ guildId: string; scenarioId: string }>;
 }) {
   const { guildId, scenarioId } = await params;
+  const t = await getT();
   const session = await getServerSession(authOptions);
 
   let roles: DiscordRole[] = [];
@@ -34,12 +38,12 @@ export default async function ScenarioEditorRoute({
       const roleList = await fetchGuildRoles(session.accessToken, guildId);
       roles = roleList.map(({ id, name, color }) => ({ id, name, color }));
     } catch (e) {
-      loadError = e instanceof Error ? e.message : "Failed to load roles";
+      loadError = e instanceof Error ? e.message : t("builder.shared.loadRolesFailed");
     }
     try {
       channels = await fetchGuildTextChannels(session.accessToken, guildId);
     } catch (e) {
-      if (!loadError) loadError = e instanceof Error ? e.message : "Failed to load channels";
+      if (!loadError) loadError = e instanceof Error ? e.message : t("builder.shared.loadChannelsFailed");
     }
   }
 
@@ -55,28 +59,37 @@ export default async function ScenarioEditorRoute({
     scenarios: Array.isArray(components?.scenarios)
       ? (components.scenarios as ScenarioCustom[])
       : [],
+    layouts: Array.isArray(components?.layouts) ? (components.layouts as LayoutCustom[]) : [],
   };
 
   const scenario = library.scenarios.find((s) => s.id === scenarioId) ?? null;
 
   return (
     <Flex direction="column" gap="24" fillWidth>
-      <Flex direction="row" gap="8" vertical="center" wrap>
-        <Button
-          variant="secondary"
-          size="s"
-          prefixIcon="back"
-          href={`/dashboard/${guildId}/scenarios`}
-        >
-          All scenarios
-        </Button>
-      </Flex>
+      <PageHeader
+        title={scenario?.name || t("builder.scenarios.untitled")}
+        actions={
+          <Button
+            variant="secondary"
+            size="s"
+            prefixIcon="back"
+            href={`/dashboard/${guildId}/scenarios`}
+          >
+            {t("builder.scenarios.allScenarios")}
+          </Button>
+        }
+      />
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (
-          <Feedback variant="danger" title="Session expired" description="Please log in again." />
+          <Feedback variant="danger" title={t("builder.shared.sessionExpiredTitle")}
+            description={t("builder.scenarios.sessionExpiredText")} />
         ) : (
-          <Feedback variant="warning" title="Partial data" description={loadError} />
+          <Feedback
+            variant="warning"
+            title={t("builder.shared.partialDataTitle")}
+            description={loadError}
+          />
         ))}
 
       {scenario ? (
@@ -88,7 +101,11 @@ export default async function ScenarioEditorRoute({
           channels={channels}
         />
       ) : (
-        <Feedback variant="warning" title="Not found" description="Scenario does not exist." />
+        <Feedback
+          variant="warning"
+          title={t("builder.scenarios.notFoundTitle")}
+          description={t("builder.scenarios.notFoundText")}
+        />
       )}
     </Flex>
   );

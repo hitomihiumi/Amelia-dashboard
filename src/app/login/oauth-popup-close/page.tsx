@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Flex, Text, Spinner } from "@once-ui-system/core";
+import { useT } from "@/i18n/client";
 
 export default function OAuthPopupClosePage() {
+  const t = useT();
   const searchParams = useSearchParams();
   const nextRaw = searchParams.get("next");
   const [showManualClose, setShowManualClose] = useState(false);
@@ -35,7 +37,7 @@ export default function OAuthPopupClosePage() {
     <Flex direction="column" vertical="center" horizontal="center" fillWidth fillHeight gap="16">
       <Spinner size="l" />
       <Text variant="body-default-s" onBackground="neutral-strong">
-        Finishing login...
+        {t("common.auth.finishingLogin")}
       </Text>
 
       {showManualClose && (

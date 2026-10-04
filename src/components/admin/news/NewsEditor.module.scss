@@ -1,0 +1,477 @@
+@use "../../styles/breakpoints.scss" as breakpoints;
+
+// Height of the sticky top bar; the formatting toolbar sticks right below it.
+$topbar: 3.5rem;
+
+.page {
+  --news-sticky-top: #{$topbar};
+
+  container-type: inline-size;
+  container-name: news-editor;
+  font-family: var(--font-body);
+  width: 100%;
+  min-width: 0;
+  // The page padding of AppShell, so the top bar can bleed into it.
+  --page-pad-x: var(--static-space-32);
+  --page-pad-top: var(--static-space-32);
+
+  @media (max-width: 1024px) {
+    --page-pad-x: var(--static-space-24);
+    --page-pad-top: var(--static-space-24);
+  }
+
+  @include breakpoints.phone {
+    --page-pad-x: var(--static-space-16);
+    --page-pad-top: var(--static-space-16);
+  }
+}
+
+/* ───────────────────────── Top bar ───────────────────────── */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--static-space-12);
+  height: $topbar;
+  // Bleed into the layout padding so the bar spans the whole content column when stuck.
+  margin: calc(var(--page-pad-top) * -1) calc(var(--page-pad-x) * -1) var(--static-space-24);
+  padding: 0 var(--page-pad-x);
+  border-bottom: 1px solid var(--neutral-alpha-weak);
+  background: color-mix(in srgb, var(--page-background) 90%, transparent);
+  backdrop-filter: blur(12px);
+
+  @include breakpoints.s {
+    margin-bottom: var(--static-space-16);
+    gap: var(--static-space-8);
+  }
+}
+
+.topLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-12);
+  min-width: 0;
+}
+
+.topRight {
+  flex-shrink: 0;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--static-space-8);
+  height: 2.25rem;
+  padding: 0 var(--static-space-12) 0 var(--static-space-8);
+  border-radius: var(--radius-m);
+  color: var(--neutral-on-background-medium);
+  font-size: var(--font-size-body-s, 0.875rem);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  &:hover {
+    background: var(--neutral-alpha-weak);
+    color: var(--neutral-on-background-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-solid-strong);
+    outline-offset: 1px;
+  }
+
+  @include breakpoints.s {
+    padding: 0 var(--static-space-8);
+  }
+}
+
+.backLabel {
+  @include breakpoints.s {
+    display: none;
+  }
+}
+
+.divider {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--neutral-alpha-medium);
+
+  @include breakpoints.s {
+    display: none;
+  }
+}
+
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--static-space-8);
+  min-width: 0;
+  color: var(--neutral-on-background-medium);
+  font-size: var(--font-size-body-s, 0.875rem);
+}
+
+.stateText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @include breakpoints.xs {
+    display: none;
+  }
+}
+
+.stateSub {
+  color: var(--neutral-on-background-weak);
+}
+
+.statusTag {
+  @include breakpoints.s {
+    display: none !important;
+  }
+}
+
+.dot {
+  flex-shrink: 0;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--neutral-solid-medium);
+
+  &[data-state="unsaved"] {
+    background: var(--warning-solid-strong);
+    box-shadow: 0 0 0 3px var(--warning-alpha-weak);
+  }
+
+  &[data-state="saved"] {
+    background: var(--success-solid-strong);
+  }
+
+  &[data-state="saving"] {
+    background: var(--brand-solid-strong);
+    animation: pulse 1s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot[data-state="saving"] {
+    animation: none;
+  }
+}
+
+/* ───────────────────────── Restore banner ───────────────────────── */
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--static-space-12);
+  margin-bottom: var(--static-space-16);
+  padding: var(--static-space-8) var(--static-space-8) var(--static-space-8) var(--static-space-16);
+  border: 1px solid var(--warning-alpha-medium);
+  border-radius: var(--radius-l);
+  background: var(--warning-alpha-weak);
+}
+
+.bannerText {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+/* ───────────────────────── Layout ───────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-24);
+  align-items: start;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-12);
+  min-width: 0;
+}
+
+.aside {
+  min-width: 0;
+}
+
+// Side-by-side layouts need the frame, not the viewport: the sidebar eats a lot of width.
+.sideSwitch {
+  display: none;
+}
+
+@container news-editor (min-width: 58rem) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+
+  // Live preview: editor and the real page share the width.
+  .grid:has(.aside[data-side="preview"]) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .aside {
+    position: sticky;
+    top: calc(#{$topbar} + var(--static-space-16));
+    max-height: calc(100vh - #{$topbar} - var(--static-space-32));
+    overflow-y: auto;
+    // Room for the focus rings that would otherwise be clipped by the scroll box.
+    margin: -4px;
+    padding: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--neutral-alpha-medium) transparent;
+  }
+
+  .sideSwitch {
+    display: flex;
+    gap: var(--static-space-2);
+    margin-bottom: var(--static-space-12);
+    padding: var(--static-space-2);
+    border: 1px solid var(--neutral-alpha-medium);
+    border-radius: var(--radius-m);
+    background: var(--neutral-alpha-weak);
+  }
+}
+
+// Below that width the live pane is not shown: Preview is a regular tab instead.
+@container news-editor (max-width: 57.99rem) {
+  .livePane,
+  .liveToggle {
+    display: none !important;
+  }
+
+  .settingsPane[hidden] {
+    display: block;
+  }
+}
+
+.sideBtn {
+  flex: 1;
+  height: 2rem;
+  padding: 0 var(--static-space-12);
+  border: none;
+  border-radius: calc(var(--radius-m) - 2px);
+  background: transparent;
+  color: var(--neutral-on-background-medium);
+  font: inherit;
+  font-size: var(--font-size-label-m, 0.8125rem);
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--neutral-on-background-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-solid-strong);
+    outline-offset: 1px;
+  }
+}
+
+.sideOn,
+.sideOn:hover {
+  background: var(--brand-alpha-weak);
+  color: var(--brand-on-background-strong);
+  box-shadow: inset 0 0 0 1px var(--brand-alpha-medium);
+}
+
+.livePane {
+  overflow: hidden;
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: var(--radius-l);
+}
+
+/* ───────────────────────── Canvas ───────────────────────── */
+
+.modeBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--static-space-8) var(--static-space-16);
+}
+
+.modeEnd {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--static-space-12);
+}
+
+.tabs {
+  display: inline-flex;
+  gap: var(--static-space-2);
+  padding: var(--static-space-2);
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: var(--radius-m);
+  background: var(--neutral-alpha-weak);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--static-space-8);
+  height: 2rem;
+  padding: 0 var(--static-space-12);
+  border: none;
+  border-radius: calc(var(--radius-m) - 2px);
+  background: transparent;
+  color: var(--neutral-on-background-medium);
+  font: inherit;
+  font-size: var(--font-size-label-m, 0.8125rem);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+
+  &:hover {
+    color: var(--neutral-on-background-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-solid-strong);
+    outline-offset: 1px;
+  }
+
+  @include breakpoints.xs {
+    padding: 0 var(--static-space-8);
+  }
+}
+
+.tabActive,
+.tabActive:hover {
+  background: var(--brand-alpha-weak);
+  color: var(--brand-on-background-strong);
+  box-shadow: inset 0 0 0 1px var(--brand-alpha-medium);
+}
+
+// On phones only the open tab keeps its label.
+.tab:not(.tabActive) .tabLabel {
+  @include breakpoints.xs {
+    display: none;
+  }
+}
+
+.stats {
+  display: inline-flex;
+  gap: var(--static-space-12);
+  color: var(--neutral-on-background-weak);
+  font-size: var(--font-size-label-s, 0.75rem);
+  font-variant-numeric: tabular-nums;
+
+  @include breakpoints.s {
+    display: none;
+  }
+}
+
+.statsDanger {
+  color: var(--danger-on-background-strong);
+}
+
+.liveToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--static-space-8);
+  height: 2.25rem;
+  padding: 0 var(--static-space-12);
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--neutral-on-background-medium);
+  font: inherit;
+  font-size: var(--font-size-label-m, 0.8125rem);
+  font-weight: 500;
+  cursor: pointer;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  &:hover {
+    background: var(--neutral-alpha-weak);
+    color: var(--neutral-on-background-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-solid-strong);
+    outline-offset: 1px;
+  }
+}
+
+.liveOn,
+.liveOn:hover {
+  border-color: var(--brand-alpha-medium);
+  background: var(--brand-alpha-weak);
+  color: var(--brand-on-background-strong);
+}
+
+// The writing surface: one rounded sheet. `clip` keeps the corners round without
+// turning the sheet into a scroll container, so the toolbar can still stick to the page.
+.canvas {
+  min-width: 0;
+  overflow: clip;
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: var(--radius-l);
+  background: var(--surface-background);
+  font-family: var(--font-body);
+}
+
+.canvasInvalid {
+  box-shadow: 0 0 0 1px var(--danger-solid-strong);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger-on-background-strong);
+  font-size: var(--font-size-label-s, 0.75rem);
+}
+
+.markdown {
+  display: block;
+  width: 100%;
+  min-height: 26rem;
+  padding: var(--static-space-24);
+  border: none;
+  border-top: 1px solid var(--neutral-alpha-weak);
+  background: transparent;
+  color: var(--neutral-on-background-strong);
+  font-family: var(--font-code);
+  font-size: var(--font-size-body-s, 0.875rem);
+  line-height: 1.7;
+  tab-size: 2;
+  resize: vertical;
+  field-sizing: content;
+  outline: none;
+
+  &::placeholder {
+    color: var(--neutral-on-background-weak);
+  }
+
+  @include breakpoints.s {
+    padding: var(--static-space-16);
+  }
+}

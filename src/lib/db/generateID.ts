@@ -12,4 +12,6 @@ export type CustomIdType =
   | "select"
   | "opt"
   | "scenario"
-  | "step";
+  | "step"
+  | "layout"
+  | "block";

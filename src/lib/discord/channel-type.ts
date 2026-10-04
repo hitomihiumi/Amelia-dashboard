@@ -22,3 +22,11 @@ export function isVoiceLikeChannel(type: number): boolean {
 export function isTextLikeChannel(type: number): boolean {
   return type === CHANNEL_TYPE_GUILD_TEXT || type === CHANNEL_TYPE_ANNOUNCEMENT;
 }
+
+export function isAnnouncementChannel(type: number): boolean {
+  return type === CHANNEL_TYPE_ANNOUNCEMENT;
+}
+
+export function isStageChannel(type: number): boolean {
+  return type === CHANNEL_TYPE_STAGE;
+}

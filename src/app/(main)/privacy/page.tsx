@@ -1,91 +1,143 @@
-"use client";
+import { Flex, Text, Column, Line, List, ListItem, RevealFx } from "@once-ui-system/core";
+import { getFormatters, getT } from "@/i18n/server";
+import { CookieSettingsButton } from "@/components/consent/CookieSettingsButton";
 
-import { Flex, Text, Column, Line, List, ListItem } from "@once-ui-system/core";
-import { formatDate } from "@/app/utils/formatDate";
+export default async function PrivacyPolicyPage() {
+  const t = await getT();
+  const format = await getFormatters();
 
-export default function PrivacyPolicyPage() {
   return (
-    <Flex fill center paddingX="l">
+    <Flex fill center paddingX="l" paddingBottom="l">
       <Column maxWidth="m" gap="24" fillWidth>
-        <Column gap="8">
-          <Text variant="heading-strong-xl">Privacy Policy</Text>
-          <Text variant="body-default-m" onBackground="neutral-weak">
-            Last updated: {formatDate("2026-05-09")}
-          </Text>
-        </Column>
+        <RevealFx translateY={-0.5}>
+          <Column gap="8">
+            <Text variant="heading-strong-xl">{t("common.nav.privacy")}</Text>
+            <Text variant="body-default-m" onBackground="neutral-weak">
+              {t("site.legal.lastUpdated", {
+                date: format.date("2026-10-03", { dateStyle: "long", timeZone: "UTC" }),
+              })}
+            </Text>
+          </Column>
+        </RevealFx>
 
-        <Line />
+        <RevealFx delay={100} translateY={-0.5}>
+          <Line />
+        </RevealFx>
 
-        <Column gap="16">
-          <Text variant="heading-strong-m">1. Information We Collect</Text>
-          <Text variant="body-default-m" onBackground="neutral-medium">
-            When you use Amelia (the "Bot") or our Dashboard, we may collect the following data:
-          </Text>
-          <List as={"ul"} textVariant="body-default-m" gap="4">
-            <ListItem>
-              <strong>Discord User Data:</strong> Your User ID, username, global name, and avatar
-              URL.
-            </ListItem>
-            <ListItem>
-              <strong>Guild (Server) Data:</strong> Guild IDs, names, roles, and channel structures
-              necessary for configuration.
-            </ListItem>
-            <ListItem>
-              <strong>Activity Data:</strong> Economy balances, experience points, level
-              progressions, and bot usage statistics.
-            </ListItem>
-            <ListItem>
-              <strong>Content Data:</strong> Message content is only processed temporarily for
-              moderation, or leveling features and is not permanently stored unless specifically
-              required by a feature (e.g., ticket logs or moderation histories).
-            </ListItem>
-          </List>
-        </Column>
+        <RevealFx delay={400} translateY={-0.5}>
+          <Column gap="16">
+            <Text variant="heading-strong-m">{t("site.legal.privacy.s1.title")}</Text>
+            <Text variant="body-default-m" onBackground="neutral-medium">
+              {t("site.legal.privacy.s1.intro")}
+            </Text>
+            <List as={"ul"} textVariant="body-default-m" gap="4">
+              <ListItem>
+                <strong>{t("site.legal.privacy.s1.items.user.label")}</strong>{" "}
+                {t("site.legal.privacy.s1.items.user.text")}
+              </ListItem>
+              <ListItem>
+                <strong>{t("site.legal.privacy.s1.items.guild.label")}</strong>{" "}
+                {t("site.legal.privacy.s1.items.guild.text")}
+              </ListItem>
+              <ListItem>
+                <strong>{t("site.legal.privacy.s1.items.activity.label")}</strong>{" "}
+                {t("site.legal.privacy.s1.items.activity.text")}
+              </ListItem>
+              <ListItem>
+                <strong>{t("site.legal.privacy.s1.items.content.label")}</strong>{" "}
+                {t("site.legal.privacy.s1.items.content.text")}
+              </ListItem>
+            </List>
+          </Column>
+        </RevealFx>
 
-        <Column gap="16">
-          <Text variant="heading-strong-m">2. How We Use Your Data</Text>
-          <Text variant="body-default-m" onBackground="neutral-medium">
-            The collected data is used exclusively to:
-          </Text>
-          <List as={"ul"} textVariant="body-default-m" gap="4">
-            <ListItem>
-              Provide, operate, and maintain the Bot's features (e.g., economy, leveling,
-              moderation).
-            </ListItem>
-            <ListItem>
-              Improve user experience and personalize interactions within the Bot.
-            </ListItem>
-            <ListItem>Authenticate users on our web Dashboard.</ListItem>
-            <ListItem>Personalize user experience (e.g., custom profiles and rank cards).</ListItem>
-          </List>
-        </Column>
+        <RevealFx delay={700} translateY={-0.5}>
+          <Column gap="16">
+            <Text variant="heading-strong-m">{t("site.legal.privacy.s2.title")}</Text>
+            <Text variant="body-default-m" onBackground="neutral-medium">
+              {t("site.legal.privacy.s2.intro")}
+            </Text>
+            <List as={"ul"} textVariant="body-default-m" gap="4">
+              <ListItem>{t("site.legal.privacy.s2.items.i1")}</ListItem>
+              <ListItem>{t("site.legal.privacy.s2.items.i2")}</ListItem>
+              <ListItem>{t("site.legal.privacy.s2.items.i3")}</ListItem>
+              <ListItem>{t("site.legal.privacy.s2.items.i4")}</ListItem>
+            </List>
+          </Column>
+        </RevealFx>
 
-        <Column gap="16">
-          <Text variant="heading-strong-m">3. Data Sharing and Third Parties</Text>
-          <Text variant="body-default-m" onBackground="neutral-medium">
-            We <strong>do not</strong> sell, rent, or share your personal data with third parties
-            for marketing purposes. Data may be shared with secure third-party service providers
-            (such as databases) solely for the purpose of operating the Bot's core functions.
-          </Text>
-        </Column>
+        <RevealFx delay={1000} translateY={-0.5}>
+          <Column gap="16">
+            <Text variant="heading-strong-m">{t("site.legal.privacy.s3.title")}</Text>
+            <Text variant="body-default-m" onBackground="neutral-medium">
+              {t("site.legal.privacy.s3.before")}{" "}
+              <strong>{t("site.legal.privacy.s3.emphasis")}</strong>{" "}
+              {t("site.legal.privacy.s3.after")}
+            </Text>
+          </Column>
+        </RevealFx>
 
-        <Column gap="16">
-          <Text variant="heading-strong-m">4. Data Retention and Deletion</Text>
-          <Text variant="body-default-m" onBackground="neutral-medium">
-            We retain your data for as long as the Bot is present in your Discord server or as long
-            as your account is active. If the Bot is removed from a server, related configuration
-            data may be deleted. You have the right to request the complete deletion of your
-            personal data by contacting the developer team.
-          </Text>
-        </Column>
+        <RevealFx delay={1300} translateY={-0.5}>
+          <Column gap="16">
+            <Text variant="heading-strong-m">{t("site.legal.privacy.s4.title")}</Text>
+            <Text variant="body-default-m" onBackground="neutral-medium">
+              {t("site.legal.privacy.s4.text")}
+            </Text>
+          </Column>
+        </RevealFx>
 
-        <Column gap="16">
-          <Text variant="heading-strong-m">5. Contact Us</Text>
-          <Text variant="body-default-m" onBackground="neutral-medium">
-            If you have any questions or concerns about this Privacy Policy, please contact us via
-            our Support Discord Server or reach out to the developer directly.
-          </Text>
-        </Column>
+        <RevealFx delay={1600} translateY={-0.5}>
+          <Column gap="16" id="cookies" style={{ scrollMarginTop: "6rem" }}>
+            <Text variant="heading-strong-m">{t("site.legal.privacy.cookies.title")}</Text>
+            <Text variant="body-default-m" onBackground="neutral-medium">
+              {t("site.legal.privacy.cookies.intro")}
+            </Text>
+            <List as={"ul"} textVariant="body-default-m" gap="4">
+              <ListItem>
+                <strong>{t("site.legal.privacy.cookies.items.session.label")}</strong>{" "}
+                {t("site.legal.privacy.cookies.items.session.text")}
+              </ListItem>
+              <ListItem>
+                <strong>{t("site.legal.privacy.cookies.items.language.label")}</strong>{" "}
+                {t("site.legal.privacy.cookies.items.language.text")}
+              </ListItem>
+              <ListItem>
+                <strong>{t("site.legal.privacy.cookies.items.consent.label")}</strong>{" "}
+                {t("site.legal.privacy.cookies.items.consent.text")}
+              </ListItem>
+              <ListItem>
+                <strong>{t("site.legal.privacy.cookies.items.analytics.label")}</strong>{" "}
+                {t("site.legal.privacy.cookies.items.analytics.text")}
+              </ListItem>
+              <ListItem>
+                <strong>{t("site.legal.privacy.cookies.items.drafts.label")}</strong>{" "}
+                {t("site.legal.privacy.cookies.items.drafts.text")}
+              </ListItem>
+            </List>
+            <CookieSettingsButton
+              style={{
+                alignSelf: "flex-start",
+                padding: 0,
+                border: "none",
+                background: "none",
+                color: "var(--brand-on-background-strong)",
+                textDecoration: "underline",
+                textUnderlineOffset: 2,
+                cursor: "pointer",
+                font: "inherit",
+              }}
+            />
+          </Column>
+        </RevealFx>
+
+        <RevealFx delay={1900} translateY={-0.5}>
+          <Column gap="16">
+            <Text variant="heading-strong-m">{t("site.legal.privacy.s5.title")}</Text>
+            <Text variant="body-default-m" onBackground="neutral-medium">
+              {t("site.legal.privacy.s5.text")}
+            </Text>
+          </Column>
+        </RevealFx>
       </Column>
     </Flex>
   );

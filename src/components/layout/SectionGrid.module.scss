@@ -1,0 +1,41 @@
+// Columns follow the `page` container (the room next to the sidebar), not the viewport.
+.grid {
+  --section-grid-gap: var(--static-space-24);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--section-grid-gap);
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+// Two columns once each can be at least ~460px wide.
+@container page (min-width: 980px) {
+  .cols2,
+  .cols3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container page (min-width: 1480px) {
+  .cols3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.full {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+// Direct children that opt into the full row (see Section `span="full"`).
+.grid > :global(.section-full) {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .grid {
+    --section-grid-gap: var(--static-space-16);
+  }
+}

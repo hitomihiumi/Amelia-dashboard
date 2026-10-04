@@ -1,0 +1,133 @@
+// Library of one kind of component: a browsable grid of item cards. An opened item takes the
+// whole row and shows its editor under the header.
+
+.tabs {
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--static-space-12) var(--static-space-16);
+}
+
+.toolbarTitle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--static-space-12);
+  min-width: 0;
+}
+
+.items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: var(--static-space-12);
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.item {
+  scroll-margin-top: var(--static-space-16);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--neutral-border-medium);
+  border-radius: var(--radius-m);
+  background: var(--neutral-alpha-weak);
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+
+  &:hover {
+    border-color: var(--neutral-border-strong);
+  }
+
+  &[data-open="true"] {
+    grid-column: 1 / -1;
+    border-color: var(--brand-border-strong);
+    background: var(--surface-background);
+  }
+}
+
+.itemHead {
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-12);
+  width: 100%;
+  min-width: 0;
+  min-height: 64px;
+  padding: var(--static-space-12) var(--static-space-16);
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--neutral-alpha-weak);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-border-strong);
+    outline-offset: -2px;
+  }
+}
+
+.itemIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: var(--static-space-8);
+  border-radius: var(--radius-s);
+  background: var(--neutral-alpha-weak);
+}
+
+.itemText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-2);
+  flex: 1;
+  min-width: 0;
+
+  > * {
+    overflow-wrap: anywhere;
+  }
+}
+
+.chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+
+  [aria-expanded="true"] > & {
+    transform: rotate(180deg);
+  }
+}
+
+.itemBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-16);
+  min-width: 0;
+  padding: var(--static-space-8) var(--static-space-16) var(--static-space-16);
+}
+
+.itemActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--static-space-8);
+}
+
+// Phones: the editor needs every pixel, so the opened card gives up some padding.
+@container page (max-width: 640px) {
+  .itemHead {
+    padding: var(--static-space-12);
+  }
+
+  .itemBody {
+    padding: var(--static-space-4) var(--static-space-8) var(--static-space-12);
+  }
+}

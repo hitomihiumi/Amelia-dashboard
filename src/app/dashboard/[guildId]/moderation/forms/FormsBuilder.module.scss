@@ -1,0 +1,7 @@
+// Long floating labels stay on one line instead of running over the value.
+.labels label {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

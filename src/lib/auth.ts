@@ -1,6 +1,7 @@
 import DiscordProvider from "next-auth/providers/discord";
 import { refreshDiscordAccessToken } from "@/lib/discord/oauth-refresh";
 import { NextAuthOptions } from "next-auth";
+import { isSiteAdmin } from "@/lib/admin/ids";
 
 export const authOptions: NextAuthOptions = {
   pages: {
@@ -83,6 +84,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user && token.sub) {
         session.user.id = token.sub;
         session.user.avatarDecoration = token.avatarDecoration as string | null;
+        // Lets the header show the admin panel shortcut. The panel itself re-checks on the server.
+        session.user.isAdmin = isSiteAdmin(token.sub);
       }
       if (token.error === "RefreshAccessTokenError") {
         session.error = "RefreshAccessTokenError";

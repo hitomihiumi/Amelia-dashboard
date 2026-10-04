@@ -1,17 +1,20 @@
 import { Guild } from "@/lib/db/Guild";
 import { PrivateForm } from "@/app/dashboard/[guildId]/private/PrivateForm";
-import { Feedback, Flex, Text } from "@once-ui-system/core";
+import { Feedback, Flex } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ChannelPickOption } from "@/lib/discord/channel-type";
 import { fetchGuildTextVoiceAndCategories } from "@/lib/discord/channels-api";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
+import { getT } from "@/i18n/server";
 
 export default async function GeneralSettingsPage({
   params,
 }: {
   params: Promise<{ guildId: string }>;
 }) {
+  const t = await getT();
   const resolvedParams = await params;
   const session = await getServerSession(authOptions);
 
@@ -28,8 +31,7 @@ export default async function GeneralSettingsPage({
       voiceChannels = bundle.voiceChannels.map((c) => ({ ...c }));
       categories = bundle.categories.map((c) => ({ ...c }));
     } catch (e) {
-      loadError =
-        e instanceof Error ? e.message : "An unknown error occurred while loading channels.";
+      loadError = e instanceof Error ? e.message : t("settings.shared.loadChannelsFailed");
     }
   }
 
@@ -38,22 +40,21 @@ export default async function GeneralSettingsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
-        <Text variant="heading-strong-l">Private rooms settings</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          Configure the settings for private voice channels in your server.
-        </Text>
-      </Flex>
+      <PageHeader title={t("settings.private.title")} description={t("settings.private.description")} />
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (
           <Feedback
             variant="danger"
-            title="Session expired"
-            description="Your Discord session has expired. Please log in again."
+            title={t("settings.shared.sessionExpiredTitle")}
+            description={t("settings.shared.sessionExpiredText")}
           />
         ) : (
-          <Feedback variant="danger" title="Error" description={loadError} />
+          <Feedback
+            variant="danger"
+            title={t("settings.shared.errorTitle")}
+            description={loadError}
+          />
         ))}
 
       <PrivateForm

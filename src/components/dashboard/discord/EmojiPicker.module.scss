@@ -1,14 +1,329 @@
-.emojiButton {
-  will-change: transform;
-  contain: layout style paint;
-  transition: transform 0.1s ease;
+// The emoji panel: search, category tabs, a scrolling list of sections and a name footer.
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: min(372px, calc(100vw - 32px));
+  height: min(440px, calc(100dvh - 120px));
+  background: var(--surface-background);
+  border: 1px solid var(--neutral-border-medium);
+  border-radius: var(--radius-l);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  color: var(--neutral-on-background-strong);
+  // The popover lives in a portal outside the page font scope.
+  font-family: var(--font-body), system-ui, sans-serif;
+}
 
-  &:hover,
-  &:focus-visible {
-    transform: scale(1.05);
+.searchRow {
+  flex: 0 0 auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: var(--static-space-12) var(--static-space-12) var(--static-space-8);
+}
+
+.searchIcon {
+  position: absolute;
+  left: var(--static-space-12);
+  color: var(--neutral-on-background-weak);
+  pointer-events: none;
+}
+
+.search {
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--static-space-32);
+  border: 1px solid var(--neutral-border-medium);
+  border-radius: var(--radius-m);
+  background: var(--neutral-alpha-weak);
+  color: inherit;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+
+  &::placeholder {
+    color: var(--neutral-on-background-weak);
   }
 
   &:focus-visible {
-    background: var(--neutral-alpha-weak) !important;
+    border-color: var(--brand-border-strong);
+    box-shadow: 0 0 0 3px var(--brand-alpha-weak);
+  }
+}
+
+.clear {
+  position: absolute;
+  right: var(--static-space-8);
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--neutral-on-background-weak);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--neutral-alpha-medium);
+    color: var(--neutral-on-background-strong);
+  }
+}
+
+.tabs {
+  flex: 0 0 auto;
+  display: flex;
+  gap: var(--static-space-2);
+  padding: 0 var(--static-space-12) var(--static-space-8);
+  border-bottom: 1px solid var(--neutral-border-medium);
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tab {
+  position: relative;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--neutral-on-background-weak);
+  cursor: pointer;
+  filter: grayscale(0.7);
+  opacity: 0.8;
+  transition: background 0.12s ease, opacity 0.12s ease, filter 0.12s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--neutral-alpha-weak);
+    opacity: 1;
+    filter: none;
+    outline: none;
+  }
+
+  &[data-active="true"] {
+    background: var(--neutral-alpha-medium);
+    color: var(--neutral-on-background-strong);
+    opacity: 1;
+    filter: none;
+  }
+}
+
+.tabGlyph {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 var(--static-space-8) var(--static-space-8);
+  scroll-behavior: auto;
+  overscroll-behavior: contain;
+}
+
+.section {
+  // Off-screen sections skip layout and paint: ~1800 cells stay cheap.
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
+
+.sectionTitle {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: var(--static-space-8) var(--static-space-4) var(--static-space-4);
+  background: var(--surface-background);
+  color: var(--neutral-on-background-weak);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.cell {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.1s ease, transform 0.1s ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--neutral-alpha-medium);
+    outline: none;
+  }
+
+  &:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--brand-border-strong);
+  }
+
+  &:active {
+    transform: scale(0.9);
+  }
+}
+
+.cellGlyph {
+  font-size: 23px;
+  line-height: 1;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+
+.glyphText {
+  display: inline-block;
+  line-height: 1;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+
+.glyphImage {
+  display: block;
+  font-size: 0; // broken image: do not print the alt text at full size
+  object-fit: contain;
+}
+
+.center {
+  display: grid;
+  place-items: center;
+  min-height: 160px;
+  color: var(--neutral-on-background-weak);
+  font-size: 14px;
+}
+
+.notice {
+  margin: var(--static-space-8) var(--static-space-4) 0;
+  padding: var(--static-space-8) var(--static-space-12);
+  border-radius: var(--radius-m);
+  background: var(--neutral-alpha-weak);
+  color: var(--neutral-on-background-medium);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-12);
+  min-height: 52px;
+  padding: var(--static-space-8) var(--static-space-16);
+  border-top: 1px solid var(--neutral-border-medium);
+  background: var(--neutral-alpha-weak);
+}
+
+.footerGlyph {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.footerName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.footerHint {
+  color: var(--neutral-on-background-weak);
+  font-size: 12px;
+}
+
+// Emoji field next to inputs ------------------------------------------------
+
+.valueField {
+  display: flex;
+  align-items: stretch;
+  gap: var(--static-space-8);
+  width: 100%;
+}
+
+.valuePreview {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  min-height: 56px;
+  border: 1px solid var(--neutral-border-medium);
+  border-radius: var(--radius-m);
+  background: var(--neutral-alpha-weak);
+  color: var(--neutral-on-background-weak);
+}
+
+.valueInput {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.valueActions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-4);
+}
+
+.insertWrap {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.insertButton {
+  position: absolute;
+  top: var(--static-space-8);
+  right: var(--static-space-8);
+  z-index: 2;
+}
+
+.insertRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--static-space-4);
+  width: 100%;
+  min-width: 0;
+}
+
+.insertRowField {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.insertRowButton {
+  flex: 0 0 auto;
+  // the field is 56px tall, the button 40px
+  margin-top: var(--static-space-8);
+}
+
+@media (max-width: 480px) {
+  .valueField {
+    flex-wrap: wrap;
+  }
+
+  .valueInput {
+    flex-basis: calc(100% - 64px);
   }
 }

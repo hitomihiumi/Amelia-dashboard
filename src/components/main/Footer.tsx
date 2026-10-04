@@ -13,8 +13,12 @@ import {
 } from "@once-ui-system/core";
 
 import styles from "./Footer.module.scss";
+import { useT } from "@/i18n/client";
+import { CookieSettingsButton } from "@/components/consent/CookieSettingsButton";
 
 export function Footer() {
+  const t = useT();
+
   return (
     <Flex
       as={"footer"}
@@ -33,15 +37,19 @@ export function Footer() {
             <Text onBackground="neutral-weak">© 2026 /</Text>
             <Text onBackground="neutral-weak">
               {" "}
-              Built with <SmartLink href="https://once-ui.com">Once UI</SmartLink> / By{" "}
+              {t("common.footer.builtWith")} <SmartLink href="https://once-ui.com">Once UI</SmartLink> /{" "}
+              {t("common.footer.by")}{" "}
               <SmartLink href={"https://hitomihiumi.xyz/"}>hitomihiumi</SmartLink> 💜
             </Text>
           </Text>
         </Row>
         <Row>
           <Text onBackground="neutral-weak" variant={"body-default-s"}>
-            <SmartLink href={"/terms"}>Terms of Service</SmartLink> /{" "}
-            <SmartLink href={"/privacy"}>Privacy Policy</SmartLink>
+            <SmartLink href={"/news"}>{t("common.nav.news")}</SmartLink> /{" "}
+            <SmartLink href={"/status"}>{t("common.nav.status")}</SmartLink> /{" "}
+            <SmartLink href={"/terms"}>{t("common.nav.terms")}</SmartLink> /{" "}
+            <SmartLink href={"/privacy"}>{t("common.nav.privacy")}</SmartLink> /{" "}
+            <CookieSettingsButton style={{ padding: 0, border: "none", background: "none", color: "inherit", cursor: "pointer", font: "inherit", textDecoration: "underline", textUnderlineOffset: 2 }} />
           </Text>
         </Row>
       </Row>

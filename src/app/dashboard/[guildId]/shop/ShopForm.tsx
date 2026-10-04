@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Flex, Text, useToast, Button, Grid, Row } from "@once-ui-system/core";
+import { Flex, Text, useToast, Button, Column, Grid, Row, RevealFx } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 
 import type { GuildSchema, ShopRole } from "@/lib/db/types";
@@ -13,6 +13,7 @@ import { updateShop } from "@/app/dashboard/[guildId]/shop/actions";
 import { GuildActionState } from "@/types/dashboard";
 import { RoleCard } from "@/components/dashboard/RoleCard";
 import { DashIcon } from "@/components/dashboard/DashIcon";
+import { useT } from "@/i18n/client";
 
 type Form = GuildSchema["economy"]["shop"];
 
@@ -21,6 +22,7 @@ export function ShopFrom({
   defaultShop,
   guildRoles,
 }: { guildId: string; defaultShop: Form; guildRoles: DiscordRole[] }) {
+  const t = useT();
   const router = useRouter();
   const { setIsDirty, setSaveAction, setCancelAction } = useUnsavedChanges();
   const { addToast } = useToast();
@@ -63,7 +65,7 @@ export function ShopFrom({
 
     const result: GuildActionState = await updateShop(guildId, fd);
     if (!result) {
-      addToast({ variant: "danger", message: "No response from server" });
+      addToast({ variant: "danger", message: t("settings.shared.noResponse") });
       return;
     }
     if (result.ok) {
@@ -71,11 +73,11 @@ export function ShopFrom({
         roles,
       });
       router.refresh();
-      addToast({ variant: "success", message: "Successfully updated shop" });
+      addToast({ variant: "success", message: t("settings.shop.saved") });
       return;
     }
-    addToast({ variant: "danger", message: result.error ?? "Cannot save settings" });
-  }, [guildId, roles, router]);
+    addToast({ variant: "danger", message: result.error ?? t("settings.shared.saveFailed") });
+  }, [guildId, roles, router, addToast, t]);
 
   const handleCancel = useCallback(() => {
     setRoles(baseline.roles);
@@ -101,56 +103,102 @@ export function ShopFrom({
   }, [roles, guildRoles]);
 
   return (
-    <>
-      <Flex
-        direction="row"
-        gap="24"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-        horizontal={"between"}
-        vertical={"center"}
-      >
-        <Row gap="16" center>
-          <DashIcon name={"cart"} />
-          <Text variant="body-strong-l">Add role to shop</Text>
-        </Row>
-        <Button
-          prefixIcon={"plus"}
-          onClick={() => {
-            setNewRole({
-              role: "",
-              price: 100,
-              discount: {
-                amount: 0,
-                starts_at: null,
-                expires_at: null,
-              },
-            });
-            setOpenModal(true);
+    <Column gap="24" fillWidth>
+      <RevealFx delay={300} translateY={-0.5} fillWidth>
+        <Flex
+          padding="24"
+          border="neutral-medium"
+          radius="l"
+          background="surface"
+          fillWidth
+          wrap
+          horizontal="between"
+          vertical="center"
+          gap="16"
+        >
+          <Row vertical="center" gap="16" style={{ minWidth: 0 }}>
+            <DashIcon name={"cart"} />
+            <Text variant="body-strong-l">{t("settings.shop.addTitle")}</Text>
+          </Row>
+          <Button
+            prefixIcon={"plus"}
+            onClick={() => {
+              setNewRole({
+                role: "",
+                price: 100,
+                discount: {
+                  amount: 0,
+                  starts_at: null,
+                  expires_at: null,
+                },
+              });
+              setOpenModal(true);
+            }}
+          >
+            {t("settings.shop.addButton")}
+          </Button>
+        </Flex>
+      </RevealFx>
+
+      {roles.length > 0 ? (
+        <Grid
+          fillWidth
+          gap="16"
+          s={{ style: { gap: "var(--static-space-12)" } }}
+          style={{
+            gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))",
+            minWidth: 0,
           }}
         >
-          Add role
-        </Button>
-      </Flex>
-
-      {roles.length > 0 && (
-        <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="m" fillWidth>
           {roles.map((item, id) => {
             const discordRole = guildRoles.find((r) => r.id === item.role) as DiscordRole;
             return (
-              <RoleCard
+              <RevealFx
+                delay={Math.min(400 + 100 * id, 900)}
+                translateY={-0.5}
+                fillWidth
                 key={id}
-                setRoles={setRoles}
-                setOpenModal={setOpenModal}
-                setNewRole={setNewRole}
-                role={item}
-                discordRole={discordRole}
-              />
+                style={{ minWidth: 0 }}
+              >
+                {/* A grid wrapper lets the card stretch to the cell height. */}
+                <Grid fillWidth style={{ minWidth: 0 }}>
+                  <RoleCard
+                    setRoles={setRoles}
+                    setOpenModal={setOpenModal}
+                    setNewRole={setNewRole}
+                    role={item}
+                    discordRole={discordRole}
+                  />
+                </Grid>
+              </RevealFx>
             );
           })}
         </Grid>
+      ) : (
+        <RevealFx delay={400} translateY={-0.5} fillWidth>
+          <Column
+            fillWidth
+            horizontal="center"
+            gap="8"
+            paddingY="40"
+            paddingX="24"
+            border="neutral-strong"
+            borderStyle="dashed"
+            radius="l"
+          >
+            <Text variant="body-strong-m" align="center" style={{ maxWidth: "52ch" }}>
+              {t("settings.shop.emptyTitle")}
+            </Text>
+            <Text
+              variant="body-default-s"
+              onBackground="neutral-weak"
+              align="center"
+              style={{ maxWidth: "52ch" }}
+            >
+              {t("settings.shop.emptyHint")}
+            </Text>
+          </Column>
+        </RevealFx>
       )}
 
       <ShopModal
@@ -165,7 +213,7 @@ export function ShopFrom({
           setRoles((prev) => {
             const existingId = prev.findIndex((r) => r.role === newRole.role);
             if (existingId >= 0) {
-              addToast({ variant: "danger", message: "Role already exists in the shop" });
+              addToast({ variant: "danger", message: t("settings.shop.alreadyExists") });
               return prev;
             }
             return [...prev, newRole];
@@ -182,6 +230,6 @@ export function ShopFrom({
           });
         }}
       />
-    </>
+    </Column>
   );
 }

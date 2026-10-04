@@ -14,11 +14,14 @@ import {
 } from "@once-ui-system/core";
 import { usePathname } from "next/navigation";
 import { layout } from "@/resources";
+import { useLocale, useT } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
 
 import styles from "./Sidebar.module.scss";
+import type { IconName } from "@/resources/icons";
 
-// Global navigation cache to prevent refetching
-let globalNavigationCache: any = null;
+// Global navigation cache to prevent refetching (one entry, tagged with the locale it was loaded for)
+let globalNavigationCache: { locale: Locale; data: NavigationItem[] } | null = null;
 
 export interface NavigationItem
   extends Omit<React.ComponentProps<typeof Flex>, "title" | "label" | "children"> {
@@ -29,7 +32,7 @@ export interface NavigationItem
   children?: NavigationItem[];
   schemes?: Schemes;
   keywords?: string;
-  navIcon?: string;
+  navIcon?: IconName;
   navTag?: string;
   navLabel?: string;
   navTagVariant?: Schemes;
@@ -182,7 +185,7 @@ const NavigationItemComponent: React.FC<{
               transform: "scale(0.8)",
               transformOrigin: "right center",
             }}
-            variant="brand"
+            scheme="brand"
             size="s"
           >
             {item.navTag}
@@ -209,7 +212,7 @@ NavigationItem.displayName = "NavigationItem";
 // Memoized resource link component
 const ResourceLinkComponent: React.FC<{
   href: string;
-  icon: string;
+  icon: IconName;
   label: string;
   pathname: string;
 }> = ({ href, icon, label, pathname }) => {
@@ -290,39 +293,45 @@ const Sidebar: React.FC<SidebarProps> = ({ initialNavigation, ...rest }) => {
   const [navigation, setNavigation] = useState<NavigationItem[]>(initialNavigation || []);
   const [hasLoaded, setHasLoaded] = useState(false);
   const pathname = usePathname();
+  const t = useT();
+  const locale = useLocale();
 
-  // Load navigation data only once, using global cache
+  // Load navigation data once per locale, using the global cache
   useEffect(() => {
     // Use initialNavigation if provided
     if (initialNavigation && initialNavigation.length > 0) {
       setNavigation(initialNavigation);
-      globalNavigationCache = initialNavigation;
+      globalNavigationCache = { locale, data: initialNavigation };
       setHasLoaded(true);
       return;
     }
 
-    // Use global cache if available
-    if (globalNavigationCache) {
-      setNavigation(globalNavigationCache);
+    // Use global cache if it was loaded for the active locale
+    if (globalNavigationCache && globalNavigationCache.locale === locale) {
+      setNavigation(globalNavigationCache.data);
       setHasLoaded(true);
       return;
     }
 
-    // Fetch only if not loaded and no global cache
-    if (!hasLoaded) {
-      fetch("/api/navigation")
-        .then((res) => res.json())
-        .then((data) => {
-          setNavigation(data);
-          globalNavigationCache = data; // Cache globally
-          setHasLoaded(true);
-        })
-        .catch((err) => {
-          console.error("Navigation fetch failed", err);
-          setHasLoaded(true);
-        });
-    }
-  }, [initialNavigation, hasLoaded]);
+    // Otherwise fetch (the route reads the locale from the cookie; the query only keys the cache)
+    let cancelled = false;
+    fetch(`/api/navigation?lang=${locale}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        setNavigation(data);
+        globalNavigationCache = { locale, data }; // Cache globally
+        setHasLoaded(true);
+      })
+      .catch((err) => {
+        console.error("Navigation fetch failed", err);
+        if (!cancelled) setHasLoaded(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialNavigation, locale]);
 
   // Create a stable container that doesn't change
   const containerStyle = useMemo(
@@ -349,7 +358,7 @@ const Sidebar: React.FC<SidebarProps> = ({ initialNavigation, ...rest }) => {
     >
       <Row paddingBottom={"12"}>
         <Button size={"s"} fillWidth href={"/"} prefixIcon={"back"}>
-          Back to Home
+          {t("common.actions.backToHome")}
         </Button>
       </Row>
       {hasLoaded && <SidebarContent key={pathname} navigation={navigation} pathname={pathname} />}

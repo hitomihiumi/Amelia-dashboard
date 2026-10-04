@@ -7,9 +7,11 @@ import {
   Input,
   Row,
   Column,
+  Grid,
   Switch,
   SegmentedControl,
   Slider,
+  Line,
   useToast,
   NumberInput,
 } from "@once-ui-system/core";
@@ -20,8 +22,10 @@ import { GuildActionState } from "@/types/dashboard";
 import type { GuildSchema } from "@/lib/db/types";
 import { useRouter } from "next/navigation";
 import { EmojiPickerDropdown } from "@/components/dashboard/discord/EmojiPickerDropdown";
-import { emojiFromString, formatCustomEmojiString, isUnicodeEmoji } from "@/lib/discord/emojis-api";
-import { DashIcon } from "@/components/dashboard/DashIcon";
+import { emojiFromString, emojiToText, isUnicodeEmoji } from "@/lib/discord/emojis-api";
+import { Section } from "@/components/dashboard/Section";
+import { useT } from "@/i18n/client";
+import styles from "./EconomyForm.module.scss";
 
 type Form = Pick<GuildSchema["economy"], "income" | "currency">;
 
@@ -30,6 +34,7 @@ export function EconomyForm({
   defaultIncome,
   defaultCurrency,
 }: { guildId: string; defaultIncome: Form["income"]; defaultCurrency: Form["currency"] }) {
+  const t = useT();
   const router = useRouter();
   const { setIsDirty, setSaveAction, setCancelAction } = useUnsavedChanges();
   const { addToast } = useToast();
@@ -59,7 +64,7 @@ export function EconomyForm({
 
     const result: GuildActionState = await updateEconomySettings(guildId, fd);
     if (!result) {
-      addToast({ variant: "danger", message: "No response from server" });
+      addToast({ variant: "danger", message: t("settings.shared.noResponse") });
       return;
     }
     if (result.ok) {
@@ -70,11 +75,11 @@ export function EconomyForm({
         currency,
       });
       router.refresh();
-      addToast({ variant: "success", message: "Successfully updated settings" });
+      addToast({ variant: "success", message: t("settings.shared.saveSuccess") });
       return;
     }
-    addToast({ variant: "danger", message: result.error ?? "Cannot save settings" });
-  }, [guildId, income, currency, router]);
+    addToast({ variant: "danger", message: result.error ?? t("settings.shared.saveFailed") });
+  }, [guildId, income, currency, router, addToast, t]);
 
   const handleCancel = useCallback(() => {
     setIncome(baseline.income);
@@ -96,298 +101,193 @@ export function EconomyForm({
     };
   }, [setIsDirty]);
 
+  const setWork = (patch: Partial<Form["income"]["work"]>) =>
+    setIncome((prev) => ({ ...prev, work: { ...prev.work, ...patch } }));
+  const setRob = (patch: Partial<Form["income"]["rob"]>) =>
+    setIncome((prev) => ({ ...prev, rob: { ...prev.rob, ...patch } }));
+  const setRobIncome = (patch: Partial<Form["income"]["rob"]["income"]>) =>
+    setIncome((prev) => ({ ...prev, rob: { ...prev.rob, income: { ...prev.rob.income, ...patch } } }));
+  const setRobPunishment = (patch: Partial<Form["income"]["rob"]["punishment"]>) =>
+    setIncome((prev) => ({
+      ...prev,
+      rob: { ...prev.rob, punishment: { ...prev.rob.punishment, ...patch } },
+    }));
+
   return (
-    <>
-      <Flex
-        direction="column"
-        gap="24"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-      >
-        <Flex gap="16">
-          <DashIcon name={"money"} />
-          <Flex direction={"column"} gap="8">
-            <Text variant="body-strong-l">Currency emoji</Text>
-            <Text variant="body-default-s" onBackground="neutral-medium">
-              This emoji will be used to represent your currency across the bot, such as in the
-              balance command and shop listings.
-            </Text>
-          </Flex>
-        </Flex>
-
-        <Flex direction="column" gap="8">
-          <Row gap={"12"} vertical={"center"} horizontal={"between"}>
-            <Input
-              id={"currency-emoji"}
-              label={"Currency emoji"}
-              value={currency?.emoji || ""}
-              onChange={(e) => {
-                const val = e.currentTarget.value;
-                isUnicodeEmoji(val)
-                  ? setCurrency({ id: null, emoji: val })
-                  : setCurrency({ id: emojiFromString(val).id, emoji: val });
-              }}
-            />
-            <EmojiPickerDropdown
-              guildId={guildId}
-              onSelect={(emoji) =>
-                setCurrency({
-                  id: emoji.id,
-                  emoji: formatCustomEmojiString(emoji),
-                })
-              }
-            />
-          </Row>
-          <Text variant="body-default-s" onBackground="neutral-weak">
-            You can use either a custom emoji from your server or a standard Unicode emoji.
-          </Text>
-        </Flex>
-      </Flex>
-
-      <Flex
-        direction="column"
-        gap="16"
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-      >
-        <Flex gap="16">
-          <DashIcon name={"diamond"} />
+    <Grid fillWidth gap="24" s={{ style: { gap: "var(--static-space-16)" } }} style={{ minWidth: 0 }} className={styles.layout}>
+      <Column as="aside" style={{ minWidth: 0 }} className={styles.aside}>
+        <Section
+          title={t("settings.economy.currencyTitle")}
+          description={t("settings.economy.currencyDescription")}
+          num={1}
+          icon="money"
+        >
           <Flex direction="column" gap="8">
-            <Text variant="body-strong-l">Income</Text>
-            <Text variant="body-default-s" onBackground="neutral-medium">
-              Set the amount of currency users will earn.
+            <Row wrap vertical="end" gap="12">
+              <Row style={{ flex: "1 1 200px", minWidth: 0 }}>
+                <Input
+                  id={"currency-emoji"}
+                  label={t("settings.economy.currencyLabel")}
+                  value={currency?.emoji || ""}
+                  onChange={(e) => {
+                    const val = e.currentTarget.value;
+                    isUnicodeEmoji(val)
+                      ? setCurrency({ id: null, emoji: val })
+                      : setCurrency({ id: emojiFromString(val).id, emoji: val });
+                  }}
+                />
+              </Row>
+              <Row style={{ flex: "0 0 auto" }}>
+                <EmojiPickerDropdown
+                  guildId={guildId}
+                  onSelect={(emoji) =>
+                    setCurrency({
+                      id: emoji.type === "custom" ? emoji.id : null,
+                      emoji: emojiToText(emoji),
+                    })
+                  }
+                />
+              </Row>
+            </Row>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              {t("settings.economy.currencyHint")}
             </Text>
           </Flex>
-        </Flex>
+        </Section>
+      </Column>
 
-        <Column
-          background={"overlay"}
-          border={"neutral-medium"}
-          radius={"m"}
-          padding={"20"}
-          gap={"12"}
+      <Column style={{ minWidth: 0 }}>
+        <Section
+          title={t("settings.economy.incomeTitle")}
+          description={t("settings.economy.incomeDescription")}
+          num={2}
+          icon="diamond"
         >
-          <Row horizontal={"between"} vertical={"center"}>
-            <Column>
-              <Text variant="body-strong-m">Regular work</Text>
-              <Text variant="body-default-xs" onBackground="neutral-weak">
-                The amount of currency users will earn each time they use the work command.
-              </Text>
-            </Column>
-            <Switch
-              isChecked={income.work.enabled}
-              onToggle={() =>
-                setIncome((prev) => ({
-                  ...prev,
-                  work: { ...prev.work, enabled: !income.work.enabled },
-                }))
-              }
-            />
-          </Row>
-          <Column gap={"8"}>
-            <Row gap={"8"}>
-              <NumberInput
-                id={"work-min-income"}
-                label={"Min Income"}
-                value={income.work.min}
-                onChange={(value) =>
-                  setIncome((prev) => ({
-                    ...prev,
-                    work: { ...prev.work, min: Number(value) },
-                  }))
-                }
-                min={0}
-                max={10000}
-                step={1}
-              />
-              <NumberInput
-                id={"work-max-income"}
-                label={"Max Income"}
-                value={income.work.max}
-                onChange={(value) =>
-                  setIncome((prev) => ({
-                    ...prev,
-                    work: { ...prev.work, max: Number(value) },
-                  }))
-                }
-                min={0}
-                max={100000}
-                step={1}
-              />
-            </Row>
-            <NumberInput
-              id={"work-cooldown-income"}
-              label={"Cooldown (s)"}
-              value={income.work.cooldown}
-              onChange={(value) =>
-                setIncome((prev) => ({
-                  ...prev,
-                  work: { ...prev.work, cooldown: Number(value) },
-                }))
-              }
-              min={0}
-              max={86400}
-              step={1}
-            />
-          </Column>
-        </Column>
+          <Grid fillWidth gap="16" style={{ minWidth: 0 }} className={styles.incomeGrid}>
+            <IncomeCard
+              title={t("settings.economy.workTitle")}
+              description={t("settings.economy.workDescription")}
+              enabled={income.work.enabled}
+              onToggle={() => setWork({ enabled: !income.work.enabled })}
+            >
+              <Fields>
+                <NumberInput
+                  id={"work-min-income"}
+                  label={t("settings.economy.minIncome")}
+                  value={income.work.min}
+                  onChange={(value) => setWork({ min: Number(value) })}
+                  min={0}
+                  max={10000}
+                  step={1}
+                />
+                <NumberInput
+                  id={"work-max-income"}
+                  label={t("settings.economy.maxIncome")}
+                  value={income.work.max}
+                  onChange={(value) => setWork({ max: Number(value) })}
+                  min={0}
+                  max={100000}
+                  step={1}
+                />
+                <NumberInput
+                  id={"work-cooldown-income"}
+                  label={t("settings.economy.cooldown")}
+                  value={income.work.cooldown}
+                  onChange={(value) => setWork({ cooldown: Number(value) })}
+                  min={0}
+                  max={86400}
+                  step={1}
+                />
+              </Fields>
+            </IncomeCard>
 
-        <Column
-          background={"overlay"}
-          border={"neutral-medium"}
-          radius={"m"}
-          padding={"20"}
-          gap={"12"}
-        >
-          <Row horizontal={"between"} vertical={"center"}>
-            <Column>
-              <Text variant="body-strong-m">Robbing</Text>
-              <Text variant="body-default-xs" onBackground="neutral-weak">
-                The amount of currency users will earn each time they use the rob command.
+            <IncomeCard
+              className={styles.rob}
+              title={t("settings.economy.robTitle")}
+              description={t("settings.economy.robDescription")}
+              enabled={income.rob.enabled}
+              onToggle={() => setRob({ enabled: !income.rob.enabled })}
+            >
+              <Text variant="label-default-xs" onBackground="neutral-weak" className={styles.groupLabel}>
+                {t("settings.economy.income")}
               </Text>
-            </Column>
-            <Switch
-              isChecked={income.rob.enabled}
-              onToggle={() =>
-                setIncome((prev) => ({
-                  ...prev,
-                  rob: { ...prev.rob, enabled: !income.rob.enabled },
-                }))
-              }
-            />
-          </Row>
-          <Column gap={"12"}>
-            <SegmentedControl
-              buttons={[
-                { value: "fixed", label: "Fixed (0)" },
-                { value: "percentage", label: "Percentage (%)" },
-              ]}
-              onToggle={(value) =>
-                setIncome((prev) => ({
-                  ...prev,
-                  rob: {
-                    ...prev.rob,
-                    income: { ...prev.rob.income, type: value as "fixed" | "percentage" },
-                  },
-                }))
-              }
-            />
-            <Column gap={"8"}>
-              <Row gap={"8"}>
+              <SegmentedControl
+                defaultValue={income.rob.income.type}
+                buttons={[
+                  { value: "fixed", label: t("settings.economy.fixed") },
+                  { value: "percentage", label: t("settings.economy.percentage") },
+                ]}
+                onChange={(value) => setRobIncome({ type: value as "fixed" | "percentage" })}
+              />
+              <Fields>
                 <NumberInput
                   id={"rob-min-income"}
-                  label={"Min Income"}
+                  label={t("settings.economy.minIncome")}
                   value={income.rob.income.min}
-                  onChange={(value) =>
-                    setIncome((prev) => ({
-                      ...prev,
-                      rob: {
-                        ...prev.rob,
-                        income: { ...prev.rob.income, min: Number(value) },
-                      },
-                    }))
-                  }
+                  onChange={(value) => setRobIncome({ min: Number(value) })}
                   min={0}
                   max={10000}
                   step={1}
                 />
                 <NumberInput
                   id={"rob-max-income"}
-                  label={"Max Income"}
+                  label={t("settings.economy.maxIncome")}
                   value={income.rob.income.max}
-                  onChange={(value) =>
-                    setIncome((prev) => ({
-                      ...prev,
-                      rob: {
-                        ...prev.rob,
-                        income: { ...prev.rob.income, max: Number(value) },
-                      },
-                    }))
-                  }
+                  onChange={(value) => setRobIncome({ max: Number(value) })}
                   min={0}
                   max={100000}
                   step={1}
                 />
-              </Row>
-              <NumberInput
-                id={"rob-cooldown-income"}
-                label={"Cooldown (s)"}
-                value={income.rob.cooldown}
-                onChange={(value) =>
-                  setIncome((prev) => ({
-                    ...prev,
-                    rob: { ...prev.rob, cooldown: Number(value) },
-                  }))
-                }
-                min={0}
-                max={86400}
-                step={1}
+                <NumberInput
+                  id={"rob-cooldown-income"}
+                  label={t("settings.economy.cooldown")}
+                  value={income.rob.cooldown}
+                  onChange={(value) => setRob({ cooldown: Number(value) })}
+                  min={0}
+                  max={86400}
+                  step={1}
+                />
+              </Fields>
+              <Line />
+              <Text variant="label-default-xs" onBackground="neutral-weak" className={styles.groupLabel}>
+                {t("settings.economy.punishmentGroup")}
+              </Text>
+              <SegmentedControl
+                defaultValue={income.rob.punishment.type}
+                buttons={[
+                  { value: "fixed", label: t("settings.economy.fixed") },
+                  { value: "percentage", label: t("settings.economy.percentage") },
+                ]}
+                onChange={(value) => setRobPunishment({ type: value as "fixed" | "percentage" })}
               />
-            </Column>
-            <SegmentedControl
-              buttons={[
-                { value: "fixed", label: "Fixed (0)" },
-                { value: "percentage", label: "Percentage (%)" },
-              ]}
-              onToggle={(value) =>
-                setIncome((prev) => ({
-                  ...prev,
-                  rob: {
-                    ...prev.rob,
-                    punishment: { ...prev.rob.punishment, type: value as "fixed" | "percentage" },
-                  },
-                }))
-              }
-            />
-            <Column gap={"8"}>
-              <Row gap={"8"}>
+              <Fields>
                 <NumberInput
                   id={"rob-min-punishment"}
-                  label={"Min Punishment"}
+                  label={t("settings.economy.minPunishment")}
                   value={income.rob.punishment.min}
-                  onChange={(value) =>
-                    setIncome((prev) => ({
-                      ...prev,
-                      rob: {
-                        ...prev.rob,
-                        punishment: { ...prev.rob.punishment, min: Number(value) },
-                      },
-                    }))
-                  }
+                  onChange={(value) => setRobPunishment({ min: Number(value) })}
                   min={0}
                   max={10000}
                   step={1}
                 />
                 <NumberInput
                   id={"rob-max-punishment"}
-                  label={"Max Punishment"}
+                  label={t("settings.economy.maxPunishment")}
                   value={income.rob.punishment.max}
-                  onChange={(value) =>
-                    setIncome((prev) => ({
-                      ...prev,
-                      rob: {
-                        ...prev.rob,
-                        punishment: { ...prev.rob.punishment, max: Number(value) },
-                      },
-                    }))
-                  }
+                  onChange={(value) => setRobPunishment({ max: Number(value) })}
                   min={0}
                   max={100000}
                   step={1}
                 />
-              </Row>
-              <Column paddingX={"xs"}>
-                <Row horizontal={"between"} vertical={"center"} paddingX={"xs"}>
+              </Fields>
+              <Column gap="4" paddingX="4">
+                <Row horizontal="between" vertical="center" gap="16">
                   <Column center>
                     <Text variant="body-strong-xl" onBackground="brand-weak">
                       {income.rob.punishment.fail_chance}%
                     </Text>
                     <Text variant="body-default-xs" onBackground="neutral-weak">
-                      Chance of failure
+                      {t("settings.economy.failChance")}
                     </Text>
                   </Column>
                   <Column center>
@@ -395,150 +295,156 @@ export function EconomyForm({
                       {100 - income.rob.punishment.fail_chance}%
                     </Text>
                     <Text variant="body-default-xs" onBackground="neutral-weak">
-                      Chance of win
+                      {t("settings.economy.winChance")}
                     </Text>
                   </Column>
                 </Row>
                 <Slider
                   value={income.rob.punishment.fail_chance}
-                  onChange={(value) =>
-                    setIncome((prev) => ({
-                      ...prev,
-                      rob: {
-                        ...prev.rob,
-                        punishment: { ...prev.rob.punishment, fail_chance: value },
-                      },
-                    }))
-                  }
+                  onChange={(value) => setRobPunishment({ fail_chance: value })}
                   min={5}
                   max={95}
                   step={1}
                 />
               </Column>
-            </Column>
-          </Column>
-        </Column>
+            </IncomeCard>
 
-        <Column
-          background={"overlay"}
-          border={"neutral-medium"}
-          radius={"m"}
-          padding={"20"}
-          gap={"12"}
-        >
-          <Row horizontal={"between"} vertical={"center"}>
-            <Column>
-              <Text variant="body-strong-m">Timely</Text>
-              <Text variant="body-default-xs" onBackground="neutral-weak">
-                The amount of currency users will earn each time they use the timely command.
-              </Text>
-            </Column>
-            <Switch
-              isChecked={income.timely.enabled}
+            <IncomeCard
+              title={t("settings.economy.timelyTitle")}
+              description={t("settings.economy.timelyDescription")}
+              enabled={income.timely.enabled}
               onToggle={() =>
                 setIncome((prev) => ({
                   ...prev,
-                  timely: { ...prev.timely, enabled: !income.timely.enabled },
+                  timely: { ...prev.timely, enabled: !prev.timely.enabled },
                 }))
               }
-            />
-          </Row>
-          <NumberInput
-            id={"timely-income"}
-            label={"Income"}
-            value={income.timely.amount}
-            onChange={(value) =>
-              setIncome((prev) => ({
-                ...prev,
-                timely: { ...prev.timely, amount: Number(value) },
-              }))
-            }
-            min={0}
-            max={100}
-            step={1}
-          />
-        </Column>
+            >
+              <NumberInput
+                id={"timely-income"}
+                label={t("settings.economy.income")}
+                value={income.timely.amount}
+                onChange={(value) =>
+                  setIncome((prev) => ({
+                    ...prev,
+                    timely: { ...prev.timely, amount: Number(value) },
+                  }))
+                }
+                min={0}
+                max={100}
+                step={1}
+              />
+            </IncomeCard>
 
-        <Column
-          background={"overlay"}
-          border={"neutral-medium"}
-          radius={"m"}
-          padding={"20"}
-          gap={"12"}
-        >
-          <Row horizontal={"between"} vertical={"center"}>
-            <Column>
-              <Text variant="body-strong-m">Daily</Text>
-              <Text variant="body-default-xs" onBackground="neutral-weak">
-                The amount of currency users will earn each time they use the daily command.
-              </Text>
-            </Column>
-            <Switch
-              isChecked={income.daily.enabled}
+            <IncomeCard
+              title={t("settings.economy.dailyTitle")}
+              description={t("settings.economy.dailyDescription")}
+              enabled={income.daily.enabled}
               onToggle={() =>
                 setIncome((prev) => ({
                   ...prev,
-                  daily: { ...prev.daily, enabled: !income.daily.enabled },
+                  daily: { ...prev.daily, enabled: !prev.daily.enabled },
                 }))
               }
-            />
-          </Row>
-          <NumberInput
-            id={"daily-income"}
-            label={"Income"}
-            value={income.daily.amount}
-            onChange={(value) =>
-              setIncome((prev) => ({
-                ...prev,
-                daily: { ...prev.daily, amount: Number(value) },
-              }))
-            }
-            min={0}
-            max={100}
-            step={1}
-          />
-        </Column>
+            >
+              <NumberInput
+                id={"daily-income"}
+                label={t("settings.economy.income")}
+                value={income.daily.amount}
+                onChange={(value) =>
+                  setIncome((prev) => ({
+                    ...prev,
+                    daily: { ...prev.daily, amount: Number(value) },
+                  }))
+                }
+                min={0}
+                max={100}
+                step={1}
+              />
+            </IncomeCard>
 
-        <Column
-          background={"overlay"}
-          border={"neutral-medium"}
-          radius={"m"}
-          padding={"20"}
-          gap={"12"}
-        >
-          <Row horizontal={"between"} vertical={"center"}>
-            <Column>
-              <Text variant="body-strong-m">Weekly</Text>
-              <Text variant="body-default-xs" onBackground="neutral-weak">
-                The amount of currency users will earn each time they use the weekly command.
-              </Text>
-            </Column>
-            <Switch
-              isChecked={income.weekly.enabled}
+            <IncomeCard
+              title={t("settings.economy.weeklyTitle")}
+              description={t("settings.economy.weeklyDescription")}
+              enabled={income.weekly.enabled}
               onToggle={() =>
                 setIncome((prev) => ({
                   ...prev,
-                  weekly: { ...prev.weekly, enabled: !income.weekly.enabled },
+                  weekly: { ...prev.weekly, enabled: !prev.weekly.enabled },
                 }))
               }
-            />
-          </Row>
-          <NumberInput
-            id={"weekly-income"}
-            label={"Income"}
-            value={income.weekly.amount}
-            onChange={(value) =>
-              setIncome((prev) => ({
-                ...prev,
-                weekly: { ...prev.weekly, amount: Number(value) },
-              }))
-            }
-            min={0}
-            max={100}
-            step={1}
-          />
+            >
+              <NumberInput
+                id={"weekly-income"}
+                label={t("settings.economy.income")}
+                value={income.weekly.amount}
+                onChange={(value) =>
+                  setIncome((prev) => ({
+                    ...prev,
+                    weekly: { ...prev.weekly, amount: Number(value) },
+                  }))
+                }
+                min={0}
+                max={100}
+                step={1}
+              />
+            </IncomeCard>
+          </Grid>
+        </Section>
+      </Column>
+    </Grid>
+  );
+}
+
+/** Number fields that share a row while each keeps ~140px. */
+function Fields({ children }: { children: React.ReactNode }) {
+  return (
+    <Grid
+      fillWidth
+      gap="8"
+      style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))" }}
+    >
+      {children}
+    </Grid>
+  );
+}
+
+/** One income type: title, description, enable switch and its fields. */
+function IncomeCard({
+  title,
+  description,
+  enabled,
+  onToggle,
+  className,
+  children,
+}: {
+  title: string;
+  description: string;
+  enabled: boolean;
+  onToggle: () => void;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Column
+      className={[styles.subcard, className].filter(Boolean).join(" ")}
+      style={{ minWidth: 0 }}
+      background="overlay"
+      border="neutral-medium"
+      radius="m"
+      padding="16"
+      gap="12"
+    >
+      <Row horizontal="between" vertical="start" gap="16">
+        <Column gap="4" style={{ minWidth: 0, maxWidth: "60ch" }}>
+          <Text variant="body-strong-m">{title}</Text>
+          <Text variant="body-default-xs" onBackground="neutral-weak">
+            {description}
+          </Text>
         </Column>
-      </Flex>
-    </>
+        <Switch checked={enabled} onToggle={onToggle} />
+      </Row>
+      {children}
+    </Column>
   );
 }

@@ -1,0 +1,18 @@
+@use "../../styles/breakpoints.scss" as breakpoints;
+
+// A page-coloured "sheet" so the preview reads as the public page, not as another form card.
+.frame {
+  display: flex;
+  justify-content: center;
+  padding: var(--static-space-40) var(--static-space-24);
+  background: var(--page-background);
+  border-radius: 0 0 var(--radius-l) var(--radius-l);
+
+  @include breakpoints.s {
+    padding: var(--static-space-24) var(--static-space-16);
+  }
+}
+
+.article {
+  min-width: 0;
+}

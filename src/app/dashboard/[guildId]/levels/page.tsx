@@ -6,15 +6,18 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { fetchGuildTextVoiceAndCategories } from "@/lib/discord/channels-api";
 import { ChannelPickOption } from "@/lib/discord/channel-type";
-import { Feedback, Flex, Text } from "@once-ui-system/core";
+import { Feedback, Flex } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import React from "react";
+import { getT } from "@/i18n/server";
 
 export default async function LevelsSettingsPage({
   params,
 }: {
   params: Promise<{ guildId: string }>;
 }) {
+  const t = await getT();
   const { guildId } = await params;
   const session = await getServerSession(authOptions);
 
@@ -31,10 +34,7 @@ export default async function LevelsSettingsPage({
       voiceChannels = bundle.voiceChannels.map((c) => ({ ...c }));
       textChannels = bundle.textChannels.map((c) => ({ ...c }));
     } catch (e) {
-      loadError =
-        e instanceof Error
-          ? e.message
-          : "An unknown error occurred while loading channels and roles.";
+      loadError = e instanceof Error ? e.message : t("settings.shared.loadChannelsRolesFailed");
     }
   }
 
@@ -46,22 +46,21 @@ export default async function LevelsSettingsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
-        <Text variant="heading-strong-l">Leveling System</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          Manage experience gain, automated role rewards, and level-up announcements.
-        </Text>
-      </Flex>
+      <PageHeader title={t("settings.levels.title")} description={t("settings.levels.description")} />
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (
           <Feedback
             variant="danger"
-            title="Session expired"
-            description="Your Discord session has expired. Please log in again."
+            title={t("settings.shared.sessionExpiredTitle")}
+            description={t("settings.shared.sessionExpiredText")}
           />
         ) : (
-          <Feedback variant="danger" title="Error" description={loadError} />
+          <Feedback
+            variant="danger"
+            title={t("settings.shared.errorTitle")}
+            description={loadError}
+          />
         ))}
 
       <LevelsForm

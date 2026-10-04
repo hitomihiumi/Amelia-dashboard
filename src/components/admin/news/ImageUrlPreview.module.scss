@@ -1,0 +1,85 @@
+.frame {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  overflow: hidden;
+  border: 1px dashed var(--neutral-alpha-medium);
+  border-radius: var(--radius-m);
+  background: var(--neutral-alpha-weak);
+  color: var(--neutral-on-background-weak);
+
+  &[data-status="ok"] {
+    border-style: solid;
+  }
+
+  &[data-status="error"] {
+    border-color: var(--danger-alpha-medium);
+    background: var(--danger-alpha-weak);
+  }
+}
+
+.cover {
+  aspect-ratio: 16 / 9;
+}
+
+.compact {
+  height: 7rem;
+}
+
+.img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--static-space-8);
+  padding: var(--static-space-8) var(--static-space-12);
+  font-size: var(--font-size-body-s, 0.875rem);
+  text-align: center;
+
+  svg {
+    flex-shrink: 0;
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+}
+
+.noteError {
+  color: var(--danger-on-background-strong);
+}
+
+.shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    var(--neutral-alpha-weak) 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+  }
+}

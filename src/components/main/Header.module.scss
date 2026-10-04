@@ -1,26 +1,252 @@
 @use "../styles/breakpoints.scss" as breakpoints;
 
+// Floating glass bar. It sits inside a sticky wrapper with a little breathing room, so the
+// page scrolls underneath it instead of being cut off by a full-width strip.
 .header {
-  padding-left: 20rem;
-  padding-right: 20rem;
+  position: sticky;
+  top: 0;
+  z-index: 9;
+  width: 100%;
+  padding: var(--static-space-12) var(--static-space-16) 0;
+  pointer-events: none; // only the bar itself catches clicks
 
-  @include breakpoints.l {
-    padding-left: 10rem;
-    padding-right: 10rem;
+  @include breakpoints.s {
+    padding: var(--static-space-8) var(--static-space-8) 0;
   }
+}
 
-  @include breakpoints.m {
-    padding-left: 6rem;
-    padding-right: 6rem;
+.bar {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-24);
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--static-space-8) var(--static-space-12) var(--static-space-8) var(--static-space-16);
+  border: 1px solid var(--neutral-alpha-weak);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--page-background) 62%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  transition: border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+
+  &.scrolled {
+    border-color: var(--neutral-alpha-medium);
+    background: color-mix(in srgb, var(--page-background) 84%, transparent);
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.32);
   }
 
   @include breakpoints.s {
-    padding-left: 4rem;
-    padding-right: 4rem;
+    gap: var(--static-space-12);
+    padding: var(--static-space-8) var(--static-space-8) var(--static-space-8) var(--static-space-12);
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-12);
+  flex-shrink: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.logo {
+  display: flex;
+  padding: 2px;
+  border: 2px solid var(--brand-alpha-medium);
+  border-radius: 999px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+
+  .brand:hover & {
+    border-color: var(--brand-solid-strong);
+    transform: rotate(-4deg);
+  }
+}
+
+.brandName {
+  letter-spacing: -0.01em;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-4);
+  margin-right: auto;
+
+  @include breakpoints.s {
+    display: none;
+  }
+}
+
+.link,
+.panelLink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 2.25rem;
+  padding: 0 var(--static-space-12);
+  border-radius: var(--radius-m);
+  color: var(--neutral-on-background-medium);
+  font-family: var(--font-body);
+  font-size: var(--font-size-label-m, 0.9375rem);
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--neutral-alpha-weak);
+    color: var(--neutral-on-background-strong);
   }
 
-  @include breakpoints.xs {
-    padding-left: 2rem;
-    padding-right: 2rem;
+  &:focus-visible {
+    outline: 2px solid var(--brand-solid-strong);
+    outline-offset: 1px;
+  }
+
+  // The page you are on: brand tint plus a small dot under the label.
+  &.active {
+    background: color-mix(in srgb, var(--brand-alpha-medium) 55%, transparent);
+    color: var(--neutral-on-background-strong);
+    font-weight: 600;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 3px;
+      width: 4px;
+      height: 4px;
+      margin-left: -2px;
+      border-radius: 50%;
+      background: var(--brand-solid-strong);
+    }
+  }
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-8);
+  margin-left: auto;
+
+  @include breakpoints.s {
+    margin-left: auto;
+  }
+}
+
+// Controls that move into the phone menu.
+.desktopOnly {
+  display: contents;
+
+  @include breakpoints.s {
+    display: none;
+  }
+}
+
+.burger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0 var(--static-space-10, 10px);
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: var(--radius-m);
+  background: var(--neutral-alpha-weak);
+  cursor: pointer;
+
+  span {
+    display: block;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--neutral-on-background-strong);
+    transition: transform 0.25s ease, opacity 0.2s ease;
+  }
+
+  &.burgerOpen {
+    span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+    span:nth-child(2) {
+      opacity: 0;
+    }
+    span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-solid-strong);
+    outline-offset: 2px;
+  }
+
+  @include breakpoints.s {
+    display: flex;
+  }
+}
+
+.panel {
+  pointer-events: auto;
+  display: none;
+  max-width: 72rem;
+  margin: var(--static-space-8) auto 0;
+  padding: var(--static-space-12);
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: var(--radius-xl);
+  background: color-mix(in srgb, var(--page-background) 94%, transparent);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  animation: panelIn 0.2s ease both;
+
+  @include breakpoints.s {
+    display: flex;
+    flex-direction: column;
+    gap: var(--static-space-12);
+  }
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panelNav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-2);
+}
+
+.panelLink {
+  height: 2.75rem;
+  font-size: var(--font-size-body-m, 1rem);
+
+  &.active::after {
+    left: auto;
+    right: var(--static-space-12);
+    bottom: 50%;
+    margin: 0 0 -2px;
+  }
+}
+
+.panelActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-8);
+  padding-top: var(--static-space-12);
+  border-top: 1px solid var(--neutral-alpha-weak);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .logo,
+  .burger span {
+    animation: none;
+    transition: none;
   }
 }

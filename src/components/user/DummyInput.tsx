@@ -3,30 +3,22 @@
 import React, { useState, useEffect, forwardRef, useCallback, ReactNode } from "react";
 import classNames from "classnames";
 import { Column, Row, Text, useDebounce } from "@once-ui-system/core";
+import type { InputProps as OnceInputProps } from "@once-ui-system/core";
 import styles from "./DummyInput.module.scss";
 
-interface InputProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "content"> {
+interface InputProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "content" | "prefix"> {
   id: string;
   label?: string;
   placeholder?: string;
-  height?: "xs" | "s" | "m" | "l" | "xl";
+  size?: OnceInputProps["size"];
   error?: boolean;
   errorMessage?: ReactNode;
   description?: ReactNode;
-  radius?:
-    | "none"
-    | "top"
-    | "right"
-    | "bottom"
-    | "left"
-    | "top-left"
-    | "top-right"
-    | "bottom-right"
-    | "bottom-left";
+  corners?: OnceInputProps["corners"];
   className?: string;
   style?: React.CSSProperties;
-  hasPrefix?: ReactNode;
-  hasSuffix?: ReactNode;
+  prefix?: ReactNode;
+  suffix?: ReactNode;
   characterCount?: boolean;
   cursor?: undefined | "interactive";
   validate?: (value: ReactNode) => ReactNode | null;
@@ -40,15 +32,15 @@ const DummyInput = forwardRef<HTMLDivElement, InputProps>(
       id,
       label,
       placeholder,
-      height = "m",
+      size = "m",
       error = false,
       errorMessage,
       description,
-      radius,
+      corners,
       className,
       style,
-      hasPrefix,
-      hasSuffix,
+      prefix,
+      suffix,
       characterCount,
       content,
       onFocus,
@@ -109,15 +101,13 @@ const DummyInput = forwardRef<HTMLDivElement, InputProps>(
 
     const inputClassNames = classNames(
       styles.input,
+      styles.content,
       "font-body",
       "font-default",
-      "font-m",
       cursor === "interactive" ? "cursor-interactive" : undefined,
       {
-        [styles.filled]: isFilled,
-        [styles.focused]: isFocused,
-        [styles.withPrefix]: hasPrefix,
-        [styles.withSuffix]: hasSuffix,
+        [styles.withPrefix]: prefix,
+        [styles.withSuffix]: suffix,
         [styles.hasChildren]: Boolean(content),
         [styles.error]: displayError && debouncedValue !== "",
       },
@@ -134,6 +124,7 @@ const DummyInput = forwardRef<HTMLDivElement, InputProps>(
         })}
       >
         <Row
+          data-surface="field"
           transition="micro-medium"
           border="neutral-medium"
           background="neutral-alpha-weak"
@@ -141,16 +132,16 @@ const DummyInput = forwardRef<HTMLDivElement, InputProps>(
           vertical="stretch"
           className={classNames(
             styles.base,
-            height && styles[height],
-            radius === "none" ? "radius-none" : radius ? `radius-l-${radius}` : "radius-l",
+            styles[size],
+            corners === "none" ? "radius-none" : corners ? `radius-l-${corners}` : "radius-l",
           )}
         >
-          {hasPrefix && (
+          {prefix && (
             <Row paddingLeft="12" className={styles.prefix} position="static">
-              {hasPrefix}
+              {prefix}
             </Row>
           )}
-          <Column fillWidth>
+          <Column fillWidth padding="4">
             <div
               ref={ref}
               id={id}
@@ -177,9 +168,9 @@ const DummyInput = forwardRef<HTMLDivElement, InputProps>(
               </Text>
             )}
           </Column>
-          {hasSuffix && (
+          {suffix && (
             <Row paddingRight="12" className={styles.suffix} position="static">
-              {hasSuffix}
+              {suffix}
             </Row>
           )}
         </Row>

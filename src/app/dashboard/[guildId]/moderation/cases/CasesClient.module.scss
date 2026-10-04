@@ -1,0 +1,180 @@
+@use "../../../../../components/styles/breakpoints.scss" as breakpoints;
+
+// Everything follows the `page` container (the room next to the sidebar), not the viewport.
+//   < 720px   cards, the open one expands under its row
+//   >= 720px  table, the open one expands under its row
+//   >= 1180px table on the left, the open case in a sticky panel on the right
+//   >= 1480px table gets moderator and source columns
+
+.board {
+  --cols: 64px 104px minmax(150px, 190px) minmax(0, 1fr) 150px 88px;
+  --areas: "num type user reason date status";
+
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--static-space-8);
+}
+
+.rowWrap {
+  min-width: 0;
+}
+
+.placeholder {
+  display: none;
+}
+
+// Column titles exist only in table mode.
+.head {
+  display: none;
+  grid-template-columns: var(--cols);
+  grid-template-areas: var(--areas);
+  gap: var(--static-space-16);
+  padding: 0 var(--static-space-16);
+  min-width: 0;
+}
+
+.wideOnly {
+  display: none;
+}
+
+// ------------------------------------------------------------------- row
+
+.row {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "num type status"
+    "user user user"
+    "reason reason reason"
+    "date date date";
+  align-items: center;
+  gap: var(--static-space-8) var(--static-space-12);
+  padding: var(--static-space-16);
+}
+
+.status {
+  justify-self: start;
+}
+
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+// ---------------------------------------------------------------- detail
+
+.detail {
+  // The row above already sits one board gap away, the detail hugs it at 4px.
+  margin-top: calc(-1 * var(--static-space-4));
+  padding: var(--static-space-20);
+
+  @include breakpoints.phone {
+    padding: var(--static-space-16);
+  }
+}
+
+.facts {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  column-gap: var(--static-space-16);
+}
+
+.revokeActions {
+  @include breakpoints.phone {
+    > * {
+      flex: 1 1 100%;
+    }
+  }
+}
+
+// ----------------------------------------------------------- breakpoints
+
+@container page (min-width: 720px) {
+  .board {
+    row-gap: var(--static-space-4);
+  }
+
+  .head {
+    display: grid;
+  }
+
+  .card {
+    border-radius: var(--radius-m);
+  }
+
+  .row {
+    grid-template-columns: var(--cols);
+    grid-template-areas: var(--areas);
+    gap: var(--static-space-16);
+    padding: var(--static-space-12) var(--static-space-16);
+  }
+
+  .status {
+    justify-self: end;
+  }
+
+  .clamp {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+
+  .detail {
+    margin-top: 0;
+  }
+}
+
+@container page (min-width: 1180px) {
+  .board {
+    --cols: 56px 96px minmax(140px, 170px) minmax(0, 1fr) 132px 84px;
+
+    grid-template-columns: minmax(0, 1fr) 380px;
+    grid-template-rows: auto repeat(var(--rows), auto) 1fr;
+    column-gap: var(--static-space-24);
+    align-items: start;
+  }
+
+  .head,
+  .rowWrap {
+    grid-column: 1;
+  }
+
+  .detail,
+  .placeholder {
+    grid-column: 2;
+    grid-row: 1 / span var(--span);
+    align-self: start;
+    position: sticky;
+    top: var(--static-space-24);
+  }
+
+  .detail {
+    max-height: calc(100vh - var(--static-space-48));
+    overflow-y: auto;
+    padding: var(--static-space-24);
+  }
+
+  .facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .placeholder {
+    display: flex;
+    min-height: 240px;
+    padding: var(--static-space-24);
+    border: 1px dashed var(--neutral-border-medium);
+    border-radius: var(--radius-l);
+    text-align: center;
+  }
+}
+
+@container page (min-width: 1480px) {
+  .board {
+    --cols: 52px 112px 150px 150px minmax(0, 1fr) 100px 124px 80px;
+    --areas: "num type user mod reason source date status";
+  }
+
+  .wideOnly {
+    display: block;
+  }
+}

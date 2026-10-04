@@ -1,6 +1,10 @@
 "use client";
 
 import { useDiscordPreviewOptional } from "@/contexts/DiscordPreviewContext";
+import { useFormat, useT } from "@/i18n/client";
+import { DEFAULT_LOCALE } from "@/i18n/config";
+import { createFormatters, type Formatters } from "@/i18n/format";
+import type { Translator } from "@/i18n/translate";
 import { replacePreviewTags } from "@/lib/discord/preview-tags";
 import type { ReactNode } from "react";
 import { Fragment, useMemo } from "react";
@@ -16,29 +20,33 @@ import { Fragment, useMemo } from "react";
  * stays hydration-safe and SSR-stable (timestamps use a frozen offset).
  */
 
-const PREVIEW_USER = "User";
+/** Locale-aware helpers for the mock Discord chrome (mention names, timestamps, spoiler tooltip).
+ * The renderer below is a set of plain functions, so `DiscordText` publishes the active
+ * translator/formatters here for the duration of one (synchronous) render pass. */
+interface RenderChrome {
+  t: Translator;
+  format: Formatters;
+}
+
+let chrome: RenderChrome | null = null;
 
 const TS_FROZEN_NOW = 1711462000; // matches src/lib/message-preview-tags in the sample
 
-function formatTimestamp(unix: number, style: string): string {
+function formatTimestamp(unix: number, style: string, format?: Formatters): string {
   const d = new Date(unix * 1000);
   if (Number.isNaN(d.getTime())) return "…";
-  const locale = "en-US";
+  const f = format ?? chrome?.format ?? createFormatters(DEFAULT_LOCALE);
   switch (style) {
     case "t":
-      return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+      return f.time(d, { hour: "2-digit", minute: "2-digit" });
     case "T":
-      return d.toLocaleTimeString(locale, {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      });
+      return f.time(d, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     case "d":
-      return d.toLocaleDateString(locale);
+      return f.date(d, {});
     case "D":
-      return d.toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+      return f.date(d, { day: "numeric", month: "long", year: "numeric" });
     case "F":
-      return d.toLocaleString(locale, {
+      return f.dateTime(d, {
         weekday: "long",
         day: "numeric",
         month: "long",
@@ -47,29 +55,26 @@ function formatTimestamp(unix: number, style: string): string {
         minute: "2-digit",
       });
     case "f":
-      return d.toLocaleString(locale, {
+      return f.dateTime(d, {
         day: "numeric",
         month: "long",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
       });
-    case "R": {
-      const diffSec = Math.round((Date.now() - d.getTime()) / 1000);
-      const abs = Math.abs(diffSec);
-      const fmt = (n: number, unit: string) =>
-        diffSec >= 0 ? `${n} ${unit} ago` : `in ${n} ${unit}`;
-      if (abs < 60) return diffSec >= 0 ? "just now" : "in a moment";
-      const mins = Math.round(abs / 60);
-      if (mins < 60) return fmt(mins, "min");
-      const hrs = Math.round(abs / 3600);
-      if (hrs < 24) return fmt(hrs, "hr");
-      const days = Math.round(abs / 86400);
-      return fmt(days, days === 1 ? "day" : "days");
-    }
+    case "R":
+      return f.relative(d);
     default:
-      return d.toLocaleString(locale);
+      return f.dateTime(d, {});
   }
+}
+
+/** Translates a chrome string; falls back to English outside a `DiscordText` render. */
+function chromeText(key: "spoiler" | "mentionUser" | "mentionRole" | "mentionChannel"): string {
+  if (chrome) return chrome.t(`builder.preview.${key}`);
+  return { spoiler: "Spoiler", mentionUser: "@User", mentionRole: "@Role", mentionChannel: "#channel" }[
+    key
+  ];
 }
 
 function consumeEmoji(rest: string): { node: ReactNode; consumed: number } | null {
@@ -99,7 +104,9 @@ function consumeMention(rest: string): { node: ReactNode; consumed: number } | n
   if (roleM) {
     return {
       node: (
-        <span className="rounded px-1 font-medium bg-discord-brand/25 text-[#c9cdfb]">@Role</span>
+        <span className="rounded px-1 font-medium bg-discord-brand/25 text-[#c9cdfb]">
+          {chromeText("mentionRole")}
+        </span>
       ),
       consumed: roleM[0].length,
     };
@@ -109,7 +116,7 @@ function consumeMention(rest: string): { node: ReactNode; consumed: number } | n
     return {
       node: (
         <span className="rounded px-1 font-medium bg-discord-brand/25 text-[#c9cdfb]">
-          @{PREVIEW_USER}
+          {chromeText("mentionUser")}
         </span>
       ),
       consumed: userM[0].length,
@@ -120,7 +127,7 @@ function consumeMention(rest: string): { node: ReactNode; consumed: number } | n
     return {
       node: (
         <span className="rounded px-1 font-medium bg-discord-interactive-muted/45 text-discord-link">
-          #channel
+          {chromeText("mentionChannel")}
         </span>
       ),
       consumed: chM[0].length,
@@ -146,7 +153,12 @@ function consumeUrl(rest: string): { node: ReactNode; consumed: number } | null 
   const href = m[1];
   return {
     node: (
-      <a href={href} target="_blank" rel="noopener noreferrer" className="text-discord-link hover:underline">
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-discord-link hover:underline"
+      >
         {href}
       </a>
     ),
@@ -194,7 +206,7 @@ function consumeSpoiler(rest: string): { node: ReactNode; consumed: number } | n
     node: (
       <span
         className="rounded bg-discord-bg-tertiary px-1 text-discord-bg-tertiary transition-colors [filter:blur(3px)] hover:[filter:none] hover:text-discord-text-normal cursor-pointer"
-        title="Spoiler"
+        title={chromeText("spoiler")}
       >
         {renderInline(inner)}
       </span>
@@ -348,6 +360,26 @@ function renderLine(line: string, key: number): ReactNode {
       </span>
     );
   }
+  const subtext = /^-#\s+(.+)$/.exec(line);
+  if (subtext) {
+    return (
+      <span key={key} className="block text-xs text-discord-text-muted">
+        {renderInline(subtext[1])}
+      </span>
+    );
+  }
+  const listItem = /^(\s*)(?:([-*])|(\d{1,2})\.)\s+(.*)$/.exec(line);
+  if (listItem) {
+    const depth = Math.min(3, Math.floor(listItem[1].length / 2));
+    return (
+      <span key={key} className="flex gap-2" style={{ paddingLeft: `${1 + depth}rem` }}>
+        <span aria-hidden className="shrink-0">
+          {listItem[3] ? `${listItem[3]}.` : depth > 0 ? "◦" : "•"}
+        </span>
+        <span className="min-w-0">{renderInline(listItem[4])}</span>
+      </span>
+    );
+  }
   const quote = /^>\s?(.*)$/.exec(line);
   if (quote) {
     return (
@@ -417,16 +449,27 @@ export interface DiscordTextProps {
   replaceTags?: boolean;
 }
 
-export function DiscordText({ text, className, inline = false, replaceTags = true }: DiscordTextProps) {
+export function DiscordText({
+  text,
+  className,
+  inline = false,
+  replaceTags = true,
+}: DiscordTextProps) {
   const ctx = useDiscordPreviewOptional();
+  const t = useT();
+  const format = useFormat();
   const normalized = useMemo(() => {
     const raw = (text ?? "").replace(/\r\n/g, "\n");
     return replaceTags ? replacePreviewTags(raw, ctx ?? undefined) : raw;
   }, [text, replaceTags, ctx]);
-  const body = useMemo(
-    () => (inline ? renderInline(normalized) : renderBlocks(normalized)),
-    [normalized, inline],
-  );
+  const body = useMemo(() => {
+    chrome = { t, format };
+    try {
+      return inline ? renderInline(normalized) : renderBlocks(normalized);
+    } finally {
+      chrome = null;
+    }
+  }, [normalized, inline, t, format]);
   if (inline) {
     return <span className={`break-words [word-break:break-word] ${className ?? ""}`}>{body}</span>;
   }

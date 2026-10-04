@@ -1,12 +1,23 @@
 import { Background, Banner, Column, Icon } from "@once-ui-system/core";
 import { Header } from "@/components/main/Header";
 import { Footer } from "@/components/main/Footer";
+import { getGlobalConfig } from "@/lib/admin/config";
 
-export default function SiteLayout({
+const BANNER_SOLID: Record<string, { solid: string; onSolid: string }> = {
+  info: { solid: "info-medium", onSolid: "info-strong" },
+  warning: { solid: "warning-medium", onSolid: "warning-strong" },
+  danger: { solid: "danger-medium", onSolid: "danger-strong" },
+  success: { solid: "success-medium", onSolid: "success-strong" },
+};
+
+export default async function SiteLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // The banner is editable in the admin panel instead of being hardcoded here.
+  const config = await getGlobalConfig();
+  const banner = BANNER_SOLID[config.bannerVariant] ?? BANNER_SOLID.warning;
   return (
     <Column fill>
       <Background
@@ -39,10 +50,12 @@ export default function SiteLayout({
           color: "brand-background-strong",
         }}
       />
-      <Banner solid="warning-medium" onSolid="warning-strong">
-        <Icon name="warning" size="s" />
-        Amelia is currently in early development. Expect bugs and breaking changes.
-      </Banner>
+      {config.bannerEnabled && config.bannerText && (
+        <Banner solid={banner.solid as never} onSolid={banner.onSolid as never}>
+          <Icon name={config.bannerVariant === "success" ? "check" : "warning"} size="s" />
+          {config.bannerText}
+        </Banner>
+      )}
       <Header />
       <Column fill>{children}</Column>
       <Footer />

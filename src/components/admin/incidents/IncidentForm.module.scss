@@ -1,0 +1,77 @@
+.layout {
+  font-family: var(--font-body);
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-24);
+
+  // Form and live preview side by side once the page has room next to the sidebar.
+  @container page (min-width: 980px) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  @container page (max-width: 640px) {
+    gap: var(--static-space-16);
+  }
+}
+
+.preview {
+  min-width: 0;
+
+  @container page (min-width: 980px) {
+    position: sticky;
+    top: var(--static-space-24);
+  }
+}
+
+.previewFrame {
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-16);
+  padding: var(--static-space-16);
+  border: 1px dashed var(--neutral-alpha-strong);
+  border-radius: var(--radius-l);
+  background: var(--page-background);
+}
+
+.previewBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--static-space-8);
+  min-height: 1.5rem;
+  padding: 0 var(--static-space-12) 0 var(--static-space-8);
+  border: 1px solid var(--brand-alpha-medium);
+  border-radius: 999px;
+  background: var(--brand-alpha-weak);
+  color: var(--brand-on-background-strong);
+  font-size: var(--font-size-label-s, 0.8125rem);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.previewDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--brand-solid-strong);
+}
+
+.fieldFoot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--static-space-12);
+  margin-top: var(--static-space-4);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--static-space-8);
+}

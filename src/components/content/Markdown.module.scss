@@ -1,0 +1,116 @@
+.root {
+  width: 100%;
+  min-width: 0;
+
+  // Keep the first and last block flush with the container.
+  > :first-child {
+    margin-top: 0 !important;
+  }
+  > :last-child {
+    margin-bottom: 0 !important;
+  }
+
+  // Task list checkboxes from GFM.
+  input[type="checkbox"] {
+    margin-right: var(--static-space-8);
+    accent-color: var(--brand-solid-strong);
+  }
+
+  del {
+    opacity: 0.7;
+  }
+}
+
+.strong {
+  color: var(--neutral-on-background-strong);
+  font-weight: 600;
+}
+
+.quote {
+  margin: var(--static-space-12) 0;
+  padding: var(--static-space-4) var(--static-space-16);
+  border-left: 3px solid var(--brand-alpha-medium);
+  color: var(--neutral-on-background-medium);
+
+  p {
+    margin: var(--static-space-4) 0;
+  }
+}
+
+.image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: var(--static-space-12) 0 var(--static-space-16);
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: var(--radius-m);
+}
+
+.tableWrap {
+  width: 100%;
+  margin: var(--static-space-12) 0 var(--static-space-16);
+  overflow-x: auto;
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: var(--radius-m);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-body-s, 0.875rem);
+
+  th,
+  td {
+    padding: var(--static-space-8) var(--static-space-12);
+    border-bottom: 1px solid var(--neutral-alpha-weak);
+    text-align: left;
+  }
+
+  th {
+    background: var(--neutral-alpha-weak);
+    color: var(--neutral-on-background-strong);
+    font-weight: 600;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.list {
+  margin: var(--static-space-8) 0 var(--static-space-12);
+  padding-left: var(--static-space-24);
+  color: var(--neutral-on-background-medium);
+  line-height: 175%;
+
+  // Nested lists sit closer to their parent item.
+  .list {
+    margin: var(--static-space-4) 0;
+  }
+}
+
+.bullets {
+  list-style: disc;
+
+  .bullets {
+    list-style: circle;
+  }
+}
+
+.numbers {
+  list-style: decimal;
+}
+
+.item {
+  margin: var(--static-space-4) 0;
+  padding-left: var(--static-space-4);
+
+  &::marker {
+    color: var(--neutral-on-background-weak);
+  }
+
+  // Loose lists wrap their text in <p>; the item already provides the spacing.
+  > p {
+    margin: 0 !important;
+  }
+}
