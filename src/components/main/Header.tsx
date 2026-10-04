@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signIn, signOut, useSession } from "next-auth/react";
-import { Button, Column, Icon, Line, Option, Text } from "@once-ui-system/core";
+import { Button, Column, Flex, Icon, Line, Option, Row, SmartLink, Text } from "@once-ui-system/core";
 import classNames from "classnames";
 import { UserMenu } from "../user/UserMenu";
 import { openDiscordOAuthPopup } from "@/lib/discord/popup-signin";
@@ -28,7 +27,7 @@ export function Header() {
 
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const rootRef = useRef<HTMLElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   // The bar gains a border and shadow once the page moves under it.
   useEffect(() => {
@@ -72,42 +71,69 @@ export function Header() {
   const isActive = (match: string) => pathname === match || pathname.startsWith(`${match}/`);
 
   return (
-    <header ref={rootRef} className={styles.header}>
-      <div className={classNames(styles.bar, scrolled && styles.scrolled)}>
-        <Link href="/" className={styles.brand} aria-label="Amelia">
-          <span className={styles.logo}>
+    <Column
+      as="header"
+      ref={rootRef}
+      position="sticky"
+      top="0"
+      zIndex={9}
+      fillWidth
+      horizontal="center"
+      paddingTop="12"
+      paddingX="16"
+      pointerEvents="none" // only the bar itself catches clicks
+      s={{ paddingTop: "8", paddingX: "8" }}
+    >
+      <Row
+        fillWidth
+        maxWidth={72}
+        vertical="center"
+        horizontal="between"
+        gap="24"
+        paddingY="8"
+        paddingLeft="16"
+        paddingRight="12"
+        radius="xl"
+        border={scrolled ? "neutral-alpha-medium" : "neutral-alpha-weak"}
+        pointerEvents="auto"
+        s={{ gap: "12", paddingLeft: "12", paddingRight: "8" }}
+        className={classNames(styles.bar, scrolled && styles.scrolled)}
+      >
+        <SmartLink unstyled href="/" aria-label="Amelia" className={styles.brand}>
+          <Row padding="2" border="brand-alpha-medium" borderWidth={2} radius="full" className={styles.logo}>
             <AvatarWFrame size="l" src="/images/avatar.jpg" radius="full" />
-          </span>
+          </Row>
           <Text variant="heading-strong-l" className={styles.brandName}>
             Amelia
           </Text>
-        </Link>
+        </SmartLink>
 
-        <nav className={styles.nav} aria-label="Primary">
+        <Row as="nav" aria-label="Primary" flex="1" vertical="center" gap="4" s={{ hide: true }}>
           {NAV.map((item) => (
-            <Link
+            <SmartLink
+              unstyled
               key={item.match}
               href={item.href}
               aria-current={isActive(item.match) ? "page" : undefined}
               className={classNames(styles.link, isActive(item.match) && styles.active)}
             >
               {t(item.label)}
-            </Link>
+            </SmartLink>
           ))}
-        </nav>
+        </Row>
 
-        <div className={styles.actions}>
-          <div className={styles.desktopOnly}>
+        <Row vertical="center" gap="8">
+          <Row s={{ hide: true }}>
             <LanguageSwitcher />
-          </div>
+          </Row>
 
           {authenticated ? (
             <>
-              <div className={styles.desktopOnly}>
+              <Row s={{ hide: true }}>
                 <Button href="/dashboard" variant="secondary" size="m" prefixIcon="navGeneral">
                   {t("common.nav.dashboard")}
                 </Button>
-              </div>
+              </Row>
               <UserMenu
                 name={session.user?.name || t("common.nav.user")}
                 placement="bottom-end"
@@ -158,44 +184,68 @@ export function Header() {
               />
             </>
           ) : (
-            <div className={styles.desktopOnly}>
+            <Row s={{ hide: true }}>
               <Button prefixIcon={"discord"} onClick={handleLogin}>
                 {t("common.nav.login")}
               </Button>
-            </div>
+            </Row>
           )}
 
-          <button
-            type="button"
+          <Column
+            as="button"
+            {...{ type: "button" }}
+            hide
+            s={{ hide: false }}
+            vertical="center"
+            gap={0.3125}
+            width={2.5}
+            height={2.5}
+            paddingX={0.625}
+            radius="m"
+            cursor="interactive"
             className={classNames(styles.burger, menuOpen && styles.burgerOpen)}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             aria-label={t("common.nav.menu")}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            <span />
-            <span />
-            <span />
-          </button>
-        </div>
-      </div>
+            <Flex as="span" className={styles.burgerBar} />
+            <Flex as="span" className={styles.burgerBar} />
+            <Flex as="span" className={styles.burgerBar} />
+          </Column>
+        </Row>
+      </Row>
 
       {menuOpen && (
-        <div id="mobile-menu" className={styles.panel}>
-          <nav className={styles.panelNav} aria-label="Primary">
+        <Column
+          id="mobile-menu"
+          fillWidth
+          maxWidth={72}
+          marginTop="8"
+          padding="12"
+          gap="12"
+          radius="xl"
+          border="neutral-alpha-medium"
+          pointerEvents="auto"
+          hide
+          s={{ hide: false }}
+          className={styles.panel}
+        >
+          <Column as="nav" aria-label="Primary" gap="2">
             {NAV.map((item) => (
-              <Link
+              <SmartLink
+                unstyled
                 key={item.match}
                 href={item.href}
                 aria-current={isActive(item.match) ? "page" : undefined}
                 className={classNames(styles.panelLink, isActive(item.match) && styles.active)}
               >
                 {t(item.label)}
-              </Link>
+              </SmartLink>
             ))}
-          </nav>
+          </Column>
 
-          <div className={styles.panelActions}>
+          <Column gap="8" paddingTop="12" borderTop="neutral-alpha-weak">
             {authenticated ? (
               <Button href="/dashboard" variant="secondary" fillWidth prefixIcon="navGeneral">
                 {t("common.nav.dashboard")}
@@ -206,9 +256,9 @@ export function Header() {
               </Button>
             )}
             <LanguageSwitcher />
-          </div>
-        </div>
+          </Column>
+        </Column>
       )}
-    </header>
+    </Column>
   );
 }

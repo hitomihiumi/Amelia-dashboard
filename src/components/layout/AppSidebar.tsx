@@ -1,9 +1,16 @@
 "use client";
 
 import { type ReactNode, useEffect, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Flex, Icon, NavIcon, Row, Text } from "@once-ui-system/core";
+import {
+  Column,
+  Flex,
+  Icon,
+  NavIcon,
+  Row,
+  SmartLink,
+  Text,
+} from "@once-ui-system/core";
 import classNames from "classnames";
 import type { IconName } from "@/resources/icons";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
@@ -43,7 +50,13 @@ interface AppSidebarProps {
  * Only the list scrolls, so the footer is never pushed off screen; on small screens it
  * turns into an off-canvas drawer.
  */
-export function AppSidebar({ header, mobileTitle, navLabel, groups, footerLink }: AppSidebarProps) {
+export function AppSidebar({
+  header,
+  mobileTitle,
+  navLabel,
+  groups,
+  footerLink,
+}: AppSidebarProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -65,7 +78,13 @@ export function AppSidebar({ header, mobileTitle, navLabel, groups, footerLink }
 
   return (
     <>
-      <div className={styles.mobileBar}>
+      <Row
+        className={styles.mobileBar}
+        fillWidth
+        paddingX="16"
+        paddingTop="16"
+        paddingBottom="8"
+      >
         <Flex
           fillWidth
           padding={"s"}
@@ -78,28 +97,34 @@ export function AppSidebar({ header, mobileTitle, navLabel, groups, footerLink }
           <NavIcon onClick={() => setIsOpen(true)} />
           <Text
             variant="heading-strong-s"
-            style={{
-              marginLeft: "12px",
-              flex: 1,
-              minWidth: 0,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
+            truncate
+            style={{ marginLeft: "12px", flex: 1, minWidth: 0 }}
           >
             {mobileTitle}
           </Text>
           <LanguageSwitcher />
         </Flex>
-      </div>
+      </Row>
 
-      <div
+      <Flex
         className={classNames(styles.overlay, isOpen && styles.open)}
+        position="fixed"
+        top="0"
+        left="0"
+        right="0"
+        bottom="0"
+        zIndex={7}
         onClick={() => setIsOpen(false)}
         aria-hidden="true"
       />
 
-      <Flex className={classNames(styles.sidebarWrapper, isOpen && styles.open)}>
+      <Flex
+        className={classNames(styles.sidebarWrapper, isOpen && styles.open)}
+        position="sticky"
+        top="0"
+        padding="16"
+        zIndex={8}
+      >
         <Flex
           direction="column"
           radius={"l"}
@@ -107,57 +132,131 @@ export function AppSidebar({ header, mobileTitle, navLabel, groups, footerLink }
           background="surface"
           className={styles.sidebarContent}
           as={"aside"}
+          fillHeight
+          minHeight={0}
+          overflow="hidden"
         >
-          <Row gap={"12"} vertical={"center"} className={styles.guild}>
+          <Row
+            gap={"12"}
+            vertical={"center"}
+            paddingX="16"
+            paddingTop="16"
+            paddingBottom="12"
+            borderBottom="neutral-alpha-weak"
+            style={{ flexShrink: 0 }}
+          >
             {header}
           </Row>
 
-          <nav className={styles.nav} aria-label={navLabel}>
+          <Column
+            as="nav"
+            flex="1"
+            minHeight={0}
+            overflowY="auto"
+            paddingX="12"
+            paddingTop="12"
+            paddingBottom="16"
+            gap="20"
+            className={styles.nav}
+            aria-label={navLabel}
+          >
             {groups.map((group) => (
-              <div className={styles.group} key={group.id}>
-                <p className={classNames(styles.groupLabel, "font-label", "font-strong")}>
+              <Column gap="4" key={group.id}>
+                <Text
+                  as="p"
+                  family="label"
+                  weight="strong"
+                  onBackground="neutral-weak"
+                  paddingX="12"
+                  className={styles.groupLabel}
+                >
                   {group.label}
-                </p>
-                <ul className={styles.list}>
+                </Text>
+                <Column as="ul" gap="2" margin="0" padding="0">
                   {group.items.map((item) => {
                     const active = isActive(item);
 
                     return (
-                      <li key={item.href}>
-                        <Link
+                      <Flex as="li" key={item.href} fillWidth>
+                        <SmartLink
+                          unstyled
+                          fillWidth
                           href={item.href}
                           aria-current={active ? "page" : undefined}
                           className={classNames(
                             styles.item,
                             active && styles.active,
-                            "font-body",
-                            "font-default",
                           )}
                         >
-                          <Icon name={item.icon} size="s" className={styles.itemIcon} />
-                          <span className={styles.itemLabel}>{item.label}</span>
-                          {item.badge !== null && item.badge !== undefined && item.badge !== 0 && (
-                            <span className={styles.badge}>{item.badge}</span>
-                          )}
-                        </Link>
-                      </li>
+                          <Icon
+                            name={item.icon}
+                            size="s"
+                            className={styles.itemIcon}
+                          />
+                          <Text
+                            truncate
+                            variant={
+                              active ? "body-strong-s" : "body-default-s"
+                            }
+                          >
+                            {item.label}
+                          </Text>
+                          {item.badge !== null &&
+                            item.badge !== undefined &&
+                            item.badge !== 0 && (
+                              <Row
+                                horizontal="center"
+                                radius="full"
+                                paddingX={0.375}
+                                minWidth={1.25}
+                                height={1.25}
+                                background={
+                                  active ? undefined : "neutral-alpha-medium"
+                                }
+                                solid={active ? "brand-strong" : undefined}
+                                className={styles.badge}
+                              >
+                                <Text
+                                  variant="label-strong-xs"
+                                  onBackground={
+                                    active ? undefined : "neutral-strong"
+                                  }
+                                  onSolid={active ? "brand-strong" : undefined}
+                                >
+                                  {item.badge}
+                                </Text>
+                              </Row>
+                            )}
+                        </SmartLink>
+                      </Flex>
                     );
                   })}
-                </ul>
-              </div>
+                </Column>
+              </Column>
             ))}
-          </nav>
+          </Column>
 
-          <div className={styles.footer}>
-            <Link
+          <Row
+            vertical="center"
+            gap="8"
+            padding="12"
+            borderTop="neutral-alpha-weak"
+            m={{ direction: "column", horizontal: "stretch" }}
+            style={{ flexShrink: 0 }}
+          >
+            <SmartLink
+              unstyled
+              fillWidth
               href={footerLink.href}
-              className={classNames(styles.back, "font-body", "font-default")}
+              className={styles.back}
             >
               <Icon name={footerLink.icon} size="s" />
-              <span className={styles.itemLabel}>{footerLink.label}</span>
-            </Link>
+              <Text truncate variant="body-default-s">
+                {footerLink.label}
+              </Text>
+            </SmartLink>
             <LanguageSwitcher />
-          </div>
+          </Row>
         </Flex>
       </Flex>
     </>

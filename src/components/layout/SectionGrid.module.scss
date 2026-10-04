@@ -1,13 +1,7 @@
 // Columns follow the `page` container (the room next to the sidebar), not the viewport.
 .grid {
-  --section-grid-gap: var(--static-space-24);
-
-  display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--section-grid-gap);
   align-items: start;
-  width: 100%;
-  min-width: 0;
 }
 
 // Two columns once each can be at least ~460px wide.
@@ -24,18 +18,15 @@
   }
 }
 
-.full {
-  grid-column: 1 / -1;
-  min-width: 0;
-}
-
-// Direct children that opt into the full row (see Section `span="full"`).
+// Cards that opt into the whole row.
+.full,
 .grid > :global(.section-full) {
   grid-column: 1 / -1;
 }
 
+// Phones use the tighter gap whatever the grid asked for.
 @media (max-width: 640px) {
   .grid {
-    --section-grid-gap: var(--static-space-16);
+    gap: var(--static-space-16);
   }
 }

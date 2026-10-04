@@ -1,43 +1,16 @@
-@use "../styles/breakpoints.scss" as breakpoints;
-
 // Floating glass bar. It sits inside a sticky wrapper with a little breathing room, so the
 // page scrolls underneath it instead of being cut off by a full-width strip.
-.header {
-  position: sticky;
-  top: 0;
-  z-index: 9;
-  width: 100%;
-  padding: var(--static-space-12) var(--static-space-16) 0;
-  pointer-events: none; // only the bar itself catches clicks
-
-  @include breakpoints.s {
-    padding: var(--static-space-8) var(--static-space-8) 0;
-  }
-}
-
 .bar {
-  pointer-events: auto;
-  display: flex;
-  align-items: center;
-  gap: var(--static-space-24);
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: var(--static-space-8) var(--static-space-12) var(--static-space-8) var(--static-space-16);
-  border: 1px solid var(--neutral-alpha-weak);
-  border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--page-background) 62%, transparent);
   backdrop-filter: blur(18px) saturate(140%);
-  transition: border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    border-color 0.25s ease,
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
 
   &.scrolled {
-    border-color: var(--neutral-alpha-medium);
     background: color-mix(in srgb, var(--page-background) 84%, transparent);
     box-shadow: 0 10px 34px rgba(0, 0, 0, 0.32);
-  }
-
-  @include breakpoints.s {
-    gap: var(--static-space-12);
-    padding: var(--static-space-8) var(--static-space-8) var(--static-space-8) var(--static-space-12);
   }
 }
 
@@ -51,11 +24,9 @@
 }
 
 .logo {
-  display: flex;
-  padding: 2px;
-  border: 2px solid var(--brand-alpha-medium);
-  border-radius: 999px;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
 
   .brand:hover & {
     border-color: var(--brand-solid-strong);
@@ -65,17 +36,6 @@
 
 .brandName {
   letter-spacing: -0.01em;
-}
-
-.nav {
-  display: flex;
-  align-items: center;
-  gap: var(--static-space-4);
-  margin-right: auto;
-
-  @include breakpoints.s {
-    display: none;
-  }
 }
 
 .link,
@@ -90,7 +50,9 @@
   font-family: var(--font-body);
   font-size: var(--font-size-label-m, 0.9375rem);
   text-decoration: none;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 
   &:hover {
     background: var(--neutral-alpha-weak);
@@ -122,87 +84,43 @@
   }
 }
 
-.actions {
-  display: flex;
-  align-items: center;
-  gap: var(--static-space-8);
-  margin-left: auto;
-
-  @include breakpoints.s {
-    margin-left: auto;
-  }
-}
-
-// Controls that move into the phone menu.
-.desktopOnly {
-  display: contents;
-
-  @include breakpoints.s {
-    display: none;
-  }
-}
-
+// The three-bar menu button; the bars turn into a cross while the phone menu is open.
 .burger {
-  display: none;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  width: 2.5rem;
-  height: 2.5rem;
-  padding: 0 var(--static-space-10, 10px);
   border: 1px solid var(--neutral-alpha-medium);
-  border-radius: var(--radius-m);
   background: var(--neutral-alpha-weak);
-  cursor: pointer;
-
-  span {
-    display: block;
-    height: 2px;
-    border-radius: 2px;
-    background: var(--neutral-on-background-strong);
-    transition: transform 0.25s ease, opacity 0.2s ease;
-  }
-
-  &.burgerOpen {
-    span:nth-child(1) {
-      transform: translateY(7px) rotate(45deg);
-    }
-    span:nth-child(2) {
-      opacity: 0;
-    }
-    span:nth-child(3) {
-      transform: translateY(-7px) rotate(-45deg);
-    }
-  }
 
   &:focus-visible {
     outline: 2px solid var(--brand-solid-strong);
     outline-offset: 2px;
   }
+}
 
-  @include breakpoints.s {
-    display: flex;
+.burgerBar {
+  height: 2px;
+  border-radius: 2px;
+  background: var(--neutral-on-background-strong);
+  transition:
+    transform 0.25s ease,
+    opacity 0.2s ease;
+
+  .burgerOpen &:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .burgerOpen &:nth-child(2) {
+    opacity: 0;
+  }
+
+  .burgerOpen &:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
   }
 }
 
 .panel {
-  pointer-events: auto;
-  display: none;
-  max-width: 72rem;
-  margin: var(--static-space-8) auto 0;
-  padding: var(--static-space-12);
-  border: 1px solid var(--neutral-alpha-medium);
-  border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--page-background) 94%, transparent);
   backdrop-filter: blur(18px);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
   animation: panelIn 0.2s ease both;
-
-  @include breakpoints.s {
-    display: flex;
-    flex-direction: column;
-    gap: var(--static-space-12);
-  }
 }
 
 @keyframes panelIn {
@@ -214,12 +132,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.panelNav {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-2);
 }
 
 .panelLink {
@@ -234,18 +146,10 @@
   }
 }
 
-.panelActions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-8);
-  padding-top: var(--static-space-12);
-  border-top: 1px solid var(--neutral-alpha-weak);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .panel,
   .logo,
-  .burger span {
+  .burgerBar {
     animation: none;
     transition: none;
   }

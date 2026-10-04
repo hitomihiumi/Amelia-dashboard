@@ -1,6 +1,5 @@
 import { Flex, RevealFx, Row, Text } from "@once-ui-system/core";
 import type { ReactNode } from "react";
-import styles from "./PageHeader.module.scss";
 
 /**
  * Title block of a settings page. `actions` sit on the right of the title next to wide
@@ -20,20 +19,30 @@ export function PageHeader({
 }) {
   return (
     <RevealFx translateY={-0.5} fillWidth>
-      <div className={styles.header}>
-        <Flex direction="column" gap="8" className={styles.text}>
+      <Flex
+        fillWidth
+        horizontal="between"
+        vertical="end"
+        gap="24"
+        s={{ direction: "column", horizontal: "stretch", gap: "16" }}
+      >
+        <Flex direction="column" gap="8" minWidth={0}>
           <Row gap="12" vertical="center" wrap>
             <Text variant="heading-strong-l">{title}</Text>
             {badge}
           </Row>
           {description && (
-            <Text variant="body-default-m" onBackground="neutral-medium" className={styles.description}>
+            <Text variant="body-default-m" onBackground="neutral-medium" style={{ maxWidth: "72ch" }}>
               {description}
             </Text>
           )}
         </Flex>
-        {actions && <div className={styles.actions}>{actions}</div>}
-      </div>
+        {actions && (
+          <Row wrap vertical="center" gap="8" style={{ flexShrink: 0 }}>
+            {actions}
+          </Row>
+        )}
+      </Flex>
     </RevealFx>
   );
 }

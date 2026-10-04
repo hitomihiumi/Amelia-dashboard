@@ -2,7 +2,7 @@
 
 import { useT } from "@/i18n/client";
 import { type PickedEmoji, emojiToText, parseEmojiText } from "@/lib/discord/emojis-api";
-import { IconButton, Input } from "@once-ui-system/core";
+import { Column, Flex, IconButton, Input, Row, Text } from "@once-ui-system/core";
 import type { ReactNode } from "react";
 import { LuX } from "react-icons/lu";
 import { EmojiGlyph } from "./EmojiPicker";
@@ -59,18 +59,25 @@ export function EmojiField({
   // so the button sits beside it instead of on top of it.
   if (multiline) {
     return (
-      <div className={styles.insertWrap}>
+      <Column fillWidth minWidth={0}>
         {children}
-        <div className={styles.insertButton}>{picker}</div>
-      </div>
+        <Flex position="absolute" top="8" right="8" zIndex={2}>
+          {picker}
+        </Flex>
+      </Column>
     );
   }
 
   return (
-    <div className={styles.insertRow}>
-      <div className={styles.insertRowField}>{children}</div>
-      <div className={styles.insertRowButton}>{picker}</div>
-    </div>
+    <Row fillWidth minWidth={0} gap="4" vertical="start">
+      <Column flex="1" minWidth={0}>
+        {children}
+      </Column>
+      {/* The field is 56px tall, the button 32px. */}
+      <Flex marginTop="8" style={{ flexShrink: 0 }}>
+        {picker}
+      </Flex>
+    </Row>
   );
 }
 
@@ -99,11 +106,21 @@ export function EmojiValueField({
   const parsed = parseEmojiText(value);
 
   return (
-    <div className={styles.valueField}>
-      <div className={styles.valuePreview} aria-hidden>
-        {parsed ? <EmojiGlyph value={parsed} size={30} /> : <span style={{ fontSize: 12 }}>—</span>}
-      </div>
-      <div className={styles.valueInput}>
+    <Row fillWidth vertical="stretch" gap="8" className={styles.valueField}>
+      <Row
+        center
+        width={3.5}
+        minHeight={3.5}
+        radius="m"
+        border="neutral-medium"
+        background="neutral-alpha-weak"
+        onBackground="neutral-weak"
+        style={{ flexShrink: 0 }}
+        aria-hidden
+      >
+        {parsed ? <EmojiGlyph value={parsed} size={30} /> : <Text size="xs">—</Text>}
+      </Row>
+      <Column minWidth={0} className={styles.valueInput}>
         <Input
           id={id}
           label={label}
@@ -111,8 +128,8 @@ export function EmojiValueField({
           onChange={(e) => onChange(e.target.value || undefined)}
           description={description}
         />
-      </div>
-      <div className={styles.valueActions}>
+      </Column>
+      <Row vertical="center" gap="4" style={{ flexShrink: 0 }}>
         <EmojiPickerIconButton guildId={guildId} onSelect={(emoji: PickedEmoji) => onChange(emojiToText(emoji))} />
         {text && (
           <IconButton
@@ -126,8 +143,8 @@ export function EmojiValueField({
             <LuX size={16} />
           </IconButton>
         )}
-      </div>
-    </div>
+      </Row>
+    </Row>
   );
 }
 

@@ -16,7 +16,8 @@ import {
   type UnicodeGroupKey,
   loadUnicodeEmojis,
 } from "@/lib/discord/unicode-emoji";
-import { Spinner } from "@once-ui-system/core";
+import { Column, Flex, Grid, IconButton, Input, Media, Row, Spinner, Text } from "@once-ui-system/core";
+import classNames from "classnames";
 import {
   type KeyboardEvent,
   type MouseEvent,
@@ -138,23 +139,23 @@ export function EmojiGlyph({ value, size = 24 }: { value: string | PickedEmoji |
   if (!emoji) return null;
   if (emoji.type === "custom") {
     return (
-      // biome-ignore lint/performance/noImgElement: Discord CDN image of unknown size
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Media
         src={emojiCdnUrl({ id: emoji.id, name: emoji.name, animated: emoji.animated }, size * 2)}
         alt={emoji.name}
-        width={size}
-        height={size}
-        loading="lazy"
-        draggable={false}
+        unoptimized
+        aspectRatio="1"
+        objectFit="contain"
+        fillWidth={false}
+        sizes={size}
         className={styles.glyphImage}
+        style={{ width: size, height: size }}
       />
     );
   }
   return (
-    <span className={styles.glyphText} style={{ fontSize: size * 0.92 }} aria-label={emoji.name} role="img">
+    <Text className={styles.glyphText} style={{ fontSize: size * 0.92 }} aria-label={emoji.name} role="img">
       {emoji.unicode}
-    </span>
+    </Text>
   );
 }
 
@@ -164,22 +165,27 @@ interface CellProps {
 
 const Cell = memo(function Cell({ entry }: CellProps) {
   return (
-    <button
-      type="button"
-      className={styles.cell}
+    <Flex
+      as="button"
+      {...{ type: "button" }}
+      center
+      minWidth={0}
+      aspectRatio={1}
+      radius="s"
+      className={classNames("reset-button-styles", styles.cell)}
       data-key={entry.key}
       tabIndex={-1}
       aria-label={entry.kind === "unicode" ? entry.label : entry.emoji.name}
     >
       {entry.kind === "unicode" ? (
-        <span className={styles.cellGlyph}>{entry.unicode}</span>
+        entry.unicode
       ) : (
         <EmojiGlyph
           size={28}
           value={{ type: "custom", id: entry.emoji.id, name: entry.emoji.name, animated: entry.emoji.animated }}
         />
       )}
-    </button>
+    </Flex>
   );
 });
 
@@ -191,14 +197,28 @@ interface SectionData {
 
 const Section = memo(function Section({ section }: { section: SectionData }) {
   return (
-    <section className={styles.section} data-section={section.id}>
-      <h3 className={styles.sectionTitle}>{section.title}</h3>
-      <div className={styles.grid} role="grid" aria-label={section.title}>
+    <Column as="section" className={styles.section} data-section={section.id}>
+      <Flex
+        as="h3"
+        position="sticky"
+        top="0"
+        zIndex={1}
+        margin="0"
+        paddingTop="8"
+        paddingX="4"
+        paddingBottom="4"
+        background="surface"
+        onBackground="neutral-weak"
+        className={styles.sectionTitle}
+      >
+        {section.title}
+      </Flex>
+      <Grid columns="9" gap="2" fillWidth role="grid" aria-label={section.title}>
         {section.entries.map((entry) => (
           <Cell key={entry.key} entry={entry} />
         ))}
-      </div>
-    </section>
+      </Grid>
+    </Column>
   );
 });
 
@@ -211,27 +231,39 @@ function Footer({ handle, hint }: { handle: React.Ref<FooterHandle>; hint: strin
   useImperativeHandle(handle, () => ({ show: setEntry }), []);
 
   return (
-    <div className={styles.footer} aria-live="polite">
+    <Row
+      vertical="center"
+      gap="12"
+      minHeight={3.25}
+      paddingX="16"
+      paddingY="8"
+      borderTop="neutral-medium"
+      background="neutral-alpha-weak"
+      style={{ flexShrink: 0 }}
+      aria-live="polite"
+    >
       {entry ? (
         <>
-          <span className={styles.footerGlyph}>
+          <Row center width={2} height={2} style={{ flexShrink: 0 }}>
             {entry.kind === "unicode" ? (
-              <span style={{ fontSize: 28, lineHeight: 1 }}>{entry.unicode}</span>
+              <Text className={styles.footerGlyph}>{entry.unicode}</Text>
             ) : (
               <EmojiGlyph
                 size={32}
                 value={{ type: "custom", id: entry.emoji.id, name: entry.emoji.name, animated: entry.emoji.animated }}
               />
             )}
-          </span>
-          <span className={styles.footerName}>
+          </Row>
+          <Text variant="body-strong-s" truncate>
             {entry.kind === "unicode" ? entry.label : `:${entry.emoji.name}:`}
-          </span>
+          </Text>
         </>
       ) : (
-        <span className={styles.footerHint}>{hint}</span>
+        <Text variant="body-default-xs" onBackground="neutral-weak">
+          {hint}
+        </Text>
       )}
-    </div>
+    </Row>
   );
 }
 
@@ -270,7 +302,20 @@ export function EmojiPicker({ guildId, onSelect, onClose, unicodeOnly, autoFocus
 
   useEffect(() => {
     setRecent(readRecent());
-    if (autoFocus) searchRef.current?.focus({ preventScroll: true });
+    if (!autoFocus) return;
+
+    // The popover stays `visibility: hidden` for a frame or two while it is positioned, and a
+    // hidden field cannot take focus: try again until it sticks.
+    let frame = 0;
+    let tries = 0;
+    const focusSearch = () => {
+      const field = searchRef.current;
+      if (!field) return;
+      field.focus({ preventScroll: true });
+      if (document.activeElement !== field && tries++ < 30) frame = requestAnimationFrame(focusSearch);
+    };
+    focusSearch();
+    return () => cancelAnimationFrame(frame);
   }, [autoFocus]);
 
   const groupLabel = useCallback((key: string) => t(`common.emoji.groups.${key}` as never) as string, [t]);
@@ -362,7 +407,7 @@ export function EmojiPicker({ guildId, onSelect, onClose, unicodeOnly, autoFocus
     }
     for (const group of UNICODE_GROUPS) {
       if (sections.some((s) => s.id === group.key)) {
-        list.push({ id: group.key, node: <span className={styles.tabGlyph}>{group.glyph}</span>, label: groupLabel(group.key) });
+        list.push({ id: group.key, node: <Text className={styles.tabGlyph}>{group.glyph}</Text>, label: groupLabel(group.key) });
       }
     }
     return list;
@@ -456,11 +501,22 @@ export function EmojiPicker({ guildId, onSelect, onClose, unicodeOnly, autoFocus
   const failed = unicode.status === "error";
 
   return (
-    <div className={styles.panel} data-testid="emoji-picker">
-      <div className={styles.searchRow}>
-        <LuSearch size={16} className={styles.searchIcon} aria-hidden />
-        <input
+    <Column
+      data-testid="emoji-picker"
+      width="calc(min(372px, 100vw - 32px))"
+      height="calc(min(440px, 100dvh - 120px))"
+      background="surface"
+      border="neutral-medium"
+      radius="l"
+      overflow="hidden"
+      onBackground="neutral-strong"
+      className={styles.panel}
+    >
+      <Row marginX="12" marginTop="12" marginBottom="8" vertical="center" style={{ flexShrink: 0 }}>
+        <Input
+          id="emoji-picker-search"
           ref={searchRef}
+          size="xs"
           className={styles.search}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -474,19 +530,40 @@ export function EmojiPicker({ guildId, onSelect, onClose, unicodeOnly, autoFocus
           aria-label={t("common.emoji.search")}
           autoComplete="off"
           spellCheck={false}
+          prefix={<LuSearch size={16} aria-hidden />}
+          suffix={
+            query ? (
+              <IconButton
+                variant="tertiary"
+                size="s"
+                rounded
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label={t("common.emoji.clear")}
+              >
+                <LuX size={14} />
+              </IconButton>
+            ) : undefined
+          }
         />
-        {query && (
-          <button type="button" className={styles.clear} onClick={() => setQuery("")} aria-label={t("common.emoji.clear")}>
-            <LuX size={14} />
-          </button>
-        )}
-      </div>
+      </Row>
 
       {tabs.length > 0 && (
-        <div className={styles.tabs} role="tablist">
+        <Row
+          role="tablist"
+          gap="2"
+          paddingX="12"
+          paddingBottom="8"
+          borderBottom="neutral-medium"
+          overflowX="auto"
+          className={styles.tabs}
+          style={{ flexShrink: 0 }}
+        >
           {tabs.map((tab) => (
-            <button
+            <IconButton
               key={tab.id}
+              variant="tertiary"
+              size="m"
               type="button"
               role="tab"
               aria-selected={(active || tabs[0].id) === tab.id}
@@ -497,13 +574,22 @@ export function EmojiPicker({ guildId, onSelect, onClose, unicodeOnly, autoFocus
               onClick={() => jumpTo(tab.id)}
             >
               {tab.node}
-            </button>
+            </IconButton>
           ))}
-        </div>
+        </Row>
       )}
 
-      <div
+      <Column
         ref={scrollRef}
+        // Static on purpose: `jumpTo` and `onScroll` measure the sections against this container.
+        position="static"
+        flex="1"
+        minHeight={0}
+        paddingX="8"
+        paddingBottom="8"
+        overflowY="auto"
+        overflowX="hidden"
+        scrollbar="default"
         className={styles.scroll}
         onClick={onClick}
         onKeyDown={onKeyDown}
@@ -512,30 +598,42 @@ export function EmojiPicker({ guildId, onSelect, onClose, unicodeOnly, autoFocus
         onMouseLeave={() => footerRef.current?.show(null)}
         onFocus={(e) => footerRef.current?.show(entryOf(e.target))}
       >
-        {!unicodeOnly && custom.status === "error" && (
-          <p className={styles.notice}>{t("common.emoji.serverFailed")}</p>
-        )}
+        {!unicodeOnly && custom.status === "error" && <Notice>{t("common.emoji.serverFailed")}</Notice>}
         {!unicodeOnly && custom.status === "ready" && customEntries.length === 0 && !deferredQuery && (
-          <p className={styles.notice}>{t("common.emoji.serverEmpty")}</p>
+          <Notice>{t("common.emoji.serverEmpty")}</Notice>
         )}
 
         {loading && (
-          <div className={styles.center}>
+          <Column center fillWidth minHeight={10}>
             <Spinner />
-          </div>
+          </Column>
         )}
-        {failed && <p className={styles.notice}>{t("common.emoji.unicodeFailed")}</p>}
+        {failed && <Notice>{t("common.emoji.unicodeFailed")}</Notice>}
 
         {!loading && sections.length === 0 && !failed && (
-          <div className={styles.center}>{t("common.emoji.noResults")}</div>
+          <Column center fillWidth minHeight={10}>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              {t("common.emoji.noResults")}
+            </Text>
+          </Column>
         )}
 
         {sections.map((section) => (
           <Section key={section.id} section={section} />
         ))}
-      </div>
+      </Column>
 
       <Footer handle={footerRef} hint={t("common.emoji.hoverHint")} />
-    </div>
+    </Column>
+  );
+}
+
+function Notice({ children }: { children: React.ReactNode }) {
+  return (
+    <Column marginTop="8" marginX="4" paddingX="12" paddingY="8" radius="m" background="neutral-alpha-weak">
+      <Text variant="body-default-xs" onBackground="neutral-medium">
+        {children}
+      </Text>
+    </Column>
   );
 }

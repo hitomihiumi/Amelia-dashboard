@@ -1,4 +1,5 @@
-import type { CSSProperties, ReactNode } from "react";
+import { Column, Grid } from "@once-ui-system/core";
+import type { ReactNode } from "react";
 import styles from "./SectionGrid.module.scss";
 
 /**
@@ -12,23 +13,31 @@ import styles from "./SectionGrid.module.scss";
 export function SectionGrid({
   children,
   columns = 2,
-  gap,
+  gap = "24",
 }: {
   children: ReactNode;
   /** Most columns on the widest screens. */
   columns?: 1 | 2 | 3;
   gap?: "16" | "24";
 }) {
-  const style = gap ? ({ "--section-grid-gap": `var(--static-space-${gap})` } as CSSProperties) : undefined;
   return (
-    <div className={`${styles.grid} ${styles[`cols${columns}`]}`} style={style}>
+    <Grid
+      fillWidth
+      minWidth={0}
+      gap={gap}
+      className={`${styles.grid} ${styles[`cols${columns}`]}`}
+    >
       {children}
-    </div>
+    </Grid>
   );
 }
 
 function Full({ children }: { children: ReactNode }) {
-  return <div className={styles.full}>{children}</div>;
+  return (
+    <Column minWidth={0} className={styles.full}>
+      {children}
+    </Column>
+  );
 }
 
 SectionGrid.Full = Full;

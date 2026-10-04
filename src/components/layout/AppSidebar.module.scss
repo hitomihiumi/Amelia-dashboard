@@ -6,8 +6,6 @@
 
   @include breakpoints.phone {
     display: flex;
-    width: 100%;
-    padding: var(--static-space-16) var(--static-space-16) var(--static-space-8);
   }
 }
 
@@ -17,14 +15,13 @@
 
   @include breakpoints.phone {
     display: block;
-    position: fixed;
-    inset: 0;
     background-color: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
-    z-index: 7;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition:
+      opacity 0.3s ease,
+      visibility 0.3s ease;
 
     &.open {
       opacity: 1;
@@ -36,14 +33,9 @@
 // Desktop: the sidebar stays put while the page scrolls and only the nav list scrolls inside it,
 // so the footer is never pushed off screen. Mobile: an off-canvas drawer.
 .sidebarWrapper {
-  position: sticky;
-  top: 0;
   align-self: flex-start;
-  display: flex;
   height: 100vh;
   height: 100dvh;
-  padding: var(--static-space-16);
-  z-index: 8;
   flex-shrink: 0;
 
   @include breakpoints.phone {
@@ -71,10 +63,6 @@
     width: 15.5rem;
   }
 
-  height: 100%;
-  min-height: 0;
-  overflow: hidden;
-
   @include breakpoints.phone {
     width: 18rem;
     max-width: 85vw;
@@ -85,69 +73,31 @@
   }
 }
 
-.guild {
-  flex-shrink: 0;
-  padding: var(--static-space-16) var(--static-space-16) var(--static-space-12);
-  border-bottom: 1px solid var(--neutral-alpha-weak);
-}
-
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+// A thin, quiet scrollbar instead of the system one.
 .nav {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: var(--static-space-12) var(--static-space-12) var(--static-space-16);
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-20);
-
-  // A thin, quiet scrollbar instead of the system one.
   scrollbar-width: thin;
   scrollbar-color: var(--neutral-alpha-medium) transparent;
 }
 
-.group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-4);
-}
-
 .groupLabel {
-  margin: 0;
-  padding: 0 var(--static-space-12);
-  color: var(--neutral-on-background-weak);
   font-size: var(--font-size-label-xs, 0.6875rem);
+  line-height: 1.125rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-}
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--static-space-2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 .item,
 .back {
   position: relative;
-  display: flex;
   align-items: center;
   gap: var(--static-space-12);
   min-height: 2.25rem;
   padding: 0 var(--static-space-12);
   border-radius: var(--radius-m);
   color: var(--neutral-on-background-medium);
-  font-size: var(--font-size-body-s, 0.875rem);
-  text-decoration: none;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 
   &:hover {
     background: var(--neutral-alpha-weak);
@@ -165,18 +115,10 @@
   opacity: 0.8;
 }
 
-.itemLabel {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 // The page you are on: brand tint plus an accent bar on the left edge.
 .item.active {
   background: color-mix(in srgb, var(--brand-alpha-medium) 55%, transparent);
   color: var(--neutral-on-background-strong);
-  font-weight: 600;
 
   &::before {
     content: "";
@@ -195,45 +137,16 @@
   }
 }
 
-.footer {
-  display: flex;
-  align-items: center;
+// The back link sits beside the language switcher, in a bordered pill.
+.back {
+  flex: 1;
   gap: var(--static-space-8);
-  flex-shrink: 0;
-  padding: var(--static-space-12);
-  border-top: 1px solid var(--neutral-alpha-weak);
-
-  // On the narrower tablet sidebar the two controls no longer fit side by side.
-  @include breakpoints.m {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .back {
-    flex: 1;
-    min-width: 0;
-    gap: var(--static-space-8);
-    padding: 0 var(--static-space-10, 10px);
-    border: 1px solid var(--neutral-border-medium);
-    background: var(--neutral-alpha-weak);
-  }
+  padding: 0 var(--static-space-10, 10px);
+  border: 1px solid var(--neutral-border-medium);
+  background: var(--neutral-alpha-weak);
 }
 
 // Counter pill on the right of a nav row.
 .badge {
   margin-left: auto;
-  min-width: 1.25rem;
-  padding: 0 var(--static-space-6, 6px);
-  border-radius: 999px;
-  background: var(--neutral-alpha-medium);
-  color: var(--neutral-on-background-strong);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  line-height: 1.25rem;
-  text-align: center;
-}
-
-.item.active .badge {
-  background: var(--brand-solid-strong);
-  color: var(--brand-on-solid-strong, #fff);
 }

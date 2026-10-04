@@ -1,3 +1,4 @@
+import { Column, Flex } from "@once-ui-system/core";
 import type { ReactNode } from "react";
 import styles from "./AppShell.module.scss";
 
@@ -21,13 +22,24 @@ export function AppShell({
   contentMaxWidth?: string;
 }) {
   return (
-    <div className={styles.shell}>
+    // Grows with the page so the sticky sidebar has room to stay in view while it scrolls.
+    <Flex fillWidth vertical="start" minHeight="100vh" className={styles.shell}>
       {sidebar}
-      <div className={styles.content}>
-        <div className={styles.inner} style={contentMaxWidth ? { maxWidth: contentMaxWidth } : undefined}>
+      <Flex flex="1" minWidth={0} horizontal="center">
+        <Column
+          fillWidth
+          minWidth={0}
+          paddingTop="32"
+          paddingX="32"
+          paddingBottom="40"
+          gap="24"
+          m={{ paddingTop: "24", paddingX: "24", paddingBottom: "24" }}
+          className={styles.inner}
+          style={contentMaxWidth ? { maxWidth: contentMaxWidth } : undefined}
+        >
           {children}
-        </div>
-      </div>
-    </div>
+        </Column>
+      </Flex>
+    </Flex>
   );
 }
