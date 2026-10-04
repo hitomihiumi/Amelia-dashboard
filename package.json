@@ -11,9 +11,6 @@
     "lint": "next lint",
     "biome-write": "npx @biomejs/biome format --write .",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:reset": "prisma migrate reset",
-    "prisma:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "generate:schema": "tsx scripts/generate-schema.ts"
   },
