@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { postgresConnection } from "./tls";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -9,12 +10,11 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     adapter: new PrismaPg(
-      {
-        connectionString:
-          process.env.NODE_ENV === "development"
-            ? process.env.DEV_DATABASE_URL || process.env.DATABASE_URL || ""
-            : process.env.DATABASE_URL || "",
-      },
+      postgresConnection(
+        process.env.NODE_ENV === "development"
+          ? process.env.DEV_DATABASE_URL || process.env.DATABASE_URL || ""
+          : process.env.DATABASE_URL || "",
+      ),
       { schema: "public" },
     ),
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],

@@ -1,4 +1,5 @@
 import { Redis } from "ioredis";
+import { redisTlsOptions } from "./tls";
 
 /**
  * Singleton Redis client for temp data caching and the status heartbeat.
@@ -26,6 +27,7 @@ class RedisService {
       RedisService.global.redisClient = new Redis(url, {
         lazyConnect: true,
         maxRetriesPerRequest: 1,
+        ...redisTlsOptions(),
       });
       // Without a listener every connection retry prints an unhandled error event.
       RedisService.global.redisClient.on("error", (error) => {
