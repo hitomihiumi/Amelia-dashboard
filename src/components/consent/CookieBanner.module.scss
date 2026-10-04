@@ -1,0 +1,64 @@
+@use "../styles/breakpoints.scss" as breakpoints;
+
+.banner {
+  left: var(--static-space-16);
+  bottom: var(--static-space-16);
+  width: min(26rem, calc(100vw - 2 * var(--static-space-16)));
+  background: color-mix(in srgb, var(--surface-background, var(--page-background)) 92%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  animation: bannerIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @include breakpoints.s {
+    left: var(--static-space-12);
+    right: var(--static-space-12);
+    bottom: var(--static-space-12);
+    width: auto;
+  }
+}
+
+@keyframes bannerIn {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .banner {
+    animation: none;
+  }
+}
+
+.link {
+  color: var(--brand-on-background-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+.actions {
+  > * {
+    min-width: 0;
+  }
+
+  // The third action ("Customize") gets a row of its own so long labels never collide.
+  > :nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  @include breakpoints.s {
+    grid-template-columns: 1fr;
+  }
+}
+
+.actionsStacked {
+  grid-template-columns: 1fr;
+}

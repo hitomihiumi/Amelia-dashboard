@@ -1,0 +1,279 @@
+// Toolbar groups: a hairline divides each group from the one before it.
+.group + .group {
+  position: relative;
+  padding-left: var(--static-space-8);
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 1px;
+    background: var(--neutral-alpha-medium);
+  }
+}
+
+.groupEnd {
+  margin-left: auto;
+}
+
+/* ───────────────────────── Document surface ─────────────────────────
+   Mirrors src/components/content/Markdown.module.scss and the Once UI
+   typography the public <Markdown/> component uses, so what the author
+   sees is close to what readers get. */
+
+.content {
+  min-width: 0;
+}
+
+.prose {
+  min-height: 16rem;
+  outline: none;
+  color: var(--neutral-on-background-strong);
+  font-family: var(--font-body);
+  font-size: calc(var(--font-size-body-m) * var(--font-size-body-multiplier, 1));
+  word-break: break-word;
+
+  > :first-child {
+    margin-top: 0 !important;
+  }
+
+  > :last-child {
+    margin-bottom: 0 !important;
+  }
+
+  p {
+    margin: var(--static-space-8) 0 var(--static-space-12);
+    color: var(--neutral-on-background-medium);
+    line-height: 175%;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: var(--static-space-24) 0 var(--static-space-12);
+    color: var(--neutral-on-background-strong);
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-heading-strong);
+  }
+
+  h1 {
+    font-size: calc(var(--font-size-heading-xl) * var(--font-size-heading-multiplier, 1));
+    line-height: calc(var(--line-height-heading-xl) * var(--line-height-heading-multiplier, 1));
+  }
+
+  h2 {
+    font-size: calc(var(--font-size-heading-l) * var(--font-size-heading-multiplier, 1));
+    line-height: calc(var(--line-height-heading-l) * var(--line-height-heading-multiplier, 1));
+  }
+
+  h3 {
+    font-size: calc(var(--font-size-heading-m) * var(--font-size-heading-multiplier, 1));
+    line-height: calc(var(--line-height-heading-m) * var(--line-height-heading-multiplier, 1));
+  }
+
+  h4 {
+    font-size: calc(var(--font-size-heading-s) * var(--font-size-heading-multiplier, 1));
+    line-height: calc(var(--line-height-heading-s) * var(--line-height-heading-multiplier, 1));
+  }
+
+  h5,
+  h6 {
+    font-size: calc(var(--font-size-heading-xs) * var(--font-size-heading-multiplier, 1));
+    line-height: calc(var(--line-height-heading-xs) * var(--line-height-heading-multiplier, 1));
+  }
+
+  strong {
+    color: var(--neutral-on-background-strong);
+    font-weight: 600;
+  }
+
+  s,
+  del {
+    opacity: 0.7;
+  }
+
+  a {
+    color: var(--brand-on-background-strong);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: text;
+  }
+
+  // Markers stay visible while writing, so lists read as lists.
+  ul,
+  ol {
+    margin: 0 0 var(--static-space-12);
+    padding: 0 0 0 var(--static-space-24);
+  }
+
+  ul {
+    list-style: disc;
+  }
+
+  ol {
+    list-style: decimal;
+  }
+
+  li {
+    margin: var(--static-space-4) 0 var(--static-space-8);
+    padding-left: var(--static-space-8);
+    color: var(--neutral-on-background-strong);
+
+    &::marker {
+      color: var(--neutral-on-background-weak);
+    }
+
+    > p {
+      margin: 0;
+      color: inherit;
+    }
+
+    > ul,
+    > ol {
+      margin: var(--static-space-4) 0 0;
+    }
+  }
+
+  blockquote {
+    margin: var(--static-space-12) 0;
+    padding: var(--static-space-4) var(--static-space-16);
+    border-left: 3px solid var(--brand-alpha-medium);
+    color: var(--neutral-on-background-medium);
+
+    p {
+      margin: var(--static-space-4) 0;
+    }
+  }
+
+  hr {
+    height: 1px;
+    margin: var(--static-space-16) 0;
+    border: none;
+    background: var(--neutral-background-strong);
+    cursor: pointer;
+
+    &:global(.ProseMirror-selectednode) {
+      outline: 2px solid var(--brand-solid-strong);
+      outline-offset: 4px;
+    }
+  }
+
+  code {
+    padding: 1px var(--static-space-4);
+    border: 1px solid var(--neutral-alpha-medium);
+    border-radius: var(--radius-s);
+    background: var(--neutral-alpha-weak);
+    color: var(--neutral-on-background-strong);
+    font-family: var(--font-code);
+    font-size: 80%;
+  }
+
+  pre {
+    margin: var(--static-space-8) 0 var(--static-space-16);
+    padding: var(--static-space-12) var(--static-space-16);
+    overflow-x: auto;
+    border: 1px solid var(--neutral-alpha-weak);
+    border-radius: var(--radius-m);
+    background: var(--surface-background);
+    color: var(--neutral-on-background-strong);
+    font-family: var(--font-code);
+    font-size: calc(var(--font-size-body-s) * var(--font-size-body-multiplier, 1));
+    line-height: 1.75;
+    tab-size: 2;
+
+    code {
+      padding: 0;
+      border: none;
+      background: none;
+      font-size: inherit;
+    }
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: var(--static-space-12) 0 var(--static-space-16);
+    border: 1px solid var(--neutral-alpha-medium);
+    border-radius: var(--radius-m);
+
+    &:global(.ProseMirror-selectednode) {
+      outline: 2px solid var(--brand-solid-strong);
+      outline-offset: 2px;
+    }
+  }
+
+  // Tiptap wraps tables for column resizing; the wrapper becomes the bordered frame.
+  :global(.tableWrapper) {
+    width: 100%;
+    margin: var(--static-space-12) 0 var(--static-space-16);
+    overflow-x: auto;
+    border: 1px solid var(--neutral-alpha-medium);
+    border-radius: var(--radius-m);
+  }
+
+  table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: var(--font-size-body-s, 0.875rem);
+  }
+
+  th,
+  td {
+    position: relative;
+    min-width: 5rem;
+    padding: var(--static-space-8) var(--static-space-12);
+    border-bottom: 1px solid var(--neutral-alpha-weak);
+    text-align: left;
+    vertical-align: top;
+
+    > p {
+      margin: 0;
+      color: inherit;
+      line-height: 1.5;
+    }
+  }
+
+  th {
+    background: var(--neutral-alpha-weak);
+    color: var(--neutral-on-background-strong);
+    font-weight: 600;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  :global(.selectedCell)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--brand-alpha-weak);
+    pointer-events: none;
+  }
+
+  // Placeholder from @tiptap/extensions
+  p:global(.is-empty:first-child)::before,
+  :global(.is-editor-empty):first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    color: var(--neutral-on-background-weak);
+    pointer-events: none;
+  }
+
+  :global(.ProseMirror-gapcursor)::after {
+    border-top-color: var(--neutral-on-background-strong);
+  }
+
+  ::selection {
+    background: var(--brand-alpha-medium);
+  }
+}

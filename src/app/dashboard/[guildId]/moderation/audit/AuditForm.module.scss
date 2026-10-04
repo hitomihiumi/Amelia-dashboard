@@ -1,0 +1,8 @@
+// Category cards. Their heights differ a lot (members and server have many events, messages
+// and voice only a few), so AuditForm distributes them into balanced stacks per column count.
+// The grid and every stack share the gap, which tightens on phones.
+@media (max-width: 640px) {
+  .cats {
+    gap: var(--static-space-16);
+  }
+}

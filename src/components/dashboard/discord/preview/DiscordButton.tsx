@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/i18n/client";
 import type { ButtonCustom } from "@/lib/db/types";
 import { DISCORD_BUTTON_COLORS } from "@/lib/discord/discord-style";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,7 @@ export interface DiscordButtonProps {
 }
 
 export function DiscordButton({ button, size = "md" }: DiscordButtonProps) {
+  const t = useT();
   const palette = DISCORD_BUTTON_COLORS[button.style] ?? DISCORD_BUTTON_COLORS.PRIMARY;
 
   return (
@@ -19,7 +21,7 @@ export function DiscordButton({ button, size = "md" }: DiscordButtonProps) {
       disabled={button.disabled}
       className={cn(
         "inline-flex max-w-full  min-w-0 items-center gap-2 rounded-sm py-1.5 font-medium leading-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-        size === "sm" ? "h-8 text-[13px] px-4" : "h-10 text-sm px-[1.3rem]",
+        size === "sm" ? "h-8 text-[13px] px-[16px]" : "h-10 text-sm px-[1.3rem]",
         palette.outline ? "border" : "hover:brightness-110",
       )}
       style={
@@ -40,7 +42,7 @@ export function DiscordButton({ button, size = "md" }: DiscordButtonProps) {
           />
         </svg>
       )}
-      <span className="max-w-[280px] truncate">{button.label || "Button"}</span>
+      <span className="max-w-[280px] truncate">{button.label || t("builder.preview.buttonFallback")}</span>
     </button>
   );
 }

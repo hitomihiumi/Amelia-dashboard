@@ -1,0 +1,46 @@
+// Library of one kind of component: a browsable grid of item cards. The layout of the cards is
+// props on the primitives (ComponentsManager.tsx); this file holds the states and the phone paddings.
+
+.item {
+  scroll-margin-top: var(--static-space-16);
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+
+  &:not([data-open="true"]):hover {
+    border-color: var(--neutral-border-strong);
+  }
+}
+
+// The head of a card is a native button: reset it, keep the hover and the focus ring.
+.itemHead {
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--neutral-alpha-weak);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-border-strong);
+    outline-offset: -2px;
+  }
+}
+
+.itemText > * {
+  overflow-wrap: anywhere;
+}
+
+// Phones: the editor needs every pixel, so the opened card gives up some padding.
+@container page (max-width: 640px) {
+  .itemHead {
+    padding: var(--static-space-12);
+  }
+
+  .itemBody {
+    padding: var(--static-space-4) var(--static-space-8) var(--static-space-12);
+  }
+}

@@ -1,0 +1,87 @@
+// Block editor for Components V2 layouts. The layout of every piece is props on the primitives
+// (Row, Column, Grid ...); this file only holds what props cannot say: states, the grid template of
+// the budget, the accent colour variable, drag cursors and the drop indicator.
+
+.editor {
+  // Once UI paints a disabled ghost button as a dark disc; here it should just fade.
+  button[data-disabled] {
+    background: transparent;
+    opacity: 0.35;
+  }
+}
+
+// ---------- budget ----------
+
+.budget {
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.budgetCompact {
+  grid-template-columns: 1fr 1fr;
+}
+
+.status {
+  @media (max-width: 640px) {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+// ---------- block card ----------
+
+.card {
+  --layout-accent: var(--neutral-border-strong);
+  transition: border-color 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+
+  &:hover {
+    border-color: var(--neutral-border-strong);
+  }
+
+  &[data-selected="true"] {
+    border-color: var(--accent-border-strong);
+    box-shadow: 0 0 0 1px var(--accent-border-strong);
+  }
+
+  &[data-invalid="true"]:not([data-selected="true"]) {
+    border-color: var(--danger-border-medium);
+  }
+
+  &[data-dragging="true"] {
+    opacity: 0.4;
+  }
+}
+
+.containerCard {
+  border-left: 4px solid var(--layout-accent);
+}
+
+.handle {
+  color: var(--neutral-on-background-weak);
+  cursor: grab;
+  touch-action: none;
+
+  &:hover {
+    color: var(--neutral-on-background-strong);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+// ---------- nested blocks ----------
+
+.children {
+  border-left: 2px solid var(--layout-accent);
+}
+
+.dropLine {
+  height: 4px;
+  margin: -6px 0;
+  box-shadow: 0 0 0 2px var(--accent-alpha-medium);
+}

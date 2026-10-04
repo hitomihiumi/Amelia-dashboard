@@ -1,3 +1,4 @@
+import { getT } from "@/i18n/server";
 import { authOptions } from "@/lib/auth";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import { Guild } from "@/lib/db/Guild";
@@ -12,19 +13,25 @@ import { fetchGuildTextChannels } from "@/lib/discord/channels-api";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
-import { Feedback, Flex, Text } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Feedback, Flex } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import { ComponentsManager } from "./ComponentsManager";
-import type { ComponentsState } from "./componentsTypes";
+import { type ComponentsState, parseComponentsTab } from "./componentsTypes";
 
 export type { ComponentsState };
 
 export default async function ComponentsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ guildId: string }>;
+  searchParams: Promise<{ tab?: string | string[] }>;
 }) {
   const { guildId } = await params;
+  const { tab } = await searchParams;
+  const initialTab = parseComponentsTab(Array.isArray(tab) ? tab[0] : tab);
+  const t = await getT();
   const session = await getServerSession(authOptions);
 
   let roles: DiscordRole[] = [];
@@ -36,12 +43,12 @@ export default async function ComponentsPage({
       const roleList = await fetchGuildRoles(session.accessToken, guildId);
       roles = roleList.map(({ id, name, color }) => ({ id, name, color }));
     } catch (e) {
-      loadError = e instanceof Error ? e.message : "Failed to load roles";
+      loadError = e instanceof Error ? e.message : t("builder.shared.loadRolesFailed");
     }
     try {
       channels = await fetchGuildTextChannels(session.accessToken, guildId);
     } catch (e) {
-      if (!loadError) loadError = e instanceof Error ? e.message : "Failed to load channels";
+      if (!loadError) loadError = e instanceof Error ? e.message : t("builder.shared.loadChannelsFailed");
     }
   }
 
@@ -52,6 +59,7 @@ export default async function ComponentsPage({
     embed: Array.isArray(components?.embed) ? components.embed : [],
     buttons: Array.isArray(components?.buttons) ? components.buttons : [],
     selectMenus: Array.isArray(components?.selectMenus) ? components.selectMenus : [],
+    layouts: Array.isArray(components?.layouts) ? components.layouts : [],
   };
   const scenarios: ScenarioCustom[] = Array.isArray(components?.scenarios)
     ? components.scenarios
@@ -59,23 +67,17 @@ export default async function ComponentsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
-        <Text variant="heading-strong-l">Custom components</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          Build reusable Buttons, Modals, Embeds and Select Menus that power your bot's scenarios.
-          Every item is reflected in the live Discord preview on the right.
-        </Text>
-      </Flex>
+      <PageHeader title={t("builder.components.title")} description={t("builder.components.subtitle")} />
 
       {loadError &&
         (loadError === DISCORD_SESSION_EXPIRED_ERROR ? (
           <Feedback
             variant="danger"
-            title="Session expired"
-            description="Your Discord session has expired. Please log in again."
+            title={t("builder.shared.sessionExpiredTitle")}
+            description={t("builder.shared.sessionExpiredText")}
           />
         ) : (
-          <Feedback variant="warning" title="Partial data" description={loadError} />
+          <Feedback variant="warning" title={t("builder.shared.partialDataTitle")} description={loadError} />
         ))}
 
       <ComponentsManager
@@ -84,6 +86,7 @@ export default async function ComponentsPage({
         roles={roles}
         channels={channels}
         scenarios={scenarios}
+        initialTab={initialTab}
       />
     </Flex>
   );

@@ -1,0 +1,32 @@
+// Columns follow the `page` container (the room next to the sidebar), not the viewport.
+.grid {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+// Two columns once each can be at least ~460px wide.
+@container page (min-width: 980px) {
+  .cols2,
+  .cols3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container page (min-width: 1480px) {
+  .cols3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+// Cards that opt into the whole row.
+.full,
+.grid > :global(.section-full) {
+  grid-column: 1 / -1;
+}
+
+// Phones use the tighter gap whatever the grid asked for.
+@media (max-width: 640px) {
+  .grid {
+    gap: var(--static-space-16);
+  }
+}

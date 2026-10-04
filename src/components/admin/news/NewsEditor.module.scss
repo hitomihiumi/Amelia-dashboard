@@ -1,0 +1,160 @@
+@use "../../styles/breakpoints.scss" as breakpoints;
+
+// Height of the sticky top bar; the formatting toolbar sticks right below it.
+$topbar: 3.5rem;
+
+.page {
+  --news-sticky-top: #{$topbar};
+
+  container-type: inline-size;
+  container-name: news-editor;
+  font-family: var(--font-body);
+  // The page padding of AppShell, so the top bar can bleed into it.
+  --page-pad-x: var(--static-space-32);
+  --page-pad-top: var(--static-space-32);
+
+  @media (max-width: 1024px) {
+    --page-pad-x: var(--static-space-24);
+    --page-pad-top: var(--static-space-24);
+  }
+
+  @include breakpoints.phone {
+    --page-pad-x: var(--static-space-16);
+    --page-pad-top: var(--static-space-16);
+  }
+}
+
+/* ───────────────────────── Top bar ───────────────────────── */
+
+.topbar {
+  // Bleed into the layout padding so the bar spans the whole content column when stuck.
+  margin: calc(var(--page-pad-top) * -1) calc(var(--page-pad-x) * -1) var(--static-space-24);
+  padding: 0 var(--page-pad-x);
+  background: color-mix(in srgb, var(--page-background) 90%, transparent);
+  backdrop-filter: blur(12px);
+
+  @include breakpoints.s {
+    margin-bottom: var(--static-space-16);
+  }
+}
+
+.stateText {
+  @include breakpoints.xs {
+    display: none;
+  }
+}
+
+// The save state dot: the colour comes from the `solid` prop, the rest from the state.
+.dot {
+  &[data-state="unsaved"] {
+    box-shadow: 0 0 0 3px var(--warning-alpha-weak);
+  }
+
+  &[data-state="saving"] {
+    animation: pulse 1s ease-in-out infinite;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot[data-state="saving"] {
+    animation: none;
+  }
+}
+
+/* ───────────────────────── Layout ───────────────────────── */
+
+.grid {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+// `hidden` has to win over the `display` utility of the Column.
+.settingsPane[hidden] {
+  display: none;
+}
+
+// Side-by-side layouts need the frame, not the viewport: the sidebar eats a lot of width.
+// `.sideSwitch.sideSwitch` outranks the `display` utility of the Row it sits on.
+.sideSwitch.sideSwitch {
+  display: none;
+}
+
+@container news-editor (min-width: 58rem) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+
+  // Live preview: editor and the real page share the width.
+  .grid:has(.aside[data-side="preview"]) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .aside {
+    position: sticky;
+    top: calc(#{$topbar} + var(--static-space-16));
+    max-height: calc(100vh - #{$topbar} - var(--static-space-32));
+    overflow-y: auto;
+    // Room for the focus rings that would otherwise be clipped by the scroll box.
+    margin: -4px;
+    padding: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--neutral-alpha-medium) transparent;
+  }
+
+  .sideSwitch.sideSwitch {
+    display: flex;
+  }
+}
+
+// Below that width the live pane is not shown: Preview is a regular tab instead.
+@container news-editor (max-width: 57.99rem) {
+  .livePane,
+  .liveToggle {
+    display: none !important;
+  }
+
+  .settingsPane[hidden] {
+    display: flex;
+  }
+}
+
+/* ───────────────────────── Canvas ───────────────────────── */
+
+// On phones only the open tab keeps its label.
+.tab[aria-selected="false"] .tabLabel {
+  @include breakpoints.xs {
+    display: none;
+  }
+}
+
+// The writing surface: one rounded sheet. `clip` keeps the corners round without
+// turning the sheet into a scroll container, so the toolbar can still stick to the page.
+.canvas {
+  overflow: clip;
+  font-family: var(--font-body);
+}
+
+.canvasInvalid {
+  box-shadow: 0 0 0 1px var(--danger-solid-strong);
+}
+
+// The Markdown source: code font, grows with its content.
+.markdown textarea {
+  min-height: 26rem;
+  padding: var(--static-space-16);
+  font-family: var(--font-code);
+  font-size: var(--font-size-body-s, 0.875rem);
+  line-height: 1.7;
+  tab-size: 2;
+  field-sizing: content;
+
+  @include breakpoints.s {
+    padding: var(--static-space-8);
+  }
+}

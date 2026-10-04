@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Flex } from "@once-ui-system/core";
+import { AppShell } from "@/components/layout/AppShell";
 import { UnsavedChangesProvider } from "@/contexts/UnsavedChangesContext";
 import { DiscordPreviewProvider } from "@/contexts/DiscordPreviewContext";
 import { UnsavedNavigationGuard } from "@/components/layout/UnsavedNavigationGuard";
@@ -50,14 +50,7 @@ export default async function GuildDashboardLayout({
         }}
       >
         <UnsavedNavigationGuard />
-        <Flex fillWidth fillHeight direction={"row"} m={{ direction: "column" }}>
-          <SettingsBar access={access} guildId={guildId} />
-          <Flex fill horizontal={"center"}>
-            <Flex direction="column" fillWidth padding="24" overflow="auto" maxWidth={"m"}>
-              {children}
-            </Flex>
-          </Flex>
-        </Flex>
+        <AppShell sidebar={<SettingsBar access={access} guildId={guildId} />}>{children}</AppShell>
         <UnsavedBar />
       </DiscordPreviewProvider>
     </UnsavedChangesProvider>

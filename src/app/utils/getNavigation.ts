@@ -2,6 +2,9 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 import { Schemes } from "@once-ui-system/core";
+import type { IconName } from "@/resources/icons";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
+import { CONTENT_DIR, isLocaleFolder, resolveLocalizedFile } from "./content";
 
 interface NavigationItem {
   slug: string;
@@ -9,7 +12,7 @@ interface NavigationItem {
   label?: string;
   navTag?: string;
   navLabel?: string;
-  navIcon?: string;
+  navIcon?: IconName;
   navTagVariant?: Schemes;
   keywords?: string;
   children?: NavigationItem[];
@@ -55,7 +58,8 @@ function sortItems(items: NavigationItem[]): NavigationItem[] {
 }
 
 export default function getNavigation(
-  dirPath = path.join(process.cwd(), "src/content"),
+  dirPath = CONTENT_DIR,
+  locale: Locale = DEFAULT_LOCALE,
 ): NavigationItem[] {
   const entries = fs.readdirSync(dirPath, { withFileTypes: true });
 
@@ -81,6 +85,11 @@ export default function getNavigation(
       const fullPath = path.join(dirPath, entry.name);
 
       if (entry.isDirectory()) {
+        // src/content/<locale>/ holds translations, not sections of the English tree
+        if (isLocaleFolder(dirPath, entry.name)) {
+          return null;
+        }
+
         const metaPath = path.join(fullPath, "meta.json");
         let metaData: MetaData | null = null;
 
@@ -98,19 +107,31 @@ export default function getNavigation(
           console.error(`Error reading meta.json in ${fullPath}:`, error);
         }
 
+        // A translated meta.json may carry a localized section title (order stays English-driven)
+        let localizedTitle: string | undefined;
+        const localizedMetaPath = resolveLocalizedFile(metaPath, locale);
+        if (localizedMetaPath !== metaPath) {
+          try {
+            localizedTitle = (JSON.parse(fs.readFileSync(localizedMetaPath, "utf8")) as MetaData)
+              .title;
+          } catch (error) {
+            console.error(`Error reading translated meta.json ${localizedMetaPath}:`, error);
+          }
+        }
+
         // Get children and sort them before returning
-        const children = getNavigation(fullPath);
+        const children = getNavigation(fullPath, locale);
 
         const item = {
           slug: entry.name,
-          title: metaData?.title || entry.name,
+          title: localizedTitle || metaData?.title || entry.name,
           order: metaData?.order,
           children: children, // Already sorted by the recursive call
         };
 
         return item;
       } else if (entry.isFile() && entry.name.endsWith(".mdx")) {
-        const fileContents = fs.readFileSync(fullPath, "utf8");
+        const fileContents = fs.readFileSync(resolveLocalizedFile(fullPath, locale), "utf8");
         const { data } = matter(fileContents);
 
         const filenameNoExt = entry.name.replace(/\.mdx$/, "");
@@ -123,8 +144,7 @@ export default function getNavigation(
           pageOrder = dirMeta.pages[filenameNoExt];
         }
 
-        const contentDir = path.join(process.cwd(), "src/content");
-        const relativePath = path.relative(contentDir, fullPath);
+        const relativePath = path.relative(CONTENT_DIR, fullPath);
         const normalizedPath = relativePath.replace(/\\/g, "/").replace(/\.mdx?$/, "");
 
         const item = {
@@ -132,7 +152,7 @@ export default function getNavigation(
           title: data.title || entry.name.replace(/\.mdx?$/, ""),
           navTag: data.navTag,
           navLabel: data.navLabel,
-          navIcon: data.navIcon,
+          navIcon: data.navIcon as IconName | undefined,
           navTagVariant: data.navTagVariant,
           keywords: data.keywords,
           order: pageOrder !== undefined ? pageOrder : data.order,

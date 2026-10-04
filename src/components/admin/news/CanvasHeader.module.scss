@@ -1,0 +1,69 @@
+// The title and the summary are edited in place, so their fields take the typography of the
+// published article instead of the look of a form field.
+// The field chrome of the Textarea (minimum height, insets) is stripped so the text sits flush.
+.titleField,
+.summaryField {
+  [data-surface="field"] {
+    min-height: 0;
+
+    > div {
+      padding: 0;
+    }
+
+    textarea {
+      overflow: hidden;
+      padding: var(--static-space-2) 0;
+    }
+  }
+}
+
+// display-strong-xs, like the published title.
+.titleField [data-surface="field"] textarea {
+  font-family: var(--font-heading);
+  font-size: calc(var(--font-size-display-xs) * var(--font-size-display-multiplier, 1));
+  font-weight: var(--font-weight-display-strong);
+  line-height: calc(var(--line-height-display-xs) * var(--line-height-display-multiplier, 1));
+}
+
+// body-default-m in neutral-medium, like the published summary.
+.summaryField [data-surface="field"] textarea {
+  color: var(--neutral-on-background-medium);
+  font-family: var(--font-body);
+  font-size: calc(var(--font-size-body-m) * var(--font-size-body-multiplier, 1));
+  line-height: calc(var(--line-height-body-m) * var(--line-height-body-multiplier, 1));
+}
+
+// The published cover has no border and a larger radius; the edit buttons appear on hover.
+.cover {
+
+  > :first-child {
+    border: none;
+    border-radius: var(--radius-l);
+  }
+
+  &:hover .coverActions,
+  &:focus-within .coverActions {
+    opacity: 1;
+  }
+}
+
+.coverActions {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  @media (hover: none) {
+    opacity: 1;
+  }
+}
+
+// Buttons over the picture: translucent and blurred. The doubled class outranks the variant.
+.coverBtn.coverBtn {
+  background: color-mix(in srgb, var(--page-background) 82%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.addCover[class]:hover {
+  border-color: var(--brand-alpha-strong);
+  background: var(--brand-alpha-weak);
+  color: var(--brand-on-background-strong);
+}

@@ -1,0 +1,146 @@
+// Two panes (incident + timeline | composer) once the page has room next to the sidebar;
+// below that the composer comes first, it is the thing you open this page for.
+.layout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-24);
+
+  @container page (min-width: 980px) {
+    grid-template-columns: minmax(0, 1fr) 24rem;
+    align-items: start;
+  }
+
+  @container page (min-width: 1480px) {
+    grid-template-columns: minmax(0, 1fr) 28rem;
+  }
+
+  @container page (max-width: 640px) {
+    gap: var(--static-space-16);
+  }
+}
+
+// Narrow: the main column dissolves so the composer can sit between the header and the timeline.
+// The doubled classes outrank the `display` / `position` utilities of the Columns they sit on.
+.main.main {
+  display: contents;
+
+  @container page (min-width: 980px) {
+    display: flex;
+    gap: var(--static-space-24);
+    min-width: 0;
+  }
+}
+
+.orderHeader {
+  order: 0;
+}
+
+.aside {
+  order: 1;
+}
+
+.orderTimeline {
+  order: 2;
+}
+
+.orderDanger {
+  order: 3;
+}
+
+@container page (min-width: 980px) {
+  .orderHeader,
+  .orderTimeline,
+  .orderDanger,
+  .aside {
+    order: 0;
+  }
+}
+
+.composerSticky.composerSticky {
+  @container page (min-width: 980px) {
+    position: sticky;
+    top: var(--static-space-24);
+  }
+}
+
+// The severity bar down the left edge of the header card.
+.header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: var(--tone);
+}
+
+// ---------------------------------------------------------------------------
+// Progress stepper: the marker and label take the colour of their step's tone once reached.
+// ---------------------------------------------------------------------------
+.step {
+  // The segment that leads into this step.
+  &::before {
+    content: "";
+    position: absolute;
+    top: 1.125rem;
+    right: 50%;
+    left: -50%;
+    height: 2px;
+    background: var(--neutral-alpha-medium);
+  }
+
+  &:first-child::before {
+    display: none;
+  }
+}
+
+.stepDone::before,
+.stepCurrent::before {
+  background: var(--tone);
+}
+
+.stepMarker {
+  position: relative;
+  font-size: 1.125rem;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.stepDone .stepMarker {
+  border-color: var(--tone);
+  background: var(--tone);
+  color: var(--page-background);
+}
+
+.stepCurrent .stepMarker {
+  border-color: var(--tone);
+  background: var(--tone-soft);
+  color: var(--tone);
+  box-shadow: 0 0 0 4px var(--tone-soft);
+}
+
+.stepCurrent.stepFinal .stepMarker {
+  background: var(--tone);
+  color: var(--page-background);
+}
+
+.step .stepLabel {
+  max-width: 100%;
+  padding: 0 var(--static-space-4);
+
+  @container page (max-width: 480px) {
+    padding: 0;
+    font-size: 0.625rem;
+    letter-spacing: -0.01em;
+  }
+}
+
+.stepDone .stepLabel {
+  color: var(--neutral-on-background-medium);
+}
+
+.stepCurrent .stepLabel {
+  color: var(--neutral-on-background-strong);
+  font-weight: 600;
+}

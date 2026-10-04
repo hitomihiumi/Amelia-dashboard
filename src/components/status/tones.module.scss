@@ -1,0 +1,34 @@
+// One class per Once UI colour scheme. Each sets the same custom properties, so a
+// component can be tinted with `className={tones[scheme]}` and then simply read
+// var(--tone), var(--tone-soft), var(--tone-medium), var(--tone-line), var(--tone-text).
+@mixin tone($scheme) {
+  --tone: var(--#{$scheme}-solid-strong);
+  --tone-soft: var(--#{$scheme}-alpha-weak);
+  --tone-medium: var(--#{$scheme}-alpha-medium);
+  --tone-line: var(--#{$scheme}-border-strong);
+  --tone-text: var(--#{$scheme}-on-background-strong);
+}
+
+.danger {
+  @include tone(danger);
+}
+
+.warning {
+  @include tone(warning);
+}
+
+.info {
+  @include tone(info);
+}
+
+.success {
+  @include tone(success);
+}
+
+.neutral {
+  @include tone(neutral);
+}
+
+.brand {
+  @include tone(brand);
+}

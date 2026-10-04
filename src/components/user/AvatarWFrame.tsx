@@ -4,6 +4,7 @@ import React, { forwardRef } from "react";
 
 import { Skeleton, Icon, Text, StatusIndicator, Flex, Media } from "@once-ui-system/core";
 import styles from "./AvatarWFrame.module.scss";
+import { useT } from "@/i18n/client";
 
 interface AvatarWFrameProps extends React.ComponentProps<typeof Flex> {
   size?: "xs" | "s" | "m" | "l" | "xl";
@@ -40,6 +41,7 @@ const AvatarWFrame = forwardRef<HTMLDivElement, AvatarWFrameProps>(
     { size = "m", value, src, frame, loading, empty, statusIndicator, className, style, ...rest },
     ref,
   ) => {
+    const t = useT();
     const isEmpty = empty || (!src && !value);
 
     if (value && src) {
@@ -58,7 +60,7 @@ const AvatarWFrame = forwardRef<HTMLDivElement, AvatarWFrameProps>(
           height={size}
           className={`${styles.avatar} ${className}`}
           aria-busy="true"
-          aria-label="Loading avatar"
+          aria-label={t("common.avatar.loading")}
         />
       );
     }
@@ -71,7 +73,7 @@ const AvatarWFrame = forwardRef<HTMLDivElement, AvatarWFrameProps>(
             name="person"
             size={size as "xs" | "s" | "m" | "l" | "xl"}
             className={styles.icon}
-            aria-label="Empty avatar"
+            aria-label={t("common.avatar.empty")}
           />
         );
       }

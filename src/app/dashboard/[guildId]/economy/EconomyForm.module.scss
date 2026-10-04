@@ -1,0 +1,43 @@
+// Layout follows the `page` container (the room next to the sidebar), not the viewport.
+.layout {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+// Wide screens: currency sits in a sticky aside next to the income grid.
+@container page (min-width: 1480px) {
+  .layout {
+    grid-template-columns: 340px minmax(0, 1fr);
+  }
+
+  .aside {
+    position: sticky;
+    top: var(--static-space-24);
+  }
+}
+
+.incomeGrid {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+// Two columns once each sub-card can keep ~370px; the long Robbing card sits beside the other four.
+@container page (min-width: 900px) {
+  .incomeGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .incomeGrid > .subcard {
+    grid-column: 1;
+  }
+
+  .incomeGrid > .rob {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+  }
+}
+
+.groupLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

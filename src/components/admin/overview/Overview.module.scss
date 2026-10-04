@@ -1,0 +1,113 @@
+// Everything here reacts to the room next to the sidebar (the `page` container of AppShell),
+// not to the viewport: at a 1024px window only ~680px are left for the page.
+
+// Stat tiles: two across on phones, three on tablets, six when there is room.
+.tiles {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--static-space-12);
+
+  @container page (min-width: 560px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @container page (min-width: 1100px) {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--static-space-16);
+  }
+}
+
+// Panels. Narrow: one stack where "needs attention" comes first. From 980px: two independent
+// columns. From 1480px: three columns (services | attention + actions | recent posts).
+// `.body.body` / `.column.column`: the doubled class outranks the layout utility classes of the
+// Column they sit on (display, gap) without depending on stylesheet order.
+.body.body {
+  @container page (min-width: 980px) {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: var(--static-space-24);
+    align-items: start;
+  }
+
+  @container page (min-width: 1480px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: auto 1fr;
+  }
+}
+
+.column.column {
+  display: contents;
+
+  @container page (min-width: 980px) {
+    display: flex;
+    gap: var(--static-space-24);
+    min-width: 0;
+  }
+
+  @container page (min-width: 1480px) {
+    display: contents;
+  }
+}
+
+// Narrow stack order.
+.orderAttention {
+  order: 1;
+}
+.orderServices {
+  order: 2;
+}
+.orderActions {
+  order: 3;
+}
+.orderRecent {
+  order: 4;
+}
+
+@container page (min-width: 980px) {
+  .orderAttention,
+  .orderServices,
+  .orderActions,
+  .orderRecent {
+    order: 0;
+  }
+}
+
+@container page (min-width: 1480px) {
+  .orderServices {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .orderAttention {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .orderActions {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .orderRecent {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Hover feedback of the link rows (Card links); the layout is on the primitives.
+// ---------------------------------------------------------------------------
+
+.chevron {
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.row:hover .chevron,
+.action:hover .chevron {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+// Quick action: the hover tint is brand-coloured. `[class]` outranks the Card's own hover rule.
+.action[class]:hover {
+  background: color-mix(in srgb, var(--brand-alpha-weak) 80%, transparent);
+  border-color: var(--brand-alpha-strong);
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, forwardRef, useImperativeHandle, useEffect, useCallback } from "react";
+import React, { useState, forwardRef, useImperativeHandle, useEffect, useCallback, useId } from "react";
 import { Flex, Icon, Text, Column, Grid, Row } from "@once-ui-system/core";
 import styles from "./CommandAccordion.module.scss";
 import classNames from "classnames";
@@ -15,8 +15,10 @@ export interface AccordionHandle extends HTMLDivElement {
 interface CommandAccordionProps extends Omit<React.ComponentProps<typeof Flex>, "title"> {
   title: React.ReactNode;
   subline: React.ReactNode;
+  /** Small summary (chips) shown under the subline, also while collapsed. */
+  meta?: React.ReactNode;
   children: React.ReactNode;
-  icon?: string;
+  icon?: IconName;
   iconName?: IconName;
   iconRotation?: number;
   size?: "s" | "m" | "l";
@@ -32,6 +34,7 @@ const CommandAccordion = forwardRef<AccordionHandle, CommandAccordionProps>(
     {
       title,
       subline,
+      meta,
       children,
       open = false,
       onToggle,
@@ -47,6 +50,7 @@ const CommandAccordion = forwardRef<AccordionHandle, CommandAccordionProps>(
     ref,
   ) => {
     const [isOpen, setIsOpen] = useState(open);
+    const contentId = useId();
 
     useEffect(() => {
       setIsOpen(open);
@@ -99,13 +103,14 @@ const CommandAccordion = forwardRef<AccordionHandle, CommandAccordionProps>(
             }
           }}
           aria-expanded={isAccordionOpen}
-          aria-controls="accordion-content"
+          aria-controls={contentId}
           radius={radius}
           role="button"
         >
-          <Row center gap={"16"}>
+          <Row center gap={"16"} style={{ minWidth: 0 }}>
             <Flex
               background={"neutral-alpha-weak"}
+              style={{ flexShrink: 0 }}
               padding={"8"}
               radius={
                 radius === "xl"
@@ -125,13 +130,24 @@ const CommandAccordion = forwardRef<AccordionHandle, CommandAccordionProps>(
                 onBackground={"brand-strong"}
               />
             </Flex>
-            <Column center>
+            <Column center style={{ minWidth: 0 }}>
               <Row fillWidth textVariant="body-strong-s">
                 {title}
               </Row>
               <Row fillWidth textVariant="body-default-s" onBackground={"neutral-weak"}>
                 {subline}
               </Row>
+              {meta && (
+                <Row
+                  fillWidth
+                  wrap
+                  vertical="center"
+                  marginTop="8"
+                  style={{ gap: "var(--static-space-4) var(--static-space-8)", minWidth: 0 }}
+                >
+                  {meta}
+                </Row>
+              )}
             </Column>
           </Row>
           <Icon
@@ -140,13 +156,15 @@ const CommandAccordion = forwardRef<AccordionHandle, CommandAccordionProps>(
             onBackground={isAccordionOpen ? "neutral-strong" : "neutral-weak"}
             style={{
               display: "flex",
+              flexShrink: 0,
+              marginLeft: "var(--static-space-8)",
               transform: isAccordionOpen ? `rotate(${iconRotation}deg)` : "rotate(0deg)",
               transition: "var(--transition-micro-medium)",
             }}
           />
         </Row>
         <Grid
-          id="accordion-content"
+          id={contentId}
           fillWidth
           transition="macro-medium"
           style={{

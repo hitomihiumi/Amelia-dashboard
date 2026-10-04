@@ -1,3 +1,4 @@
+import type { Translator } from "@/i18n/translate";
 import type { PreviewMessage } from "@/components/dashboard/discord/preview/DiscordPreview";
 import type {
   ButtonCustom,
@@ -7,6 +8,7 @@ import type {
   SelectMenuCustom,
 } from "@/lib/db/types";
 import type { DiscordRole } from "@/lib/discord/role-style";
+import { LAYOUT_CAPABLE_ACTIONS } from "./scenarioValidation";
 import type { ComponentsLibrary } from "./scenariosTypes";
 
 /** Build a representative Discord preview message for a single step.
@@ -15,10 +17,24 @@ import type { ComponentsLibrary } from "./scenariosTypes";
 export function buildPreviewForStep(
   step: ScenarioStep,
   library: ComponentsLibrary,
+  t: Translator,
   role?: DiscordRole,
 ): PreviewMessage | null {
   const action = step.action;
   if (!action) return null;
+
+  // A layout replaces content, embeds, buttons and menus. `""` = layout mode, none picked yet.
+  if (action.layoutId != null && LAYOUT_CAPABLE_ACTIONS.has(action.type)) {
+    const asDm = action.type === "send_dm";
+    if (!action.layoutId) return { content: t("builder.preview.layoutNone"), asDm };
+    const layout = library.layouts.find((l) => l.id === action.layoutId);
+    if (!layout) return { content: t("builder.preview.layoutGone"), asDm };
+    return {
+      layout,
+      layoutLibrary: { buttons: library.buttons, selectMenus: library.selectMenus },
+      asDm,
+    };
+  }
 
   const findEmbed = (id: string): EmbedCustom | undefined => library.embed.find((e) => e.id === id);
   const findButton = (id: string): ButtonCustom | undefined =>
@@ -43,7 +59,7 @@ export function buildPreviewForStep(
     case "send_message":
     case "send_embed":
       return {
-        content: action.content || (embeds.length > 0 ? undefined : "Message"),
+        content: action.content || (embeds.length > 0 ? undefined : t("builder.preview.message")),
         embeds,
         buttons,
         selectMenus,
@@ -51,7 +67,7 @@ export function buildPreviewForStep(
       };
     case "edit_message":
       return {
-        content: action.content || "Edited message",
+        content: action.content || t("builder.preview.editedMessage"),
         embeds,
         buttons,
         selectMenus,
@@ -62,40 +78,51 @@ export function buildPreviewForStep(
     case "send_dm":
       return {
         asDm: true,
-        content: action.dmContent || "Direct message",
+        content: action.dmContent || t("builder.preview.directMessage"),
         embeds: action.dmEmbedId
           ? ([findEmbed(action.dmEmbedId)].filter(Boolean) as EmbedCustom[])
           : [],
       };
     case "add_role":
       return {
-        content: role ? `Role <@&${role.id}> added to user.` : "Role added.",
+        content: role
+          ? t("builder.preview.roleAdded", { role: `<@&${role.id}>` })
+          : t("builder.preview.roleAddedGeneric"),
       };
     case "remove_role":
       return {
-        content: role ? `Role <@&${role.id}> removed from user.` : "Role removed.",
+        content: role
+          ? t("builder.preview.roleRemoved", { role: `<@&${role.id}>` })
+          : t("builder.preview.roleRemovedGeneric"),
       };
     case "create_thread":
       return {
         embeds: [
           {
             id: "preview-thread",
-            name: "Thread",
-            title: action.threadName || "Thread",
-            description: `Thread will be created with archive=${action.autoArchiveDuration ?? 1440} min.`,
+            name: t("builder.preview.thread"),
+            title: action.threadName || t("builder.preview.thread"),
+            description: t("builder.preview.threadDescription", {
+              minutes: action.autoArchiveDuration ?? 1440,
+            }),
             color: "#5865f2",
           },
         ],
       };
     case "set_variable":
       return {
-        content: `Set \`${action.variableName || "var"}\` = \`${action.variableValue || ""}\``,
+        content: t("builder.preview.setVariable", {
+          name: action.variableName || t("builder.preview.variableFallback"),
+          value: action.variableValue || "",
+        }),
       };
     case "delete_message":
       return {
         content: action.deleteOriginal
-          ? "The original interaction/response gets deleted."
-          : `Delete target message${action.deleteDelay ? ` after ${action.deleteDelay} ms` : ""}.`,
+          ? t("builder.preview.deleteOriginal")
+          : action.deleteDelay
+            ? t("builder.preview.deleteTargetDelay", { ms: action.deleteDelay })
+            : t("builder.preview.deleteTarget"),
       };
     default:
       return null;

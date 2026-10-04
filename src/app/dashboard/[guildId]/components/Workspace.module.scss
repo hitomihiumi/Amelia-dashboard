@@ -1,0 +1,50 @@
+// Two-pane workspace: the editor takes the flexible space, the preview keeps a readable width and
+// stays in view while the editor scrolls. Every switch follows the `page` container (the room
+// next to the sidebar, see AppShell), never the viewport. Everything that props can say (chrome,
+// spacing, flex) lives on the primitives in Workspace.tsx; this file only holds what they cannot.
+
+$split-at: 1000px;
+
+.workspace {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-24);
+  align-items: start;
+
+  @container page (max-width: 640px) {
+    gap: var(--static-space-16);
+  }
+}
+
+.card {
+  @container page (max-width: 640px) {
+    padding: var(--static-space-16);
+  }
+}
+
+.paneBody {
+  overscroll-behavior: contain;
+}
+
+.paneEmpty {
+  min-height: 160px;
+}
+
+@container page (min-width: #{$split-at}) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) clamp(420px, 38%, 640px);
+  }
+
+  .workspace.workspaceWide {
+    grid-template-columns: minmax(0, 1fr) clamp(380px, 32%, 560px);
+  }
+
+  .workspace > .aside {
+    position: sticky;
+    top: var(--static-space-16);
+    max-height: calc(100vh - var(--static-space-32));
+  }
+
+  .paneEmpty {
+    min-height: 240px;
+  }
+}

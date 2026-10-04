@@ -1,8 +1,11 @@
 import { Background, Button, Column, Heading, Text } from "@once-ui-system/core";
 
+import { getT } from "@/i18n/server";
 import styles from "./NotFoundCapsule.module.scss";
 
-export function NotFoundCapsule() {
+export async function NotFoundCapsule() {
+  const t = await getT();
+
   return (
     <Column radius={"xl"} overflow={"hidden"} className={styles.notFound}>
       <Background
@@ -32,12 +35,12 @@ export function NotFoundCapsule() {
           404
         </Text>
         <Heading marginBottom="xs" variant="display-default-xs">
-          Page Not Found
+          {t("common.notFound.title")}
         </Heading>
         <Text onBackground="neutral-weak" marginBottom="m">
-          The page you are looking for does not exist.
+          {t("common.notFound.text")}
         </Text>
-        <Button href={"/"}>Back to Home</Button>
+        <Button href={"/"}>{t("common.actions.backToHome")}</Button>
       </Column>
     </Column>
   );

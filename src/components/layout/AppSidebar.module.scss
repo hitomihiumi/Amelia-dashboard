@@ -1,0 +1,152 @@
+@use "../styles/breakpoints.scss" as breakpoints;
+
+// Top bar that opens the drawer; only phones use it.
+.mobileBar {
+  display: none;
+
+  @include breakpoints.phone {
+    display: flex;
+  }
+}
+
+// Phone drawer backdrop.
+.overlay {
+  display: none;
+
+  @include breakpoints.phone {
+    display: block;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.3s ease,
+      visibility 0.3s ease;
+
+    &.open {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+}
+
+// Desktop: the sidebar stays put while the page scrolls and only the nav list scrolls inside it,
+// so the footer is never pushed off screen. Mobile: an off-canvas drawer.
+.sidebarWrapper {
+  align-self: flex-start;
+  height: 100vh;
+  height: 100dvh;
+  flex-shrink: 0;
+
+  @include breakpoints.phone {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    height: 100dvh;
+    padding: 0;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+}
+
+.sidebarContent {
+  width: 18rem;
+  max-width: 100%;
+
+  // Tablets keep the sidebar on screen, just a little narrower so the page still has room.
+  @include breakpoints.m {
+    width: 15.5rem;
+  }
+
+  @include breakpoints.phone {
+    width: 18rem;
+    max-width: 85vw;
+    border-radius: 0 !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+  }
+}
+
+// A thin, quiet scrollbar instead of the system one.
+.nav {
+  scrollbar-width: thin;
+  scrollbar-color: var(--neutral-alpha-medium) transparent;
+}
+
+.groupLabel {
+  font-size: var(--font-size-label-xs, 0.6875rem);
+  line-height: 1.125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.item,
+.back {
+  position: relative;
+  align-items: center;
+  gap: var(--static-space-12);
+  min-height: 2.25rem;
+  padding: 0 var(--static-space-12);
+  border-radius: var(--radius-m);
+  color: var(--neutral-on-background-medium);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    background: var(--neutral-alpha-weak);
+    color: var(--neutral-on-background-strong);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--brand-solid-strong);
+    outline-offset: 1px;
+  }
+}
+
+.itemIcon {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+// The page you are on: brand tint plus an accent bar on the left edge.
+.item.active {
+  background: color-mix(in srgb, var(--brand-alpha-medium) 55%, transparent);
+  color: var(--neutral-on-background-strong);
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 22%;
+    bottom: 22%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--brand-solid-strong);
+  }
+
+  .itemIcon {
+    opacity: 1;
+    color: var(--brand-on-background-strong);
+  }
+}
+
+// The back link sits beside the language switcher, in a bordered pill.
+.back {
+  flex: 1;
+  gap: var(--static-space-8);
+  padding: 0 var(--static-space-10, 10px);
+  border: 1px solid var(--neutral-border-medium);
+  background: var(--neutral-alpha-weak);
+}
+
+// Counter pill on the right of a nav row.
+.badge {
+  margin-left: auto;
+}

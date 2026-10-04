@@ -1,0 +1,51 @@
+// Two columns of cards when the page is really wide.
+.list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-12);
+
+  @container page (min-width: 1280px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--static-space-16);
+  }
+}
+
+// One incident: a link card tinted by its severity (the tone class sets --tone-*).
+.item {
+  &:hover {
+    border-color: var(--tone-line);
+  }
+
+  &:hover .chevron {
+    color: var(--neutral-on-background-strong);
+    transform: translateX(2px);
+  }
+}
+
+.itemTitle {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.chevron {
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  color: var(--neutral-on-background-weak);
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+// The latest update, quoted under the badges.
+.preview {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  padding-left: var(--static-space-12);
+  border-left: 2px solid var(--neutral-alpha-medium);
+}

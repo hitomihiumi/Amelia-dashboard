@@ -4,12 +4,16 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Button, Flex, Logo, NavIcon, Row, Kbar, useTheme, Animation } from "@once-ui-system/core";
 import { layout } from "@/resources";
+import { useT, useLocale } from "@/i18n/client";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { Sidebar, NavigationItem } from "./Sidebar";
 
 export function Header() {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [isMac, setIsMac] = useState(false);
   const pathname = usePathname();
+  const t = useT();
+  const locale = useLocale();
 
   useEffect(() => {
     setSidebarVisible(false);
@@ -26,13 +30,18 @@ export function Header() {
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
 
   useEffect(() => {
-    fetch("/api/navigation")
+    let cancelled = false;
+    fetch(`/api/navigation?lang=${locale}`)
       .then((res) => res.json())
       .then((data) => {
-        setNavigationItems(data);
+        if (!cancelled) setNavigationItems(data);
       })
       .catch((err) => console.error("Navigation fetch failed", err));
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
 
   // Function to convert navigation items to Kbar items recursively
   const convertToKbarItems = (items: NavigationItem[]) => {
@@ -50,13 +59,13 @@ export function Header() {
       } else {
         const correctedSlug = item.slug.replace(/^src\\content\\/, "").replace(/\\/g, "/");
 
-        const defaultKeywords = `${item.title.toLowerCase()}, docs, documentation`;
+        const defaultKeywords = t("docs.kbar.defaultKeywords", { title: item.title.toLowerCase() });
         const keywords = item.keywords || defaultKeywords;
 
         kbarItems.push({
           id: correctedSlug,
           name: item.label || item.title,
-          section: "Documentation",
+          section: t("docs.kbar.sectionDocumentation"),
           shortcut: [],
           keywords: keywords,
           href: `/${correctedSlug}`,
@@ -74,10 +83,10 @@ export function Header() {
   const navigationKbarItems = [
     {
       id: "home",
-      name: "Home",
-      section: "Navigation",
+      name: t("docs.kbar.home"),
+      section: t("docs.kbar.sectionNavigation"),
       shortcut: [],
-      keywords: "home, landing page",
+      keywords: t("docs.kbar.homeKeywords"),
       href: "/",
       icon: "home",
     },
@@ -88,10 +97,10 @@ export function Header() {
     ...docsItems,
     {
       id: "theme-toggle",
-      name: theme === "dark" ? "Light mode" : "Dark mode",
-      section: "Theme",
+      name: theme === "dark" ? t("docs.kbar.lightMode") : t("docs.kbar.darkMode"),
+      section: t("docs.kbar.sectionTheme"),
       shortcut: [],
-      keywords: "light mode, dark mode, theme, toggle, switch, appearance",
+      keywords: t("docs.kbar.themeKeywords"),
       perform: () => {
         setTheme(theme === "dark" ? "light" : "dark");
       },
@@ -155,7 +164,7 @@ export function Header() {
                   hide
                   m={{ hide: false }}
                   onClick={toggleSidebar}
-                  isActive={sidebarVisible}
+                  active={sidebarVisible}
                 />
               }
             >
@@ -190,11 +199,13 @@ export function Header() {
                 >
                   {isMac ? "Cmd" : "Ctrl"} k
                 </Row>
-                Search docs...
+                {t("docs.header.searchPlaceholder")}
               </Row>
             </Button>
           </Kbar>
-          <Row fillWidth horizontal="end" gap="8" data-border="rounded"></Row>
+          <Row fillWidth horizontal="end" vertical="center" gap="8" data-border="rounded">
+            <LanguageSwitcher />
+          </Row>
         </Row>
       </Flex>
     </>

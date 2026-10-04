@@ -1,5 +1,5 @@
 // Import and set font for each variant
-import { Inter, Lexend, Sora } from "next/font/google";
+import { Inter, Lexend, Manrope, Onest, Sora } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
 
 const heading = Sora({
@@ -26,11 +26,41 @@ const code = Geist_Mono({
   display: "swap",
 });
 
+// Sora and Lexend have no Cyrillic glyphs, so Russian and Ukrainian text would drop to the
+// browser's serif. These companions only declare the Cyrillic subsets, which means the browser
+// takes Latin letters from the faces above and Cyrillic ones from these.
+const headingCyrillic = Manrope({
+  variable: "--font-heading-cyrillic",
+  subsets: ["cyrillic", "cyrillic-ext"],
+  display: "swap",
+});
+
+const bodyCyrillic = Onest({
+  variable: "--font-body-cyrillic",
+  subsets: ["cyrillic", "cyrillic-ext"],
+  display: "swap",
+});
+
+// `'Font', 'Font Fallback'` -> the font itself and its metric-adjusted system fallback. The
+// Cyrillic companion has to sit between them, otherwise the fallback (Arial) answers first.
+const withCompanion = (main, companion) => {
+  const [first, ...rest] = main.style.fontFamily.split(/,\s*/);
+  return [first, companion.style.fontFamily.split(/,\s*/)[0], ...rest].join(", ");
+};
+
 const fonts = {
   heading: heading,
   body: body,
   label: label,
   code: code,
+  headingCyrillic: headingCyrillic,
+  bodyCyrillic: bodyCyrillic,
+};
+
+/** Values for the `--font-*` variables once the Cyrillic companions are in the stack. */
+const fontStacks = {
+  heading: withCompanion(heading, headingCyrillic),
+  body: withCompanion(body, bodyCyrillic),
 };
 
 // default customization applied to the HTML in the main layout.tsx
@@ -84,4 +114,4 @@ const layout = {
   },
 };
 
-export { fonts, style, dataStyle, layout };
+export { fonts, fontStacks, style, dataStyle, layout };

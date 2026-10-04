@@ -2,11 +2,10 @@
 
 import React from "react";
 import classNames from "classnames";
-import { DropdownWrapper, DropdownWrapperProps, Column } from "@once-ui-system/core";
+import { DropdownWrapper, DropdownWrapperProps, Column, Placement } from "@once-ui-system/core";
 import { User, UserProps } from "./User";
 
 import styles from "./UserMenu.module.scss";
-import { Placement } from "@floating-ui/react-dom";
 
 interface UserMenuProps
   extends UserProps,

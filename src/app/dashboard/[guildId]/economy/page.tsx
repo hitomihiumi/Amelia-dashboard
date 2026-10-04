@@ -1,12 +1,15 @@
 import { Guild } from "@/lib/db/Guild";
 import { EconomyForm } from "@/app/dashboard/[guildId]/economy/EconomyForm";
-import { Flex, Text } from "@once-ui-system/core";
+import { Flex } from "@once-ui-system/core";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { getT } from "@/i18n/server";
 
 export default async function GeneralSettingsPage({
   params,
 }: {
   params: Promise<{ guildId: string }>;
 }) {
+  const t = await getT();
   const resolvedParams = await params;
 
   const guild = new Guild(resolvedParams.guildId);
@@ -14,13 +17,7 @@ export default async function GeneralSettingsPage({
 
   return (
     <Flex direction="column" gap="24">
-      <Flex direction="column" gap="8">
-        <Text variant="heading-strong-l">General economy settings</Text>
-        <Text variant="body-default-m" onBackground="neutral-medium">
-          Configure the basic settings of your guild's economy, such as the income from commands and
-          currency emoji.
-        </Text>
-      </Flex>
+      <PageHeader title={t("settings.economy.title")} description={t("settings.economy.description")} />
 
       <EconomyForm
         guildId={resolvedParams.guildId}

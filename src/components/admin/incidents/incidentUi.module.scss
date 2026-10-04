@@ -1,0 +1,114 @@
+// ---------------------------------------------------------------------------
+// Selectable options: severity cards, component tiles, status chips (ToggleButtons).
+// Colours come from the tone class (see components/status/tones.module.scss). The `[role]`
+// selectors outrank the size and variant classes of the ToggleButton underneath, and the
+// `:hover:not([data-disabled])` ones outrank its hover rule.
+// ---------------------------------------------------------------------------
+.option[role] {
+  height: auto;
+  padding: var(--static-space-12) var(--static-space-16);
+  border-color: var(--neutral-alpha-medium);
+  white-space: normal;
+}
+
+.option:hover:not([data-disabled]) {
+  border-color: var(--tone-line);
+}
+
+.option[aria-checked="true"],
+.option[aria-checked="true"]:hover:not([data-disabled]) {
+  background: var(--tone-soft);
+  border-color: var(--tone);
+  box-shadow: 0 0 0 1px var(--tone);
+}
+
+.optionCard[role] {
+  align-items: flex-start;
+}
+
+.optionTile[role] {
+  padding: var(--static-space-8) var(--static-space-12);
+}
+
+.optionChip[role] {
+  min-height: 2rem;
+  padding: var(--static-space-4) var(--static-space-12) var(--static-space-4) var(--static-space-8);
+}
+
+.optionIcon {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-m);
+  background: var(--tone-soft);
+  color: var(--tone);
+  font-size: 1.125rem;
+}
+
+.optionTile .optionIcon {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 1rem;
+}
+
+.optionChip .optionIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  font-size: 0.875rem;
+}
+
+.optionLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optionCard .optionLabel,
+.optionTile .optionLabel {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+// The tick in the corner of a severity card.
+.optionCheck {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--neutral-alpha-strong);
+  border-radius: 50%;
+  color: transparent;
+  font-size: 0.75rem;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.option[aria-checked="true"] .optionCheck {
+  background: var(--tone);
+  border-color: var(--tone);
+  color: var(--page-background);
+}
+
+// The dot of an open incident pulses.
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--tone-medium);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}

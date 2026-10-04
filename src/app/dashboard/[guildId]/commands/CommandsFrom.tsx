@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Flex, Text, useToast, Column, Line, Row, Select } from "@once-ui-system/core";
+import { Text, useToast, Column, Grid, Line, Row, Select, RevealFx, Tag } from "@once-ui-system/core";
+import styles from "./CommandsFrom.module.scss";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { updateCommandPermissions } from "./actions";
 import { RoleSelect } from "@/components/dashboard/discord/RoleSelect";
@@ -12,66 +13,86 @@ import { useRouter } from "next/navigation";
 import type { CommandPermission, GuildSchema } from "@/lib/db/types";
 import { DiscordRole } from "@/lib/discord/role-style";
 import { IconName } from "@/resources/icons";
+import { useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
 
 type Form = GuildSchema["permissions"]["commands"];
 
 const commandList: {
   name: string;
-  label: string;
-  description: string;
+  label: MessageKey;
+  description: MessageKey;
   icon: IconName;
   defaultPermission: bigint | null;
 }[] = [
   {
     name: "bot",
-    label: "Bot Information",
-    description: "Access to bot status, latency, and invite link.",
+    label: "settings.commands.items.bot.label",
+    description: "settings.commands.items.bot.description",
     icon: "gitnet",
     defaultPermission: null,
   },
   {
     name: "custom",
-    label: "Constructor",
-    description: "Commands for creation custom buttons and etc.",
+    label: "settings.commands.items.custom.label",
+    description: "settings.commands.items.custom.description",
     icon: "palette",
     defaultPermission: permissionType.Administrator,
   },
   {
     name: "eco",
-    label: "Economy",
-    description: "Use economy commands like balance, daily rewards, and leaderboards.",
+    label: "settings.commands.items.eco.label",
+    description: "settings.commands.items.eco.description",
     icon: "money",
     defaultPermission: null,
   },
   {
+    name: "mod",
+    label: "settings.commands.items.mod.label",
+    description: "settings.commands.items.mod.description",
+    icon: "shield",
+    defaultPermission: permissionType.ModerateMembers,
+  },
+  {
     name: "setting",
-    label: "Settings Control",
-    description: "Manage bot prefix, language, and core behavior.",
+    label: "settings.commands.items.setting.label",
+    description: "settings.commands.items.setting.description",
     icon: "gear",
     defaultPermission: permissionType.Administrator,
   },
   {
     name: "user",
-    label: "User Customization",
-    description: "Commands for profile customization and view profile.",
+    label: "settings.commands.items.user.label",
+    description: "settings.commands.items.user.description",
     icon: "user",
     defaultPermission: null,
   },
   {
     name: "util",
-    label: "Utils",
-    description: "Utility commands like backup.",
+    label: "settings.commands.items.util.label",
+    description: "settings.commands.items.util.description",
     icon: "command",
     defaultPermission: permissionType.Administrator,
   },
   {
     name: "rp",
-    label: "Role Play",
-    description: "Command for roleplay interactions.",
+    label: "settings.commands.items.rp.label",
+    description: "settings.commands.items.rp.description",
     icon: "bonfire",
     defaultPermission: null,
   },
 ];
+
+const permissionLabelKeys: Record<string, MessageKey> = {
+  [permissionType.Administrator.toString()]: "settings.commands.permissions.administrator",
+  [permissionType.ManageGuild.toString()]: "settings.commands.permissions.manageGuild",
+  [permissionType.ManageRoles.toString()]: "settings.commands.permissions.manageRoles",
+  [permissionType.ManageChannels.toString()]: "settings.commands.permissions.manageChannels",
+  [permissionType.KickMembers.toString()]: "settings.commands.permissions.kickMembers",
+  [permissionType.BanMembers.toString()]: "settings.commands.permissions.banMembers",
+  [permissionType.ManageMessages.toString()]: "settings.commands.permissions.manageMessages",
+  [permissionType.ModerateMembers.toString()]: "settings.commands.permissions.moderateMembers",
+};
 
 const normalizePermission = (
   cmd: CommandPermission | undefined,
@@ -95,6 +116,7 @@ export function CommandsFrom({
   permissions,
   guildRoles,
 }: { guildId: string; permissions: Form; guildRoles: DiscordRole[] }) {
+  const t = useT();
   const router = useRouter();
   const { addToast } = useToast();
   const { setIsDirty, setSaveAction, setCancelAction } = useUnsavedChanges();
@@ -132,17 +154,17 @@ export function CommandsFrom({
 
     const result = await updateCommandPermissions(guildId, fd);
     if (!result) {
-      addToast({ variant: "danger", message: "No response from server" });
+      addToast({ variant: "danger", message: t("settings.shared.noResponse") });
       return;
     }
     if (result.ok) {
       setBaseline(perms);
-      addToast({ message: "Permissions updated successfully", variant: "success" });
+      addToast({ message: t("settings.commands.saved"), variant: "success" });
       router.refresh();
     } else {
-      addToast({ message: result.error || "Update failed", variant: "danger" });
+      addToast({ message: result.error || t("settings.commands.saveFailed"), variant: "danger" });
     }
-  }, [guildId, perms, router, addToast]);
+  }, [guildId, perms, router, addToast, t]);
 
   const handleCancel = useCallback(() => setPerms(baseline), [baseline]);
 
@@ -173,13 +195,16 @@ export function CommandsFrom({
 
   const permissionOptions = useMemo(
     () => [
-      { label: "None (Default)", value: "null" },
-      ...defaultPermissions.map((p) => ({
-        label: p.name,
-        value: p.bigint.toString(),
-      })),
+      { label: t("settings.commands.defaultNone"), value: "null" },
+      ...defaultPermissions.map((p) => {
+        const key = permissionLabelKeys[p.bigint.toString()];
+        return {
+          label: key ? t(key) : p.name,
+          value: p.bigint.toString(),
+        };
+      }),
     ],
-    [],
+    [t],
   );
 
   const renderCommandSettings = (
@@ -196,8 +221,29 @@ export function CommandsFrom({
       <CommandAccordion
         key={name}
         iconName={icon}
+        meta={
+          <>
+            <Tag size="s" scheme="neutral" prefixIcon="shield">
+              {cmd.permission !== null
+                ? permissionLabelKeys[cmd.permission.toString()]
+                  ? t(permissionLabelKeys[cmd.permission.toString()])
+                  : cmd.permission.toString()
+                : t("settings.commands.defaultNone")}
+            </Tag>
+            {allowedIds.length > 0 && (
+              <Tag size="s" scheme="success">
+                {t("settings.commands.allowedCount", { count: allowedIds.length })}
+              </Tag>
+            )}
+            {deniedIds.length > 0 && (
+              <Tag size="s" scheme="danger">
+                {t("settings.commands.deniedCount", { count: deniedIds.length })}
+              </Tag>
+            )}
+          </>
+        }
         title={
-          <Row center gap={"16"}>
+          <Row center gap={"8"} wrap>
             <Text variant="body-strong-m">{label}</Text>
             <Text variant="body-default-s" onBackground={"brand-weak"}>
               /{name}
@@ -205,25 +251,28 @@ export function CommandsFrom({
           </Row>
         }
         subline={description}
+        fillWidth
       >
         <Column gap="16" paddingBottom="12">
-          <Column gap="8">
+          <Line />
+          <Grid
+            fillWidth
+            gap="16"
+            className={styles.fields}
+            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))" }}
+          >
             <Select
-              label={"Required Discord Permission"}
+              label={t("settings.commands.requiredPermission")}
               id={`${name}-perm`}
               options={permissionOptions}
               value={cmd.permission?.toString() || "null"}
               onSelect={(val) =>
-                updateCmd(name, { permission: val === "null" ? null : BigInt(val) })
+                updateCmd(name, { permission: val === "null" ? null : BigInt(String(val)) })
               }
             />
-          </Column>
 
-          <Line />
-
-          <Column gap="8">
             <RoleSelect
-              label={"Whitelisted Roles (Always Allowed)"}
+              label={t("settings.commands.whitelist")}
               id={`${name}-allow`}
               multiple
               options={roleOptions}
@@ -237,11 +286,9 @@ export function CommandsFrom({
                 updateCmd(name, { roles: updated });
               }}
             />
-          </Column>
 
-          <Column gap="8">
             <RoleSelect
-              label={"Blacklisted Roles (Always Denied)"}
+              label={t("settings.commands.blacklist")}
               id={`${name}-deny`}
               multiple
               options={roleOptions}
@@ -255,19 +302,25 @@ export function CommandsFrom({
                 updateCmd(name, { roles: updated });
               }}
             />
-          </Column>
+          </Grid>
         </Column>
       </CommandAccordion>
     );
   };
 
   return (
-    <Flex direction="column" gap="24">
-      <Column gap="12">
-        {commandList.map((cmd) =>
-          renderCommandSettings(cmd.name, cmd.label, cmd.description, cmd.icon),
-        )}
-      </Column>
-    </Flex>
+    <Grid fillWidth className={styles.grid} style={{ minWidth: 0 }}>
+      {commandList.map((cmd, idx) => (
+        <RevealFx
+          key={cmd.name}
+          delay={Math.min(60 * idx, 400)}
+          translateY={-0.5}
+          fillWidth
+          style={{ minWidth: 0 }}
+        >
+          {renderCommandSettings(cmd.name, t(cmd.label), t(cmd.description), cmd.icon)}
+        </RevealFx>
+      ))}
+    </Grid>
   );
 }

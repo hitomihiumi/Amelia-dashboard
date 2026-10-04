@@ -7,6 +7,7 @@ import { LabelSelect } from "@/components/dashboard/discord/LabelSelect";
 import { RolePill } from "@/components/dashboard/discord/RolePill";
 import { RoleSelect } from "@/components/dashboard/discord/RoleSelect";
 import { DiscordPreview } from "@/components/dashboard/discord/preview/DiscordPreview";
+import { useT } from "@/i18n/client";
 import { generateID } from "@/lib/db/generateID";
 import type {
   ScenarioAction,
@@ -19,21 +20,31 @@ import type { DiscordRole } from "@/lib/discord/role-style";
 import {
   Button,
   Column,
-  Flex,
   IconButton,
   Input,
+  Line,
   NumberInput,
+  RevealFx,
   Row,
   SegmentedControl,
   Switch,
-  Text, Textarea,
+  Text,
+  Textarea,
 } from "@once-ui-system/core";
 import type React from "react";
+import { LuSlidersHorizontal } from "react-icons/lu";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PreviewEmpty, PreviewPane, Workspace } from "../components/Workspace";
 import { ActionNodeForm } from "./ActionNodeForm";
 import { type ScenarioEdge, ScenarioFlow, type ScenarioNode } from "./ScenarioFlow";
+import styles from "./ScenarioEditor.module.scss";
 import { buildPreviewForStep } from "./previewBuild";
-import { type StepFactory, nodesEdgesToSteps, stepsToNodesEdges } from "./scenarioGraph";
+import {
+  TRIGGER_TYPE_OPTION_LABEL,
+  type StepFactory,
+  nodesEdgesToSteps,
+  stepsToNodesEdges,
+} from "./scenarioGraph";
 import type { ComponentsLibrary } from "./scenariosTypes";
 
 export interface ScenarioEditorProps {
@@ -45,11 +56,7 @@ export interface ScenarioEditorProps {
   onChange: (next: ScenarioCustom) => void;
 }
 
-const TRIGGER_OPTIONS: { value: ScenarioTriggerType; label: string }[] = [
-  { value: "button", label: "Button" },
-  { value: "select_menu", label: "Select menu" },
-  { value: "modal_submit", label: "Modal submit" },
-];
+const TRIGGER_OPTIONS: ScenarioTriggerType[] = ["button", "select_menu", "modal_submit"];
 
 const stepFactory: StepFactory = {
   defaultStep: (id) => ({ id, order: 0, action: { type: "reply" } }),
@@ -63,9 +70,16 @@ export function ScenarioEditor({
   channels,
   onChange,
 }: ScenarioEditorProps) {
+  const t = useT();
   const [nodes, setNodes] = useState<ScenarioNode[]>(() => stepsToNodesEdges(scenario).nodes);
   const [edges, setEdges] = useState<ScenarioEdge[]>(() => stepsToNodesEdges(scenario).edges);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeId, setSelectedNodeIdRaw] = useState<string | null>(null);
+  // The inspector shows the scenario's own settings or the selected step; picking a step opens it.
+  const [inspector, setInspector] = useState<"settings" | "step">("settings");
+  const setSelectedNodeId = useCallback((id: string | null) => {
+    setSelectedNodeIdRaw(id);
+    if (id) setInspector("step");
+  }, []);
   const [restrictionsOpen, setRestrictionsOpen] = useState(true);
   const [variablesOpen, setVariablesOpen] = useState(false);
 
@@ -132,7 +146,7 @@ export function ScenarioEditor({
       setNodes((prev) => [...prev, node]);
       setSelectedNodeId(id);
     },
-    [guildId, nodes],
+    [guildId, nodes, setSelectedNodeId],
   );
 
   const removeStep = useCallback(
@@ -141,7 +155,7 @@ export function ScenarioEditor({
       setEdges((prev) => prev.filter((e) => e.source !== stepId && e.target !== stepId));
       if (selectedNodeId === stepId) setSelectedNodeId(null);
     },
-    [selectedNodeId],
+    [selectedNodeId, setSelectedNodeId],
   );
 
   const handleCanvasChange = useCallback((nextNodes: ScenarioNode[], nextEdges: ScenarioEdge[]) => {
@@ -157,8 +171,8 @@ export function ScenarioEditor({
   const previewMessage = useMemo(() => {
     if (!selectedStep) return null;
     const role = roles.find((r) => r.id === (selectedStep.action as { roleId?: string }).roleId);
-    return buildPreviewForStep(selectedStep, library, role);
-  }, [selectedStep, library, roles]);
+    return buildPreviewForStep(selectedStep, library, t, role);
+  }, [selectedStep, library, roles, t]);
 
   // Only meaningful when the scenario's trigger is a modal submit — lets the
   // "input" condition editor offer real field names instead of a raw index.
@@ -175,16 +189,19 @@ export function ScenarioEditor({
     if (triggerType === "select_menu")
       return library.selectMenus.map((s) => ({
         value: s.id,
-        label: s.name || s.placeholder || "Menu",
+        label: s.name || s.placeholder || t("builder.fallback.menu"),
       }));
-    return library.modals.map((m) => ({ value: m.id, label: m.title || "Modal" }));
-  }, [triggerType, library]);
+    return library.modals.map((m) => ({
+      value: m.id,
+      label: m.title || t("builder.fallback.modal"),
+    }));
+  }, [triggerType, library, t]);
 
   const settingsPanel = (
     <Column gap="16" fillWidth>
       <Input
         id="scn-name"
-        label="Name"
+        label={t("builder.scenarios.name")}
         value={scenario.name}
         onChange={(e) => updateMeta({ name: e.target.value })}
         maxLength={100}
@@ -192,7 +209,7 @@ export function ScenarioEditor({
       />
       <Textarea
         id="scn-desc"
-        label="Description"
+        label={t("builder.scenarios.description")}
         value={scenario.description ?? ""}
         onChange={(e) => updateMeta({ description: e.target.value })}
         maxLength={250}
@@ -207,11 +224,11 @@ export function ScenarioEditor({
         radius="m"
         background="neutral-alpha-weak"
       >
-        <Text variant="label-strong-s">Trigger</Text>
+        <Text variant="label-strong-s">{t("builder.scenarios.triggerHeading")}</Text>
         <Switch
-          label="Use trigger"
-          description="When off, this scenario never fires automatically (acts as a manual/draft)."
-          isChecked={useTrigger}
+          label={t("builder.scenarios.useTrigger")}
+          description={t("builder.scenarios.useTriggerHint")}
+          checked={useTrigger}
           onToggle={() =>
             updateMeta(
               useTrigger ? { trigger: null } : { trigger: { type: "button", componentId: "" } },
@@ -221,18 +238,21 @@ export function ScenarioEditor({
 
         {useTrigger && (
           <Column gap="8" fillWidth>
-            <Text variant="label-default-s">Trigger type</Text>
+            <Text variant="label-default-s">{t("builder.scenarios.triggerType")}</Text>
             <SegmentedControl
               fillWidth
-              selected={triggerType}
-              onToggle={(v) =>
+              value={triggerType}
+              onChange={(v) =>
                 updateMeta({ trigger: { type: v as ScenarioTriggerType, componentId: "" } })
               }
-              buttons={TRIGGER_OPTIONS.map((o) => ({ label: o.label, value: o.value }))}
+              buttons={TRIGGER_OPTIONS.map((o) => ({
+                label: t(TRIGGER_TYPE_OPTION_LABEL[o]),
+                value: o,
+              }))}
             />
             <LabelSelect
               id="trigger-component"
-              label="Trigger component"
+              label={t("builder.scenarios.triggerComponent")}
               selectedValue={scenario.trigger?.componentId ?? ""}
               setSelectedValue={(v) =>
                 updateMeta({
@@ -245,16 +265,16 @@ export function ScenarioEditor({
         )}
 
         <Switch
-          label="Enabled"
-          description="Whether this scenario responds when its trigger fires."
-          isChecked={scenario.enabled}
+          label={t("builder.scenarios.enabled")}
+          description={t("builder.scenarios.enabledHint")}
+          checked={scenario.enabled}
           onToggle={() => updateMeta({ enabled: !scenario.enabled })}
         />
       </Column>
 
       <CommandAccordion
-        title="Restrictions"
-        subline="Roles, channels, cooldown"
+        title={t("builder.scenarios.restrictions")}
+        subline={t("builder.scenarios.restrictionsHint")}
         iconName="security"
         open={restrictionsOpen}
         onToggle={() => setRestrictionsOpen((v) => !v)}
@@ -262,7 +282,7 @@ export function ScenarioEditor({
         <Column gap="12" fillWidth>
           <RoleSelect
             id="allowed-roles"
-            label="Allowed roles"
+            label={t("builder.scenarios.allowedRoles")}
             multiple
             selectedRole={scenario.allowedRoles ?? []}
             setSelectedRole={(val) => updateMeta({ allowedRoles: (val as string[]) ?? [] })}
@@ -273,7 +293,7 @@ export function ScenarioEditor({
           />
           <RoleSelect
             id="denied-roles"
-            label="Denied roles"
+            label={t("builder.scenarios.deniedRoles")}
             multiple
             selectedRole={scenario.deniedRoles ?? []}
             setSelectedRole={(val) => updateMeta({ deniedRoles: (val as string[]) ?? [] })}
@@ -284,7 +304,7 @@ export function ScenarioEditor({
           />
           <ChannelSelect
             id="allowed-channels"
-            label="Allowed channels"
+            label={t("builder.scenarios.allowedChannels")}
             multiple
             selectedChannel={scenario.allowedChannels ?? []}
             setSelectedChannel={(val) => updateMeta({ allowedChannels: (val as string[]) ?? [] })}
@@ -297,7 +317,7 @@ export function ScenarioEditor({
           />
           <NumberInput
             id="scn-cooldown"
-            label="Cooldown (seconds)"
+            label={t("builder.scenarios.cooldown")}
             min={0}
             max={86400}
             step={1}
@@ -308,8 +328,8 @@ export function ScenarioEditor({
       </CommandAccordion>
 
       <CommandAccordion
-        title="Variables (predefined)"
-        subline="Predefined key-value substitutions"
+        title={t("builder.scenarios.variables")}
+        subline={t("builder.scenarios.variablesHint")}
         iconName="actionVar"
         open={variablesOpen}
         onToggle={() => setVariablesOpen((v) => !v)}
@@ -322,62 +342,33 @@ export function ScenarioEditor({
     </Column>
   );
 
-  return (
-    <Flex
-      fillWidth
-      direction="column"
-      gap="16"
-      wrap
-      m={{ direction: "column" }}
-      style={{ alignItems: "flex-start" }}
+  const inspectorPane = (
+    <PreviewPane
+      title={t("builder.workspace.inspectorTitle")}
+      icon={<LuSlidersHorizontal size={16} aria-hidden />}
+      toolbar={
+        <SegmentedControl
+          fillWidth
+          value={inspector}
+          onChange={(v) => setInspector(v as "settings" | "step")}
+          buttons={[
+            { label: t("builder.flow.scenarioSettings"), value: "settings" },
+            { label: t("builder.workspace.stepTitle"), value: "step" },
+          ]}
+        />
+      }
     >
-      {/* Canvas — scenario settings and add-step live inside it as collapsible overlays */}
-      <Column
-        gap="12"
-        fillWidth
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-        minHeight={55}
-        style={{ flex: "3 1 600px", minWidth: 360  }}
-      >
-        <Flex
-            fill
-        >
-            <ScenarioFlow
-                guildId={guildId}
-                nodes={nodes}
-                edges={edges}
-                selectedNodeId={selectedNodeId}
-                setNodes={setNodes}
-                setEdges={setEdges}
-                onCanvasChange={handleCanvasChange}
-                onSelectNode={setSelectedNodeId}
-                onRemoveStep={removeStep}
-                onAddStep={addStep}
-                settingsPanel={settingsPanel}
-                library={library}
-                roles={roles}
-                channels={channels}
-            />
-        </Flex>
-      </Column>
-
-      <Column
-        gap="12"
-        fillWidth
-        padding="24"
-        border="neutral-weak"
-        radius="l"
-        background="surface"
-        style={{ minWidth: 320 }}
-      >
-        <Text variant="label-default-s">Preview</Text>
-        <Flex center>
-          <DiscordPreview message={previewMessage} />
-        </Flex>
-        {selectedStep ? (
+      {inspector === "settings" ? (
+        settingsPanel
+      ) : selectedStep ? (
+        <>
+          <Column gap="8" minWidth={0}>
+            <Text variant="label-default-s" onBackground="neutral-weak">
+              {t("builder.workspace.stepPreview")}
+            </Text>
+            <DiscordPreview message={previewMessage} />
+          </Column>
+          <Line style={{ background: "var(--neutral-border-weak)" }} />
           <ActionNodeForm
             guildId={guildId}
             step={selectedStep}
@@ -388,15 +379,46 @@ export function ScenarioEditor({
             onUpdate={(action) => updateStepAction(selectedStep.id, action)}
             onUpdateMeta={(patch) => updateStepMeta(selectedStep.id, patch)}
           />
-        ) : (
-            <Flex center>
-              <Text variant="body-default-s" onBackground="neutral-weak" align="center">
-                Select a step on the canvas to edit its action and conditions.
-              </Text>
-            </Flex>
-        )}
-      </Column>
-    </Flex>
+        </>
+      ) : (
+        <PreviewEmpty
+          title={t("builder.workspace.previewEmptyTitle")}
+          text={t("builder.workspace.previewEmptyScenario")}
+        />
+      )}
+    </PreviewPane>
+  );
+
+  return (
+    <RevealFx delay={300} translateY={-0.5} fillWidth>
+      <Workspace aside={inspectorPane} asideSize="narrow">
+        <Column
+          fillWidth
+          minWidth={0}
+          overflow="hidden"
+          border="neutral-medium"
+          radius="l"
+          background="surface"
+          className={styles.canvas}
+        >
+          <ScenarioFlow
+            guildId={guildId}
+            nodes={nodes}
+            edges={edges}
+            selectedNodeId={selectedNodeId}
+            setNodes={setNodes}
+            setEdges={setEdges}
+            onCanvasChange={handleCanvasChange}
+            onSelectNode={setSelectedNodeId}
+            onRemoveStep={removeStep}
+            onAddStep={addStep}
+            library={library}
+            roles={roles}
+            channels={channels}
+          />
+        </Column>
+      </Workspace>
+    </RevealFx>
   );
 }
 
@@ -407,13 +429,14 @@ function VariablesEditor({
   value: Record<string, string>;
   onChange: (v: Record<string, string>) => void;
 }) {
+  const t = useT();
   const [name, setName] = useState("");
   const [val, setVal] = useState("");
   return (
     <Column gap="8" fillWidth>
       {Object.keys(value).length === 0 && (
         <Text variant="body-default-s" onBackground="neutral-weak">
-          No variables defined.
+          {t("builder.scenarios.noVariables")}
         </Text>
       )}
       {Object.entries(value).map(([k, v]) => (
@@ -432,7 +455,7 @@ function VariablesEditor({
             icon="trash"
             variant="ghost"
             size="s"
-            tooltip="Remove variable"
+            tooltip={t("builder.scenarios.removeVariable")}
             onClick={() => {
               const next = { ...value };
               delete next[k];
@@ -444,14 +467,14 @@ function VariablesEditor({
       <Row gap="8" fillWidth>
         <Input
           id="var-name"
-          label="Name"
+          label={t("builder.scenarios.variableName")}
           placeholder="myVar"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
         <Input
           id="var-value"
-          label="Value"
+          label={t("builder.scenarios.variableValue")}
           placeholder="{user.name}"
           value={val}
           onChange={(e) => setVal(e.target.value)}
@@ -466,7 +489,7 @@ function VariablesEditor({
             setVal("");
           }}
         >
-          Add
+          {t("builder.scenarios.addVariable")}
         </Button>
       </Row>
     </Column>

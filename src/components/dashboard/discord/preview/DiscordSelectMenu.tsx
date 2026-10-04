@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/i18n/client";
 import type { SelectMenuCustom } from "@/lib/db/types";
 import React, { useState } from "react";
 import { DiscordEmoji } from "./DiscordButton";
@@ -9,6 +10,7 @@ export interface DiscordSelectMenuProps {
 }
 
 export function DiscordSelectMenu({ menu }: DiscordSelectMenuProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const selected = menu.options.find((o) => o.default) ?? null;
   const disabled = menu.disabled;
@@ -24,7 +26,7 @@ export function DiscordSelectMenu({ menu }: DiscordSelectMenuProps) {
         <div className="flex items-center gap-2 min-w-0">
           {selected?.emoji && <DiscordEmoji value={selected.emoji} />}
           <span className={selected ? "truncate text-discord-text-normal" : "truncate"}>
-            {selected ? selected.label : menu.placeholder || "Select an option"}
+            {selected ? selected.label : menu.placeholder || t("builder.preview.selectPlaceholder")}
           </span>
         </div>
         <svg
@@ -45,11 +47,11 @@ export function DiscordSelectMenu({ menu }: DiscordSelectMenuProps) {
       </button>
 
       {open && !disabled && (
-        <div className="absolute z-50 mt-1 w-full bg-discord-bg-floating rounded-lg shadow-[0_8px_16px_rgba(0,0,0,0.3)] overflow-hidden max-h-[280px] overflow-y-auto">
+        <div className="absolute z-50 mt-[4px] w-full bg-discord-bg-floating rounded-lg shadow-[0_8px_16px_rgba(0,0,0,0.3)] overflow-hidden max-h-[280px] overflow-y-auto">
           {menu.options.map((opt, i) => (
             <div
               key={i}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-discord-text-normal hover:bg-discord-bg-modifier-hover cursor-pointer h-10"
+              className="flex items-center gap-2 px-3 py-[8px] text-sm text-discord-text-normal hover:bg-discord-bg-modifier-hover cursor-pointer h-10"
               onClick={() => setOpen(false)}
             >
               {opt.emoji && <DiscordEmoji value={opt.emoji} />}

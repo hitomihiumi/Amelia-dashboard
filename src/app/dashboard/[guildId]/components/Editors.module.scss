@@ -1,0 +1,10 @@
+// Cells of an editor grid (EditorGrid.tsx) may shrink below their content; a field that needs the
+// whole row takes `.full`.
+
+.cells > * {
+  min-width: 0;
+}
+
+.full {
+  grid-column: 1 / -1;
+}

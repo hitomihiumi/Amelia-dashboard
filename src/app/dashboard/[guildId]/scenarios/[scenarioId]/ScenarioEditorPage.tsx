@@ -1,6 +1,7 @@
 "use client";
 
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
+import { useT } from "@/i18n/client";
 import type { ScenarioCustom } from "@/lib/db/types";
 import type { GuildChannelOption } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
@@ -27,6 +28,7 @@ export function ScenarioEditorPage({
   roles,
   channels,
 }: ScenarioEditorPageProps) {
+  const t = useT();
   const router = useRouter();
   const { addToast } = useToast();
   const { setIsDirty, setSaveAction, setCancelAction } = useUnsavedChanges();
@@ -54,11 +56,11 @@ export function ScenarioEditorPage({
     if (result?.ok) {
       setBaseline(scenario);
       router.refresh();
-      addToast({ variant: "success", message: "Scenario saved" });
+      addToast({ variant: "success", message: t("builder.scenarios.savedOne") });
     } else {
-      addToast({ variant: "danger", message: result?.error ?? "Failed to save scenario" });
+      addToast({ variant: "danger", message: result?.error ?? t("builder.scenarios.saveFailedOne") });
     }
-  }, [guildId, scenario, router, addToast]);
+  }, [guildId, scenario, router, addToast, t]);
 
   const handleCancel = useCallback(() => {
     setScenario(baseline);

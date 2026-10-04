@@ -1,0 +1,49 @@
+// Category choices: a ToggleButton with a two-line label. `[role]` outranks the size class.
+.chip[role] {
+  height: auto;
+  padding: var(--static-space-8) var(--static-space-12) var(--static-space-8) var(--static-space-8);
+}
+
+.chipIcon {
+  background: var(--cat-alpha);
+  color: var(--cat-text);
+}
+
+// The chosen category takes the colour of its scheme. The second selector outranks the hover
+// rule of the ToggleButton underneath.
+.chip[aria-checked="true"],
+.chip[aria-checked="true"]:hover:not([data-disabled]) {
+  border-color: var(--cat-alpha-medium);
+  background: var(--cat-alpha);
+  box-shadow: inset 0 0 0 1px var(--cat-alpha-medium);
+
+  .chipIcon {
+    background: var(--cat-solid);
+    color: var(--neutral-on-solid-strong, #fff);
+  }
+}
+
+// The slug is shown in the code font, like in the address bar.
+.code input {
+  font-family: var(--font-code);
+}
+
+.wrap {
+  overflow-wrap: anywhere;
+}
+
+.clamp2,
+.clamp3 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.clamp2 {
+  -webkit-line-clamp: 2;
+}
+
+.clamp3 {
+  -webkit-line-clamp: 3;
+}

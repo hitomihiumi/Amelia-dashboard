@@ -1,0 +1,26 @@
+// Phones: the footer buttons share the row.
+.actions {
+  @container page (max-width: 640px) {
+    > * {
+      flex: 1 1 140px;
+    }
+  }
+}
+
+// Embeds, buttons and menus: one row of three when each gets a decent width, otherwise stacked.
+.pickers {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+@container page (min-width: 760px) and (max-width: 999px) {
+  .pickers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@container page (min-width: 1480px) {
+  .pickers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

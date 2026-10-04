@@ -1,0 +1,25 @@
+@use "../styles/breakpoints.scss" as breakpoints;
+
+// Phones stack the drawer's top bar above the content (the 640px phone breakpoint is not one
+// of the design system's responsive props).
+.shell {
+  @include breakpoints.phone {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+// Wide enough to use a large monitor, narrow enough to keep lines readable on an ultrawide.
+$page-max-width: 1680px;
+
+.inner {
+  max-width: $page-max-width;
+  // Pages query the room next to the sidebar: `@container page (min-width: …)`.
+  container-type: inline-size;
+  container-name: page;
+
+  @include breakpoints.phone {
+    padding: var(--static-space-16);
+    gap: var(--static-space-16);
+  }
+}

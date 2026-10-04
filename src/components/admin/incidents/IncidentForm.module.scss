@@ -1,0 +1,23 @@
+// Form and live preview side by side once the page has room next to the sidebar (the `page`
+// container of AppShell); below that, one column.
+.layout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-24);
+  align-items: start;
+
+  @container page (min-width: 980px) {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+
+  @container page (max-width: 640px) {
+    gap: var(--static-space-16);
+  }
+}
+
+// `.preview.preview` outranks the `position` utility of the Column it sits on.
+.preview.preview {
+  @container page (min-width: 980px) {
+    position: sticky;
+    top: var(--static-space-24);
+  }
+}

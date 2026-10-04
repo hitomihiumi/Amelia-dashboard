@@ -1,0 +1,96 @@
+// Rows: one column of wide rows, two columns of cards when the page is really wide.
+.list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-12);
+  list-style: none;
+
+  @container page (min-width: 1280px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--static-space-16);
+  }
+}
+
+.search {
+  flex: 1 1 14rem;
+  max-width: 22rem;
+  min-width: 0;
+
+  @container page (max-width: 700px) {
+    max-width: none;
+    flex-basis: 100%;
+  }
+}
+
+// Each post lays itself out by its own width (wide row, compact row, banner card).
+.cell {
+  container-type: inline-size;
+  container-name: post;
+}
+
+.row {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-12);
+  align-items: center;
+  transition: border-color 0.15s ease;
+
+  &:hover,
+  &:focus-within {
+    border-color: var(--neutral-alpha-strong);
+  }
+
+  // Compact row: thumbnail beside the text, actions underneath.
+  @container post (min-width: 440px) {
+    grid-template-columns: 7rem minmax(0, 1fr);
+    gap: var(--static-space-12) var(--static-space-16);
+    align-items: stretch;
+  }
+
+  // Wide row: everything on one line.
+  @container post (min-width: 860px) {
+    grid-template-columns: 7.5rem minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}
+
+.thumb {
+  align-self: stretch;
+  aspect-ratio: 16 / 7;
+  min-height: 0;
+
+  @container post (min-width: 440px) {
+    aspect-ratio: auto;
+    min-height: 5rem;
+  }
+}
+
+.thumbPlaceholder {
+  background: linear-gradient(135deg, var(--cat-alpha-medium), var(--cat-alpha));
+  color: var(--cat-text);
+}
+
+.title:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.summary {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.wrapText {
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  @container post (min-width: 440px) {
+    grid-column: 1 / -1;
+  }
+
+  @container post (min-width: 860px) {
+    grid-column: auto;
+    justify-content: flex-end;
+  }
+}

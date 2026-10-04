@@ -1,10 +1,18 @@
 $breakpoint-xs: 480px;
+// Phones. Tablets and up keep persistent side navigation.
+$breakpoint-phone: 640px;
 $breakpoint-s: 768px;
 $breakpoint-m: 1024px;
 $breakpoint-l: 1440px;
 
 @mixin xs {
   @media (max-width: #{$breakpoint-xs}) {
+    @content;
+  }
+}
+
+@mixin phone {
+  @media (max-width: #{$breakpoint-phone}) {
     @content;
   }
 }

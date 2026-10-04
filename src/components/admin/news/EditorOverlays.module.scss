@@ -1,0 +1,5 @@
+// The slash menu rows are ToggleButtons: a two-line row needs a little less padding than the
+// `l` size gives. `[role]` outranks the size class.
+.slashItem[role] {
+  padding: var(--static-space-4) var(--static-space-8);
+}

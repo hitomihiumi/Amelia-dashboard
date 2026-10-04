@@ -1,0 +1,4 @@
+// The whole card is the link: keep the stronger border on hover (the surface tint comes from `Card`).
+.card:hover {
+  border-color: var(--neutral-border-strong);
+}

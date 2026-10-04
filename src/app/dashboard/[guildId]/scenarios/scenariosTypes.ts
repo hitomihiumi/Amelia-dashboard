@@ -1,6 +1,7 @@
 import type {
   ButtonCustom,
   EmbedCustom,
+  LayoutCustom,
   ModalCustom,
   ScenarioCustom,
   SelectMenuCustom,
@@ -13,4 +14,6 @@ export interface ComponentsLibrary {
   buttons: ButtonCustom[];
   selectMenus: SelectMenuCustom[];
   scenarios: ScenarioCustom[];
+  /** Components V2 layouts a message action can send instead of content/embeds. */
+  layouts: LayoutCustom[];
 }

@@ -1,0 +1,177 @@
+import React from "react";
+import Link from "next/link";
+import {
+  Button,
+  Column,
+  Flex,
+  Grid,
+  Row,
+  Tag,
+  Text,
+  Meta,
+  RevealFx,
+  Card,
+} from "@once-ui-system/core";
+import type { Metadata } from "next";
+import { baseURL, schema } from "@/resources";
+import { getFormatters, getT } from "@/i18n/server";
+import {
+  NEWS_CATEGORIES,
+  NEWS_PAGE_SIZE,
+  getPublishedPosts,
+  isNewsCategory,
+} from "@/lib/news/news";
+
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+
+  return Meta.generate({
+    title: `${t("site.news.title")} – ${schema.name}`,
+    description: t("site.news.metaDescription"),
+    baseURL,
+    path: "/news",
+  });
+}
+
+export default async function NewsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; page?: string }>;
+}) {
+  const t = await getT();
+  const format = await getFormatters();
+  const query = await searchParams;
+  const category = isNewsCategory(query.category) ? query.category : null;
+  const page = Math.max(1, Number(query.page) || 1);
+
+  const { posts, total } = await getPublishedPosts({ category, page });
+  const pages = Math.max(1, Math.ceil(total / NEWS_PAGE_SIZE));
+
+  const href = (next: { category?: string | null; page?: number }) => {
+    const params = new URLSearchParams();
+    const nextCategory = next.category === undefined ? category : next.category;
+    if (nextCategory) params.set("category", nextCategory);
+    if (next.page && next.page > 1) params.set("page", String(next.page));
+    const search = params.toString();
+    return search ? `/news?${search}` : "/news";
+  };
+
+  return (
+    <Flex fillWidth horizontal="center" paddingY="40" paddingX="16">
+      <Column maxWidth="l" fillWidth gap="32">
+        <RevealFx translateY={-0.5}>
+          <Column gap="8">
+            <Text variant="display-strong-xs">{t("site.news.title")}</Text>
+            <Text variant="body-default-m" onBackground="neutral-medium">
+              {t("site.news.subtitle")}
+            </Text>
+          </Column>
+        </RevealFx>
+
+        <RevealFx delay={300} translateY={-0.5}>
+          <Row gap="8" wrap>
+            <Button
+              size="s"
+              variant={category === null ? "primary" : "secondary"}
+              href={href({ category: null, page: 1 })}
+            >
+              {t("site.news.all")}
+            </Button>
+            {NEWS_CATEGORIES.map((item) => (
+              <Button
+                key={item}
+                size="s"
+                variant={category === item ? "primary" : "secondary"}
+                href={href({ category: item, page: 1 })}
+              >
+                {t(`site.news.categories.${item}`)}
+              </Button>
+            ))}
+          </Row>
+        </RevealFx>
+
+        <RevealFx delay={600} translateY={-0.5}>
+          {posts.length === 0 && (
+            <Text variant="body-default-m" onBackground="neutral-weak">
+              {t("site.news.empty")}
+            </Text>
+          )}
+        </RevealFx>
+
+        <Grid columns={3} m={{ columns: 2 }} s={{ columns: 1 }} gap="16" fillWidth>
+          {posts.map((post, idx) => (
+            <RevealFx key={post.id} delay={900 + 100 * idx} translateY={-0.5}>
+              <Card
+                direction="column"
+                fillWidth
+                fillHeight
+                gap="12"
+                padding="16"
+                radius="l"
+                border="neutral-medium"
+                background="surface"
+                key={post.id}
+                href={`/news/${post.slug}`}
+              >
+                {post.coverUrl && (
+                  // A plain <img>: covers can live on any host, which next/image would refuse.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={post.coverUrl}
+                    alt={post.title}
+                    loading="lazy"
+                    style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "cover", borderRadius: "var(--radius-m)" }}
+                  />
+                )}
+                <Row gap="8" vertical="center" wrap>
+                  <Tag scheme="neutral">
+                    {isNewsCategory(post.category)
+                      ? t(`site.news.categories.${post.category}`)
+                      : post.category}
+                  </Tag>
+                  <Text variant="body-default-xs" onBackground="neutral-weak">
+                    {format.date(post.publishedAt ?? post.createdAt, { dateStyle: "long" })}
+                  </Text>
+                </Row>
+                <Text variant="heading-strong-s">{post.title}</Text>
+                {post.summary && (
+                  <Text variant="body-default-s" onBackground="neutral-weak">
+                    {post.summary}
+                  </Text>
+                )}
+              </Card>
+            </RevealFx>
+          ))}
+        </Grid>
+
+        <RevealFx delay={1200} translateY={-0.5}>
+          {pages > 1 && (
+            <Row fillWidth horizontal="center" gap="8" vertical="center">
+              <Button
+                size="s"
+                variant="secondary"
+                disabled={page <= 1}
+                href={href({ page: page - 1 })}
+              >
+                {t("site.news.previous")}
+              </Button>
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                {t("site.news.page", { page, pages })}
+              </Text>
+              <Button
+                size="s"
+                variant="secondary"
+                disabled={page >= pages}
+                href={href({ page: page + 1 })}
+              >
+                {t("site.news.next")}
+              </Button>
+            </Row>
+          )}
+        </RevealFx>
+      </Column>
+    </Flex>
+  );
+}

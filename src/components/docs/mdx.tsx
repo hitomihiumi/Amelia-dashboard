@@ -12,7 +12,6 @@ import {
   InlineCode,
   Accordion,
   AccordionGroup,
-  CodeBlock,
   TextProps,
   HeadingLink,
   MediaProps,
@@ -25,7 +24,9 @@ import {
   ListItem,
   Line,
 } from "@once-ui-system/core";
+import { CodeBlock } from "@once-ui-system/core/code";
 import { PageList } from "./PageList";
+import { getT } from "@/i18n/server";
 
 const onceUIComponents = {
   Table,
@@ -86,7 +87,7 @@ function slugify(str: string): string {
     .toLowerCase()
     .replace(/\s+/g, "-") // Replace spaces with -
     .replace(/&/g, "-and-") // Replace & with 'and'
-    .replace(/[^\w\-]+/g, "") // Remove all non-word characters except for -
+    .replace(/[^\p{L}\p{N}_\-]+/gu, "") // Remove everything but letters (any script), digits, _ and -
     .replace(/\-\-+/g, "-"); // Replace multiple - with single -
 }
 
@@ -196,7 +197,9 @@ type CustomMDXProps = MDXRemoteProps & {
   components?: typeof components;
 };
 
-export function CustomMDX(props: CustomMDXProps) {
+export async function CustomMDX(props: CustomMDXProps) {
+  const t = await getT();
+
   // Add a try-catch block to handle any errors during MDX rendering
   try {
     return (
@@ -216,10 +219,10 @@ export function CustomMDX(props: CustomMDXProps) {
     return (
       <Column gap="16" padding="24" border="accent-medium" radius="m">
         <Text variant="heading-strong-m" onBackground="accent-strong">
-          Error rendering content
+          {t("docs.mdx.errorTitle")}
         </Text>
         <Text variant="body-default-m" onBackground="accent-medium">
-          There was an error rendering this content. Please try refreshing the page.
+          {t("docs.mdx.errorText")}
         </Text>
       </Column>
     );

@@ -1,0 +1,140 @@
+// Two columns of cards once the page has room (`page` container of AppShell), a sticky
+// index of the sections on the right when there is room for that as well. Phones and
+// tablets get one column, in the same order.
+.sections {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-24);
+
+  @container page (min-width: 980px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    // Banner + landing page on the left, links + status on the right: each pair is about
+    // as tall as the other one.
+    > :nth-child(1) {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    > :nth-child(2) {
+      grid-column: 2;
+      grid-row: 1;
+    }
+    > :nth-child(3) {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    > :nth-child(4) {
+      grid-column: 2;
+      grid-row: 2;
+    }
+  }
+
+  @container page (max-width: 640px) {
+    gap: var(--static-space-16);
+  }
+}
+
+// Shown only when the page is wide enough. `.index.index` outranks the `display` utility of
+// the Column it sits on.
+.index.index {
+  display: none;
+  flex-shrink: 0;
+
+  @container page (min-width: 1480px) {
+    display: flex;
+  }
+}
+
+// `[aria-current]` (always set) lifts the rule above the size class of the ToggleButton.
+.indexItem[aria-current] {
+  padding-inline: var(--static-space-12);
+}
+
+// The accent bar of the current section.
+.indexItem[aria-current="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--brand-solid-strong);
+}
+
+.section {
+  // Anchors from the index and from the overview land below the top edge.
+  scroll-margin-top: var(--static-space-24);
+}
+
+// ---------------------------------------------------------------------------
+// Choice chips (banner style, service status). The selected chip takes the colour of its tone.
+// The second selector outranks the hover rule of the ToggleButton underneath.
+// ---------------------------------------------------------------------------
+
+.chip[data-tone] {
+  height: 2.25rem;
+  min-height: 2.25rem;
+  padding-inline: var(--static-space-12);
+}
+
+.chip {
+  --tone: var(--neutral-solid-strong);
+  --tone-bg: var(--neutral-alpha-weak);
+  --tone-border: var(--neutral-alpha-strong);
+
+  &[data-tone="success"] {
+    --tone: var(--success-solid-strong);
+    --tone-bg: var(--success-alpha-weak);
+    --tone-border: var(--success-alpha-strong);
+  }
+  &[data-tone="warning"] {
+    --tone: var(--warning-solid-strong);
+    --tone-bg: var(--warning-alpha-weak);
+    --tone-border: var(--warning-alpha-strong);
+  }
+  &[data-tone="danger"] {
+    --tone: var(--danger-solid-strong);
+    --tone-bg: var(--danger-alpha-weak);
+    --tone-border: var(--danger-alpha-strong);
+  }
+  &[data-tone="info"] {
+    --tone: var(--info-solid-strong);
+    --tone-bg: var(--info-alpha-weak);
+    --tone-border: var(--info-alpha-strong);
+  }
+
+  &[aria-checked="true"],
+  &[aria-checked="true"]:hover:not([data-disabled]) {
+    border-color: var(--tone-border);
+    background: var(--tone-bg);
+    font-weight: 600;
+  }
+}
+
+.chipDot {
+  opacity: 0.55;
+
+  .chip[aria-checked="true"] & {
+    opacity: 1;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 25%, transparent);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Previews
+// ---------------------------------------------------------------------------
+
+.faded {
+  opacity: 0.35;
+  filter: saturate(0.6);
+}
+
+.heroGlow {
+  background:
+    radial-gradient(60% 80% at 20% 110%, var(--brand-alpha-medium), transparent 70%),
+    linear-gradient(var(--neutral-alpha-weak) 1px, transparent 1px) 0 0 / 1rem 1rem,
+    linear-gradient(90deg, var(--neutral-alpha-weak) 1px, transparent 1px) 0 0 / 1rem 1rem;
+}
+
+.wrapText {
+  overflow-wrap: anywhere;
+}
