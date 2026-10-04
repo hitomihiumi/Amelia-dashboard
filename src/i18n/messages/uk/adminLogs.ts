@@ -11,6 +11,14 @@ export const adminLogs: Dict<typeof en> = {
       "{count, plural, one {# попередження} few {# попередження} many {# попереджень} other {# попередження}}",
     window: "за останні {hours} год",
   },
+  containers: "Контейнери",
+  count: {
+    errors: "{count, plural, one {# помилка} few {# помилки} many {# помилок} other {# помилки}}",
+    warnings:
+      "{count, plural, one {# попередження} few {# попередження} many {# попереджень} other {# попередження}}",
+  },
+  consoleCount: "Показано {shown} з {total}",
+  consoleLive: "оновлюється кожні 15 с",
   filters: {
     level: "Важливість",
     all: "Усі",

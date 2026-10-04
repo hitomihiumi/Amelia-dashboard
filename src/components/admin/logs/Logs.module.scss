@@ -1,0 +1,243 @@
+@use "../../styles/breakpoints.scss" as breakpoints;
+
+// Clickable counters on top: they also act as the severity filter.
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--static-space-12);
+
+  @include breakpoints.phone {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.stat {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: var(--static-space-16);
+  padding: var(--static-space-16) var(--static-space-20);
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: var(--radius-l);
+  background: var(--surface-background, var(--page-background));
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--tone-line);
+  }
+
+  &.active {
+    border-color: var(--tone-line);
+    background: var(--tone-soft);
+  }
+}
+
+.statDot {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--tone);
+}
+
+.statValue {
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--tone-text);
+  font-variant-numeric: tabular-nums;
+}
+
+// One container filter: its name and what it logged, in words.
+.containers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--static-space-8);
+}
+
+.container {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--static-space-8);
+  min-width: 0;
+  padding: var(--static-space-12) var(--static-space-16);
+  border: 1px solid var(--neutral-alpha-medium);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--neutral-alpha-strong);
+  }
+
+  &.active {
+    border-color: var(--brand-border-strong);
+    background: var(--brand-alpha-weak);
+  }
+}
+
+.containerName {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--static-space-8);
+}
+
+.count {
+  padding: 0.125rem var(--static-space-8);
+  border-radius: var(--radius-full);
+  font-size: var(--static-font-size-xs, 0.75rem);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--neutral-on-background-weak);
+  background: var(--neutral-alpha-weak);
+
+  &.hasErrors {
+    color: var(--danger-on-background-strong);
+    background: var(--danger-alpha-medium);
+  }
+
+  &.hasWarnings {
+    color: var(--warning-on-background-strong);
+    background: var(--warning-alpha-medium);
+  }
+}
+
+.search {
+  min-width: 16rem;
+  flex: 1;
+}
+
+// The terminal: always dark, whatever the site theme is, like the consoles people are used to.
+.console {
+  --term-bg: #0c0e12;
+  --term-text: #d5d9e0;
+  --term-dim: #7b8494;
+  --term-error: #ff7a8a;
+  --term-warn: #ffc857;
+
+  overflow: hidden;
+  border: 1px solid var(--neutral-alpha-strong);
+  border-radius: var(--radius-l);
+  background: var(--term-bg);
+  color: var(--term-text);
+  font-family: var(--font-code), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.consoleBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--static-space-12);
+  padding: var(--static-space-8) var(--static-space-16);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--term-dim);
+  font-size: 0.75rem;
+}
+
+.consoleBody {
+  max-height: 70vh;
+  overflow: auto;
+  padding: var(--static-space-4) 0;
+}
+
+.day {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: var(--static-space-4) var(--static-space-16);
+  background: var(--term-bg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--term-dim);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.line {
+  display: grid;
+  grid-template-columns: 5.25rem 3.5rem 10rem minmax(0, 1fr);
+  gap: var(--static-space-12);
+  padding: 0.25rem var(--static-space-16);
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  &.error {
+    border-left-color: var(--term-error);
+    background: rgba(255, 122, 138, 0.06);
+  }
+
+  &.warn {
+    border-left-color: var(--term-warn);
+    background: rgba(255, 200, 87, 0.05);
+  }
+
+  @include breakpoints.phone {
+    grid-template-columns: auto auto minmax(0, 1fr);
+
+    .message {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.time {
+  color: var(--term-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.level {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+
+  .error & {
+    color: var(--term-error);
+  }
+
+  .warn & {
+    color: var(--term-warn);
+  }
+}
+
+.source {
+  overflow: hidden;
+  color: #8ab4ff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message {
+  margin: 0;
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+// Stack-trace lines after the first one.
+.trace {
+  display: block;
+  color: var(--term-dim);
+}
+
+.more {
+  padding: var(--static-space-8) var(--static-space-16);
+  color: var(--term-dim);
+  font-size: 0.75rem;
+}
