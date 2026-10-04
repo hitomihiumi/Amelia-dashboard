@@ -7,6 +7,13 @@ export const adminLogs = {
     warnings: "{count, plural, one {# warning} other {# warnings}}",
     window: "in the last {hours} h",
   },
+  containers: "Containers",
+  count: {
+    errors: "{count, plural, one {# error} other {# errors}}",
+    warnings: "{count, plural, one {# warning} other {# warnings}}",
+  },
+  consoleCount: "Showing {shown} of {total}",
+  consoleLive: "updates every 15 s",
   filters: {
     level: "Severity",
     all: "All",
