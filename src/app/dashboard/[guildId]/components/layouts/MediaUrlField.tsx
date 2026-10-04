@@ -4,10 +4,9 @@
 import { useDiscordPreviewOptional } from "@/contexts/DiscordPreviewContext";
 import { useT } from "@/i18n/client";
 import { replacePreviewTags } from "@/lib/discord/preview-tags";
-import { Input, Text } from "@once-ui-system/core";
+import { Column, Input, Row, Text } from "@once-ui-system/core";
 import { useEffect, useState } from "react";
 import { LuImage, LuImageOff, LuVideo } from "react-icons/lu";
-import styles from "./LayoutEditor.module.scss";
 
 const VIDEO_URL = /\.(mp4|webm|mov|m4v)(?:[?#].*)?$/i;
 
@@ -37,8 +36,14 @@ function MediaThumb({ url }: { url: string }) {
   }, [resolved]);
 
   return (
-    <div
-      className={styles.thumb}
+    <Row
+      center
+      overflow="hidden"
+      border={status === "error" ? "danger-strong" : status === "ok" || status === "video" ? "success-medium" : "neutral-medium"}
+      radius="s"
+      background="neutral-alpha-weak"
+      onBackground={status === "error" ? "danger-strong" : "neutral-weak"}
+      style={{ width: 56, height: 56, flexShrink: 0 }}
       data-status={status === "video" ? "ok" : status}
       title={
         status === "error"
@@ -55,15 +60,17 @@ function MediaThumb({ url }: { url: string }) {
       ) : status === "error" ? (
         <LuImageOff size={20} aria-hidden />
       ) : (
+        // A native <img>: the thumbnail needs onLoad/onError for links on any host, which `Media`
+        // (next/image) cannot report.
         <img
           src={src}
           alt=""
           onLoad={() => setStatus("ok")}
           onError={() => setStatus("error")}
-          style={{ opacity: status === "ok" ? 1 : 0.4 }}
+          style={{ width: "100%", height: "100%", objectFit: "cover", opacity: status === "ok" ? 1 : 0.4 }}
         />
       )}
-    </div>
+    </Row>
   );
 }
 
@@ -82,9 +89,9 @@ export function MediaUrlField({ id, value, onChange, invalid, label, placeholder
   const hasPlaceholder = /\{[a-zA-Z][\w.]*\}/.test(value);
 
   return (
-    <div className={styles.mediaRow}>
+    <Row fillWidth gap="12" minWidth="0" vertical="start">
       <MediaThumb url={value} />
-      <div className={styles.mediaFields}>
+      <Column flex="1" gap="8" minWidth="0">
         <Input
           id={id}
           label={label}
@@ -101,7 +108,7 @@ export function MediaUrlField({ id, value, onChange, invalid, label, placeholder
             {t("layouts.media.placeholderNote")}
           </Text>
         ) : null}
-      </div>
-    </div>
+      </Column>
+    </Row>
   );
 }

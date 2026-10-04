@@ -7,8 +7,7 @@ import {
   countLayoutComponents,
   countLayoutText,
 } from "@/lib/db/types";
-import { Text } from "@once-ui-system/core";
-import { LuCircleAlert, LuCircleCheck } from "react-icons/lu";
+import { Column, Grid, Row, Tag, Text } from "@once-ui-system/core";
 import styles from "./LayoutEditor.module.scss";
 
 type BudgetState = "ok" | "warn" | "over";
@@ -18,6 +17,9 @@ export function budgetState(value: number, max: number): BudgetState {
   if (value > max) return "over";
   return value >= max * 0.85 ? "warn" : "ok";
 }
+
+const STATE_SOLID = { ok: "success-strong", warn: "warning-strong", over: "danger-strong" } as const;
+const STATE_TEXT = { ok: undefined, warn: "warning-strong", over: "danger-strong" } as const;
 
 function Meter({
   label,
@@ -33,26 +35,44 @@ function Meter({
   const percent = Math.min(100, (value / max) * 100);
 
   return (
-    <div className={styles.meter} data-budget-state={state}>
-      <div className={styles.meterHead}>
+    <Column gap="4" minWidth="0" data-budget-state={state}>
+      <Row horizontal="between" gap="8" style={{ alignItems: "baseline" }}>
         <Text variant="label-default-xs" onBackground="neutral-weak">
           {label}
         </Text>
-        <Text variant="label-strong-s" className={styles.meterValue} data-state={state}>
+        <Text
+          variant="label-strong-s"
+          onBackground={STATE_TEXT[state]}
+          style={{ fontVariantNumeric: "tabular-nums" }}
+          data-state={state}
+        >
           {format.number(value)}/{format.number(max)}
         </Text>
-      </div>
-      <div
-        className={styles.meterTrack}
+      </Row>
+      <Row
         role="progressbar"
         aria-label={label}
         aria-valuemin={0}
         aria-valuemax={max}
         aria-valuenow={Math.min(value, max)}
+        fillWidth
+        radius="full"
+        background="neutral-alpha-medium"
+        overflow="hidden"
+        style={{ height: 6 }}
       >
-        <div className={styles.meterFill} data-state={state} style={{ width: `${percent}%` }} />
-      </div>
-    </div>
+        <Row
+          fillHeight
+          radius="full"
+          solid={STATE_SOLID[state]}
+          data-state={state}
+          style={{
+            width: `${percent}%`,
+            transition: "width 0.15s ease, background-color 0.15s ease",
+          }}
+        />
+      </Row>
+    </Column>
   );
 }
 
@@ -69,7 +89,17 @@ export function BudgetBar({
   const t = useT();
 
   return (
-    <div className={`${styles.budget} ${compact ? styles.budgetCompact : ""}`} data-budget>
+    <Grid
+      fillWidth
+      gap={compact ? "12" : "16"}
+      paddingX={compact ? "12" : "16"}
+      paddingY={compact ? "8" : "12"}
+      border="neutral-medium"
+      radius="m"
+      background="neutral-alpha-weak"
+      className={`${styles.budget} ${compact ? styles.budgetCompact : ""}`}
+      data-budget
+    >
       <Meter
         label={t("layouts.budget.components")}
         value={countLayoutComponents(layout)}
@@ -81,20 +111,19 @@ export function BudgetBar({
         max={LAYOUT_LIMITS.MAX_TEXT_LENGTH}
       />
       {issueCount === undefined ? null : (
-        <span className={styles.status} data-state={issueCount > 0 ? "issues" : "ok"}>
-          {issueCount > 0 ? (
-            <>
-              <LuCircleAlert size={14} aria-hidden />
-              {t("layouts.budget.issues", { count: issueCount })}
-            </>
-          ) : (
-            <>
-              <LuCircleCheck size={14} aria-hidden />
-              {t("layouts.budget.valid")}
-            </>
-          )}
-        </span>
+        <Tag
+          scheme={issueCount > 0 ? "danger" : "success"}
+          size="m"
+          prefixIcon={issueCount > 0 ? "danger" : "check"}
+          label={
+            issueCount > 0
+              ? t("layouts.budget.issues", { count: issueCount })
+              : t("layouts.budget.valid")
+          }
+          className={styles.status}
+          data-state={issueCount > 0 ? "issues" : "ok"}
+        />
       )}
-    </div>
+    </Grid>
   );
 }

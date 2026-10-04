@@ -1,33 +1,10 @@
-// Editor forms use the width of the editor pane: short fields sit side by side when there is
-// room and stack when there is not. Fields that need the whole row take `.full`.
+// Cells of an editor grid (EditorGrid.tsx) may shrink below their content; a field that needs the
+// whole row takes `.full`.
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: var(--static-space-16);
-  align-items: start;
-  width: 100%;
+.cells > * {
   min-width: 0;
-
-  > * {
-    min-width: 0;
-  }
 }
 
 .full {
   grid-column: 1 / -1;
-}
-
-// Repeating items (options, fields): as many columns as fit, an opened item grows downward.
-.list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
-  gap: var(--static-space-12);
-  align-items: start;
-  width: 100%;
-  min-width: 0;
-
-  > * {
-    min-width: 0;
-  }
 }

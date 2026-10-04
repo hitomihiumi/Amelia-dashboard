@@ -1,4 +1,4 @@
-import { Text } from "@once-ui-system/core";
+import { Column, Grid, Row, Text } from "@once-ui-system/core";
 import type { ReactNode, Ref } from "react";
 import { LuEye } from "react-icons/lu";
 import styles from "./Workspace.module.scss";
@@ -19,16 +19,32 @@ export function Workspace({
   asideSize?: "default" | "narrow";
 }) {
   return (
-    <div className={`${styles.workspace} ${asideSize === "narrow" ? styles.workspaceWide : ""}`}>
-      <div className={styles.main}>{children}</div>
-      <aside className={styles.aside}>{aside}</aside>
-    </div>
+    <Grid fillWidth className={`${styles.workspace} ${asideSize === "narrow" ? styles.workspaceWide : ""}`}>
+      <Column fillWidth gap="16">
+        {children}
+      </Column>
+      <Column as="aside" minWidth="0" className={styles.aside}>
+        {aside}
+      </Column>
+    </Grid>
   );
 }
 
 /** Editor surface (a card with the same chrome as `Section`). */
 export function WorkspaceCard({ children }: { children: ReactNode }) {
-  return <div className={styles.card}>{children}</div>;
+  return (
+    <Column
+      fillWidth
+      gap="16"
+      padding="24"
+      border="neutral-medium"
+      radius="l"
+      background="surface"
+      className={styles.card}
+    >
+      {children}
+    </Column>
+  );
 }
 
 /** Right-hand pane with a header; its body scrolls when the pane would not fit the viewport. */
@@ -52,33 +68,89 @@ export function PreviewPane({
   children: ReactNode;
 }) {
   return (
-    <section className={styles.pane} aria-label={title}>
-      <header className={styles.paneHeader}>
-        <span className={styles.paneTitle}>
+    <Column
+      as="section"
+      aria-label={title}
+      fillWidth
+      minHeight="0"
+      border="neutral-medium"
+      radius="l"
+      background="surface"
+      overflow="hidden"
+      style={{ maxHeight: "inherit" }}
+    >
+      <Row
+        as="header"
+        fillWidth
+        horizontal="between"
+        vertical="center"
+        wrap
+        gap="8"
+        paddingX="16"
+        paddingY="12"
+        borderBottom="neutral-weak"
+        style={{ columnGap: "var(--static-space-12)" }}
+      >
+        <Row fitWidth vertical="center" gap="8">
           {icon ?? <LuEye size={16} aria-hidden />}
           <Text variant="label-strong-s">{title}</Text>
-        </span>
-        {meta ? <div className={styles.paneMeta}>{meta}</div> : null}
-      </header>
-      {toolbar ? <div className={styles.paneToolbar}>{toolbar}</div> : null}
-      <div className={styles.paneBody} ref={bodyRef}>
+        </Row>
+        {meta ? (
+          <Row vertical="center" wrap gap="8" minWidth="0">
+            {meta}
+          </Row>
+        ) : null}
+      </Row>
+      {toolbar ? (
+        <Column fillWidth paddingX="16" paddingY="8" borderBottom="neutral-weak">
+          {toolbar}
+        </Column>
+      ) : null}
+      <Column
+        ref={bodyRef}
+        fillWidth
+        gap="16"
+        padding="16"
+        minHeight="0"
+        overflowY="auto"
+        className={styles.paneBody}
+      >
         {children}
-      </div>
-    </section>
+      </Column>
+    </Column>
   );
 }
 
 /** Intentional empty state of a preview pane. */
 export function PreviewEmpty({ title, text }: { title: string; text?: string }) {
   return (
-    <div className={styles.paneEmpty}>
-      <LuEye size={26} aria-hidden />
-      <Text variant="body-strong-s">{title}</Text>
+    <Column
+      fillWidth
+      center
+      gap="8"
+      padding="24"
+      border="neutral-medium"
+      borderStyle="dashed"
+      radius="m"
+      background="neutral-alpha-weak"
+      onBackground="neutral-weak"
+      className={styles.paneEmpty}
+    >
+      <LuEye size={26} aria-hidden style={{ marginBottom: "var(--static-space-4)", opacity: 0.8 }} />
+      <Text variant="body-strong-s" align="center">
+        {title}
+      </Text>
       {text ? (
-        <Text variant="body-default-s" onBackground="neutral-weak" className={styles.paneEmptyText}>
+        <Text
+          variant="body-default-s"
+          onBackground="neutral-weak"
+          align="center"
+          wrap="balance"
+          style={{ maxWidth: "42ch" }}
+        >
           {text}
         </Text>
       ) : null}
-    </div>
+    </Column>
   );
 }

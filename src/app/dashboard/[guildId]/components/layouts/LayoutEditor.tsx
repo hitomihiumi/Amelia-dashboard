@@ -19,11 +19,11 @@ import {
   usedInteractives,
 } from "@/lib/layouts/blocks";
 import { type IssueContext, formatIssue, groupIssues } from "@/lib/layouts/issues";
-import { Button, Input, Row, Text } from "@once-ui-system/core";
+import { Button, Column, Input, Row, Text } from "@once-ui-system/core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LuCircleAlert, LuLayoutTemplate } from "react-icons/lu";
+import { LuLayoutTemplate } from "react-icons/lu";
 import { AddBlockMenu } from "./AddBlockMenu";
-import { BlockList } from "./BlockTree";
+import { BlockList, IssueList } from "./BlockTree";
 import { BudgetBar } from "./BudgetBar";
 import styles from "./LayoutEditor.module.scss";
 import {
@@ -347,7 +347,9 @@ export function LayoutEditor({
   return (
     <EditorActionsContext.Provider value={actions}>
       <EditorEnvContext.Provider value={env}>
-        <div
+        <Column
+          fillWidth
+          gap="16"
           className={styles.editor}
           onDrop={commitDrop}
           onDragOver={(e) => {
@@ -369,26 +371,33 @@ export function LayoutEditor({
 
           <BudgetBar layout={value} issueCount={issues.length} />
 
-          {layoutIssues.length > 0 ? (
-            <ul className={`${styles.issues} ${styles.layoutIssues}`} role="alert">
-              {layoutIssues.map((issue, i) => (
-                <li key={`${issue.code}-${i}`}>
-                  <LuCircleAlert size={14} aria-hidden />
-                  <span>{formatIssue(t, issue, issueContext)}</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          {layoutIssues.length > 0 ? <IssueList issues={layoutIssues} context={issueContext} /> : null}
 
           {blockCount === 0 ? (
-            <div className={styles.emptyBlocks}>
+            <Column
+              fillWidth
+              horizontal="center"
+              gap="12"
+              paddingX="16"
+              paddingY="24"
+              border="neutral-strong"
+              borderStyle="dashed"
+              radius="m"
+            >
               <LuLayoutTemplate size={28} aria-hidden />
-              <Text variant="body-strong-m">{t("layouts.empty.title")}</Text>
-              <Text variant="body-default-s" onBackground="neutral-weak" style={{ maxWidth: 360 }}>
+              <Text variant="body-strong-m" align="center">
+                {t("layouts.empty.title")}
+              </Text>
+              <Text
+                variant="body-default-s"
+                onBackground="neutral-weak"
+                align="center"
+                style={{ maxWidth: 360 }}
+              >
                 {t("layouts.empty.text")}
               </Text>
               <AddBlockMenu parentId={ROOT} variant="primary" label={t("layouts.empty.add")} />
-            </div>
+            </Column>
           ) : (
             <>
               <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
@@ -410,7 +419,7 @@ export function LayoutEditor({
               />
             </>
           )}
-        </div>
+        </Column>
       </EditorEnvContext.Provider>
     </EditorActionsContext.Provider>
   );

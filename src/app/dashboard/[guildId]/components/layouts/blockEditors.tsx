@@ -25,8 +25,8 @@ import {
   Switch,
   Text,
 } from "@once-ui-system/core";
+import type { ReactNode } from "react";
 import { useEditorActions, useEditorEnv } from "./editorContext";
-import styles from "./LayoutEditor.module.scss";
 import { MediaUrlField } from "./MediaUrlField";
 import {
   ButtonSwatch,
@@ -46,6 +46,23 @@ function move<T>(list: T[], from: number, delta: -1 | 1): T[] {
   const next = list.slice();
   [next[from], next[to]] = [next[to], next[from]];
   return next;
+}
+
+/** A bordered group of fields inside a block (one gallery item, the thumbnail of a section). */
+function SubCard({ children }: { children: ReactNode }) {
+  return (
+    <Column
+      fillWidth
+      gap="8"
+      padding="12"
+      border="neutral-medium"
+      radius="m"
+      background="neutral-alpha-weak"
+      minWidth="0"
+    >
+      {children}
+    </Column>
+  );
 }
 
 // ==================== TEXT ====================
@@ -150,7 +167,7 @@ export function GalleryEditor({
       </Row>
 
       {block.items.map((item, i) => (
-        <div className={styles.subCard} key={i}>
+        <SubCard key={i}>
           <Row fillWidth horizontal="between" vertical="center" gap="8">
             <Text variant="label-strong-s">{t("layouts.gallery.itemTitle", { n: i + 1 })}</Text>
             <Row gap="2">
@@ -198,7 +215,7 @@ export function GalleryEditor({
             checked={Boolean(item.spoiler)}
             onToggle={() => patch(i, { spoiler: !item.spoiler })}
           />
-        </div>
+        </SubCard>
       ))}
     </Column>
   );
@@ -291,7 +308,7 @@ export function SectionEditor({
         />
 
         {accessory.kind === "thumbnail" ? (
-          <div className={styles.subCard}>
+          <SubCard>
             <MediaUrlField
               id={`${block.id}-thumb-url`}
               label={t("layouts.media.url")}
@@ -313,7 +330,7 @@ export function SectionEditor({
               checked={Boolean(accessory.spoiler)}
               onToggle={() => onChange({ ...block, accessory: { ...accessory, spoiler: !accessory.spoiler } })}
             />
-          </div>
+          </SubCard>
         ) : library.buttons.length === 0 ? (
           <NothingStored kind="buttons" onGoto={actions.gotoTab && (() => actions.gotoTab?.("buttons"))} />
         ) : (
@@ -399,7 +416,19 @@ export function ActionsEditor({
             {block.buttons.map((id, i) => {
               const button = library.buttons.find((candidate) => candidate.id === id);
               return (
-                <div className={styles.rowItem} key={`${id}-${i}`}>
+                <Row
+                  key={`${id}-${i}`}
+                  fillWidth
+                  vertical="center"
+                  gap="8"
+                  paddingY="4"
+                  paddingRight="4"
+                  paddingLeft="8"
+                  border="neutral-medium"
+                  radius="s"
+                  background="neutral-alpha-weak"
+                  minWidth="0"
+                >
                   {button ? <ButtonSwatch style={button.style} /> : null}
                   <Text
                     variant="body-default-s"
@@ -433,7 +462,7 @@ export function ActionsEditor({
                     tooltip={t("layouts.actions.removeButton")}
                     onClick={() => setButtons(block.buttons.filter((_, index) => index !== i))}
                   />
-                </div>
+                </Row>
               );
             })}
 

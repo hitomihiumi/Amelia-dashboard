@@ -17,7 +17,7 @@ import {
   Textarea,
 } from "@once-ui-system/core";
 import React from "react";
-import styles from "./Editors.module.scss";
+import { EditorList } from "./EditorGrid";
 
 /** Discord allows at most 25 fields per embed. */
 const MAX_FIELDS = 25;
@@ -260,7 +260,7 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
         </Button>
       </Row>
 
-      <div className={styles.list}>
+      <EditorList>
         {(value.fields ?? []).map((field, i) => (
           <FieldEditor
             key={i}
@@ -270,7 +270,7 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
             onDelete={() => removeField(i)}
           />
         ))}
-      </div>
+      </EditorList>
     </Column>
   );
 }

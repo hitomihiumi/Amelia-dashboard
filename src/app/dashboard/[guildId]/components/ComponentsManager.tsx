@@ -23,10 +23,13 @@ import type { DiscordRole } from "@/lib/discord/role-style";
 import type { GuildActionState } from "@/types/dashboard";
 import {
   Button,
+  Column,
   Feedback,
+  Grid,
   Icon,
   IconButton,
   RevealFx,
+  Row,
   SegmentedControl,
   Tag,
   Text,
@@ -51,6 +54,9 @@ import {
 } from "./componentsTypes";
 
 type TabValue = ComponentsTab;
+
+/** `Row as="button"` does not type `type`, but the element still needs it (never a submit button). */
+const NATIVE_BUTTON = { type: "button" } as const;
 
 const TAB_LABEL_KEYS: Record<TabValue, MessageKey> = {
   buttons: "builder.components.tabs.buttons",
@@ -379,7 +385,7 @@ export function ComponentsManager({
     <RevealFx delay={300} translateY={-0.5} fillWidth>
       <Workspace aside={preview}>
         <WorkspaceCard>
-          <div className={styles.tabs} ref={tabsRef}>
+          <Column fillWidth ref={tabsRef}>
             <SegmentedControl
               fillWidth
               value={tab}
@@ -392,19 +398,26 @@ export function ComponentsManager({
                 { label: t(TAB_LABEL_KEYS.layouts), value: "layouts" },
               ]}
             />
-          </div>
+          </Column>
 
-          <div className={styles.toolbar}>
-            <span className={styles.toolbarTitle}>
+          <Row
+            fillWidth
+            horizontal="between"
+            vertical="center"
+            wrap
+            gap="12"
+            style={{ columnGap: "var(--static-space-16)" }}
+          >
+            <Row fitWidth gap="12" minWidth="0" style={{ alignItems: "baseline" }}>
               <Text variant="heading-strong-s">{t(TAB_LABEL_KEYS[tab])}</Text>
               <Text variant="body-default-s" onBackground="neutral-weak">
                 {items.length}
               </Text>
-            </span>
+            </Row>
             <Button prefixIcon="plus" onClick={() => startCreate(tab)}>
               {t(NEW_ITEM_KEYS[tab])}
             </Button>
-          </div>
+          </Row>
 
           {items.length === 0 ? (
             <Feedback
@@ -413,7 +426,14 @@ export function ComponentsManager({
               description={t(EMPTY_TEXT_KEYS[tab])}
             />
           ) : (
-            <div className={styles.items}>
+            <Grid
+              fillWidth
+              gap="12"
+              style={{
+                gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
+                alignItems: "start",
+              }}
+            >
               {items.map((item) => (
                 <ComponentItem
                   key={item.id}
@@ -445,7 +465,7 @@ export function ComponentsManager({
                   }}
                 />
               ))}
-            </div>
+            </Grid>
           )}
         </WorkspaceCard>
       </Workspace>
@@ -565,18 +585,35 @@ function ComponentItem({
   const usage = usageNames && usageNames.length > 0 ? usageNames : undefined;
 
   return (
-    <div className={styles.item} data-open={open} data-item-id={item.id}>
-      <button
-        type="button"
+    <Column
+      minWidth="0"
+      border={open ? "brand-strong" : "neutral-medium"}
+      radius="m"
+      background={open ? "surface" : "neutral-alpha-weak"}
+      className={styles.item}
+      data-open={open}
+      data-item-id={item.id}
+      // An opened item takes the whole row of the grid.
+      style={open ? { gridColumn: "1 / -1" } : undefined}
+    >
+      <Row
+        as="button"
+        {...NATIVE_BUTTON}
+        fillWidth
+        vertical="center"
+        gap="12"
+        paddingX="16"
+        paddingY="12"
         className={styles.itemHead}
+        style={{ minHeight: 64 }}
         aria-expanded={open}
         data-item-head
         onClick={onToggle}
       >
-        <span className={styles.itemIcon}>
+        <Row fitWidth padding="8" radius="s" background="neutral-alpha-weak">
           <Icon name={tabIcon(tab)} size="s" onBackground="brand-strong" />
-        </span>
-        <span className={styles.itemText}>
+        </Row>
+        <Column gap="2" flex="1" minWidth="0" className={styles.itemText}>
           <Text variant="body-strong-s">{name}</Text>
           {subtitle && (
             <Text variant="body-default-s" onBackground="neutral-weak">
@@ -590,14 +627,25 @@ function ComponentItem({
                 : t("builder.components.usedIn", { count: usage.length })}
             </Text>
           )}
-        </span>
-        <span className={styles.chevron}>
-          <Icon name="chevronDown" size="s" onBackground={open ? "neutral-strong" : "neutral-weak"} />
-        </span>
-      </button>
+        </Column>
+        <Icon
+          name="chevronDown"
+          size="s"
+          onBackground={open ? "neutral-strong" : "neutral-weak"}
+          style={{ transform: open ? "rotate(180deg)" : undefined, transition: "transform 0.15s ease" }}
+        />
+      </Row>
       {open && (
-        <div className={styles.itemBody}>
-          <div className={styles.itemActions}>
+        <Column
+          fillWidth
+          gap="16"
+          paddingTop="8"
+          paddingX="16"
+          paddingBottom="16"
+          minWidth="0"
+          className={styles.itemBody}
+        >
+          <Row fillWidth wrap horizontal="end" gap="8">
             <IconButton
               icon="copy"
               variant="secondary"
@@ -633,7 +681,7 @@ function ComponentItem({
                 onClick={onDelete}
               />
             )}
-          </div>
+          </Row>
           {tab === "buttons" && (
             <ButtonEditor guildId={guildId} value={item as ButtonCustom} onChange={onChange} />
           )}
@@ -656,8 +704,8 @@ function ComponentItem({
               onGotoTab={onGotoTab}
             />
           )}
-        </div>
+        </Column>
       )}
-    </div>
+    </Column>
   );
 }

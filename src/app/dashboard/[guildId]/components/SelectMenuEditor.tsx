@@ -17,7 +17,7 @@ import {
 } from "@once-ui-system/core";
 import React from "react";
 import { EmojiField, EmojiValueField } from "@/components/dashboard/discord/EmojiField";
-import styles from "./Editors.module.scss";
+import { EditorGrid, EditorList } from "./EditorGrid";
 
 /** Discord allows at most 25 options per select menu. */
 const MAX_OPTIONS = 25;
@@ -59,7 +59,7 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
 
   return (
     <Column fillWidth gap="16">
-      <div className={styles.grid}>
+      <EditorGrid>
         <Input
           id="select-name"
           label={t("builder.shared.internalName")}
@@ -75,7 +75,7 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
           maxLength={150}
           characterCount
         />
-      </div>
+      </EditorGrid>
       <Text variant="body-default-s" onBackground="neutral-weak">
         {t("builder.shared.customId")} <InlineCode>{value.id}</InlineCode>
       </Text>
@@ -116,7 +116,7 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
         </Button>
       </Row>
 
-      <div className={styles.list}>
+      <EditorList>
         {value.options.map((opt, i) => (
           <OptionEditor
             key={opt.value}
@@ -126,7 +126,7 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
             onMove={(direction) => moveOption(i, direction)}
           />
         ))}
-      </div>
+      </EditorList>
     </Column>
   );
 }

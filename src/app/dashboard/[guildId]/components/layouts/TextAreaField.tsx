@@ -12,7 +12,16 @@ import {
   toggleLinePrefix,
   wrapSelection,
 } from "@/lib/layouts/markdown";
-import { Column, DropdownWrapper, IconButton, Option, Row, Text, Textarea } from "@once-ui-system/core";
+import {
+  Column,
+  DropdownWrapper,
+  IconButton,
+  Line,
+  Option,
+  Row,
+  Text,
+  Textarea,
+} from "@once-ui-system/core";
 import { type ReactNode, useRef, useState } from "react";
 import {
   LuBold,
@@ -27,7 +36,6 @@ import {
   LuStrikethrough,
   LuUnderline,
 } from "react-icons/lu";
-import styles from "./LayoutEditor.module.scss";
 
 const PLACEHOLDER_LABELS: Record<keyof typeof VARIABLE_PLACEHOLDERS, MessageKey> = {
   USER_ID: "layouts.placeholders.USER_ID",
@@ -55,6 +63,19 @@ export interface TextAreaFieldProps {
   invalid?: boolean;
   /** Extra controls on the right of the toolbar, e.g. "remove this text". */
   actions?: ReactNode;
+}
+
+function ToolbarSeparator() {
+  return (
+    <Line
+      vert
+      aria-hidden
+      fillHeight={false}
+      marginX="4"
+      background="neutral-alpha-medium"
+      style={{ height: 20 }}
+    />
+  );
 }
 
 /** A markdown textarea with a formatting toolbar, a placeholder menu and its own character count. */
@@ -112,7 +133,18 @@ export function TextAreaField({
         </Text>
       </Row>
 
-      <div className={styles.toolbar} role="toolbar" aria-label={t("layouts.text.toolbar")}>
+      <Row
+        role="toolbar"
+        aria-label={t("layouts.text.toolbar")}
+        fillWidth
+        wrap
+        vertical="center"
+        gap="2"
+        padding="2"
+        border="neutral-medium"
+        radius="m"
+        background="neutral-alpha-weak"
+      >
         {tool("layouts.text.bold", <LuBold size={15} />, (v, s, e) =>
           wrapSelection(v, s, e, "**", t("layouts.text.sampleBold")),
         )}
@@ -125,18 +157,18 @@ export function TextAreaField({
         {tool("layouts.text.strike", <LuStrikethrough size={15} />, (v, s, e) =>
           wrapSelection(v, s, e, "~~", t("layouts.text.sampleStrike")),
         )}
-        <span className={styles.toolbarSep} aria-hidden />
+        <ToolbarSeparator />
         {tool("layouts.text.heading", <LuHeading size={15} />, cycleHeading)}
         {tool("layouts.text.list", <LuList size={15} />, (v, s, e) => toggleLinePrefix(v, s, e, "- "))}
         {tool("layouts.text.quote", <LuQuote size={15} />, (v, s, e) => toggleLinePrefix(v, s, e, "> "))}
-        <span className={styles.toolbarSep} aria-hidden />
+        <ToolbarSeparator />
         {tool("layouts.text.code", <LuCode size={15} />, (v, s, e) =>
           wrapSelection(v, s, e, "`", t("layouts.text.sampleCode")),
         )}
         {tool("layouts.text.spoiler", <LuEyeOff size={15} />, (v, s, e) =>
           wrapSelection(v, s, e, "||", t("layouts.text.sampleSpoiler")),
         )}
-        <span className={styles.toolbarSep} aria-hidden />
+        <ToolbarSeparator />
         <DropdownWrapper
           open={placeholdersOpen}
           onOpenChange={setPlaceholdersOpen}
@@ -194,7 +226,7 @@ export function TextAreaField({
             {actions}
           </Row>
         ) : null}
-      </div>
+      </Row>
 
       <Textarea
         ref={ref}

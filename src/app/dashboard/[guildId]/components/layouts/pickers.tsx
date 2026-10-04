@@ -4,20 +4,25 @@ import { LabelSelect } from "@/components/dashboard/discord/LabelSelect";
 import { useT } from "@/i18n/client";
 import type { ButtonCustom, SelectMenuCustom } from "@/lib/db/types";
 import { DISCORD_BUTTON_COLORS } from "@/lib/discord/discord-style";
-import { Button, Column, Text } from "@once-ui-system/core";
+import { Button, Column, Row, Text } from "@once-ui-system/core";
 import type { ComponentProps } from "react";
 import { BUTTON_STYLE_LABEL_KEY } from "../ButtonEditor";
-import styles from "./LayoutEditor.module.scss";
 
 type Option = ComponentProps<typeof LabelSelect>["options"][number];
 
 /** The colour of a button as it looks in Discord, so stored buttons are recognisable in a list. */
 export function ButtonSwatch({ style }: { style: ButtonCustom["style"] }) {
   return (
-    <span
-      className={styles.swatch}
-      style={{ backgroundColor: (DISCORD_BUTTON_COLORS[style] ?? DISCORD_BUTTON_COLORS.PRIMARY).bg }}
+    <Row
+      inline
+      radius="xs"
       aria-hidden
+      style={{
+        width: 14,
+        height: 14,
+        flexShrink: 0,
+        backgroundColor: (DISCORD_BUTTON_COLORS[style] ?? DISCORD_BUTTON_COLORS.PRIMARY).bg,
+      }}
     />
   );
 }
@@ -42,10 +47,10 @@ export function useButtonOptions(
         value: button.id,
         disabled,
         label: (
-          <span className={styles.optionLabel}>
+          <Row inline vertical="center" gap="8" minWidth="0">
             <ButtonSwatch style={button.style} />
-            <span>{buttonName(button, t("builder.fallback.button"))}</span>
-          </span>
+            <Text>{buttonName(button, t("builder.fallback.button"))}</Text>
+          </Row>
         ),
         description: disabled
           ? t("layouts.pickers.usedElsewhere")

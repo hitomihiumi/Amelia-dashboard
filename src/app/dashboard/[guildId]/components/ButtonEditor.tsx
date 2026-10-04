@@ -13,6 +13,7 @@ import {
   Text,
 } from "@once-ui-system/core";
 import { EmojiField, EmojiValueField } from "@/components/dashboard/discord/EmojiField";
+import { EditorGrid } from "./EditorGrid";
 import styles from "./Editors.module.scss";
 
 export interface ButtonEditorProps {
@@ -39,7 +40,7 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
   };
 
   return (
-    <div className={styles.grid}>
+    <EditorGrid>
       <Input
         id="btn-name"
         label={t("builder.buttons.nameLabel")}
@@ -69,14 +70,14 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
           buttons={STYLES.map((s) => ({ label: t(BUTTON_STYLE_LABEL_KEY[s]), value: s }))}
         />
       </Column>
-      <div className={styles.full}>
+      <Column className={styles.full}>
         <EmojiValueField
           id="btn-emoji"
           label={t("builder.shared.emoji")}
           value={value.emoji}
           onChange={(emoji) => update({ emoji })}
         />
-      </div>
+      </Column>
       {value.style === "LINK" ? (
         <Input
           id="btn-url"
@@ -101,6 +102,6 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
           onToggle={() => update({ disabled: !value.disabled })}
         />
       </Row>
-    </div>
+    </EditorGrid>
   );
 }

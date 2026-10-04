@@ -6,7 +6,7 @@ import type { LayoutIssue } from "@/lib/db/types";
 import { resolveDiscordColor } from "@/lib/discord/discord-style";
 import { type Block, type ParentId, ROOT } from "@/lib/layouts/blocks";
 import { type IssueContext, NO_ISSUES, formatIssue, issueSubPath } from "@/lib/layouts/issues";
-import { IconButton, Text } from "@once-ui-system/core";
+import { Column, IconButton, Row, Tag, Text } from "@once-ui-system/core";
 import { Fragment, memo, useMemo, useRef } from "react";
 import { LuChevronDown, LuCircleAlert, LuGripVertical } from "react-icons/lu";
 import { AddBlockMenu } from "./AddBlockMenu";
@@ -75,13 +75,17 @@ const BlockCard = memo(function BlockCard({
   const childCount = block.type === "container" ? block.children.length : 0;
 
   return (
-    <div
+    <Column
       ref={cardRef}
       id={blockDomId(block.id)}
       data-block-card
       data-selected={selected}
       data-invalid={issues.length > 0}
       data-dragging={dragging}
+      minWidth="0"
+      border="neutral-medium"
+      radius="m"
+      background="neutral-alpha-weak"
       className={`${styles.card} ${block.type === "container" ? styles.containerCard : ""}`}
       style={accent ? ({ "--layout-accent": accent } as React.CSSProperties) : undefined}
       onFocus={(e) => {
@@ -92,16 +96,28 @@ const BlockCard = memo(function BlockCard({
       }}
       onDragOver={(e) => actions.dragOverCard(e, { id: block.id, parentId, visibleIndex })}
     >
-      <div className={styles.header}>
-        <button
+      <Row
+        fillWidth
+        wrap
+        vertical="center"
+        gap="4"
+        paddingY="8"
+        paddingRight="8"
+        paddingLeft="4"
+        style={{ columnGap: "var(--static-space-8)" }}
+      >
+        <IconButton
+          icon="text"
           type="button"
+          size="s"
+          variant="ghost"
           className={styles.handle}
           draggable
           aria-label={t("layouts.block.drag")}
           title={t("layouts.block.dragHint")}
-          onDragStart={(e) => actions.dragStart(block.id, cardRef.current, e)}
+          onDragStart={(e: React.DragEvent<HTMLButtonElement>) => actions.dragStart(block.id, cardRef.current, e)}
           onDragEnd={actions.dragEnd}
-          onKeyDown={(e) => {
+          onKeyDown={(e: React.KeyboardEvent<HTMLButtonElement>) => {
             if (e.key === "ArrowUp" || e.key === "ArrowDown") {
               e.preventDefault();
               actions.move(block.id, e.key === "ArrowUp" ? -1 : 1);
@@ -111,33 +127,43 @@ const BlockCard = memo(function BlockCard({
             }
           }}
           data-block-handle
+          style={{ width: 24, height: 32, minHeight: 32 }}
         >
           <LuGripVertical size={16} aria-hidden />
-        </button>
+        </IconButton>
 
-        <div
-          className={styles.title}
+        <Row
+          vertical="center"
+          gap="8"
+          minWidth="0"
+          cursor="interactive"
           onClick={() => actions.toggleCollapse(block.id)}
           role="presentation"
+          style={{ flex: "1 1 9rem" }}
         >
-          <span className={styles.blockIcon}>{meta.icon(16)}</span>
-          <span className={styles.titleText}>
+          <Row
+            center
+            radius="s"
+            background="neutral-alpha-weak"
+            onBackground="brand-strong"
+            style={{ width: 28, height: 28, flexShrink: 0 }}
+          >
+            {meta.icon(16)}
+          </Row>
+          <Column minWidth="0">
             <Text variant="body-strong-s">{t(meta.label)}</Text>
             {collapsed ? (
-              <Text variant="body-default-xs" onBackground="neutral-weak" className={styles.summary}>
+              <Text variant="body-default-xs" onBackground="neutral-weak" truncate>
                 {summarize(block, t, env.library)}
               </Text>
             ) : null}
-          </span>
+          </Column>
           {issues.length > 0 ? (
-            <span className={styles.badge}>
-              <LuCircleAlert size={12} aria-hidden />
-              {issues.length}
-            </span>
+            <Tag scheme="danger" size="s" prefixIcon="danger" label={String(issues.length)} />
           ) : null}
-        </div>
+        </Row>
 
-        <div className={styles.controls}>
+        <Row wrap vertical="center" gap="2" style={{ marginLeft: "auto" }}>
           <IconButton
             icon="chevronUp"
             size="s"
@@ -180,21 +206,12 @@ const BlockCard = memo(function BlockCard({
           >
             <LuChevronDown size={16} aria-hidden />
           </IconButton>
-        </div>
-      </div>
+        </Row>
+      </Row>
 
       {collapsed ? null : (
-        <div className={styles.body}>
-          {issues.length > 0 ? (
-            <ul className={styles.issues} role="alert">
-              {issues.map((issue, i) => (
-                <li key={`${issue.code}-${i}`}>
-                  <LuCircleAlert size={14} aria-hidden />
-                  <span>{formatIssue(t, issue, issueContext)}</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+        <Column fillWidth gap="12" paddingTop="4" paddingX="12" paddingBottom="12" minWidth="0">
+          {issues.length > 0 ? <IssueList issues={issues} context={issueContext} /> : null}
 
           {block.type === "text" && <TextBlockEditor block={block} invalid={invalid} onChange={onChange} />}
           {block.type === "separator" && <SeparatorEditor block={block} onChange={onChange} />}
@@ -208,22 +225,22 @@ const BlockCard = memo(function BlockCard({
                 invalid={issues.some((issue) => issue.code === "accentColorInvalid")}
                 onChange={onChange}
               />
-              <div className={styles.children}>
+              <Column gap="8" paddingLeft="12" marginLeft="4" minWidth="0" className={styles.children}>
                 <BlockList
                   parentId={block.id}
                   blocks={block.children}
                   issuesByBlock={issuesByBlock}
                   issueContext={issueContext}
                 />
-                <div>
+                <Row fillWidth>
                   <AddBlockMenu parentId={block.id} label={t("layouts.add.toContainer")} />
-                </div>
-              </div>
+                </Row>
+              </Column>
             </>
           )}
-        </div>
+        </Column>
       )}
-    </div>
+    </Column>
   );
 });
 
@@ -254,13 +271,15 @@ export function BlockList({
   }, [blocks, dragId]);
   const visibleCount = rows.filter((row) => row.block.id !== dragId).length;
 
+  const over = drop?.parentId === parentId && drop.index === visibleCount;
+
   const indicator = (position: number) =>
     drop && drop.parentId === parentId && drop.index === position ? (
-      <div className={styles.dropLine} aria-hidden />
+      <Row fillWidth radius="full" solid="accent-strong" pointerEvents="none" className={styles.dropLine} aria-hidden />
     ) : null;
 
   return (
-    <div className={styles.list}>
+    <Column fillWidth gap="8" minWidth="0">
       {rows.map(({ block, visibleIndex }, index) => (
         <Fragment key={block.id}>
           {block.id !== dragId ? indicator(visibleIndex) : null}
@@ -277,14 +296,55 @@ export function BlockList({
         </Fragment>
       ))}
       {indicator(visibleCount)}
-      <div
-        className={styles.dropZone}
+      <Row
+        center
+        hide={!(dragId !== null && !(dragContainer && parentId !== ROOT))}
+        fillWidth
+        radius="s"
+        border={over ? "accent-strong" : "neutral-strong"}
+        borderStyle="dashed"
+        background={over ? "accent-alpha-weak" : undefined}
+        onBackground={over ? "accent-strong" : "neutral-weak"}
+        style={{ minHeight: 28 }}
         data-active={dragId !== null && !(dragContainer && parentId !== ROOT)}
-        data-over={drop?.parentId === parentId && drop.index === visibleCount}
+        data-over={over}
         onDragOver={(e) => actions.dragOverEnd(e, { parentId, visibleCount })}
       >
-        {t("layouts.block.dropHere")}
-      </div>
-    </div>
+        <Text variant="label-default-s">{t("layouts.block.dropHere")}</Text>
+      </Row>
+    </Column>
+  );
+}
+
+/** The problems of a block (or of the layout), as one alert. */
+export function IssueList({
+  issues,
+  context,
+}: {
+  issues: readonly LayoutIssue[];
+  context: IssueContext;
+}) {
+  const t = useT();
+
+  return (
+    <Column
+      as="ul"
+      role="alert"
+      fillWidth
+      gap="4"
+      margin="0"
+      paddingX="12"
+      paddingY="8"
+      radius="s"
+      background="danger-alpha-weak"
+      onBackground="danger-strong"
+    >
+      {issues.map((issue, i) => (
+        <Row as="li" key={`${issue.code}-${i}`} gap="8" vertical="start">
+          <LuCircleAlert size={14} aria-hidden style={{ flexShrink: 0, marginTop: 3 }} />
+          <Text variant="body-default-s">{formatIssue(t, issue, context)}</Text>
+        </Row>
+      ))}
+    </Column>
   );
 }
