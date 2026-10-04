@@ -114,19 +114,7 @@ export default async function PrivacyPolicyPage() {
                 {t("site.legal.privacy.cookies.items.drafts.text")}
               </ListItem>
             </List>
-            <CookieSettingsButton
-              style={{
-                alignSelf: "flex-start",
-                padding: 0,
-                border: "none",
-                background: "none",
-                color: "var(--brand-on-background-strong)",
-                textDecoration: "underline",
-                textUnderlineOffset: 2,
-                cursor: "pointer",
-                font: "inherit",
-              }}
-            />
+            <CookieSettingsButton style={{ alignSelf: "flex-start" }} />
           </Column>
         </RevealFx>
 

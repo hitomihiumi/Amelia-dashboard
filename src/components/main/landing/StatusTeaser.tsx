@@ -1,21 +1,20 @@
 import React from "react";
-import Link from "next/link";
-import { Icon, Row, Text } from "@once-ui-system/core";
+import { Icon, Row, SmartLink, StatusIndicator, Text } from "@once-ui-system/core";
 import type { ServiceStatus } from "@/lib/status/status";
 import { getT } from "@/i18n/server";
 
-const COLOR: Record<ServiceStatus, string> = {
-  operational: "var(--success-solid-strong)",
-  degraded: "var(--warning-solid-strong)",
-  down: "var(--danger-solid-strong)",
-  maintenance: "var(--info-solid-strong)",
+const STATUS_COLOR: Record<ServiceStatus, "green" | "yellow" | "red" | "blue"> = {
+  operational: "green",
+  degraded: "yellow",
+  down: "red",
+  maintenance: "blue",
 };
 
 export async function StatusTeaser({ status }: { status: ServiceStatus }) {
   const t = await getT();
 
   return (
-    <Link href="/status" style={{ textDecoration: "none" }}>
+    <SmartLink href="/status" unstyled fillWidth>
       <Row
         fillWidth
         horizontal="between"
@@ -27,15 +26,7 @@ export async function StatusTeaser({ status }: { status: ServiceStatus }) {
         background="surface"
       >
         <Row gap="8" vertical="center">
-          <span
-            aria-hidden
-            style={{
-              width: "0.5rem",
-              height: "0.5rem",
-              borderRadius: "50%",
-              background: COLOR[status],
-            }}
-          />
+          <StatusIndicator size="s" color={STATUS_COLOR[status]} aria-hidden />
           <Text variant="body-default-m">{t(`site.status.headline.${status}`)}</Text>
         </Row>
         <Row gap="4" vertical="center">
@@ -45,6 +36,6 @@ export async function StatusTeaser({ status }: { status: ServiceStatus }) {
           <Icon name="chevronRight" size="xs" onBackground="neutral-weak" />
         </Row>
       </Row>
-    </Link>
+    </SmartLink>
   );
 }

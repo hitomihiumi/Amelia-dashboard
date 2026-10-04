@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useId, useState } from "react";
-import Link from "next/link";
-import { Button, Column, Row, Switch, Text } from "@once-ui-system/core";
+import { Button, Column, Flex, Grid, Row, SmartLink, Switch, Text } from "@once-ui-system/core";
 import { LuCookie } from "react-icons/lu";
 import classNames from "classnames";
 import { useT } from "@/i18n/client";
@@ -34,45 +33,60 @@ export function CookieBanner() {
   if (!bannerOpen) return null;
 
   return (
-    <section
+    <Column
+      as="section"
       role="dialog"
       aria-modal="false"
       aria-labelledby={titleId}
       aria-describedby={textId}
+      position="fixed"
+      zIndex={8}
+      gap="16"
+      padding="20"
+      radius="l"
+      border="neutral-medium"
       className={styles.banner}
     >
       <Row gap="12" vertical="start">
-        <span className={styles.icon} aria-hidden="true">
+        <Flex
+          center
+          aria-hidden="true"
+          radius="m"
+          border="brand-medium"
+          background="brand-alpha-weak"
+          onBackground="brand-strong"
+          style={{ width: "2.25rem", height: "2.25rem", flexShrink: 0 }}
+        >
           <LuCookie size={20} />
-        </span>
+        </Flex>
         <Column gap="4" style={{ minWidth: 0 }}>
           <Text id={titleId} variant="heading-strong-s">
             {t("common.cookies.title")}
           </Text>
           <Text id={textId} variant="body-default-s" onBackground="neutral-weak">
             {t("common.cookies.description")}{" "}
-            <Link href="/privacy#cookies" className={styles.link}>
+            <SmartLink href="/privacy#cookies" className={styles.link}>
               {t("common.cookies.learnMore")}
-            </Link>
+            </SmartLink>
           </Text>
         </Column>
       </Row>
 
       {customizing && (
-        <Column gap="8" className={styles.details}>
-          <Row gap="12" vertical="center" horizontal="between" className={styles.category}>
+        <Column gap="8" paddingTop="4">
+          <Row gap="12" vertical="center" horizontal="between" padding="12" radius="m" border="neutral-medium" background="neutral-alpha-weak">
             <Column gap="2" style={{ minWidth: 0 }}>
               <Text variant="label-strong-s">{t("common.cookies.necessary.title")}</Text>
               <Text variant="body-default-xs" onBackground="neutral-weak">
                 {t("common.cookies.necessary.text")}
               </Text>
             </Column>
-            <Text variant="label-default-xs" onBackground="neutral-weak" className={styles.always}>
+            <Text variant="label-default-xs" onBackground="neutral-weak" style={{ flexShrink: 0, whiteSpace: "nowrap" }}>
               {t("common.cookies.alwaysOn")}
             </Text>
           </Row>
 
-          <Row gap="12" vertical="center" horizontal="between" className={styles.category}>
+          <Row gap="12" vertical="center" horizontal="between" padding="12" radius="m" border="neutral-medium" background="neutral-alpha-weak">
             <Column gap="2" style={{ minWidth: 0 }}>
               <Text variant="label-strong-s">{t("common.cookies.analytics.title")}</Text>
               <Text variant="body-default-xs" onBackground="neutral-weak">
@@ -88,7 +102,7 @@ export function CookieBanner() {
         </Column>
       )}
 
-      <div className={classNames(styles.actions, customizing && styles.actionsStacked)}>
+      <Grid columns="2" gap="8" className={classNames(styles.actions, customizing && styles.actionsStacked)}>
         {customizing ? (
           <>
             <Button variant="primary" size="s" onClick={() => save({ analytics })} fillWidth>
@@ -111,7 +125,7 @@ export function CookieBanner() {
             </Button>
           </>
         )}
-      </div>
-    </section>
+      </Grid>
+    </Column>
   );
 }

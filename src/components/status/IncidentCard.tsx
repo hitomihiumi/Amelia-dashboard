@@ -104,10 +104,16 @@ export function IncidentCard({ incident, updates, titleMuted }: IncidentCardProp
       {updates.length > 0 && (
         <>
           <Line />
-          <ul className={styles.updates}>
+          <Column as="ul" gap="12" margin="0" padding="0" style={{ listStyle: "none" }}>
             {updates.map((update) => (
-              <li key={update.id} className={classNames(styles.update, tones[statusTone(update.status)])}>
-                <span aria-hidden className={styles.dot} />
+              <Row
+                as="li"
+                key={update.id}
+                gap="12"
+                vertical="start"
+                className={tones[statusTone(update.status)]}
+              >
+                <Flex aria-hidden className={styles.dot} />
                 <Column gap="2" style={{ minWidth: 0 }}>
                   <Text variant="label-default-s">{statusLabel(update.status)}</Text>
                   <Text
@@ -121,9 +127,9 @@ export function IncidentCard({ incident, updates, titleMuted }: IncidentCardProp
                     {format.date(update.createdAt, { dateStyle: "long" })}
                   </Text>
                 </Column>
-              </li>
+              </Row>
             ))}
-          </ul>
+          </Column>
         </>
       )}
     </Flex>
