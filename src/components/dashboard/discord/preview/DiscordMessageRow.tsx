@@ -71,13 +71,13 @@ export function DiscordMessageRow({
   return (
     <div>
       {text ? (
-        <div className="mt-1 text-discord-text-normal">
+        <div className="mt-[4px] text-discord-text-normal">
           <DiscordText text={content ?? ""} />
         </div>
       ) : null}
 
       {visibleEmbeds.length > 0 ? (
-        <div className="mt-1 space-y-2">
+        <div className="mt-[4px] space-y-2">
           {visibleEmbeds.map((embed, i) => (
             <DiscordEmbed key={i} embed={embed} />
           ))}
@@ -85,7 +85,7 @@ export function DiscordMessageRow({
       ) : null}
 
       {hasComponents ? (
-        <div className="mt-1 flex flex-col gap-2">
+        <div className="mt-[4px] flex flex-col gap-2">
           {selectMenus.map((menu, i) => (
             <DiscordSelectMenu key={i} menu={menu} />
           ))}
@@ -94,7 +94,7 @@ export function DiscordMessageRow({
       ) : null}
 
       {isEmpty && showEmptyHint ? (
-        <p className="mt-1 text-sm italic text-discord-text-muted">
+        <p className="mt-[4px] text-sm italic text-discord-text-muted">
           {t("builder.preview.emptyMessage")}
         </p>
       ) : null}
@@ -106,7 +106,7 @@ function renderActionRows(buttons: ButtonCustom[], size: "sm" | "md") {
   const rows: ButtonCustom[][] = [];
   for (let i = 0; i < buttons.length; i += 5) rows.push(buttons.slice(i, i + 5));
   return rows.map((row, i) => (
-    <div key={i} className="mt-1 flex flex-wrap items-center gap-2">
+    <div key={i} className="mt-[4px] flex flex-wrap items-center gap-2">
       {row.map((b, j) => (
         <DiscordButton key={j} button={b} size={size} />
       ))}

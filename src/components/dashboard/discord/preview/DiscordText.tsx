@@ -104,7 +104,7 @@ function consumeMention(rest: string): { node: ReactNode; consumed: number } | n
   if (roleM) {
     return {
       node: (
-        <span className="rounded px-1 font-medium bg-discord-brand/25 text-[#c9cdfb]">
+        <span className="rounded px-[4px] font-medium bg-discord-brand/25 text-[#c9cdfb]">
           {chromeText("mentionRole")}
         </span>
       ),
@@ -115,7 +115,7 @@ function consumeMention(rest: string): { node: ReactNode; consumed: number } | n
   if (userM) {
     return {
       node: (
-        <span className="rounded px-1 font-medium bg-discord-brand/25 text-[#c9cdfb]">
+        <span className="rounded px-[4px] font-medium bg-discord-brand/25 text-[#c9cdfb]">
           {chromeText("mentionUser")}
         </span>
       ),
@@ -126,7 +126,7 @@ function consumeMention(rest: string): { node: ReactNode; consumed: number } | n
   if (chM) {
     return {
       node: (
-        <span className="rounded px-1 font-medium bg-discord-interactive-muted/45 text-discord-link">
+        <span className="rounded px-[4px] font-medium bg-discord-interactive-muted/45 text-discord-link">
           {chromeText("mentionChannel")}
         </span>
       ),
@@ -137,7 +137,7 @@ function consumeMention(rest: string): { node: ReactNode; consumed: number } | n
   if (tsM) {
     return {
       node: (
-        <span className="rounded bg-discord-interactive-muted/40 px-1 text-xs">
+        <span className="rounded bg-discord-interactive-muted/40 px-[4px] text-xs">
           {formatTimestamp(Number(tsM[1]), tsM[2])}
         </span>
       ),
@@ -189,7 +189,7 @@ function consumeCode(rest: string): { node: ReactNode; consumed: number } | null
   if (!m) return null;
   return {
     node: (
-      <code className="rounded bg-discord-bg-secondary px-1 py-px font-mono text-[0.875em] text-discord-text-normal">
+      <code className="rounded bg-discord-bg-secondary px-[4px] py-px font-mono text-[0.875em] text-discord-text-normal">
         {m[1]}
       </code>
     ),
@@ -205,7 +205,7 @@ function consumeSpoiler(rest: string): { node: ReactNode; consumed: number } | n
   return {
     node: (
       <span
-        className="rounded bg-discord-bg-tertiary px-1 text-discord-bg-tertiary transition-colors [filter:blur(3px)] hover:[filter:none] hover:text-discord-text-normal cursor-pointer"
+        className="rounded bg-discord-bg-tertiary px-[4px] text-discord-bg-tertiary transition-colors [filter:blur(3px)] hover:[filter:none] hover:text-discord-text-normal cursor-pointer"
         title={chromeText("spoiler")}
       >
         {renderInline(inner)}
@@ -339,7 +339,7 @@ function renderLine(line: string, key: number): ReactNode {
   const h3 = /^###\s+(.+)$/.exec(line);
   if (h3) {
     return (
-      <span key={key} className="mt-1 block text-lg font-bold text-discord-header-primary">
+      <span key={key} className="mt-[4px] block text-lg font-bold text-discord-header-primary">
         {renderInline(h3[1])}
       </span>
     );
@@ -347,7 +347,7 @@ function renderLine(line: string, key: number): ReactNode {
   const h2 = /^##\s+(.+)$/.exec(line);
   if (h2) {
     return (
-      <span key={key} className="mt-1 block text-xl font-bold text-discord-header-primary">
+      <span key={key} className="mt-[4px] block text-xl font-bold text-discord-header-primary">
         {renderInline(h2[1])}
       </span>
     );
@@ -355,7 +355,7 @@ function renderLine(line: string, key: number): ReactNode {
   const h1 = /^#\s+(.+)$/.exec(line);
   if (h1) {
     return (
-      <span key={key} className="mt-1 block text-2xl font-bold text-discord-header-primary">
+      <span key={key} className="mt-[4px] block text-2xl font-bold text-discord-header-primary">
         {renderInline(h1[1])}
       </span>
     );
@@ -429,7 +429,7 @@ function renderBlocks(text: string): ReactNode[] {
     out.push(
       <pre
         key={key++}
-        className="my-1 w-full overflow-x-auto rounded-md bg-discord-bg-secondary p-3 font-mono text-sm leading-snug text-discord-text-normal whitespace-pre-wrap [word-break:break-all]"
+        className="my-[4px] w-full overflow-x-auto rounded-md bg-discord-bg-secondary p-3 font-mono text-sm leading-snug text-discord-text-normal whitespace-pre-wrap [word-break:break-all]"
       >
         {code}
       </pre>,

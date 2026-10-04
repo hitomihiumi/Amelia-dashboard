@@ -21,7 +21,7 @@ export function DiscordButton({ button, size = "md" }: DiscordButtonProps) {
       disabled={button.disabled}
       className={cn(
         "inline-flex max-w-full  min-w-0 items-center gap-2 rounded-sm py-1.5 font-medium leading-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-        size === "sm" ? "h-8 text-[13px] px-4" : "h-10 text-sm px-[1.3rem]",
+        size === "sm" ? "h-8 text-[13px] px-[16px]" : "h-10 text-sm px-[1.3rem]",
         palette.outline ? "border" : "hover:brightness-110",
       )}
       style={

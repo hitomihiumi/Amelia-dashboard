@@ -158,7 +158,7 @@ function Selectable({
 
 function Separator({ divider, spacing }: { divider: boolean; spacing: "small" | "large" }) {
   return (
-    <div className={spacing === "large" ? "py-3" : "py-1"}>
+    <div className={spacing === "large" ? "py-3" : "py-[4px]"}>
       {divider ? <div className="h-px w-full bg-discord-bg-modifier-hover" /> : <div className="h-px" />}
     </div>
   );
@@ -209,7 +209,7 @@ function ContainerBlock({
       {accent ? (
         <div className="absolute inset-y-0 left-0 w-1" style={{ backgroundColor: accent }} aria-hidden />
       ) : null}
-      <div className={cn("flex flex-col gap-2 p-4", accent && "pl-5", hidden && "blur-md")}>
+      <div className={cn("flex flex-col gap-2 p-[16px]", accent && "pl-5", hidden && "blur-md")}>
         {block.children.length === 0 ? (
           <span className="text-sm italic text-discord-text-muted">{t("layouts.preview.emptyContainer")}</span>
         ) : (
@@ -227,7 +227,7 @@ function ContainerBlock({
           aria-label={t("layouts.preview.revealSpoiler")}
           className="absolute inset-0 flex cursor-pointer items-center justify-center"
         >
-          <span className="rounded-full bg-discord-bg-floating/80 px-3 py-1 text-xs font-bold uppercase tracking-wide text-discord-header-primary">
+          <span className="rounded-full bg-discord-bg-floating/80 px-3 py-[4px] text-xs font-bold uppercase tracking-wide text-discord-header-primary">
             {t("layouts.preview.spoiler")}
           </span>
         </button>
@@ -256,12 +256,12 @@ export function DiscordLayout({
 
   if (components.length === 0) {
     return (
-      <div className="mt-1 text-sm italic text-discord-text-muted">{t("layouts.preview.empty")}</div>
+      <div className="mt-[4px] text-sm italic text-discord-text-muted">{t("layouts.preview.empty")}</div>
     );
   }
 
   return (
-    <div className="mt-1 flex w-full max-w-[520px] flex-col gap-2 text-discord-text-normal">
+    <div className="mt-[4px] flex w-full max-w-[520px] flex-col gap-2 text-discord-text-normal">
       {components.map((component) => (
         <Selectable key={component.id} id={component.id}>
           {component.type === "container" ? (

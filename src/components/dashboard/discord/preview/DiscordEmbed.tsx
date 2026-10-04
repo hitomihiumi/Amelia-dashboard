@@ -68,7 +68,7 @@ export function DiscordEmbed({ embed }: DiscordEmbedProps) {
 
   return (
     <div
-      className="max-w-[520px] rounded-r-md border-l-4 bg-discord-bg-secondary p-3 shadow-sm sm:p-4"
+      className="max-w-[520px] rounded-r-md border-l-4 bg-discord-bg-secondary p-3 shadow-sm sm:p-[16px]"
       style={{ borderLeftColor: color }}
     >
       <div className="flex justify-between gap-4">
@@ -89,7 +89,7 @@ export function DiscordEmbed({ embed }: DiscordEmbedProps) {
                     href={embed.author!.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="ml-1 text-discord-link hover:underline"
+                    className="ml-[4px] text-discord-link hover:underline"
                   >
                     ↗
                   </a>
@@ -111,7 +111,7 @@ export function DiscordEmbed({ embed }: DiscordEmbedProps) {
           ) : null}
 
           {fields.length > 0 ? (
-            <div className="mt-2 space-y-2">
+            <div className="mt-[8px] space-y-2">
               {fieldRows.map((row, ri) => {
                 const singleBlock = row.length === 1 && !row[0].inline;
                 return (

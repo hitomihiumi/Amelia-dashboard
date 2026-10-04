@@ -13,7 +13,7 @@ export function DiscordModal({ modal }: DiscordModalProps) {
   return (
     <div className="w-full h-full grid place-items-center p-5">
       <div className="w-full max-w-[480px] max-h-full overflow-y-auto bg-discord-bg-primary rounded-[8px] text-discord-text-normal shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-3">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-[16px] py-3">
           <h3 className="text-white text-[18px] font-semibold truncate max-w-[70%]">
             {modal.title || t("builder.preview.modalTitle")}
           </h3>
@@ -32,9 +32,9 @@ export function DiscordModal({ modal }: DiscordModalProps) {
             />
           </svg>
         </div>
-        <div className="px-4 pb-2 flex flex-col gap-4">
+        <div className="px-[16px] pb-[8px] flex flex-col gap-4">
           {modal.fields.length === 0 && (
-            <div className="text-discord-text-muted text-sm py-4 text-center">
+            <div className="text-discord-text-muted text-sm py-[16px] text-center">
               {t("builder.preview.noFields")}
             </div>
           )}
@@ -67,7 +67,7 @@ export function DiscordModal({ modal }: DiscordModalProps) {
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-end gap-2 px-4 py-3">
+        <div className="flex items-center justify-end gap-2 px-[16px] py-3">
           <button
             type="button"
             className="px-3 h-9 rounded-sm  text-sm font-medium text-discord-text-faint hover:underline"

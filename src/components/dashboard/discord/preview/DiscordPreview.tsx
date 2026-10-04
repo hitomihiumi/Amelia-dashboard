@@ -73,7 +73,7 @@ function PreviewChrome({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             <span className="font-medium text-[#f2f3f5]">{name}</span>
-            <span className="rounded bg-[#5865F2] px-2 py-px text-[10px] font-semibold uppercase leading-none text-white">
+            <span className="rounded bg-[#5865F2] px-[8px] py-px text-[10px] font-semibold uppercase leading-none text-white">
               {t("builder.preview.botBadge")}
             </span>
             <span className="text-xs font-medium text-[#949ba4]">{t("builder.preview.timeToday")}</span>
@@ -161,7 +161,7 @@ function DiscordDMFrame({
 
   return (
     <div className="w-full h-full flex flex-col bg-discord-bg-primary rounded-[8px] overflow-hidden font-discord antialiased">
-      <div className="flex items-center gap-2 px-4 h-12 border-b border-discord-bg-tertiary flex-shrink-0">
+      <div className="flex items-center gap-2 px-[16px] h-12 border-b border-discord-bg-tertiary flex-shrink-0">
         {avatarUrl ? (
           <img src={avatarUrl} alt="" className="w-6 h-6 rounded-full object-cover" />
         ) : (
@@ -174,7 +174,7 @@ function DiscordDMFrame({
         <span className="text-white font-semibold text-[15px]">{name}</span>
         <span className="text-discord-text-muted text-xs">{t("builder.preview.directMessage")}</span>
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-[16px]">
         <DiscordMessageRow
           botName={botName}
           botAvatarUrl={botAvatarUrl}

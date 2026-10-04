@@ -54,7 +54,7 @@ export function PreviewMedia({
     media = (
       <div
         className={cn(
-          "flex min-h-20 flex-col items-center justify-center gap-1 bg-discord-bg-tertiary px-2 text-center text-xs text-discord-text-muted",
+          "flex min-h-20 flex-col items-center justify-center gap-1 bg-discord-bg-tertiary px-[8px] text-center text-xs text-discord-text-muted",
           fill ? "absolute inset-0" : "aspect-video w-full",
         )}
       >
@@ -121,7 +121,7 @@ export function PreviewMedia({
           className="absolute inset-0 flex cursor-pointer items-center justify-center"
           aria-label={t("layouts.preview.revealSpoiler")}
         >
-          <span className="rounded-full bg-discord-bg-floating/80 px-3 py-1 text-xs font-bold uppercase tracking-wide text-discord-header-primary">
+          <span className="rounded-full bg-discord-bg-floating/80 px-3 py-[4px] text-xs font-bold uppercase tracking-wide text-discord-header-primary">
             {t("layouts.preview.spoiler")}
           </span>
         </button>

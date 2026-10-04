@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Tailwind is used only by the Discord message preview. Once UI ships its own global utility
+   classes with the same names but a different scale (`p-4` is 4px there, 16px in Tailwind;
+   `mt-1`, `px-2`, `py-1` ... likewise), and its unlayered CSS beats Tailwind's layered utilities.
+   In the preview, spacing from that scale must therefore be written as an arbitrary value
+   (`p-[16px]`), which never collides. */
+
 /* Real Discord dark-theme palette, used exclusively by the Discord message
    preview (src/components/dashboard/discord/preview) so it stays visually
    accurate regardless of the dashboard's own Once UI theme. */
