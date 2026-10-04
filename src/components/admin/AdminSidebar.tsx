@@ -38,6 +38,7 @@ export function AdminSidebar({ adminName, counts }: AdminSidebarProps) {
       label: t("admin.nav.site"),
       items: [
         { href: "/admin/config", icon: "navSiteSettings", label: t("admin.nav.siteSettings") },
+        { href: "/admin/logs", icon: "navLogs", label: t("admin.nav.logs") },
       ],
     },
   ];

@@ -156,6 +156,7 @@ export const iconLibrary = {
   navOverview: IoSpeedometerOutline,
   navNews: IoNewspaperOutline,
   navIncidents: IoWarningOutline,
+  navLogs: IoTerminalOutline,
   navSiteSettings: IoSettingsOutline,
   navAdminPanel: IoShieldHalfOutline,
   navHome: IoHomeOutline,
@@ -241,6 +242,7 @@ declare module "@once-ui-system/core" {
     navOverview: true;
     navNews: true;
     navIncidents: true;
+    navLogs: true;
     navSiteSettings: true;
     navAdminPanel: true;
     navHome: true;
