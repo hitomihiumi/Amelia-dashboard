@@ -180,7 +180,7 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
         <WorkspaceCard>
           <Grid fillWidth minWidth={0} gap="16" style={FIELDS_GRID}>
             <Grid minWidth={0} gap="16" style={PAIR_GRID}>
-              <Column gap="8" minWidth={0}>
+              <Column gap="8" minWidth={0} center fill>
                 {channels.length === 0 ? (
                   <Column gap="4">
                     <Text variant="label-default-s">{t("send.channel.label")}</Text>
