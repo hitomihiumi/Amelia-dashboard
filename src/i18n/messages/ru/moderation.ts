@@ -112,6 +112,47 @@ export const moderation: Dict<typeof en> = {
     unbanRejected: "Discord отклонил разбан. Проверьте права бота.",
   },
 
+  automod: {
+    kinds: {
+      invite: "Приглашения",
+      links: "Ссылки",
+      keywords: "Запрещённые слова",
+      profanity: "Списки слов",
+      mention_spam: "Спам упоминаниями",
+      spam: "Спам",
+    },
+    issues: {
+      ignore_channels_too_many: "{kind}: Discord принимает не больше {max} игнорируемых каналов.",
+      ignore_roles_truncated: "{kind}: Discord принимает не больше {max} ролей-исключений (игнорируемые роли и роли модераторов вместе). Остальные не учтены.",
+      block_message_too_long: "{kind}: сообщение для автора может содержать не больше {max} символов.",
+      keywords_empty: "{kind}: добавьте хотя бы одно слово или шаблон.",
+      keywords_too_many: "{kind}: допускается не больше {max} слов.",
+      keyword_too_long: "{kind}: «{word}» длиннее {max} символов.",
+      regex_too_many: "{kind}: допускается не больше {max} шаблонов.",
+      regex_too_long: "{kind}: шаблон «{pattern}» длиннее {max} символов.",
+      allow_too_many: "{kind}: допускается не больше {max} разрешённых слов.",
+      presets_empty: "{kind}: выберите хотя бы один список слов.",
+      mention_limit_range: "{kind}: лимит должен быть от 1 до {max}.",
+      link_pattern_invalid: "{kind}: «{pattern}» не является корректным шаблоном белого списка.",
+      link_whitelist_unsupported: "{kind}: в шаблоне «{pattern}» символ * стоит в середине, Discord так не умеет. Используйте * только в начале или в конце.",
+      link_whitelist_too_large: "{kind}: для белого списка в Discord нужно {words} записей, лимит — {max}. Удалите часть шаблонов.",
+    },
+    sync: {
+      noToken: "Сохранено, но у дашборда нет токена бота, поэтому правила AutoMod в Discord не обновлены.",
+      permissions: "Сохранено, но Discord отказал в изменении правил AutoMod: боту нужно право «Управлять сервером» (и «Отправлять участникам тайм-аут» для тайм-аутов).",
+      limit: "{kind}: на сервере достигнут лимит Discord для правил этого типа. Удалите правило этого типа в Настройки сервера → Безопасность → AutoMod.",
+      invalid: "{kind}: Discord отклонил правило: {message}",
+      unknown: "{kind}: Discord не смог применить правило: {message}",
+    },
+    state: {
+      active: "Активно в Discord",
+      missing: "Отсутствует в Discord",
+      off: "Не создано",
+      unknown: "Выключено в Discord",
+      unavailable: "Не удалось проверить Discord",
+    },
+  },
+
   settings: {
     title: "Модерация",
     description:

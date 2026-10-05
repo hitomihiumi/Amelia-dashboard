@@ -107,6 +107,47 @@ export const moderation = {
     unbanRejected: "Discord rejected the unban. Check the bot permissions.",
   },
 
+  automod: {
+    kinds: {
+      invite: "Invite links",
+      links: "Links",
+      keywords: "Blocked words",
+      profanity: "Word lists",
+      mention_spam: "Mention spam",
+      spam: "Spam",
+    },
+    issues: {
+      ignore_channels_too_many: "{kind}: Discord accepts at most {max} ignored channels.",
+      ignore_roles_truncated: "{kind}: Discord accepts at most {max} exempt roles (ignored roles plus moderator roles together). The rest was left out.",
+      block_message_too_long: "{kind}: the message shown to the author can have at most {max} characters.",
+      keywords_empty: "{kind}: add at least one word or pattern.",
+      keywords_too_many: "{kind}: at most {max} words are allowed.",
+      keyword_too_long: "{kind}: \"{word}\" is longer than {max} characters.",
+      regex_too_many: "{kind}: at most {max} patterns are allowed.",
+      regex_too_long: "{kind}: the pattern \"{pattern}\" is longer than {max} characters.",
+      allow_too_many: "{kind}: at most {max} allowed words are accepted.",
+      presets_empty: "{kind}: pick at least one word list.",
+      mention_limit_range: "{kind}: the limit must be between 1 and {max}.",
+      link_pattern_invalid: "{kind}: \"{pattern}\" is not a valid whitelist pattern.",
+      link_whitelist_unsupported: "{kind}: \"{pattern}\" has a wildcard in the middle, which Discord cannot match. Use * only at the start or the end.",
+      link_whitelist_too_large: "{kind}: the whitelist needs {words} entries in Discord, the limit is {max}. Remove some patterns.",
+    },
+    sync: {
+      noToken: "Saved, but this dashboard has no bot token, so the AutoMod rules were not updated in Discord.",
+      permissions: "Saved, but Discord refused to change the AutoMod rules: the bot needs the Manage Server permission (and Moderate Members for timeouts).",
+      limit: "{kind}: Discord has reached its limit for rules of this type on the server. Remove a rule of the same type in Server Settings → Safety Setup → AutoMod.",
+      invalid: "{kind}: Discord rejected the rule: {message}",
+      unknown: "{kind}: Discord could not apply the rule: {message}",
+    },
+    state: {
+      active: "Active in Discord",
+      missing: "Missing in Discord",
+      off: "Not created",
+      unknown: "Disabled in Discord",
+      unavailable: "Cannot check Discord",
+    },
+  },
+
   settings: {
     title: "Moderation",
     description:
