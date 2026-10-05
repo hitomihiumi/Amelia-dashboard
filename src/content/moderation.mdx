@@ -1,6 +1,6 @@
 ---
 title: "Moderation"
-updatedAt: "2026-08-17"
+updatedAt: "2026-10-05"
 summary: "Set up punishments, auto moderation and the report / appeal forms."
 navLabel: "Moderation"
 navIcon: "security"
@@ -23,14 +23,58 @@ Open **Moderation → Settings** in the dashboard:
   to the appeal form.
 - **Warn escalation** — punish a member automatically once they reach a given number of active
   warns. Warns can also expire after a number of days.
-- **Invite / link filters** — delete the message and punish the author, with per-channel and
-  per-role exceptions and a whitelist for links.
+- **Auto moderation** — six filters (invites, links, blocked words, word lists, mention spam and
+  spam) that run on Discord's own AutoMod, see below.
+
+## Auto moderation
+
+Every filter you switch on is created as a rule in **Server Settings → Safety Setup → AutoMod** and
+kept in sync with the dashboard when you save. Discord itself does the matching, so a filter also
+catches edited messages and works while the bot is restarting. The filters are:
+
+- **Invite filter** — invites to other Discord servers.
+- **Link filter** — every link that is not on the whitelist.
+- **Blocked words** — words and phrases (up to 1000, a `*` at the start or the end is a wildcard),
+  regular expressions (up to 10, Rust syntax, no look-around) and a list of allowed words.
+- **Word lists** — Discord's built-in lists of profanity, sexual content and slurs, plus allowed
+  words.
+- **Mention spam** — more than 1–50 different member or role mentions in one message, with optional
+  mention raid protection.
+- **Spam** — Discord's own detection of spam content, nothing more to configure.
+
+Each filter has the same options: the message can be blocked (optionally with a text shown to its
+author, up to 150 characters), Discord can post an alert to a channel of your choice, channels and
+roles can be ignored, and moderators can be exempt. Discord needs at least one action per rule, so
+if you neither block the message, nor pick an alert channel, nor use a timeout, the message is
+blocked anyway.
+
+### Punishments and cases
+
+Discord blocks the message, posts the alert and applies the timeout by itself. Then the bot records a
+case (shown in the case log with the source “Auto moderation”) and applies the punishment of the
+filter: a warn, a kick or a ban. A timeout (the “Mute” punishment) is applied by Discord for the
+invite, link and blocked-word filters, and by the bot for the others.
+
+### What the bot needs
+
+- **Manage Server** to create, update and delete the AutoMod rules (and **Moderate Members** for
+  timeouts). Without it the settings are saved, but Discord is not updated: the page says so, and
+  every filter shows “Cannot check Discord”.
+- Next to every enabled filter the page shows whether its rule exists in Discord: *Active in
+  Discord*, *Not created* (it is created on the next save), *Missing in Discord* or *Disabled in
+  Discord* (somebody deleted or switched off the rule there; saving restores it).
+- Discord allows one rule each for spam, word lists and mention spam per server, and six rules with
+  keywords (the bot uses three). If the server already has a rule of the same type of its own, saving
+  shows a warning and that filter is not created: remove the other rule, or keep it and leave the
+  filter off.
 
 ### Link whitelist patterns
 
-The whitelist is not a list of plain domains any more: it accepts one wildcard character, `*`,
-which stands for “anything”. Everything else is matched literally, and a pattern always covers the
-deeper pages of whatever it matched.
+The whitelist is not a list of plain domains: it accepts one wildcard character, `*`, which stands
+for “anything”, at the start or the end of a pattern. Everything else is matched literally, and a
+pattern always covers the deeper pages of whatever it matched. Discord's allow list takes 100
+entries and every pattern uses two to four of them; the counter above the list shows how many are
+left.
 
 | Pattern | Ignores |
 | --- | --- |
@@ -39,8 +83,9 @@ deeper pages of whatever it matched.
 | `discord.com/channels/*` | only links pointing at a channel |
 | `*docs*` | any link containing “docs” |
 
-The settings page has a tester: paste a link and it tells you which pattern lets it through. Plain
-domains you configured before keep working exactly as they did.
+The settings page has a tester: paste a link and it tells you which pattern lets it through. The
+tester is an approximation, Discord has the final word. Plain domains you configured before keep
+working exactly as they did.
 
 ## Report and appeal forms
 
@@ -90,7 +135,7 @@ messages.
 Twenty-one events are covered, grouped into four categories:
 
 - **Members** — joins, leaves, kicks, bans, unbans, role changes, nickname changes, timeouts.
-- **Messages** — deletion (with the auto moderation reason, when the bot removed it), edits shown
+- **Messages** — deletion, edits shown
   as a diff, bulk deletion.
 - **Voice** — joining, leaving and switching channels.
 - **Server** — channels, roles and server settings.

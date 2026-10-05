@@ -7,6 +7,8 @@ import { Guild } from "@/lib/db/Guild";
 import { requireGuildAdmin } from "@/app/dashboard/[guildId]/actions";
 import { GuildActionState } from "@/types/dashboard";
 import type {
+  AutoModKind,
+  AutoModerationSettings,
   AuditCategory,
   AuditEventKey,
   AuditSettings,
@@ -16,6 +18,7 @@ import type {
   WarnThreshold,
 } from "@/lib/db/types";
 import {
+  AUTOMOD_KINDS,
   AUDIT_CATEGORIES,
   AUDIT_EVENT_KEYS,
   resolveAuditChannel,
@@ -25,7 +28,12 @@ import {
   normalizeForm,
   validateFormConfiguration,
 } from "@/lib/moderation/forms";
-import { describeLinkPatternIssue } from "@/lib/moderation/linkPatternMessages";
+import { applyAutoModeration } from "@/lib/discord/automod";
+import {
+  type AutoModIssue,
+  type AutoModSyncResult,
+  validateAutoModeration as validateAutoModRules,
+} from "@/lib/moderation/autoModeration";
 import { resolveSubmission, revokeCase } from "@/lib/moderation/service";
 import { syncAuditWebhooks } from "@/lib/moderation/webhooks";
 import { getT } from "@/i18n/server";
@@ -39,7 +47,6 @@ type ModerationSettings = {
   warn_thresholds: WarnThreshold[];
 };
 
-type AutoModeration = GuildSchema["moderation"]["auto_moderation"];
 
 const SNOWFLAKE = /^\d{17,20}$/;
 const PUNISHMENT_TYPES = ["warn", "mute", "kick", "ban"];
@@ -62,10 +69,12 @@ export async function updateModerationSettings(
       return { ok: false, error: t("moderation.errors.missingData") };
 
     const settings = JSON.parse(settingsRaw as string) as ModerationSettings;
-    const autoMod = JSON.parse(autoModRaw as string) as AutoModeration;
 
     const settingsError = validateSettings(settings, t);
     if (settingsError) return { ok: false, error: settingsError };
+
+    const autoMod = sanitizeAutoModeration(JSON.parse(autoModRaw as string));
+    if (!autoMod) return { ok: false, error: t("moderation.errors.autoModIncomplete") };
 
     const autoModError = validateAutoModeration(autoMod, t);
     if (autoModError) return { ok: false, error: autoModError };
@@ -77,10 +86,29 @@ export async function updateModerationSettings(
     await guild.set("moderation.dm_notify", settings.dm_notify);
     await guild.set("moderation.warn_expiry", settings.warn_expiry);
     await guild.set("moderation.warn_thresholds", settings.warn_thresholds);
-    await guild.set("moderation.auto_moderation", autoMod);
+
+    for (const kind of AUTOMOD_KINDS) {
+      await guild.set(`moderation.auto_moderation.${kind}` as any, autoMod[kind] as any);
+    }
+
+    // The rule ids belong to the server, never to the browser: read them back from the database.
+    const stored = (await guild.get("moderation.auto_moderation")) as AutoModerationSettings;
+    const synced = await applyAutoModeration(
+      guildId,
+      { ...autoMod, rules: stored?.rules ?? {} },
+      settings.moderation_roles,
+    );
+
+    let messages: string[] = [];
+    if (!synced) {
+      messages = [t("moderation.automod.sync.noToken")];
+    } else {
+      await guild.set("moderation.auto_moderation.rules" as any, synced.rules as any);
+      messages = describeSync(synced, t);
+    }
 
     revalidatePath(`/dashboard/${guildId}/moderation`);
-    return { ok: true };
+    return messages.length > 0 ? { ok: true, automod: { messages } } : { ok: true };
   } catch (error) {
     console.error("[Moderation Action Error]:", error);
     if (error instanceof SyntaxError)
@@ -146,23 +174,119 @@ function validateSettings(
   return null;
 }
 
+function isSnowflakeList(value: unknown, max: number): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.length <= max &&
+    value.every((item) => typeof item === "string" && SNOWFLAKE.test(item))
+  );
+}
+
+function stringList(value: unknown, maxItems: number, maxLength: number): string[] | null {
+  if (!Array.isArray(value) || value.length > maxItems) return null;
+  return value.every((item) => typeof item === "string" && item.length <= maxLength)
+    ? (value as string[])
+    : null;
+}
+
+/**
+ * The browser sends the rules as JSON, so nothing in it can be trusted: keep only known fields of the
+ * right type and nothing else (the rule ids in particular are never taken from the request).
+ * Returns `null` when a field is malformed.
+ */
+function sanitizeAutoModeration(raw: unknown): AutoModerationSettings | null {
+  const input = (raw ?? {}) as Record<string, any>;
+  const out: Record<string, any> = { rules: {} };
+
+  for (const kind of AUTOMOD_KINDS) {
+    const rule = input[kind];
+    if (!rule || typeof rule !== "object") return null;
+
+    const base = {
+      enabled: rule.enabled === true,
+      ignore_channels: rule.ignore_channels,
+      ignore_roles: rule.ignore_roles,
+      delete_message: rule.delete_message === true,
+      block_message:
+        typeof rule.block_message === "string" && rule.block_message.trim()
+          ? rule.block_message.trim()
+          : null,
+      alert_channel:
+        typeof rule.alert_channel === "string" && SNOWFLAKE.test(rule.alert_channel)
+          ? rule.alert_channel
+          : null,
+      moderation_immune: rule.moderation_immune === true,
+      punishment: {
+        type: rule.punishment?.type,
+        time: rule.punishment?.time,
+        reason: rule.punishment?.reason,
+      },
+    };
+    if (!isSnowflakeList(base.ignore_channels, 200) || !isSnowflakeList(base.ignore_roles, 200)) {
+      return null;
+    }
+    if (typeof base.block_message === "string" && base.block_message.length > 1000) return null;
+
+    let extra: Record<string, unknown> = {};
+    switch (kind) {
+      case "links": {
+        const list = stringList(rule.ignore_links, 1000, 400);
+        if (!list) return null;
+        extra = { ignore_links: list };
+        break;
+      }
+      case "keywords": {
+        const keywords = stringList(rule.keywords, 3000, 400);
+        const regex = stringList(rule.regex, 100, 1000);
+        const allow = stringList(rule.allow, 1000, 400);
+        if (!keywords || !regex || !allow) return null;
+        extra = { keywords, regex, allow };
+        break;
+      }
+      case "profanity": {
+        const presets = stringList(rule.presets, 3, 20);
+        const allow = stringList(rule.allow, 1000, 400);
+        if (!presets || !allow) return null;
+        extra = {
+          presets: presets.filter((preset) =>
+            ["profanity", "sexual_content", "slurs"].includes(preset),
+          ),
+          allow,
+        };
+        break;
+      }
+      case "mention_spam":
+        extra = {
+          limit: Number(rule.limit),
+          raid_protection: rule.raid_protection === true,
+        };
+        break;
+    }
+
+    out[kind] = { ...base, ...extra };
+  }
+
+  return out as AutoModerationSettings;
+}
+
+function kindLabel(t: Translator, kind: AutoModKind): string {
+  return t(`moderation.automod.kinds.${kind}`);
+}
+
+function describeIssue(t: Translator, issue: AutoModIssue): string {
+  return t(`moderation.automod.issues.${issue.code}`, {
+    kind: kindLabel(t, issue.kind),
+    ...(issue.params ?? {}),
+  });
+}
+
 function validateAutoModeration(
-  autoMod: AutoModeration,
+  autoMod: AutoModerationSettings,
   t: Translator,
 ): string | null {
-  for (const key of ["invite", "links"] as const) {
-    const rule = autoMod?.[key];
-    if (!rule) return t("moderation.errors.autoModIncomplete");
+  for (const kind of AUTOMOD_KINDS) {
+    const rule = autoMod[kind];
 
-    if (
-      !Array.isArray(rule.ignore_channels) ||
-      rule.ignore_channels.length > 50
-    ) {
-      return t("moderation.errors.ignoredChannelsLimit");
-    }
-    if (!Array.isArray(rule.ignore_roles) || rule.ignore_roles.length > 50) {
-      return t("moderation.errors.ignoredRolesLimit");
-    }
     if (!PUNISHMENT_TYPES.includes(String(rule.punishment?.type))) {
       return t("moderation.errors.autoModPunishment");
     }
@@ -181,22 +305,45 @@ function validateAutoModeration(
     }
   }
 
-  if (
-    !Array.isArray(autoMod.links.ignore_links) ||
-    autoMod.links.ignore_links.length > 100
-  ) {
-    return t("moderation.errors.whitelistLimit");
+  const issues = validateAutoModRules(autoMod);
+  return issues.length > 0 ? describeIssue(t, issues[0]) : null;
+}
+
+/** What Discord refused or shortened, as sentences the administrator can act on. */
+function describeSync(result: AutoModSyncResult, t: Translator): string[] {
+  if (result.listError) {
+    return [
+      result.listError.kind === "permissions"
+        ? t("moderation.automod.sync.permissions")
+        : t("moderation.automod.sync.unknown", {
+            kind: "AutoMod",
+            message: result.listError.message,
+          }),
+    ];
   }
 
-  for (const pattern of autoMod.links.ignore_links) {
-    if (typeof pattern !== "string")
-      return t("moderation.errors.whitelistText");
+  const messages: string[] = [];
+  for (const kind of AUTOMOD_KINDS) {
+    const outcome = result.results[kind];
+    outcome.warnings.forEach((issue) => messages.push(describeIssue(t, issue)));
 
-    const error = describeLinkPatternIssue(t, pattern);
-    if (error) return error;
+    const error = outcome.error;
+    if (!error) continue;
+    if (error.kind === "permissions") {
+      messages.push(t("moderation.automod.sync.permissions"));
+    } else if (error.kind === "limit") {
+      messages.push(t("moderation.automod.sync.limit", { kind: kindLabel(t, kind) }));
+    } else {
+      messages.push(
+        t(`moderation.automod.sync.${error.kind === "invalid" ? "invalid" : "unknown"}`, {
+          kind: kindLabel(t, kind),
+          message: error.message,
+        }),
+      );
+    }
   }
 
-  return null;
+  return [...new Set(messages)];
 }
 
 /** Report and appeal form configuration coming from the form builder. */

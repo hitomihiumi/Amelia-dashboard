@@ -107,10 +107,51 @@ export const moderation = {
     unbanRejected: "Discord rejected the unban. Check the bot permissions.",
   },
 
+  automod: {
+    kinds: {
+      invite: "Invite links",
+      links: "Links",
+      keywords: "Blocked words",
+      profanity: "Word lists",
+      mention_spam: "Mention spam",
+      spam: "Spam",
+    },
+    issues: {
+      ignore_channels_too_many: "{kind}: Discord accepts at most {max} ignored channels.",
+      ignore_roles_truncated: "{kind}: Discord accepts at most {max} exempt roles (ignored roles plus moderator roles together). The rest was left out.",
+      block_message_too_long: "{kind}: the message shown to the author can have at most {max} characters.",
+      keywords_empty: "{kind}: add at least one word or pattern.",
+      keywords_too_many: "{kind}: at most {max} words are allowed.",
+      keyword_too_long: "{kind}: \"{word}\" is longer than {max} characters.",
+      regex_too_many: "{kind}: at most {max} patterns are allowed.",
+      regex_too_long: "{kind}: the pattern \"{pattern}\" is longer than {max} characters.",
+      allow_too_many: "{kind}: at most {max} allowed words are accepted.",
+      presets_empty: "{kind}: pick at least one word list.",
+      mention_limit_range: "{kind}: the limit must be between 1 and {max}.",
+      link_pattern_invalid: "{kind}: \"{pattern}\" is not a valid whitelist pattern.",
+      link_whitelist_unsupported: "{kind}: \"{pattern}\" has a wildcard in the middle, which Discord cannot match. Use * only at the start or the end.",
+      link_whitelist_too_large: "{kind}: the whitelist needs {words} entries in Discord, the limit is {max}. Remove some patterns.",
+    },
+    sync: {
+      noToken: "Saved, but this dashboard has no bot token, so the AutoMod rules were not updated in Discord.",
+      permissions: "Saved, but Discord refused to change the AutoMod rules: the bot needs the Manage Server permission (and Moderate Members for timeouts).",
+      limit: "{kind}: Discord has reached its limit for rules of this type on the server. Remove a rule of the same type in Server Settings → Safety Setup → AutoMod.",
+      invalid: "{kind}: Discord rejected the rule: {message}",
+      unknown: "{kind}: Discord could not apply the rule: {message}",
+    },
+    state: {
+      active: "Active in Discord",
+      missing: "Missing in Discord",
+      off: "Not created",
+      unknown: "Disabled in Discord",
+      unavailable: "Cannot check Discord",
+    },
+  },
+
   settings: {
     title: "Moderation",
     description:
-      "Configure who can moderate, how punishments escalate and what the bot filters automatically.",
+      "Configure who can moderate, how punishments escalate and what Discord's AutoMod filters on this server. The bot records every catch as a case.",
     saved: "Moderation settings saved",
 
     general: {
@@ -139,13 +180,44 @@ export const moderation = {
     },
 
     autoMod: {
-      deleteMessage: "Delete the offending message",
+      deleteMessage: "Block the offending message",
       moderatorsExempt: "Moderators are exempt",
+      actionsHint:
+        "Discord needs at least one action per rule. If you neither block the message, nor pick an alert channel, nor use a timeout, the message is blocked anyway.",
+      blockMessage: "Message for the author",
+      blockMessageHint:
+        "Shown to the member whose message was blocked. Up to {max} characters.",
+      blockMessageUnused:
+        "Only shown when the message is blocked. Switch on blocking above, or leave the alert channel and the timeout out.",
+      alertChannel: "Alert channel",
+      alertChannelHint: "Discord posts an alert there every time the rule fires.",
+      alertNone: "No alert",
       ignoredChannels: "Ignored channels",
       ignoredRoles: "Ignored roles",
       punishment: "Punishment",
+      punishmentNative:
+        "Discord blocks the message and applies a timeout itself. The bot records a case and applies warns, kicks and bans.",
+      punishmentBot:
+        "Discord blocks the message. The bot records a case and applies the punishment, a timeout included.",
       duration: "Duration in seconds (0 = permanent)",
       reason: "Reason",
+      stateHint: {
+        off: "The rule is created in Discord when you save.",
+        missing: "The rule is gone from Discord. Saving creates it again.",
+        unknown: "The rule is switched off in Discord. Saving switches it on again.",
+      },
+      permissionsTitle: "Discord AutoMod is not reachable",
+      permissionsText:
+        "The bot needs the Manage Server permission to create and update AutoMod rules (and Moderate Members for timeouts). Grant it in Server Settings → Roles, then save again.",
+    },
+
+    list: {
+      add: "Add",
+      remove: "Remove",
+      duplicate: "Already in the list.",
+      full: "The list is full.",
+      tooLong: "At most {max} characters.",
+      lookaround: "Look-around is not supported by Discord.",
     },
 
     invite: {
@@ -160,14 +232,78 @@ export const moderation = {
         "Act on messages containing links. Whitelisted domains are ignored.",
     },
 
+    keywords: {
+      title: "Blocked words",
+      description:
+        "Act on messages that contain the words, phrases or patterns you list. Discord does the matching.",
+      words: "Words and phrases ({count}/{max})",
+      wordsPlaceholder: "Add a word or phrase",
+      wordsHint:
+        "Separate several with commas. A star at the start or the end is a wildcard: *spam matches “antispam”, spam* matches “spammer”, *spam* matches both. Without a star only the whole word matches. Case is ignored.",
+      regex: "Regular expressions ({count}/{max})",
+      regexPlaceholder: "free\\s+nitro",
+      regexHint:
+        "Rust regex syntax, so no look-around or backreferences. At most {max} characters each.",
+      allow: "Allowed words ({count}/{max})",
+      allowPlaceholder: "Add an allowed word",
+      allowHint:
+        "Words that never trigger this rule, even when they match the lists above. The same wildcards work.",
+    },
+
+    profanity: {
+      title: "Word lists",
+      description:
+        "Use Discord's built-in lists of profanity, sexual content and slurs. Discord keeps them up to date.",
+      presets: "Word lists to use",
+      presetsEmpty: "Pick at least one word list.",
+      preset: {
+        profanity: {
+          title: "Profanity",
+          description: "Words that may be considered swearing or cursing.",
+        },
+        sexual_content: {
+          title: "Sexual content",
+          description: "Words that refer to sexually explicit behavior or activity.",
+        },
+        slurs: {
+          title: "Slurs",
+          description: "Personal insults and words that may be considered hate speech.",
+        },
+      },
+      allow: "Allowed words ({count}/{max})",
+      allowPlaceholder: "Add an allowed word",
+      allowHint:
+        "Words that stay allowed even when one of the lists contains them. A star at the start or the end works as a wildcard.",
+    },
+
+    mention_spam: {
+      title: "Mention spam",
+      description:
+        "Act on messages that mention too many members or roles at once.",
+      limit: "Mentions per message",
+      limitHint:
+        "A message with more different member and role mentions than this trips the rule (1–{max}).",
+      raidProtection: "Mention raid protection",
+      raidProtectionHint:
+        "Let Discord detect sudden waves of mention spam on its own and react to them.",
+    },
+
+    spam: {
+      title: "Spam",
+      description:
+        "Discord's own detection of spam content: messages its systems recognise as spam are caught here. There is nothing more to configure.",
+    },
+
     whitelist: {
-      title: "Allowed links ({count}/{max})",
+      title: "Allowed links ({count}/{max} entries)",
+      entriesHint:
+        "The matching is done by Discord, and every pattern uses 2–4 of its {max} allow-list entries.",
       pattern: "Pattern",
       add: "Add",
       duplicate: "This pattern is already in the list.",
       howTitle: "How patterns work",
       howText:
-        "Write the address as you would read it. The star stands for “anything”; everything else is matched literally. A pattern always covers the deeper pages of what it matched.",
+        "Write the address as you would read it. The star stands for “anything”; everything else is matched literally. A pattern always covers the deeper pages of what it matched. A star works at the start or the end of the pattern only.",
       examples: {
         domain: "the domain itself, every subdomain and every page",
         subdomains: "subdomains only",
@@ -175,6 +311,8 @@ export const moderation = {
         contains: "any link containing “docs”",
       },
       test: "Test a link against the list",
+      testNote:
+        "This check is an approximation: Discord has the final word on what it lets through.",
       allowedTitle: "This link is allowed",
       allowedText: "Matched by the pattern “{pattern}”.",
       moderatedTitle: "This link is moderated",

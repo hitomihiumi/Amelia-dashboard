@@ -9,7 +9,7 @@ import {
 } from "./Action";
 import type { LayoutCustom } from "./Layout";
 import { SchemaKey, LiteralSchemaKey } from "./SchemaKeys";
-import { ModerationForm, Punishment, WarnThreshold } from "./Moderation";
+import { AutoModerationSettings, ModerationForm, Punishment, WarnThreshold } from "./Moderation";
 import { AuditSettings } from "./Audit";
 
 export interface GuildSchema {
@@ -121,25 +121,7 @@ export interface GuildSchema {
       report: ModerationForm;
       appeal: ModerationForm;
     };
-    auto_moderation: {
-      invite: {
-        enabled: boolean;
-        ignore_channels: string[];
-        ignore_roles: string[];
-        delete_message: boolean;
-        moderation_immune: boolean;
-        punishment: Punishment;
-      };
-      links: {
-        enabled: boolean;
-        ignore_channels: string[];
-        ignore_roles: string[];
-        ignore_links: string[];
-        delete_message: boolean;
-        moderation_immune: boolean;
-        punishment: Punishment;
-      };
-    };
+    auto_moderation: AutoModerationSettings;
   };
   audit: AuditSettings;
   permissions: {
