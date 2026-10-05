@@ -9,9 +9,52 @@ import { fetchGuildTextChannels } from "@/lib/discord/channels-api";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import type { ChannelPickOption } from "@/lib/discord/channel-type";
 import type { DiscordRole } from "@/lib/discord/role-style";
-import type { GuildSchema, WarnThreshold } from "@/lib/db/types";
+import { readAutoModerationState } from "@/lib/discord/automod";
+import type { AutoModKind, GuildSchema, WarnThreshold } from "@/lib/db/types";
+import { AUTOMOD_KINDS } from "@/lib/db/types";
 import { getT } from "@/i18n/server";
-import { ModerationForm } from "./ModerationForm";
+import { type AutoModDisplayState, ModerationForm } from "./ModerationForm";
+
+/**
+ * What the page shows next to each rule: the saved settings against what Discord has. Never throws,
+ * an unreachable Discord only turns the labels into "cannot check".
+ */
+async function loadRuleStates(
+  guildId: string,
+  autoModeration: GuildSchema["moderation"]["auto_moderation"],
+): Promise<{
+  states: Partial<Record<AutoModKind, AutoModDisplayState>>;
+  error: string | null;
+}> {
+  const states: Partial<Record<AutoModKind, AutoModDisplayState>> = {};
+  const created = AUTOMOD_KINDS.filter(
+    (kind) => autoModeration[kind]?.enabled && autoModeration.rules?.[kind],
+  );
+
+  let report: Awaited<ReturnType<typeof readAutoModerationState>> = {
+    states: {},
+    error: null,
+  };
+  if (created.length > 0) {
+    try {
+      report = await readAutoModerationState(guildId, autoModeration);
+    } catch (error) {
+      console.error("[Moderation] Reading the AutoMod rules failed:", error);
+      report = { states: {}, error: "unknown" };
+    }
+  }
+
+  for (const kind of AUTOMOD_KINDS) {
+    const live = report.states[kind];
+    if (!autoModeration[kind]?.enabled || !autoModeration.rules?.[kind]) {
+      states[kind] = "off";
+    } else {
+      states[kind] = report.error || !live ? "unavailable" : live;
+    }
+  }
+
+  return { states, error: report.error };
+}
 
 export default async function ModerationSettingsPage({
   params,
@@ -53,6 +96,12 @@ export default async function ModerationSettingsPage({
     "moderation.auto_moderation",
   )) as GuildSchema["moderation"]["auto_moderation"];
 
+  const { states: ruleStates, error: autoModError } = await loadRuleStates(
+    guildId,
+    autoModeration,
+  );
+  const autoModOn = AUTOMOD_KINDS.some((kind) => autoModeration[kind]?.enabled);
+
   return (
     <Flex direction="column" gap="24">
       <PageHeader
@@ -75,10 +124,19 @@ export default async function ModerationSettingsPage({
           />
         ))}
 
+      {autoModError === "permissions" && autoModOn && (
+        <Feedback
+          variant="warning"
+          title={t("moderation.settings.autoMod.permissionsTitle")}
+          description={t("moderation.settings.autoMod.permissionsText")}
+        />
+      )}
+
       <ModerationForm
         guildId={guildId}
         defaultSettings={settings}
         defaultAutoModeration={autoModeration}
+        ruleStates={ruleStates}
         textChannels={textChannels}
         roles={roles}
       />

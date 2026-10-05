@@ -23,7 +23,7 @@ export const site = {
       items: {
         moderation: {
           title: "Moderation",
-          text: "Numbered cases, warn escalation, temporary bans and auto moderation for invites and links.",
+          text: "Numbered cases, warn escalation, temporary bans and auto moderation powered by Discord's AutoMod.",
         },
         reports: {
           title: "Reports & appeals",
