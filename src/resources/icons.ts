@@ -73,6 +73,7 @@ import {
   IoShieldHalfOutline,
   IoSpeedometerOutline,
   IoWarningOutline,
+  IoServerOutline,
 } from "react-icons/io5";
 
 import { FaDiscord, FaGithub, FaHashtag } from "react-icons/fa";
@@ -159,6 +160,7 @@ export const iconLibrary = {
   navNews: IoNewspaperOutline,
   navIncidents: IoWarningOutline,
   navLogs: IoTerminalOutline,
+  navServers: IoServerOutline,
   navSiteSettings: IoSettingsOutline,
   navAdminPanel: IoShieldHalfOutline,
   navHome: IoHomeOutline,
@@ -246,6 +248,7 @@ declare module "@once-ui-system/core" {
     navNews: true;
     navIncidents: true;
     navLogs: true;
+    navServers: true;
     navSiteSettings: true;
     navAdminPanel: true;
     navHome: true;

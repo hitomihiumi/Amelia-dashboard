@@ -5,6 +5,8 @@ export const admin = {
     content: "Content",
     news: "News",
     incidents: "Incidents",
+    servers: "Servers",
+    bot: "Bot",
     logs: "Logs",
     ai: "AI & premium",
     site: "Site",
