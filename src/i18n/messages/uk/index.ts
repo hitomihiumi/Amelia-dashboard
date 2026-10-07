@@ -8,9 +8,10 @@ import { docs } from "./docs";
 import { adminNews } from "./adminNews";
 import { adminIncidents } from "./adminIncidents";
 import { adminLogs } from "./adminLogs";
+import { adminServers } from "./adminServers";
 import { layouts } from "./layouts";
 import { send } from "./send";
 import { ai } from "./ai";
 import { adminAi } from "./adminAi";
 
-export const uk = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, adminLogs, layouts, send, ai, adminAi, };
+export const uk = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, adminLogs, adminServers, layouts, send, ai, adminAi, };
