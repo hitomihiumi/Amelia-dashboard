@@ -18,7 +18,7 @@ export const adminAi = {
     rpd: "Requests per day",
     tpm: "Tokens per minute",
     noteTitle: "Shared by every server",
-    note: "These numbers are counted across all servers and shards together. The daily counter follows Google's reset at midnight Pacific time. When the API itself answers that the quota is spent, the bot pauses that model for as long as it asks, whatever is set here.",
+    note: "These numbers are counted across all servers and shards together. The per-minute limit is a sliding 60 second window, so it holds around the turn of a minute too. The daily counter follows Google's reset at midnight Pacific time. When the API itself answers that the quota is spent, the bot pauses that model for as long as it asks, whatever is set here.",
   },
 
   caps: {
