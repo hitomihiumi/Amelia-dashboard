@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Column, Feedback, Grid, Input, Text, useToast } from "@once-ui-system/core";
+import { Column, Feedback, Grid, NumberInput, Text, useToast } from "@once-ui-system/core";
 import { useRouter } from "next/navigation";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { Section } from "@/components/dashboard/Section";
@@ -97,22 +97,20 @@ export function AiLimitsForm({ config }: { config: AiGlobalConfig }) {
   // Leaving the page must not leave the bar behind.
   useEffect(() => () => setIsDirty(false), [setIsDirty]);
 
-  const setQuota = (model: AiModelKey, field: keyof AiModelQuota, raw: string) => {
-    const value = Number.parseInt(raw, 10);
+  const setQuota = (model: AiModelKey, field: keyof AiModelQuota, value: number) => {
     setState((prev) => ({
       ...prev,
       quota: {
         ...prev.quota,
-        [model]: { ...prev.quota[model], [field]: Number.isNaN(value) ? 0 : value },
+        [model]: { ...prev.quota[model], [field]: Number(value) || 0 },
       },
     }));
   };
 
-  const setCap = (field: keyof AiLimits, raw: string) => {
-    const value = Number.parseInt(raw, 10);
+  const setCap = (field: keyof AiLimits, value: number) => {
     setState((prev) => ({
       ...prev,
-      caps: { ...prev.caps, [field]: Number.isNaN(value) ? 0 : value },
+      caps: { ...prev.caps, [field]: Number(value) || 0 },
     }));
   };
 
@@ -141,17 +139,16 @@ export function AiLimitsForm({ config }: { config: AiGlobalConfig }) {
                 const { min, max } = AI_QUOTA_BOUNDS[field];
                 const bad = outOfRange(state.quota[model][field], min, max);
                 return (
-                  <Input
+                  <NumberInput
                     key={field}
                     id={`ai-quota-${model}-${field}`}
-                    type="number"
                     label={t(`adminAi.quota.${field}`)}
-                    value={String(state.quota[model][field])}
+                    value={state.quota[model][field]}
                     min={min}
                     max={max}
                     error={bad}
                     errorMessage={bad ? t("adminAi.range", { min, max }) : undefined}
-                    onChange={(e) => setQuota(model, field, e.target.value)}
+                    onChange={(value: number) => setQuota(model, field, value)}
                   />
                 );
               })}
@@ -185,17 +182,16 @@ export function AiLimitsForm({ config }: { config: AiGlobalConfig }) {
             const { min, max } = AI_CAP_BOUNDS[field];
             const bad = outOfRange(state.caps[field], min, max);
             return (
-              <Input
+              <NumberInput
                 key={field}
                 id={`ai-cap-${field}`}
-                type="number"
                 label={t(`adminAi.caps.${field}`)}
-                value={String(state.caps[field])}
+                value={state.caps[field]}
                 min={min}
                 max={max}
                 error={bad}
                 errorMessage={bad ? t("adminAi.range", { min, max }) : undefined}
-                onChange={(e) => setCap(field, e.target.value)}
+                onChange={(value: number) => setCap(field, value)}
               />
             );
           })}

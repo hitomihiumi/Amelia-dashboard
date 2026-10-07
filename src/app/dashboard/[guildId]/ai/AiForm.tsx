@@ -5,7 +5,7 @@ import {
   Column,
   Feedback,
   Grid,
-  Input,
+  NumberInput,
   Row,
   SegmentedControl,
   Text,
@@ -92,11 +92,10 @@ export function AiForm({
 
   const update = (patch: Partial<AiSettings>) => setAi((prev) => ({ ...prev, ...patch }));
 
-  const updateLimit = (field: keyof AiLimits, raw: string) => {
-    const value = Number.parseInt(raw, 10);
+  const updateLimit = (field: keyof AiLimits, value: number) => {
     setAi((prev) => ({
       ...prev,
-      limits: { ...prev.limits, [field]: Number.isNaN(value) ? 0 : value },
+      limits: { ...prev.limits, [field]: Number(value) || 0 },
     }));
   };
 
@@ -191,23 +190,34 @@ export function AiForm({
         icon="navAi"
       >
         <Column gap="16" fillWidth>
-          {LIMIT_FIELDS.map((field) => {
-            const { min, max } = bounds[field];
-            return (
-              <Input
-                key={field}
-                id={`ai-limit-${field}`}
-                type="number"
-                label={t(`ai.limits.${field}`)}
-                value={String(ai.limits[field])}
-                min={min}
-                max={max}
-                error={limitInvalid(field)}
-                errorMessage={limitInvalid(field) ? t("ai.limits.range", { min, max }) : undefined}
-                onChange={(e) => updateLimit(field, e.target.value)}
-              />
-            );
-          })}
+          <Grid
+            fillWidth
+            gap="16"
+            minWidth={0}
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
+              alignItems: "start",
+            }}
+          >
+            {LIMIT_FIELDS.map((field) => {
+              const { min, max } = bounds[field];
+              return (
+                <NumberInput
+                  key={field}
+                  id={`ai-limit-${field}`}
+                  label={t(`ai.limits.${field}`)}
+                  value={ai.limits[field]}
+                  min={min}
+                  max={max}
+                  error={limitInvalid(field)}
+                  errorMessage={
+                    limitInvalid(field) ? t("ai.limits.range", { min, max }) : undefined
+                  }
+                  onChange={(value: number) => updateLimit(field, value)}
+                />
+              );
+            })}
+          </Grid>
           <Text variant="body-default-s" onBackground="neutral-weak">
             {t("ai.limits.note")}
           </Text>
