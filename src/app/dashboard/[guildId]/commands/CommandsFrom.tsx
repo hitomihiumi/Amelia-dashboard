@@ -75,6 +75,13 @@ const commandList: {
     defaultPermission: permissionType.Administrator,
   },
   {
+    name: "ai",
+    label: "settings.commands.items.ai.label",
+    description: "settings.commands.items.ai.description",
+    icon: "navAi",
+    defaultPermission: null,
+  },
+  {
     name: "rp",
     label: "settings.commands.items.rp.label",
     description: "settings.commands.items.rp.description",

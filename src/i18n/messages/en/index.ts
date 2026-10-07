@@ -10,5 +10,6 @@ import { adminIncidents } from "./adminIncidents";
 import { adminLogs } from "./adminLogs";
 import { layouts } from "./layouts";
 import { send } from "./send";
+import { ai } from "./ai";
 
-export const en = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, adminLogs, layouts, send, };
+export const en = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, adminLogs, layouts, send, ai, };
