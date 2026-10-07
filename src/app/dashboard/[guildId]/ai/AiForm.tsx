@@ -22,7 +22,7 @@ import { SectionGrid } from "@/components/layout/SectionGrid";
 import type { ChannelPickOption } from "@/lib/discord/channel-type";
 import type { GuildActionState } from "@/types/dashboard";
 import type { AiLimits, AiModelChoice, AiSettings } from "@/lib/db/types";
-import { AI_LIMIT_BOUNDS, AI_MODEL_CHOICES, AI_PERSONA_MAX_LENGTH } from "@/lib/db/types";
+import { AI_MODEL_CHOICES, AI_PERSONA_MAX_LENGTH, limitBounds } from "@/lib/db/types";
 import { useT } from "@/i18n/client";
 import { updateAiSettings } from "./actions";
 
@@ -32,11 +32,15 @@ export function AiForm({
   guildId,
   defaultSettings,
   textChannels,
+  caps,
 }: {
   guildId: string;
   defaultSettings: AiSettings;
   textChannels: ChannelPickOption[];
+  /** Highest limits the bot's administrators let a server set. */
+  caps: AiLimits;
 }) {
+  const bounds = limitBounds(caps);
   const t = useT();
   const router = useRouter();
   const { addToast } = useToast();
@@ -97,7 +101,7 @@ export function AiForm({
   };
 
   const limitInvalid = (field: keyof AiLimits) => {
-    const { min, max } = AI_LIMIT_BOUNDS[field];
+    const { min, max } = bounds[field];
     const value = ai.limits[field];
     return !Number.isInteger(value) || value < min || value > max;
   };
@@ -188,7 +192,7 @@ export function AiForm({
       >
         <Column gap="16" fillWidth>
           {LIMIT_FIELDS.map((field) => {
-            const { min, max } = AI_LIMIT_BOUNDS[field];
+            const { min, max } = bounds[field];
             return (
               <Input
                 key={field}

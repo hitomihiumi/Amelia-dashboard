@@ -9,6 +9,7 @@ export const admin: Dict<typeof en> = {
     news: "Новини",
     incidents: "Інциденти",
     logs: "Логи",
+    ai: "ШІ і преміум",
     site: "Сайт",
     siteSettings: "Налаштування сайту",
     backToSite: "Повернутися на сайт",

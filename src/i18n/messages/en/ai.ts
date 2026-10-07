@@ -4,7 +4,17 @@ export const ai = {
     "Let Amelia chat with your members: pick where she talks, which model answers, how much each member can use her and what she is like on your server.",
   saved: "AI chat settings saved.",
 
+  premium: {
+    requiredTitle: "Premium required",
+    requiredText:
+      "The AI chat is a premium feature. For now premium is given out personally by the bot's administrators: ask them to unlock it for this server. Your settings are kept and come back as soon as premium is on.",
+    activeTitle: "Premium",
+    activeUntil: "Premium is active until {date}.",
+    activeForever: "Premium is active, with no end date.",
+  },
+
   errors: {
+    premiumRequired: "The AI chat is a premium feature. This server has no active premium.",
     genericTitle: "Error",
     loadChannels: "An unknown error occurred while loading channels.",
     saveFailed: "Save failed",

@@ -4,8 +4,14 @@ import { revalidatePath } from "next/cache";
 import { Guild } from "@/lib/db/Guild";
 import { requireGuildAdmin } from "@/app/dashboard/[guildId]/actions";
 import type { GuildActionState } from "@/types/dashboard";
-import type { AiSettings } from "@/lib/db/types";
-import { AI_LIMIT_BOUNDS, AI_MODEL_CHOICES, AI_PERSONA_MAX_LENGTH } from "@/lib/db/types";
+import type { AiGlobalConfig, AiLimits, AiSettings } from "@/lib/db/types";
+import {
+  AI_MODEL_CHOICES,
+  AI_PERSONA_MAX_LENGTH,
+  isPremiumActive,
+  limitBounds,
+} from "@/lib/db/types";
+import { getAiGlobalConfig } from "@/lib/admin/ai";
 import { getT } from "@/i18n/server";
 import type { Translator } from "@/i18n/translate";
 
@@ -28,10 +34,16 @@ export async function updateAiSettings(
 
     const ai = JSON.parse(raw as string) as AiSettings;
 
-    const error = validateAi(ai, t);
+    const guild = new Guild(guildId);
+
+    // The AI chat is a premium feature; the bot's administrators give premium out.
+    if (!isPremiumActive(await guild.get("premium"))) {
+      return { ok: false, error: t("ai.errors.premiumRequired") };
+    }
+
+    const error = validateAi(ai, (await getAiGlobalConfig()).caps, t);
     if (error) return { ok: false, error };
 
-    const guild = new Guild(guildId);
     const persona = ai.persona?.trim() ? ai.persona.trim() : null;
 
     await guild.set("ai.enabled", ai.enabled);
@@ -55,7 +67,7 @@ export async function updateAiSettings(
   }
 }
 
-function validateAi(ai: AiSettings, t: Translator): string | null {
+function validateAi(ai: AiSettings, caps: AiGlobalConfig["caps"], t: Translator): string | null {
   if (typeof ai?.enabled !== "boolean") return t("ai.errors.invalid");
 
   if (!AI_MODEL_CHOICES.includes(ai.model)) return t("ai.errors.model");
@@ -74,14 +86,12 @@ function validateAi(ai: AiSettings, t: Translator): string | null {
     return t("ai.errors.personaLength", { max: AI_PERSONA_MAX_LENGTH });
   }
 
-  for (const [field, { min, max }] of Object.entries(AI_LIMIT_BOUNDS)) {
+  const bounds = limitBounds(caps);
+  for (const field of Object.keys(bounds) as (keyof AiLimits)[]) {
+    const { min, max } = bounds[field];
     const value = (ai.limits as unknown as Record<string, unknown> | undefined)?.[field];
     if (typeof value !== "number" || !Number.isInteger(value) || value < min || value > max) {
-      return t("ai.errors.limit", {
-        limit: t(`ai.limits.${field as keyof typeof AI_LIMIT_BOUNDS}`),
-        min,
-        max,
-      });
+      return t("ai.errors.limit", { limit: t(`ai.limits.${field}`), min, max });
     }
   }
 
