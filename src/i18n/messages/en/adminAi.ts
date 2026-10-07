@@ -36,7 +36,7 @@ export const adminAi = {
       "Give a server premium to unlock the AI chat. It takes effect at once and works even before the bot has joined the server.",
     guildId: "Server ID",
     until: "Valid until",
-    untilHint: "The whole day counts. Leave empty for no end.",
+    untilHint: "Premium stays on until the end of the chosen day.",
     note: "Note",
     notePlaceholder: "Who it is for and why",
     give: "Give or update premium",

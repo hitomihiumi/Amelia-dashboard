@@ -5,10 +5,12 @@ import {
   Avatar,
   Button,
   Column,
+  DateInput,
   Grid,
   IconButton,
   Input,
   Row,
+  Switch,
   Tag,
   Text,
   useToast,
@@ -24,6 +26,25 @@ import { grantPremium, revokePremium } from "./actions";
 /** `YYYY-MM-DD` of an ISO timestamp, in UTC like the end date the server stores. */
 const day = (iso: string) => iso.slice(0, 10);
 
+const pad = (value: number) => String(value).padStart(2, "0");
+
+/** The day a calendar pick stands for, as the `YYYY-MM-DD` the server expects. */
+const toDay = (date: Date) =>
+  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+
+/** A `YYYY-MM-DD` day as a date on the local calendar, so the picker shows the same day. */
+const fromDay = (value: string) => {
+  const [year, month, date] = value.split("-").map(Number);
+  return new Date(year, month - 1, date);
+};
+
+/** Where the end date starts when someone turns "no end date" off: a month ahead. */
+const inAMonth = () => {
+  const date = new Date();
+  date.setDate(date.getDate() + 30);
+  return date;
+};
+
 /**
  * Premium servers: who has it, until when, and the form to give or change it.
  * Unlike the limits above these act at once; there is nothing to save afterwards.
@@ -35,7 +56,8 @@ export function PremiumPanel({ guilds }: { guilds: PremiumGuildRow[] }) {
   const [pending, startTransition] = useTransition();
 
   const [guildId, setGuildId] = useState("");
-  const [until, setUntil] = useState("");
+  // `null` means premium without an end date.
+  const [until, setUntil] = useState<Date | null>(null);
   const [note, setNote] = useState("");
 
   const run = (action: () => Promise<{ ok: true } | { ok: false; error: string }>, done: string) =>
@@ -51,10 +73,10 @@ export function PremiumPanel({ guilds }: { guilds: PremiumGuildRow[] }) {
 
   const handleGrant = () =>
     run(async () => {
-      const result = await grantPremium(guildId, until, note);
+      const result = await grantPremium(guildId, until ? toDay(until) : "", note);
       if (result.ok) {
         setGuildId("");
-        setUntil("");
+        setUntil(null);
         setNote("");
       }
       return result;
@@ -62,7 +84,7 @@ export function PremiumPanel({ guilds }: { guilds: PremiumGuildRow[] }) {
 
   const edit = (row: PremiumGuildRow) => {
     setGuildId(row.id);
-    setUntil(row.until ? day(row.until) : "");
+    setUntil(row.until ? fromDay(day(row.until)) : null);
     setNote(row.note ?? "");
     document
       .getElementById("premium-guild-id")
@@ -83,7 +105,7 @@ export function PremiumPanel({ guilds }: { guilds: PremiumGuildRow[] }) {
           gap="16"
           minWidth={0}
           style={{
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
             alignItems: "start",
           }}
         >
@@ -97,14 +119,6 @@ export function PremiumPanel({ guilds }: { guilds: PremiumGuildRow[] }) {
             onChange={(e) => setGuildId(e.target.value)}
           />
           <Input
-            id="premium-until"
-            type="date"
-            label={t("adminAi.premium.until")}
-            description={t("adminAi.premium.untilHint")}
-            value={until}
-            onChange={(e) => setUntil(e.target.value)}
-          />
-          <Input
             id="premium-note"
             label={t("adminAi.premium.note")}
             placeholder={t("adminAi.premium.notePlaceholder")}
@@ -113,6 +127,25 @@ export function PremiumPanel({ guilds }: { guilds: PremiumGuildRow[] }) {
             onChange={(e) => setNote(e.target.value)}
           />
         </Grid>
+
+        <Row fillWidth gap="24" vertical="center" wrap>
+          <Switch
+            label={t("adminAi.premium.noEnd")}
+            description={t("adminAi.premium.untilHint")}
+            checked={until === null}
+            onToggle={() => setUntil(until === null ? inAMonth() : null)}
+          />
+          {until !== null && (
+            <DateInput
+              id="premium-until"
+              label={t("adminAi.premium.until")}
+              value={until}
+              minDate={new Date()}
+              onChange={(date: Date) => setUntil(date)}
+              style={{ minWidth: 220 }}
+            />
+          )}
+        </Row>
 
         <Row>
           <Button
