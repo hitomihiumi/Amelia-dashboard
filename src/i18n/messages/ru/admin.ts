@@ -11,6 +11,7 @@ export const admin: Dict<typeof en> = {
     servers: "Серверы",
     bot: "Бот",
     logs: "Логи",
+    ai: "ИИ и премиум",
     site: "Сайт",
     siteSettings: "Настройки сайта",
     backToSite: "Вернуться на сайт",

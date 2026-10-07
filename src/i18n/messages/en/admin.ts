@@ -8,6 +8,7 @@ export const admin = {
     servers: "Servers",
     bot: "Bot",
     logs: "Logs",
+    ai: "AI & premium",
     site: "Site",
     siteSettings: "Site settings",
     backToSite: "Back to site",

@@ -40,6 +40,7 @@ export const settings: Dict<typeof en> = {
     leveling: "Рівні",
     utils: "Утиліти",
     privateRooms: "Приватні кімнати",
+    ai: "Чат зі ШІ",
     interactions: "Взаємодії",
     components: "Компоненти",
     scenarios: "Сценарії",
@@ -296,6 +297,10 @@ export const settings: Dict<typeof en> = {
       util: {
         label: "Утиліти",
         description: "Службові команди, наприклад резервне копіювання.",
+      },
+      ai: {
+        label: "Чат зі ШІ",
+        description: "Команди для спілкування зі ШІ.",
       },
       rp: {
         label: "Рольові дії",

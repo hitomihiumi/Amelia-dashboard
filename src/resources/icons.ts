@@ -35,6 +35,7 @@ import {
   IoCubeOutline,
   IoToggleOutline,
   IoDocumentTextOutline,
+  IoSparklesOutline,
   IoLayersOutline,
   IoListOutline,
   IoChatbubbleEllipsesOutline,
@@ -150,6 +151,7 @@ export const iconLibrary = {
   navShop: IoCartOutline,
   navLevels: IoRibbonOutline,
   navPrivate: IoMicOutline,
+  navAi: IoSparklesOutline,
   navComponents: IoToggleOutline,
   navScenarios: IoGitNetworkOutline,
   navSend: IoSendOutline,
@@ -237,6 +239,7 @@ declare module "@once-ui-system/core" {
     navShop: true;
     navLevels: true;
     navPrivate: true;
+    navAi: true;
     navComponents: true;
     navScenarios: true;
     navSend: true;

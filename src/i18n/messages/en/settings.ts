@@ -36,6 +36,7 @@ export const settings = {
     leveling: "Leveling",
     utils: "Utils",
     privateRooms: "Private Rooms",
+    ai: "AI chat",
     interactions: "Interactions",
     components: "Components",
     scenarios: "Scenarios",
@@ -284,6 +285,10 @@ export const settings = {
       util: {
         label: "Utils",
         description: "Utility commands like backup.",
+      },
+      ai: {
+        label: "AI chat",
+        description: "Commands for chatting with the AI.",
       },
       rp: {
         label: "Role Play",

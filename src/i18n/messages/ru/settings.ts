@@ -40,6 +40,7 @@ export const settings: Dict<typeof en> = {
     leveling: "Уровни",
     utils: "Утилиты",
     privateRooms: "Приватные комнаты",
+    ai: "Чат с ИИ",
     interactions: "Взаимодействия",
     components: "Компоненты",
     scenarios: "Сценарии",
@@ -293,6 +294,10 @@ export const settings: Dict<typeof en> = {
       util: {
         label: "Утилиты",
         description: "Служебные команды, например резервное копирование.",
+      },
+      ai: {
+        label: "Чат с ИИ",
+        description: "Команды для общения с ИИ.",
       },
       rp: {
         label: "Ролевые действия",

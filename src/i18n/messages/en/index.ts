@@ -11,5 +11,7 @@ import { adminLogs } from "./adminLogs";
 import { adminServers } from "./adminServers";
 import { layouts } from "./layouts";
 import { send } from "./send";
+import { ai } from "./ai";
+import { adminAi } from "./adminAi";
 
-export const en = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, adminLogs, adminServers, layouts, send, };
+export const en = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, adminLogs, adminServers, layouts, send, ai, adminAi, };
