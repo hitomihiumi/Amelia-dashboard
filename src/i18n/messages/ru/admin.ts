@@ -8,6 +8,8 @@ export const admin: Dict<typeof en> = {
     content: "Контент",
     news: "Новости",
     incidents: "Инциденты",
+    servers: "Серверы",
+    bot: "Бот",
     logs: "Логи",
     site: "Сайт",
     siteSettings: "Настройки сайта",
