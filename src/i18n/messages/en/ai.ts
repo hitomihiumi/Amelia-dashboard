@@ -41,7 +41,7 @@ export const ai = {
       "When she is mentioned, when someone replies to one of her answers, and to every message in a chat channel (except talk between other members). /ai ask works anywhere that is not ignored.",
     privacyTitle: "Privacy",
     privacyText:
-      "Messages addressed to her are sent to Google's Gemini API on a free key to write the answer. Keep the AI off if your community should not use it.",
+      "Messages addressed to her, and the pictures attached to them, are sent to Google's Gemini API on a free key to write the answer, together with the notes she keeps about the people in the conversation. Keep the AI off if your community should not use it.",
   },
 
   model: {
@@ -67,6 +67,23 @@ export const ai = {
     guild_per_day: "Messages per server per day",
     range: "Between {min} and {max}",
     note: "The counters restart every minute and every day at 00:00 UTC. The bot also has a global limit shared by all servers, so answers can pause when many communities talk to her at once.",
+  },
+
+  memory: {
+    title: "Memory and pictures",
+    description: "What Amelia may keep in mind and look at.",
+    short_term: "Short-term memory",
+    short_termHint:
+      "Remembers the last exchanges of a channel for 30 minutes, so replies follow the conversation.",
+    long_term: "Long-term memory",
+    long_termHint:
+      "Remembers lasting things members tell her about themselves, such as names, hobbies and pets, and brings them up days later. Members can see and delete their notes with /ai memory.",
+    images: "Pictures",
+    imagesHint: "Looks at images attached to a message (PNG, JPEG, WebP), up to 3 per message.",
+    stored: "Notes kept about members: {count}",
+    clear: "Forget all notes",
+    clearConfirm: "Delete everything Amelia has noted about the members of this server?",
+    cleared: "All notes about the members were deleted.",
   },
 
   persona: {

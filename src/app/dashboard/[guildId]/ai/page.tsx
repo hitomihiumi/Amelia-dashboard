@@ -4,6 +4,7 @@ import { Feedback, Flex } from "@once-ui-system/core";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { authOptions } from "@/lib/auth";
 import { Guild } from "@/lib/db/Guild";
+import { prisma } from "@/lib/db/db";
 import { fetchGuildTextChannels } from "@/lib/discord/channels-api";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import type { ChannelPickOption } from "@/lib/discord/channel-type";
@@ -13,6 +14,7 @@ import {
   DEFAULT_AI_SETTINGS,
   clampLimits,
   isPremiumActive,
+  normalizeAiOptions,
 } from "@/lib/db/types";
 import { getAiGlobalConfig } from "@/lib/admin/ai";
 import { getT } from "@/i18n/server";
@@ -62,7 +64,9 @@ export default async function AiPage({ params }: { params: Promise<{ guildId: st
     persona: raw.persona ?? null,
     // What really applies: a limit above the administrators' ceiling is brought down to it.
     limits: clampLimits({ ...DEFAULT_AI_LIMITS, ...(raw.limits ?? {}) }, caps),
+    options: normalizeAiOptions(raw.options),
   };
+  const memoryCount = await prisma.aiMemory.count({ where: { guildId } });
 
   return (
     <Flex direction="column" gap="24">
@@ -96,6 +100,7 @@ export default async function AiPage({ params }: { params: Promise<{ guildId: st
         defaultSettings={settings}
         textChannels={textChannels}
         caps={caps}
+        memoryCount={memoryCount}
       />
     </Flex>
   );
