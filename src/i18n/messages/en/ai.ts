@@ -80,6 +80,9 @@ export const ai = {
       "Remembers lasting things members tell her about themselves, such as names, hobbies and pets, and brings them up days later. Members can see and delete their notes with /ai memory.",
     images: "Pictures",
     imagesHint: "Looks at images attached to a message (PNG, JPEG, WebP), up to 3 per message.",
+    code: "Code files",
+    codeHint:
+      "Reads code and text files attached to a message (up to 3, 200 KB each) to explain or review them. Obvious secrets are blanked out before anything is sent. Files go to Google together with the message, so do not enable it for private code.",
     stored: "Notes kept about members: {count}",
     clear: "Forget all notes",
     clearConfirm: "Delete everything Amelia has noted about the members of this server?",

@@ -28,7 +28,12 @@ import { clearAiMemories, updateAiSettings } from "./actions";
 import { ConfirmIconButton } from "@/components/dashboard/ConfirmIconButton";
 
 const LIMIT_FIELDS = ["user_per_minute", "user_per_day", "guild_per_day"] as const;
-const OPTION_KEYS = ["short_term", "long_term", "images"] as const satisfies (keyof AiOptions)[];
+const OPTION_KEYS = [
+  "short_term",
+  "long_term",
+  "images",
+  "code",
+] as const satisfies (keyof AiOptions)[];
 
 export function AiForm({
   guildId,
