@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { Guild } from "@/lib/db/Guild";
+import { prisma } from "@/lib/db/db";
 import { requireGuildAdmin } from "@/app/dashboard/[guildId]/actions";
 import type { GuildActionState } from "@/types/dashboard";
 import type { AiGlobalConfig, AiLimits, AiSettings } from "@/lib/db/types";
@@ -18,7 +19,7 @@ import type { Translator } from "@/i18n/translate";
 const SNOWFLAKE = /^\d{17,20}$/;
 const MAX_CHANNELS = 25;
 
-/** AI chat settings: switch, chat and ignored channels, model, personality text and limits. */
+/** AI chat settings: switch, chat and ignored channels, model, personality text, limits, memory. */
 export async function updateAiSettings(
   guildId: string,
   formData: FormData,
@@ -56,6 +57,12 @@ export async function updateAiSettings(
       user_per_day: ai.limits.user_per_day,
       guild_per_day: ai.limits.guild_per_day,
     });
+    await guild.set("ai.options", {
+      short_term: ai.options.short_term,
+      long_term: ai.options.long_term,
+      images: ai.options.images,
+      code: ai.options.code,
+    });
 
     revalidatePath(`/dashboard/${guildId}/ai`);
 
@@ -86,6 +93,11 @@ function validateAi(ai: AiSettings, caps: AiGlobalConfig["caps"], t: Translator)
     return t("ai.errors.personaLength", { max: AI_PERSONA_MAX_LENGTH });
   }
 
+  const options = ai.options as unknown as Record<string, unknown> | undefined;
+  for (const key of ["short_term", "long_term", "images", "code"]) {
+    if (typeof options?.[key] !== "boolean") return t("ai.errors.invalid");
+  }
+
   const bounds = limitBounds(caps);
   for (const field of Object.keys(bounds) as (keyof AiLimits)[]) {
     const { min, max } = bounds[field];
@@ -96,4 +108,25 @@ function validateAi(ai: AiSettings, caps: AiGlobalConfig["caps"], t: Translator)
   }
 
   return null;
+}
+
+/**
+ * Forget everything the AI chat has kept about the members of the server. The members' own
+ * `/ai memory` does the same for one person; this is the server owners' way to wipe it all.
+ */
+export async function clearAiMemories(guildId: string): Promise<GuildActionState> {
+  const t = await getT();
+
+  try {
+    const gate = await requireGuildAdmin(guildId);
+    if (gate.error) return { ok: false, error: gate.error };
+
+    await prisma.aiMemory.deleteMany({ where: { guildId } });
+
+    revalidatePath(`/dashboard/${guildId}/ai`);
+    return { ok: true };
+  } catch (error) {
+    console.error("[AI Memory Clear Error]:", error);
+    return { ok: false, error: t("ai.errors.internalSave") };
+  }
 }

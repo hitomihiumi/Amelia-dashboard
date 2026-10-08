@@ -21,24 +21,34 @@ import { Section } from "@/components/dashboard/Section";
 import { SectionGrid } from "@/components/layout/SectionGrid";
 import type { ChannelPickOption } from "@/lib/discord/channel-type";
 import type { GuildActionState } from "@/types/dashboard";
-import type { AiLimits, AiModelChoice, AiSettings } from "@/lib/db/types";
+import type { AiLimits, AiModelChoice, AiOptions, AiSettings } from "@/lib/db/types";
 import { AI_MODEL_CHOICES, AI_PERSONA_MAX_LENGTH, limitBounds } from "@/lib/db/types";
 import { useT } from "@/i18n/client";
-import { updateAiSettings } from "./actions";
+import { clearAiMemories, updateAiSettings } from "./actions";
+import { ConfirmIconButton } from "@/components/dashboard/ConfirmIconButton";
 
 const LIMIT_FIELDS = ["user_per_minute", "user_per_day", "guild_per_day"] as const;
+const OPTION_KEYS = [
+  "short_term",
+  "long_term",
+  "images",
+  "code",
+] as const satisfies (keyof AiOptions)[];
 
 export function AiForm({
   guildId,
   defaultSettings,
   textChannels,
   caps,
+  memoryCount,
 }: {
   guildId: string;
   defaultSettings: AiSettings;
   textChannels: ChannelPickOption[];
   /** Highest limits the bot's administrators let a server set. */
   caps: AiLimits;
+  /** Notes the AI keeps about members of the server. */
+  memoryCount: number;
 }) {
   const bounds = limitBounds(caps);
   const t = useT();
@@ -97,6 +107,20 @@ export function AiForm({
       ...prev,
       limits: { ...prev.limits, [field]: Number(value) || 0 },
     }));
+  };
+
+  const toggleOption = (key: keyof AiOptions) =>
+    setAi((prev) => ({ ...prev, options: { ...prev.options, [key]: !prev.options[key] } }));
+
+  // Wiping the notes is not a setting: it happens at once and is not part of the unsaved bar.
+  const handleClearMemories = async () => {
+    const result: GuildActionState = await clearAiMemories(guildId);
+    if (result?.ok) {
+      addToast({ message: t("ai.memory.cleared"), variant: "success" });
+      router.refresh();
+    } else {
+      addToast({ message: result?.error || t("ai.errors.saveFailed"), variant: "danger" });
+    }
   };
 
   const limitInvalid = (field: keyof AiLimits) => {
@@ -225,10 +249,44 @@ export function AiForm({
       </Section>
 
       <Section
+        title={t("ai.memory.title")}
+        description={t("ai.memory.description")}
+        span="full"
+        num={4}
+        icon="navAi"
+      >
+        <Column gap="16" fillWidth>
+          {OPTION_KEYS.map((key) => (
+            <Switch
+              key={key}
+              label={t(`ai.memory.${key}`)}
+              description={t(`ai.memory.${key}Hint`)}
+              checked={ai.options[key]}
+              onToggle={() => toggleOption(key)}
+            />
+          ))}
+
+          <Row fillWidth gap="12" vertical="center" wrap>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              {t("ai.memory.stored", { count: memoryCount })}
+            </Text>
+            {memoryCount > 0 && (
+              <ConfirmIconButton
+                variant="confirm"
+                tooltip={t("ai.memory.clear")}
+                confirmMessage={t("ai.memory.clearConfirm")}
+                onConfirm={handleClearMemories}
+              />
+            )}
+          </Row>
+        </Column>
+      </Section>
+
+      <Section
         title={t("ai.persona.title")}
         description={t("ai.persona.description")}
         span="full"
-        num={4}
+        num={5}
         icon="navAi"
       >
         <Column gap="12" fillWidth>
