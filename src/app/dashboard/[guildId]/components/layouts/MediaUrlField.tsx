@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { TextTools } from "@/components/dashboard/text/TextTools";
 import { useDiscordPreviewOptional } from "@/contexts/DiscordPreviewContext";
 import { useT } from "@/i18n/client";
 import { replacePreviewTags } from "@/lib/discord/preview-tags";
@@ -92,17 +93,19 @@ export function MediaUrlField({ id, value, onChange, invalid, label, placeholder
     <Row fillWidth gap="12" minWidth="0" vertical="start">
       <MediaThumb url={value} />
       <Column flex="1" gap="8" minWidth="0">
-        <Input
-          id={id}
-          label={label}
-          placeholder={placeholder ?? "https://…"}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          error={invalid}
-          maxLength={2000}
-          inputMode="url"
-          autoComplete="off"
-        />
+        <TextTools id={id} value={value} onValueChange={onChange} placeholders="url" emoji={false}>
+          <Input
+            id={id}
+            label={label}
+            placeholder={placeholder ?? "https://…"}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            error={invalid}
+            maxLength={2000}
+            inputMode="url"
+            autoComplete="off"
+          />
+        </TextTools>
         {hasPlaceholder ? (
           <Text variant="body-default-xs" onBackground="neutral-weak" paddingX="4">
             {t("layouts.media.placeholderNote")}

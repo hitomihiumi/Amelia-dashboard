@@ -202,7 +202,7 @@ export function ComponentsManager({
       return;
     }
     const id = generateID(guildId, COMPONENT_ID_TYPE[kind]);
-    const item = DEFAULT_FACTORIES[kind](id, t);
+    const item = DEFAULT_FACTORIES[kind](id, t, guildId);
     // Seed the new item into state immediately so the editor + preview see it.
     setState(
       (prev) =>

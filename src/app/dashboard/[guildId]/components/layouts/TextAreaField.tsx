@@ -1,58 +1,10 @@
 "use client";
 
-import { EmojiPickerDropdown } from "@/components/dashboard/discord/EmojiPickerDropdown";
+import type { ApplyEdit } from "@/components/dashboard/text/applyEdit";
+import { TextToolbar } from "@/components/dashboard/text/TextToolbar";
 import { useT } from "@/i18n/client";
-import { emojiToText } from "@/lib/discord/emojis-api";
-import type { MessageKey } from "@/i18n/messages/types";
-import { VARIABLE_PLACEHOLDERS } from "@/lib/db/types";
-import {
-  cycleHeading,
-  insertText,
-  type TextEdit,
-  toggleLinePrefix,
-  wrapSelection,
-} from "@/lib/layouts/markdown";
-import {
-  Column,
-  DropdownWrapper,
-  IconButton,
-  Line,
-  Option,
-  Row,
-  Text,
-  Textarea,
-} from "@once-ui-system/core";
-import { type ReactNode, useRef, useState } from "react";
-import {
-  LuBold,
-  LuBraces,
-  LuCode,
-  LuEyeOff,
-  LuHeading,
-  LuItalic,
-  LuList,
-  LuQuote,
-  LuSmile,
-  LuStrikethrough,
-  LuUnderline,
-} from "react-icons/lu";
-
-const PLACEHOLDER_LABELS: Record<keyof typeof VARIABLE_PLACEHOLDERS, MessageKey> = {
-  USER_ID: "layouts.placeholders.USER_ID",
-  USER_NAME: "layouts.placeholders.USER_NAME",
-  USER_DISPLAY_NAME: "layouts.placeholders.USER_DISPLAY_NAME",
-  USER_MENTION: "layouts.placeholders.USER_MENTION",
-  USER_AVATAR: "layouts.placeholders.USER_AVATAR",
-  CHANNEL_ID: "layouts.placeholders.CHANNEL_ID",
-  CHANNEL_NAME: "layouts.placeholders.CHANNEL_NAME",
-  CHANNEL_MENTION: "layouts.placeholders.CHANNEL_MENTION",
-  GUILD_ID: "layouts.placeholders.GUILD_ID",
-  GUILD_NAME: "layouts.placeholders.GUILD_NAME",
-  GUILD_ICON: "layouts.placeholders.GUILD_ICON",
-  DATE: "layouts.placeholders.DATE",
-  TIME: "layouts.placeholders.TIME",
-  TIMESTAMP: "layouts.placeholders.TIMESTAMP",
-};
+import { Column, Row, Text, Textarea } from "@once-ui-system/core";
+import { type ReactNode, useRef } from "react";
 
 export interface TextAreaFieldProps {
   id: string;
@@ -63,19 +15,6 @@ export interface TextAreaFieldProps {
   invalid?: boolean;
   /** Extra controls on the right of the toolbar, e.g. "remove this text". */
   actions?: ReactNode;
-}
-
-function ToolbarSeparator() {
-  return (
-    <Line
-      vert
-      aria-hidden
-      fillHeight={false}
-      marginX="4"
-      background="neutral-alpha-medium"
-      style={{ height: 20 }}
-    />
-  );
 }
 
 /** A markdown textarea with a formatting toolbar, a placeholder menu and its own character count. */
@@ -90,9 +29,8 @@ export function TextAreaField({
 }: TextAreaFieldProps) {
   const t = useT();
   const ref = useRef<HTMLTextAreaElement>(null);
-  const [placeholdersOpen, setPlaceholdersOpen] = useState(false);
 
-  const apply = (edit: (value: string, start: number, end: number) => TextEdit) => {
+  const apply: ApplyEdit = (edit) => {
     const el = ref.current;
     if (!el) return;
     const next = edit(el.value, el.selectionStart, el.selectionEnd);
@@ -102,25 +40,6 @@ export function TextAreaField({
       el.setSelectionRange(next.start, next.end);
     });
   };
-
-  const keepFocus = (event: React.MouseEvent) => event.preventDefault();
-
-  const tool = (
-    labelKey: MessageKey,
-    icon: ReactNode,
-    edit: (value: string, start: number, end: number) => TextEdit,
-  ) => (
-    <IconButton
-      icon="text"
-      variant="ghost"
-      size="s"
-      tooltip={t(labelKey)}
-      onMouseDown={keepFocus}
-      onClick={() => apply(edit)}
-    >
-      {icon}
-    </IconButton>
-  );
 
   return (
     <Column fillWidth gap="4">
@@ -133,100 +52,7 @@ export function TextAreaField({
         </Text>
       </Row>
 
-      <Row
-        role="toolbar"
-        aria-label={t("layouts.text.toolbar")}
-        fillWidth
-        wrap
-        vertical="center"
-        gap="2"
-        padding="2"
-        border="neutral-medium"
-        radius="m"
-        background="neutral-alpha-weak"
-      >
-        {tool("layouts.text.bold", <LuBold size={15} />, (v, s, e) =>
-          wrapSelection(v, s, e, "**", t("layouts.text.sampleBold")),
-        )}
-        {tool("layouts.text.italic", <LuItalic size={15} />, (v, s, e) =>
-          wrapSelection(v, s, e, "*", t("layouts.text.sampleItalic")),
-        )}
-        {tool("layouts.text.underline", <LuUnderline size={15} />, (v, s, e) =>
-          wrapSelection(v, s, e, "__", t("layouts.text.sampleUnderline")),
-        )}
-        {tool("layouts.text.strike", <LuStrikethrough size={15} />, (v, s, e) =>
-          wrapSelection(v, s, e, "~~", t("layouts.text.sampleStrike")),
-        )}
-        <ToolbarSeparator />
-        {tool("layouts.text.heading", <LuHeading size={15} />, cycleHeading)}
-        {tool("layouts.text.list", <LuList size={15} />, (v, s, e) => toggleLinePrefix(v, s, e, "- "))}
-        {tool("layouts.text.quote", <LuQuote size={15} />, (v, s, e) => toggleLinePrefix(v, s, e, "> "))}
-        <ToolbarSeparator />
-        {tool("layouts.text.code", <LuCode size={15} />, (v, s, e) =>
-          wrapSelection(v, s, e, "`", t("layouts.text.sampleCode")),
-        )}
-        {tool("layouts.text.spoiler", <LuEyeOff size={15} />, (v, s, e) =>
-          wrapSelection(v, s, e, "||", t("layouts.text.sampleSpoiler")),
-        )}
-        <ToolbarSeparator />
-        <DropdownWrapper
-          open={placeholdersOpen}
-          onOpenChange={setPlaceholdersOpen}
-          placement="bottom-start"
-          trigger={
-            <IconButton
-              icon="text"
-              variant="ghost"
-              size="s"
-              tooltip={t("layouts.text.placeholders")}
-              onMouseDown={keepFocus}
-            >
-              <LuBraces size={15} />
-            </IconButton>
-          }
-          dropdown={
-            <Column gap="2" padding="4" minWidth={16} maxHeight={22} style={{ overflowY: "auto" }}>
-              <Text variant="body-default-xs" onBackground="neutral-weak" paddingX="8" paddingY="4">
-                {t("layouts.text.placeholderHint", { token: VARIABLE_PLACEHOLDERS.USER_NAME })}
-              </Text>
-              {(Object.keys(VARIABLE_PLACEHOLDERS) as Array<keyof typeof VARIABLE_PLACEHOLDERS>).map(
-                (key) => (
-                  <Option
-                    key={key}
-                    value={key}
-                    label={t(PLACEHOLDER_LABELS[key])}
-                    description={VARIABLE_PLACEHOLDERS[key]}
-                    onClick={() => {
-                      setPlaceholdersOpen(false);
-                      apply((v, s, e) => insertText(v, s, e, VARIABLE_PLACEHOLDERS[key]));
-                    }}
-                  />
-                ),
-              )}
-            </Column>
-          }
-        />
-        <EmojiPickerDropdown
-          placement="bottom-start"
-          onSelect={(emoji) => apply((v, s, e) => insertText(v, s, e, emojiToText(emoji)))}
-          trigger={
-            <IconButton
-              icon="text"
-              variant="ghost"
-              size="s"
-              tooltip={t("common.emoji.insert")}
-              onMouseDown={keepFocus}
-            >
-              <LuSmile size={15} />
-            </IconButton>
-          }
-        />
-        {actions ? (
-          <Row gap="2" style={{ marginLeft: "auto" }}>
-            {actions}
-          </Row>
-        ) : null}
-      </Row>
+      <TextToolbar apply={apply} actions={actions} />
 
       <Textarea
         ref={ref}

@@ -43,8 +43,10 @@ export function parseComponentsTab(value: string | null | undefined): Components
 
 /** Factories for the "New <item>" button — produce a full default object with
  *  all required fields populated so the editor and live preview see a
- *  complete item from the very first keystroke. The caller mints the id and
- *  passes the translator so default names follow the dashboard language. */
+ *  complete item from the very first keystroke, and one Discord would accept as it is
+ *  (a modal needs a field, a select menu needs options). The caller mints the id and
+ *  passes the translator so default names follow the dashboard language, and the guild
+ *  so the ids of the parts (fields, options) are minted for it too. */
 export function defaultButton(id: string, t: Translator): import("@/lib/db/types").ButtonCustom {
   return {
     id,
@@ -55,11 +57,22 @@ export function defaultButton(id: string, t: Translator): import("@/lib/db/types
   };
 }
 
-export function defaultModal(id: string, t: Translator): import("@/lib/db/types").ModalCustom {
+export function defaultModal(
+  id: string,
+  t: Translator,
+  guildId?: string,
+): import("@/lib/db/types").ModalCustom {
   return {
     id,
     title: t("builder.defaults.modal.title"),
-    fields: [],
+    fields: [
+      {
+        id: generateID(guildId, "field"),
+        name: t("builder.defaults.modal.field", { n: 1 }),
+        type: "short",
+        required: true,
+      },
+    ],
   };
 }
 
@@ -67,15 +80,19 @@ export function defaultEmbed(id: string, t: Translator): import("@/lib/db/types"
   return {
     id,
     name: t("builder.defaults.embed.name"),
-    title: undefined,
-    description: undefined,
+    title: t("builder.defaults.embed.title", { token: "{user.displayName}" }),
+    description: t("builder.defaults.embed.description", { token: "{user.mention}" }),
     color: "#5865f2",
     fields: [],
     timestamp: false,
   };
 }
 
-export function defaultSelectMenu(id: string, t: Translator): import("@/lib/db/types").SelectMenuCustom {
+export function defaultSelectMenu(
+  id: string,
+  t: Translator,
+  guildId?: string,
+): import("@/lib/db/types").SelectMenuCustom {
   return {
     id,
     name: t("builder.defaults.selectMenu.name"),
@@ -83,7 +100,11 @@ export function defaultSelectMenu(id: string, t: Translator): import("@/lib/db/t
     minValues: 1,
     maxValues: 1,
     disabled: false,
-    options: [],
+    options: [1, 2].map((n) => ({
+      label: t("builder.defaults.selectMenu.option", { n }),
+      value: generateID(guildId, "opt"),
+      default: false,
+    })),
   };
 }
 
@@ -112,13 +133,12 @@ export function defaultLayout(id: string, t: Translator): LayoutCustom {
   };
 }
 
-export const DEFAULT_FACTORIES: Record<
-  ComponentsTab,
-  (id: string, t: Translator) => ComponentsState[ComponentsTab][number]
-> = {
-  buttons: defaultButton as (id: string, t: Translator) => ComponentsState[ComponentsTab][number],
-  modals: defaultModal as (id: string, t: Translator) => ComponentsState[ComponentsTab][number],
-  embed: defaultEmbed as (id: string, t: Translator) => ComponentsState[ComponentsTab][number],
-  selectMenus: defaultSelectMenu as (id: string, t: Translator) => ComponentsState[ComponentsTab][number],
-  layouts: defaultLayout as (id: string, t: Translator) => ComponentsState[ComponentsTab][number],
+type DefaultFactory = (id: string, t: Translator, guildId?: string) => ComponentsState[ComponentsTab][number];
+
+export const DEFAULT_FACTORIES: Record<ComponentsTab, DefaultFactory> = {
+  buttons: defaultButton as DefaultFactory,
+  modals: defaultModal as DefaultFactory,
+  embed: defaultEmbed as DefaultFactory,
+  selectMenus: defaultSelectMenu as DefaultFactory,
+  layouts: defaultLayout as DefaultFactory,
 };

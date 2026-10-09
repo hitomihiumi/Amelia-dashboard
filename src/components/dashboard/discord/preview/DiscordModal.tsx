@@ -1,5 +1,6 @@
 "use client";
 
+import { usePreviewText } from "@/contexts/DiscordPreviewContext";
 import { useT } from "@/i18n/client";
 import type { ModalCustom } from "@/lib/db/types";
 import React from "react";
@@ -10,12 +11,13 @@ export interface DiscordModalProps {
 
 export function DiscordModal({ modal }: DiscordModalProps) {
   const t = useT();
+  const resolve = usePreviewText();
   return (
     <div className="w-full h-full grid place-items-center p-5">
       <div className="w-full max-w-[480px] max-h-full overflow-y-auto bg-discord-bg-primary rounded-[8px] text-discord-text-normal shadow-[0_8px_32px_rgba(0,0,0,0.5)] p-3">
         <div className="flex items-center justify-between px-[16px] py-3">
           <h3 className="text-white text-[18px] font-semibold truncate max-w-[70%]">
-            {modal.title || t("builder.preview.modalTitle")}
+            {resolve(modal.title) || t("builder.preview.modalTitle")}
           </h3>
           <svg
             width="16"
@@ -41,7 +43,7 @@ export function DiscordModal({ modal }: DiscordModalProps) {
           {modal.fields.map((field) => (
             <div key={field.id} className="flex flex-col gap-1.5">
               <label className="text-[10px] uppercase font-semibold text-discord-text-faint tracking-wide">
-                {field.name || t("builder.preview.fieldFallback")}
+                {resolve(field.name) || t("builder.preview.fieldFallback")}
                 {field.required && <span className="text-discord-red ml-0.5">*</span>}
               </label>
               <div
@@ -50,7 +52,7 @@ export function DiscordModal({ modal }: DiscordModalProps) {
                   (field.type === "long" ? "min-h-[100px]" : "")
                 }
               >
-                {field.placeholder || t("builder.preview.enterAnswer")}
+                {(field.placeholder && resolve(field.placeholder)) || t("builder.preview.enterAnswer")}
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-discord-text-muted">

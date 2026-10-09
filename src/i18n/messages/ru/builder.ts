@@ -27,17 +27,19 @@ export const builder: Dict<typeof en> = {
     },
     modal: {
       title: "Заголовок окна",
-      field: "Новое поле",
+      field: "Поле {n}",
     },
     embed: {
       name: "Новый эмбед",
-      field: "Новое поле",
+      title: "Привет, {token}!",
+      description: "Напишите здесь своё сообщение. Работают **жирный текст**, списки и плейсхолдеры вроде {token}.",
+      field: "Поле {n}",
       fieldValue: "Значение",
     },
     selectMenu: {
       name: "Новое меню выбора",
       placeholder: "Выберите вариант…",
-      option: "Новый вариант",
+      option: "Вариант {n}",
     },
     scenario: {
       name: "Новый сценарий",

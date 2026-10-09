@@ -1,6 +1,6 @@
 "use client";
 
-import { EmojiField } from "@/components/dashboard/discord/EmojiField";
+import { TextTools } from "@/components/dashboard/text/TextTools";
 import { LabelSelect } from "@/components/dashboard/discord/LabelSelect";
 import {
   DiscordPreview,
@@ -237,11 +237,12 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
             ) : (
               <>
                 <Column minWidth={0} style={FULL_ROW}>
-                  <EmojiField
+                  <TextTools
                     id={`${guildId}-send-content`}
                     value={content}
                     onValueChange={setContent}
                     guildId={guildId}
+                    scenario={false}
                     multiline
                   >
                     <Textarea
@@ -255,7 +256,7 @@ export function SendComposer({ guildId, library, channels }: SendComposerProps) 
                       resize="vertical"
                       description={t("send.classic.contentHint")}
                     />
-                  </EmojiField>
+                  </TextTools>
                 </Column>
                 <Grid minWidth={0} gap="16" className={styles.pickers} style={FULL_ROW}>
                   <Column gap="8" minWidth={0}>

@@ -16,6 +16,7 @@ import {
   Switch,
   Text,
 } from "@once-ui-system/core";
+import { TextTools } from "@/components/dashboard/text/TextTools";
 import { EditorList } from "./EditorGrid";
 import React from "react";
 
@@ -35,7 +36,7 @@ export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
   const addField = () => {
     const field: IModalField = {
       id: generateID(guildId, "field"),
-      name: t("builder.defaults.modal.field"),
+      name: t("builder.defaults.modal.field", { n: value.fields.length + 1 }),
       type: "short",
       required: true,
     };
@@ -44,6 +45,12 @@ export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
   const updateField = (i: number, patch: Partial<IModalField>) => {
     const nextFields = value.fields.map((f, idx) => (idx === i ? { ...f, ...patch } : f));
     update({ fields: nextFields });
+  };
+  const duplicateField = (i: number) => {
+    const source = value.fields[i];
+    if (!source || value.fields.length >= MAX_FIELDS) return;
+    const copy: IModalField = { ...source, id: generateID(guildId, "field") };
+    update({ fields: [...value.fields.slice(0, i + 1), copy, ...value.fields.slice(i + 1)] });
   };
   const removeField = (i: number) => {
     update({ fields: value.fields.filter((_, idx) => idx !== i) });
@@ -59,14 +66,21 @@ export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
 
   return (
     <Column fillWidth gap="16">
-      <Input
+      <TextTools
         id="modal-title"
-        label={t("builder.modals.title")}
         value={value.title}
-        onChange={(e) => update({ title: e.target.value })}
-        characterCount
-        maxLength={45}
-      />
+        onValueChange={(title) => update({ title })}
+        emoji="unicode"
+      >
+        <Input
+          id="modal-title"
+          label={t("builder.modals.title")}
+          value={value.title}
+          onChange={(e) => update({ title: e.target.value })}
+          characterCount
+          maxLength={45}
+        />
+      </TextTools>
       <Text variant="body-default-s" onBackground="neutral-weak">
         {t("builder.shared.customId")} <InlineCode>{value.id}</InlineCode>.{" "}
         {t("builder.modals.limitHint", { max: MAX_FIELDS })}
@@ -91,7 +105,9 @@ export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
           <FieldRow
             key={field.id}
             field={field}
+            canDuplicate={value.fields.length < MAX_FIELDS}
             onChange={(patch) => updateField(i, patch)}
+            onDuplicate={() => duplicateField(i)}
             onDelete={() => removeField(i)}
             onMove={(direction) => moveField(i, direction)}
           />
@@ -103,12 +119,16 @@ export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
 
 function FieldRow({
   field,
+  canDuplicate,
   onChange,
+  onDuplicate,
   onDelete,
   onMove,
 }: {
   field: IModalField;
+  canDuplicate: boolean;
   onChange: (patch: Partial<IModalField>) => void;
+  onDuplicate: () => void;
   onDelete: () => void;
   onMove: (direction: number) => void;
 }) {
@@ -138,24 +158,45 @@ function FieldRow({
             onClick={() => onMove(1)}
             tooltip={t("builder.shared.moveDown")}
           />
+          <IconButton
+            icon="copy"
+            variant="secondary"
+            tooltip={t("builder.shared.duplicate")}
+            disabled={!canDuplicate}
+            onClick={onDuplicate}
+          />
           <IconButton icon="trash" variant="danger" tooltip={t("builder.modals.deleteField")} onClick={onDelete} />
         </Row>
-        <Input
+        <TextTools
           id={`field-${field.id}-name`}
-          label={t("builder.modals.label")}
           value={field.name}
-          onChange={(e) => onChange({ name: e.target.value })}
-          maxLength={45}
-          characterCount
-        />
-        <Input
+          onValueChange={(name) => onChange({ name })}
+          emoji="unicode"
+        >
+          <Input
+            id={`field-${field.id}-name`}
+            label={t("builder.modals.label")}
+            value={field.name}
+            onChange={(e) => onChange({ name: e.target.value })}
+            maxLength={45}
+            characterCount
+          />
+        </TextTools>
+        <TextTools
           id={`field-${field.id}-placeholder`}
-          label={t("builder.modals.placeholder")}
           value={field.placeholder ?? ""}
-          onChange={(e) => onChange({ placeholder: e.target.value || undefined })}
-          maxLength={100}
-          characterCount
-        />
+          onValueChange={(placeholder) => onChange({ placeholder: placeholder || undefined })}
+          emoji="unicode"
+        >
+          <Input
+            id={`field-${field.id}-placeholder`}
+            label={t("builder.modals.placeholder")}
+            value={field.placeholder ?? ""}
+            onChange={(e) => onChange({ placeholder: e.target.value || undefined })}
+            maxLength={100}
+            characterCount
+          />
+        </TextTools>
         <SegmentedControl
           fillWidth
           value={field.type}

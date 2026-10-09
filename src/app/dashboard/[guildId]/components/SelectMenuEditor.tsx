@@ -16,7 +16,8 @@ import {
   Text,
 } from "@once-ui-system/core";
 import React from "react";
-import { EmojiField, EmojiValueField } from "@/components/dashboard/discord/EmojiField";
+import { EmojiValueField } from "@/components/dashboard/discord/EmojiField";
+import { TextTools } from "@/components/dashboard/text/TextTools";
 import { EditorGrid, EditorList } from "./EditorGrid";
 
 /** Discord allows at most 25 options per select menu. */
@@ -34,7 +35,7 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
 
   const addOption = () => {
     const opt: SelectMenuOptionCustom = {
-      label: t("builder.defaults.selectMenu.option"),
+      label: t("builder.defaults.selectMenu.option", { n: value.options.length + 1 }),
       value: generateID(guildId, "opt"),
       description: undefined,
       emoji: undefined,
@@ -44,6 +45,16 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
   };
   const updateOption = (i: number, patch: Partial<SelectMenuOptionCustom>) => {
     update({ options: value.options.map((o, idx) => (idx === i ? { ...o, ...patch } : o)) });
+  };
+  const duplicateOption = (i: number) => {
+    const source = value.options[i];
+    if (!source || value.options.length >= MAX_OPTIONS) return;
+    const copy: SelectMenuOptionCustom = {
+      ...source,
+      value: generateID(guildId, "opt"),
+      default: false,
+    };
+    update({ options: [...value.options.slice(0, i + 1), copy, ...value.options.slice(i + 1)] });
   };
   const removeOption = (i: number) => {
     update({ options: value.options.filter((_, idx) => idx !== i) });
@@ -67,14 +78,21 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
           onChange={(e) => update({ name: e.target.value })}
           maxLength={100}
         />
-        <Input
+        <TextTools
           id="select-placeholder"
-          label={t("builder.selectMenus.placeholder")}
           value={value.placeholder ?? ""}
-          onChange={(e) => update({ placeholder: e.target.value || undefined })}
-          maxLength={150}
-          characterCount
-        />
+          onValueChange={(placeholder) => update({ placeholder: placeholder || undefined })}
+          emoji="unicode"
+        >
+          <Input
+            id="select-placeholder"
+            label={t("builder.selectMenus.placeholder")}
+            value={value.placeholder ?? ""}
+            onChange={(e) => update({ placeholder: e.target.value || undefined })}
+            maxLength={150}
+            characterCount
+          />
+        </TextTools>
       </EditorGrid>
       <Text variant="body-default-s" onBackground="neutral-weak">
         {t("builder.shared.customId")} <InlineCode>{value.id}</InlineCode>
@@ -121,7 +139,9 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
           <OptionEditor
             key={opt.value}
             option={opt}
+            canDuplicate={value.options.length < MAX_OPTIONS}
             onChange={(patch) => updateOption(i, patch)}
+            onDuplicate={() => duplicateOption(i)}
             onDelete={() => removeOption(i)}
             onMove={(direction) => moveOption(i, direction)}
           />
@@ -133,12 +153,16 @@ export function SelectMenuEditor({ value, guildId, onChange }: SelectMenuEditorP
 
 function OptionEditor({
   option,
+  canDuplicate,
   onChange,
+  onDuplicate,
   onDelete,
   onMove,
 }: {
   option: SelectMenuOptionCustom;
+  canDuplicate: boolean;
   onChange: (patch: Partial<SelectMenuOptionCustom>) => void;
+  onDuplicate: () => void;
   onDelete: () => void;
   onMove: (direction: number) => void;
 }) {
@@ -168,12 +192,20 @@ function OptionEditor({
             onClick={() => onMove(1)}
             tooltip={t("builder.shared.moveDown")}
           />
+          <IconButton
+            icon="copy"
+            variant="secondary"
+            tooltip={t("builder.shared.duplicate")}
+            disabled={!canDuplicate}
+            onClick={onDuplicate}
+          />
           <IconButton icon="trash" variant="danger" tooltip={t("builder.selectMenus.deleteOption")} onClick={onDelete} />
         </Row>
-        <EmojiField
+        <TextTools
           id={`opt-label-${option.value}`}
           value={option.label}
           onValueChange={(label) => onChange({ label })}
+          emoji="unicode"
         >
           <Input
             id={`opt-label-${option.value}`}
@@ -181,12 +213,14 @@ function OptionEditor({
             value={option.label}
             onChange={(e) => onChange({ label: e.target.value })}
             maxLength={100}
+            characterCount
           />
-        </EmojiField>
-        <EmojiField
+        </TextTools>
+        <TextTools
           id={`opt-desc-${option.value}`}
           value={option.description ?? ""}
           onValueChange={(description) => onChange({ description: description || undefined })}
+          emoji="unicode"
         >
           <Input
             id={`opt-desc-${option.value}`}
@@ -194,8 +228,9 @@ function OptionEditor({
             value={option.description ?? ""}
             onChange={(e) => onChange({ description: e.target.value || undefined })}
             maxLength={100}
+            characterCount
           />
-        </EmojiField>
+        </TextTools>
         <EmojiValueField
           id={`opt-emoji-${option.value}`}
           label={t("builder.shared.emoji")}

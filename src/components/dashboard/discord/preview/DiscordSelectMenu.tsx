@@ -1,5 +1,6 @@
 "use client";
 
+import { usePreviewText } from "@/contexts/DiscordPreviewContext";
 import { useT } from "@/i18n/client";
 import type { SelectMenuCustom } from "@/lib/db/types";
 import React, { useState } from "react";
@@ -11,6 +12,7 @@ export interface DiscordSelectMenuProps {
 
 export function DiscordSelectMenu({ menu }: DiscordSelectMenuProps) {
   const t = useT();
+  const resolve = usePreviewText();
   const [open, setOpen] = useState(false);
   const selected = menu.options.find((o) => o.default) ?? null;
   const disabled = menu.disabled;
@@ -26,7 +28,9 @@ export function DiscordSelectMenu({ menu }: DiscordSelectMenuProps) {
         <div className="flex items-center gap-2 min-w-0">
           {selected?.emoji && <DiscordEmoji value={selected.emoji} />}
           <span className={selected ? "truncate text-discord-text-normal" : "truncate"}>
-            {selected ? selected.label : menu.placeholder || t("builder.preview.selectPlaceholder")}
+            {selected
+              ? resolve(selected.label)
+              : (menu.placeholder && resolve(menu.placeholder)) || t("builder.preview.selectPlaceholder")}
           </span>
         </div>
         <svg
@@ -57,12 +61,12 @@ export function DiscordSelectMenu({ menu }: DiscordSelectMenuProps) {
               {opt.emoji && <DiscordEmoji value={opt.emoji} />}
               <div className="flex flex-col min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-white font-medium truncate">{opt.label}</span>
+                  <span className="text-white font-medium truncate">{resolve(opt.label)}</span>
                   {opt.default && <span className="text-discord-green text-xs">✓</span>}
                 </div>
                 {opt.description && (
                   <span className="text-discord-text-muted text-[12px] truncate">
-                    {opt.description}
+                    {resolve(opt.description)}
                   </span>
                 )}
               </div>

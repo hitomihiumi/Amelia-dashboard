@@ -1,7 +1,7 @@
 "use client";
 
 import { ColorInput } from "@/components/dashboard/ColorInput";
-import { EmojiField } from "@/components/dashboard/discord/EmojiField";
+import { TextTools } from "@/components/dashboard/text/TextTools";
 import { useT } from "@/i18n/client";
 import type { EmbedCustom, EmbedField } from "@/lib/db/types";
 import { resolveDiscordColor } from "@/lib/discord/discord-style";
@@ -35,11 +35,16 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
 
   const addField = () => {
     const f: EmbedField = {
-      name: t("builder.defaults.embed.field"),
+      name: t("builder.defaults.embed.field", { n: (value.fields?.length ?? 0) + 1 }),
       value: t("builder.defaults.embed.fieldValue"),
       inline: false,
     };
     update({ fields: [...(value.fields ?? []), f] });
+  };
+  const duplicateField = (i: number) => {
+    const fields = value.fields ?? [];
+    if (fields.length >= MAX_FIELDS || !fields[i]) return;
+    update({ fields: [...fields.slice(0, i + 1), { ...fields[i] }, ...fields.slice(i + 1)] });
   };
   const updateFieldAt = (i: number, patch: Partial<EmbedField>) => {
     const fields = value.fields ?? [];
@@ -72,7 +77,7 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
 
       <Accordion title={t("builder.embeds.sectionContent")} fillWidth>
         <Column fillWidth gap="8">
-          <EmojiField
+          <TextTools
             id="embed-title"
             value={value.title ?? ""}
             onValueChange={(title) => update({ title: title || undefined })}
@@ -85,8 +90,8 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
               maxLength={256}
               characterCount
             />
-          </EmojiField>
-          <EmojiField
+          </TextTools>
+          <TextTools
             id="embed-description"
             value={value.description ?? ""}
             onValueChange={(description) =>
@@ -106,7 +111,7 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
               characterCount
               resize="vertical"
             />
-          </EmojiField>
+          </TextTools>
           <ColorInput
             id="embed-color"
             label={t("builder.embeds.color")}
@@ -123,8 +128,9 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
 
       <Accordion title={t("builder.embeds.sectionAuthor")} fillWidth>
         <Column fillWidth gap="8">
-          <EmojiField
+          <TextTools
             id="embed-author-name"
+            emoji="unicode"
             value={value.author?.name ?? ""}
             onValueChange={(name) =>
               update({
@@ -151,57 +157,94 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
               }
               maxLength={256}
             />
-          </EmojiField>
-          <Input
+          </TextTools>
+          <TextTools
             id="embed-author-icon"
-            label={t("builder.embeds.authorIcon")}
+            placeholders="url"
+            emoji={false}
             value={value.author?.icon_url ?? ""}
-            onChange={(e) =>
-              update({
-                author: {
-                  ...(value.author ?? { name: "" }),
-                  icon_url: e.target.value || undefined,
-                },
-              })
+            onValueChange={(icon_url) =>
+              update({ author: { ...(value.author ?? { name: "" }), icon_url: icon_url || undefined } })
             }
-          />
-          <Input
+          >
+            <Input
+              id="embed-author-icon"
+              label={t("builder.embeds.authorIcon")}
+              value={value.author?.icon_url ?? ""}
+              onChange={(e) =>
+                update({
+                  author: {
+                    ...(value.author ?? { name: "" }),
+                    icon_url: e.target.value || undefined,
+                  },
+                })
+              }
+            />
+          </TextTools>
+          <TextTools
             id="embed-author-url"
-            label={t("builder.embeds.authorUrl")}
+            placeholders="url"
+            emoji={false}
             value={value.author?.url ?? ""}
-            onChange={(e) =>
-              update({
-                author: {
-                  ...(value.author ?? { name: "" }),
-                  url: e.target.value || undefined,
-                },
-              })
+            onValueChange={(url) =>
+              update({ author: { ...(value.author ?? { name: "" }), url: url || undefined } })
             }
-          />
+          >
+            <Input
+              id="embed-author-url"
+              label={t("builder.embeds.authorUrl")}
+              value={value.author?.url ?? ""}
+              onChange={(e) =>
+                update({
+                  author: {
+                    ...(value.author ?? { name: "" }),
+                    url: e.target.value || undefined,
+                  },
+                })
+              }
+            />
+          </TextTools>
         </Column>
       </Accordion>
 
       <Accordion title={t("builder.embeds.sectionMedia")} fillWidth>
         <Column fillWidth gap="8">
-          <Input
+          <TextTools
             id="embed-thumbnail"
-            label={t("builder.embeds.thumbnail")}
+            placeholders="url"
+            emoji={false}
             value={value.thumbnail ?? ""}
-            onChange={(e) => update({ thumbnail: e.target.value || undefined })}
-          />
-          <Input
+            onValueChange={(thumbnail) => update({ thumbnail: thumbnail || undefined })}
+          >
+            <Input
+              id="embed-thumbnail"
+              label={t("builder.embeds.thumbnail")}
+              value={value.thumbnail ?? ""}
+              onChange={(e) => update({ thumbnail: e.target.value || undefined })}
+            />
+          </TextTools>
+          <TextTools
             id="embed-image"
-            label={t("builder.embeds.image")}
+            placeholders="url"
+            emoji={false}
             value={value.image ?? ""}
-            onChange={(e) => update({ image: e.target.value || undefined })}
-          />
+            onValueChange={(image) => update({ image: image || undefined })}
+          >
+            <Input
+              id="embed-image"
+              label={t("builder.embeds.image")}
+              value={value.image ?? ""}
+              onChange={(e) => update({ image: e.target.value || undefined })}
+            />
+          </TextTools>
         </Column>
       </Accordion>
 
       <Accordion title={t("builder.embeds.sectionFooter")} fillWidth>
         <Column fillWidth gap="8">
-          <EmojiField
+          <TextTools
             id="embed-footer-text"
+            emoji="unicode"
             value={value.footer?.text ?? ""}
             onValueChange={(text) =>
               update({ footer: { text, icon_url: value.footer?.icon_url } })
@@ -221,20 +264,30 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
               }
               maxLength={2048}
             />
-          </EmojiField>
-          <Input
+          </TextTools>
+          <TextTools
             id="embed-footer-icon"
-            label={t("builder.embeds.footerIcon")}
+            placeholders="url"
+            emoji={false}
             value={value.footer?.icon_url ?? ""}
-            onChange={(e) =>
-              update({
-                footer: {
-                  text: value.footer?.text ?? "",
-                  icon_url: e.target.value || undefined,
-                },
-              })
+            onValueChange={(icon_url) =>
+              update({ footer: { text: value.footer?.text ?? "", icon_url: icon_url || undefined } })
             }
-          />
+          >
+            <Input
+              id="embed-footer-icon"
+              label={t("builder.embeds.footerIcon")}
+              value={value.footer?.icon_url ?? ""}
+              onChange={(e) =>
+                update({
+                  footer: {
+                    text: value.footer?.text ?? "",
+                    icon_url: e.target.value || undefined,
+                  },
+                })
+              }
+            />
+          </TextTools>
           <Switch
             label={t("builder.embeds.showTimestamp")}
             description={t("builder.embeds.showTimestampHint")}
@@ -264,9 +317,12 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
         {(value.fields ?? []).map((field, i) => (
           <FieldEditor
             key={i}
+            index={i}
             field={field}
+            canDuplicate={(value.fields?.length ?? 0) < MAX_FIELDS}
             onChange={(patch) => updateFieldAt(i, patch)}
             onMove={(direction) => moveField(i, direction)}
+            onDuplicate={() => duplicateField(i)}
             onDelete={() => removeField(i)}
           />
         ))}
@@ -276,14 +332,20 @@ export function EmbedEditor({ value, onChange }: EmbedEditorProps) {
 }
 
 function FieldEditor({
+  index,
   field,
+  canDuplicate,
   onChange,
   onMove,
+  onDuplicate,
   onDelete,
 }: {
+  index: number;
   field: EmbedField;
+  canDuplicate: boolean;
   onChange: (patch: Partial<EmbedField>) => void;
   onMove: (direction: number) => void;
+  onDuplicate: () => void;
   onDelete: () => void;
 }) {
   const t = useT();
@@ -318,41 +380,49 @@ function FieldEditor({
             tooltip={t("builder.shared.moveDown")}
           />
           <IconButton
+            icon="copy"
+            variant="secondary"
+            tooltip={t("builder.shared.duplicate")}
+            disabled={!canDuplicate}
+            onClick={onDuplicate}
+          />
+          <IconButton
             icon="trash"
             variant="danger"
             tooltip={t("builder.embeds.deleteField")}
             onClick={onDelete}
           />
         </Row>
-        <EmojiField
-          id={`field-name-${field.name}`}
+        <TextTools
+          id={`embed-field-${index}-name`}
           value={field.name}
           onValueChange={(name) => onChange({ name })}
         >
           <Input
-            id={`field-name-${field.name}`}
+            id={`embed-field-${index}-name`}
             label={t("builder.embeds.fieldName")}
             value={field.name}
             onChange={(e) => onChange({ name: e.target.value })}
             maxLength={256}
           />
-        </EmojiField>
-        <EmojiField
-          id={`field-value-${field.name}`}
+        </TextTools>
+        <TextTools
+          id={`embed-field-${index}-value`}
           value={field.value}
           onValueChange={(v) => onChange({ value: v })}
           multiline
         >
           <Textarea
-            id={`field-value-${field.name}`}
+            id={`embed-field-${index}-value`}
             label={t("builder.embeds.fieldValue")}
             value={field.value}
             onChange={(e) => onChange({ value: e.target.value })}
             maxLength={1024}
             lines={2}
+            characterCount
             resize="vertical"
           />
-        </EmojiField>
+        </TextTools>
         <Switch
           label={t("builder.embeds.inline")}
           checked={!!field.inline}

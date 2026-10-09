@@ -1,6 +1,6 @@
 "use client";
 
-import type { PreviewTagContext } from "@/lib/discord/preview-tags";
+import { type PreviewTagContext, replacePreviewTags } from "@/lib/discord/preview-tags";
 import { createContext, useContext, type ReactNode } from "react";
 
 /** Everything the Discord preview needs to render with real identities:
@@ -25,4 +25,13 @@ export function DiscordPreviewProvider({
 /** Null outside a guild dashboard (e.g. isolated renders) — callers fall back to defaults. */
 export function useDiscordPreviewOptional(): DiscordPreviewContextValue | null {
   return useContext(DiscordPreviewContext);
+}
+
+/**
+ * Resolves the bot placeholders in a short label the way the bot does when it sends the message
+ * (`{user.name}` in a button label, an option description or a modal title).
+ */
+export function usePreviewText(): (text: string) => string {
+  const ctx = useContext(DiscordPreviewContext);
+  return (text) => replacePreviewTags(text, ctx ?? undefined);
 }

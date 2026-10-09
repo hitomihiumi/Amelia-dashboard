@@ -2,7 +2,7 @@
 
 import { useT } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/messages";
-import type { ButtonCustom } from "@/lib/db/types";
+import { type ButtonCustom, hasPlaceholder } from "@/lib/db/types";
 import {
   Column,
   InlineCode,
@@ -12,7 +12,8 @@ import {
   Switch,
   Text,
 } from "@once-ui-system/core";
-import { EmojiField, EmojiValueField } from "@/components/dashboard/discord/EmojiField";
+import { EmojiValueField } from "@/components/dashboard/discord/EmojiField";
+import { TextTools } from "@/components/dashboard/text/TextTools";
 import { EditorGrid } from "./EditorGrid";
 import styles from "./Editors.module.scss";
 
@@ -30,6 +31,11 @@ export const BUTTON_STYLE_LABEL_KEY: Record<ButtonCustom["style"], MessageKey> =
   DANGER: "builder.buttons.styles.DANGER",
   LINK: "builder.buttons.styles.LINK",
 };
+
+/** An http(s) link, or a placeholder that becomes one when the button is sent. */
+function isLinkValue(url: string): boolean {
+  return /^https?:\/\//i.test(url) || hasPlaceholder(url);
+}
 
 export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
   const t = useT();
@@ -50,7 +56,12 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
         characterCount
         maxLength={100}
       />
-      <EmojiField id="btn-label" value={value.label} onValueChange={(label) => update({ label })}>
+      <TextTools
+        id="btn-label"
+        value={value.label}
+        onValueChange={(label) => update({ label })}
+        emoji="unicode"
+      >
         <Input
           id="btn-label"
           label={t("builder.buttons.label")}
@@ -60,7 +71,7 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
           characterCount
           maxLength={80}
         />
-      </EmojiField>
+      </TextTools>
       <Column gap="8" className={styles.full}>
         <Text variant="label-default-s">{t("builder.buttons.style")}</Text>
         <SegmentedControl
@@ -79,15 +90,23 @@ export function ButtonEditor({ value, onChange }: ButtonEditorProps) {
         />
       </Column>
       {value.style === "LINK" ? (
-        <Input
+        <TextTools
           id="btn-url"
-          label={t("builder.buttons.url")}
-          placeholder="https://example.com"
           value={value.url ?? ""}
-          onChange={(e) => update({ url: e.target.value })}
-          error={!!value.url && !/^https?:\/\//i.test(value.url)}
-          errorMessage={t("builder.buttons.urlError")}
-        />
+          onValueChange={(url) => update({ url })}
+          placeholders="url"
+          emoji={false}
+        >
+          <Input
+            id="btn-url"
+            label={t("builder.buttons.url")}
+            placeholder="https://example.com"
+            value={value.url ?? ""}
+            onChange={(e) => update({ url: e.target.value })}
+            error={!!value.url && !isLinkValue(value.url)}
+            errorMessage={t("builder.buttons.urlError")}
+          />
+        </TextTools>
       ) : (
         <Text variant="body-default-s" onBackground="neutral-weak" className={styles.full}>
           {t("builder.shared.customId")} <InlineCode>{value.id}</InlineCode>{" "}
