@@ -49,6 +49,7 @@ export const common = {
     terms: "Terms of Service",
     privacy: "Privacy Policy",
     dashboard: "Dashboard",
+    profile: "Profile",
     admin: "Admin panel",
     menu: "Menu",
     login: "Login",

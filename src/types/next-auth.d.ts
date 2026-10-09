@@ -8,12 +8,14 @@ declare module "next-auth" {
     user: {
       id: string;
       avatarDecoration?: string | null;
+      username?: string;
       isAdmin?: boolean;
     } & DefaultSession["user"];
   }
 
   interface User {
     avatarDecoration?: string | null;
+    username?: string;
   }
 }
 
@@ -24,5 +26,6 @@ declare module "next-auth/jwt" {
     expiresAt?: number;
     error?: string;
     avatarDecoration?: string | null;
+    username?: string;
   }
 }
