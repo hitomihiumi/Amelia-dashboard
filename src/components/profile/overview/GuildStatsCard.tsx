@@ -1,4 +1,5 @@
 import { Column, Flex, Icon, Row, Tag, Text } from "@once-ui-system/core";
+import { AvatarWFrame } from "@/components/user/AvatarWFrame";
 import { getNextLevelXP } from "@/components/profile/cards/utils";
 import type { CardTimeUnits } from "@/components/profile/cards/types";
 import type { Formatters } from "@/i18n/format";
@@ -33,29 +34,12 @@ export function GuildStatsCard({
     >
       <Row gap="12" vertical="center" horizontal="between" style={{ minWidth: 0 }}>
         <Row gap="12" vertical="center" style={{ minWidth: 0 }}>
-          {guild.iconUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={`${guild.iconUrl}?size=96`}
-              alt=""
-              width={44}
-              height={44}
-              loading="lazy"
-              style={{ borderRadius: 12, objectFit: "cover", flexShrink: 0 }}
-            />
-          ) : (
-            <Row
-              center
-              radius="m"
-              background="neutral-alpha-weak"
-              border="neutral-alpha-medium"
-              style={{ width: 44, height: 44, flexShrink: 0 }}
-            >
-              <Text variant="label-strong-m" onBackground="neutral-medium">
-                {Array.from(guild.name)[0]?.toUpperCase()}
-              </Text>
-            </Row>
-          )}
+          <AvatarWFrame
+            size="l"
+            src={guild.iconUrl ?? undefined}
+            value={guild.iconUrl ? undefined : Array.from(guild.name)[0]?.toUpperCase()}
+            radius="full"
+          />
           <Column gap="2" minWidth={0}>
             <Text variant="heading-strong-s" truncate>
               {guild.name}

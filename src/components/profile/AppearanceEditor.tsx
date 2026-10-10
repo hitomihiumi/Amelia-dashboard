@@ -7,17 +7,17 @@ import {
   Flex,
   Row,
   SegmentedControl,
-  Select,
   Slider,
   Text,
   Textarea,
   useToast,
 } from "@once-ui-system/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { saveAppearance, type CardPatch } from "@/app/profile/actions";
+import { saveAppearance, type CardPatch } from "@/app/(main)/profile/actions";
 import { ColorInput } from "@/components/dashboard/ColorInput";
 import { Section } from "@/components/dashboard/Section";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { SelectReact } from "@/components/user/SelectReact";
 import { CardPreview } from "@/components/profile/cards/CardPreview";
 import type {
   CardColors,
@@ -257,7 +257,7 @@ export function AppearanceEditor({
 
       <Row gap="16" vertical="end" wrap fillWidth>
         <Column style={{ flex: "1 1 260px", maxWidth: 420, minWidth: 0 }} gap="4">
-          <Select
+          <SelectReact
             id="appearance-server"
             label={t("profile.appearance.server")}
             value={guild.id}
