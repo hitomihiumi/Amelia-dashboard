@@ -18,14 +18,14 @@ importers:
         specifier: ^15.5.9
         version: 15.5.23(@mdx-js/loader@3.1.1)(@mdx-js/react@3.1.1(@types/react@19.0.1)(react@19.2.8))
       '@nmmty/adapter-browser':
-        specifier: 1.0.0
-        version: 1.0.0(@nmmty/lazycanvas@1.0.0)
+        specifier: ^1.0.0
+        version: 1.0.0(@nmmty/lazycanvas@1.0.1)
       '@nmmty/adapter-react':
-        specifier: 1.0.0
-        version: 1.0.0(@nmmty/adapter-browser@1.0.0(@nmmty/lazycanvas@1.0.0))(@nmmty/lazycanvas@1.0.0)(react@19.2.8)
+        specifier: ^1.0.0
+        version: 1.0.0(@nmmty/adapter-browser@1.0.0(@nmmty/lazycanvas@1.0.1))(@nmmty/lazycanvas@1.0.1)(react@19.2.8)
       '@nmmty/lazycanvas':
-        specifier: 1.0.0
-        version: 1.0.0
+        specifier: ^1.0.1
+        version: 1.0.1
       '@once-ui-system/core':
         specifier: ^2.0.0
         version: 2.0.0(compressorjs@1.3.0)(next@16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(prismjs@1.30.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(recharts@3.10.1(@types/react@19.0.1)(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1))(sass@1.102.0)(sharp@0.33.5)
@@ -810,8 +810,8 @@ packages:
       '@nmmty/lazycanvas': ^1.0.0
       react: '>=18.0.0'
 
-  '@nmmty/lazycanvas@1.0.0':
-    resolution: {integrity: sha512-aGCMXPcyNseRf5r+sqcswvpwSVdVlTmTTf0l5W08qGUJJdQ1USMFRdS+FtK3aqMK1p5Q7iMshnUVFtlBu88irw==}
+  '@nmmty/lazycanvas@1.0.1':
+    resolution: {integrity: sha512-mlmt8JKUPYL1WVjqP6Z1Qv2Pu/LKqUKvi9csx6ClfKHYGbqkNvQAkIiuTLcRoNuRoCyZ1oBCRCqgfSJHncqGlg==}
     engines: {node: '>=18'}
 
   '@once-ui-system/core@2.0.0':
@@ -3441,17 +3441,17 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.3.1':
     optional: true
 
-  '@nmmty/adapter-browser@1.0.0(@nmmty/lazycanvas@1.0.0)':
+  '@nmmty/adapter-browser@1.0.0(@nmmty/lazycanvas@1.0.1)':
     dependencies:
-      '@nmmty/lazycanvas': 1.0.0
+      '@nmmty/lazycanvas': 1.0.1
 
-  '@nmmty/adapter-react@1.0.0(@nmmty/adapter-browser@1.0.0(@nmmty/lazycanvas@1.0.0))(@nmmty/lazycanvas@1.0.0)(react@19.2.8)':
+  '@nmmty/adapter-react@1.0.0(@nmmty/adapter-browser@1.0.0(@nmmty/lazycanvas@1.0.1))(@nmmty/lazycanvas@1.0.1)(react@19.2.8)':
     dependencies:
-      '@nmmty/adapter-browser': 1.0.0(@nmmty/lazycanvas@1.0.0)
-      '@nmmty/lazycanvas': 1.0.0
+      '@nmmty/adapter-browser': 1.0.0(@nmmty/lazycanvas@1.0.1)
+      '@nmmty/lazycanvas': 1.0.1
       react: 19.2.8
 
-  '@nmmty/lazycanvas@1.0.0':
+  '@nmmty/lazycanvas@1.0.1':
     dependencies:
       js-yaml: 4.3.2
       yoga-layout: 3.2.1
