@@ -11,6 +11,9 @@ export const authOptions: NextAuthOptions = {
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID!,
       clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+      // next-auth gives the token exchange only 3.5 s by default; a slow answer from Discord
+      // then ends the login with `error=OAuthCallback`.
+      httpOptions: { timeout: 15000 },
       authorization: {
         url: "https://discord.com/api/oauth2/authorize",
         params: {

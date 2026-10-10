@@ -62,6 +62,9 @@ export const common = {
   },
   auth: {
     finishingLogin: "Finishing login...",
+    failedTitle: "Login failed",
+    failedText: "Discord did not complete the sign-in. Please try again.",
+    retry: "Try again",
   },
   select: {
     selectChannel: "Select a channel",
