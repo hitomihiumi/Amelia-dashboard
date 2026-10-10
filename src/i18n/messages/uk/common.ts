@@ -65,6 +65,9 @@ export const common: Dict<typeof en> = {
   },
   auth: {
     finishingLogin: "Завершуємо вхід...",
+    failedTitle: "Не вдалося увійти",
+    failedText: "Discord не завершив вхід. Спробуйте ще раз.",
+    retry: "Повторити",
   },
   select: {
     selectChannel: "Оберіть канал",
