@@ -2,7 +2,7 @@
 
 import { Scene } from "@nmmty/adapter-react";
 import { Column } from "@once-ui-system/core";
-import { useMemo } from "react";
+import { useDeferredValue, useMemo } from "react";
 import "./cardFonts.css";
 import { levelUpCard, LEVEL_UP_CARD_SIZE } from "./levelUpCard";
 import { PROFILE_CARD_SIZE, profileCard } from "./profileCard";
@@ -48,15 +48,23 @@ export function CardPreview({
   kind,
   identity,
   stats,
-  colors,
+  colors: liveColors,
   units,
-  bio = null,
+  bio: liveBio = null,
   icons = [],
   iconsPadding = 10,
   levelUpTo,
   maxWidth,
 }: CardPreviewProps) {
   const size = CARD_SIZES[kind];
+
+  // Dragging the colour picker or typing the biography changes these on every event, and each
+  // change is a redraw of the whole card. A deferred value is picked up at low priority and a
+  // newer one replaces it before it commits, so the input stays responsive and the card is
+  // redrawn for the value the user stopped on instead of for every step on the way. The scene
+  // itself also keeps at most one more frame waiting behind the one it is drawing.
+  const colors = useDeferredValue(liveColors);
+  const bio = useDeferredValue(liveBio);
 
   // `<Scene>` rebuilds its layers whenever the element it receives is a new object, so the
   // tree is memoised on the values it is made of and not re-created on every parent render.
