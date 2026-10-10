@@ -1,5 +1,6 @@
 "use client";
 
+import { usePreviewText } from "@/contexts/DiscordPreviewContext";
 import { useT } from "@/i18n/client";
 import type { ButtonCustom } from "@/lib/db/types";
 import { DISCORD_BUTTON_COLORS } from "@/lib/discord/discord-style";
@@ -13,6 +14,7 @@ export interface DiscordButtonProps {
 
 export function DiscordButton({ button, size = "md" }: DiscordButtonProps) {
   const t = useT();
+  const resolve = usePreviewText();
   const palette = DISCORD_BUTTON_COLORS[button.style] ?? DISCORD_BUTTON_COLORS.PRIMARY;
 
   return (
@@ -42,7 +44,7 @@ export function DiscordButton({ button, size = "md" }: DiscordButtonProps) {
           />
         </svg>
       )}
-      <span className="max-w-[280px] truncate">{button.label || t("builder.preview.buttonFallback")}</span>
+      <span className="max-w-[280px] truncate">{resolve(button.label) || t("builder.preview.buttonFallback")}</span>
     </button>
   );
 }

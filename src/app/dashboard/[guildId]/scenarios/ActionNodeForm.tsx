@@ -1,6 +1,6 @@
 "use client";
 
-import { EmojiField } from "@/components/dashboard/discord/EmojiField";
+import { TextTools } from "@/components/dashboard/text/TextTools";
 import { LabelSelect } from "@/components/dashboard/discord/LabelSelect";
 import { useT } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/messages";
@@ -204,14 +204,20 @@ function ActionBody({
             value={action.channelId ?? ""}
             onChange={(v) => update({ channelId: v || undefined })}
           />
-          <Input
+          <TextTools
             id={`${guildId}-thread-name`}
-            label={t("builder.actions.threadName")}
             value={action.threadName ?? ""}
-            onChange={(e) => update({ threadName: e.target.value })}
-            maxLength={100}
-            characterCount
-          />
+            onValueChange={(threadName) => update({ threadName })}
+          >
+            <Input
+              id={`${guildId}-thread-name`}
+              label={t("builder.actions.threadName")}
+              value={action.threadName ?? ""}
+              onChange={(e) => update({ threadName: e.target.value })}
+              maxLength={100}
+              characterCount
+            />
+          </TextTools>
           <SegmentedControl
             fillWidth
             value={String(action.autoArchiveDuration ?? 1440)}
@@ -235,16 +241,25 @@ function ActionBody({
             onChange={(e) => update({ variableName: e.target.value })}
             maxLength={32}
           />
-          <Textarea
+          <TextTools
             id={`${guildId}-var-value`}
-            label={t("builder.actions.variableValue")}
             value={action.variableValue ?? ""}
-            onChange={(e) => update({ variableValue: e.target.value })}
-            lines={2}
-            maxLength={1000}
-            characterCount
-            resize="vertical"
-          />
+            onValueChange={(variableValue) => update({ variableValue })}
+            multiline
+            format="none"
+            emoji={false}
+          >
+            <Textarea
+              id={`${guildId}-var-value`}
+              label={t("builder.actions.variableValue")}
+              value={action.variableValue ?? ""}
+              onChange={(e) => update({ variableValue: e.target.value })}
+              lines={2}
+              maxLength={1000}
+              characterCount
+              resize="vertical"
+            />
+          </TextTools>
         </>
       );
     case "delete_message":
@@ -391,7 +406,7 @@ function ClassicMessageFields({
   if (action.type === "send_dm") {
     return (
       <>
-        <EmojiField
+        <TextTools
           id={`${guildId}-dm-content`}
           value={action.dmContent ?? ""}
           onValueChange={(dmContent) => update({ dmContent })}
@@ -407,7 +422,7 @@ function ClassicMessageFields({
             characterCount
             resize="vertical"
           />
-        </EmojiField>
+        </TextTools>
         <ReferenceField
           label={t("builder.actions.dmEmbed")}
           options={library.embed.map((e) => ({
@@ -431,7 +446,7 @@ function ClassicMessageFields({
 
   return (
     <>
-      <EmojiField
+      <TextTools
         id={`${guildId}-${action.type}-content`}
         value={action.content ?? ""}
         onValueChange={(content) => update({ content })}
@@ -447,7 +462,7 @@ function ClassicMessageFields({
           characterCount={!compact}
           resize="vertical"
         />
-      </EmojiField>
+      </TextTools>
       {ephemeral}
       <MultiReferences
         label={t("builder.actions.embeds")}

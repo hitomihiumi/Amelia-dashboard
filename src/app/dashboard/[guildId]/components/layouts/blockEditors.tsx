@@ -35,6 +35,7 @@ import {
   useButtonOptions,
   useSelectMenuOptions,
 } from "./pickers";
+import { TextTools } from "@/components/dashboard/text/TextTools";
 import { TextAreaField } from "./TextAreaField";
 
 /** Problems of one field, e.g. `.items[1]`: whether the block has an issue whose path starts with it. */
@@ -203,13 +204,21 @@ export function GalleryEditor({
             invalid={invalid(`.items[${i}]`)}
             onChange={(url) => patch(i, { url })}
           />
-          <Input
+          <TextTools
             id={`${block.id}-desc-${i}`}
-            label={t("layouts.media.description")}
             value={item.description ?? ""}
-            maxLength={LAYOUT_LIMITS.MAX_MEDIA_DESCRIPTION}
-            onChange={(e) => patch(i, { description: e.target.value || undefined })}
-          />
+            onValueChange={(description) => patch(i, { description: description || undefined })}
+            emoji={false}
+          >
+            <Input
+              id={`${block.id}-desc-${i}`}
+              label={t("layouts.media.description")}
+              value={item.description ?? ""}
+              maxLength={LAYOUT_LIMITS.MAX_MEDIA_DESCRIPTION}
+              characterCount
+              onChange={(e) => patch(i, { description: e.target.value || undefined })}
+            />
+          </TextTools>
           <Switch
             label={t("layouts.media.spoiler")}
             checked={Boolean(item.spoiler)}
@@ -316,15 +325,25 @@ export function SectionEditor({
               invalid={invalid(".accessory")}
               onChange={(url) => onChange({ ...block, accessory: { ...accessory, url } })}
             />
-            <Input
+            <TextTools
               id={`${block.id}-thumb-desc`}
-              label={t("layouts.media.description")}
               value={accessory.description ?? ""}
-              maxLength={LAYOUT_LIMITS.MAX_MEDIA_DESCRIPTION}
-              onChange={(e) =>
-                onChange({ ...block, accessory: { ...accessory, description: e.target.value || undefined } })
+              onValueChange={(description) =>
+                onChange({ ...block, accessory: { ...accessory, description: description || undefined } })
               }
-            />
+              emoji={false}
+            >
+              <Input
+                id={`${block.id}-thumb-desc`}
+                label={t("layouts.media.description")}
+                value={accessory.description ?? ""}
+                maxLength={LAYOUT_LIMITS.MAX_MEDIA_DESCRIPTION}
+                characterCount
+                onChange={(e) =>
+                  onChange({ ...block, accessory: { ...accessory, description: e.target.value || undefined } })
+                }
+              />
+            </TextTools>
             <Switch
               label={t("layouts.media.spoiler")}
               checked={Boolean(accessory.spoiler)}

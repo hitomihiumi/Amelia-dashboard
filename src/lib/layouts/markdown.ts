@@ -89,3 +89,56 @@ export function insertText(value: string, start: number, end: number, text: stri
   const caret = start + text.length;
   return { value: value.slice(0, start) + text + value.slice(end), start: caret, end: caret };
 }
+
+/** Inserts `text` and selects the first `select` inside it, so the author can type over an example. */
+export function insertTemplate(
+  value: string,
+  start: number,
+  end: number,
+  text: string,
+  select?: string,
+): TextEdit {
+  const at = select ? text.indexOf(select) : -1;
+  const from = start + (at === -1 ? text.length : at);
+  const to = at === -1 ? from : from + (select?.length ?? 0);
+  return { value: value.slice(0, start) + text + value.slice(end), start: from, end: to };
+}
+
+/**
+ * Turns the selection into a `[text](https://)` link and selects the address. With no selection the
+ * link text is the example, selected instead.
+ */
+export function insertLink(value: string, start: number, end: number, sample: string): TextEdit {
+  const selected = value.slice(start, end);
+  const url = "https://";
+  const text = `[${selected || sample}](${url})`;
+  const from = start + 1 + (selected || sample).length + 2;
+  const next = value.slice(0, start) + text + value.slice(end);
+  return selected
+    ? { value: next, start: from, end: from + url.length }
+    : { value: next, start: start + 1, end: start + 1 + sample.length };
+}
+
+/** A fenced code block around the selection. */
+export function toggleCodeBlock(value: string, start: number, end: number, sample: string): TextEdit {
+  const selected = value.slice(start, end);
+  const before = value.slice(0, start);
+  const after = value.slice(end);
+
+  if (before.endsWith("```\n") && after.startsWith("\n```") && selected) {
+    return {
+      value: before.slice(0, -4) + selected + after.slice(4),
+      start: start - 4,
+      end: end - 4,
+    };
+  }
+
+  const text = selected || sample;
+  const lead = before === "" || before.endsWith("\n") ? "" : "\n";
+  const opening = `${lead}\`\`\`\n`;
+  return {
+    value: `${before}${opening}${text}\n\`\`\`${after}`,
+    start: start + opening.length,
+    end: start + opening.length + text.length,
+  };
+}

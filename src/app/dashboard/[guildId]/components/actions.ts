@@ -7,6 +7,7 @@ import type { Translator } from "@/i18n/translate";
 import { authOptions } from "@/lib/auth";
 import { Guild } from "@/lib/db/Guild";
 import {
+  hasPlaceholder,
   type ButtonCustom,
   type EmbedCustom,
   type IModalField,
@@ -23,6 +24,8 @@ import { revalidatePath } from "next/cache";
 
 const BUTTON_STYLES = new Set(["PRIMARY", "SECONDARY", "SUCCESS", "DANGER", "LINK"]);
 const LINK_URL_RE = /^https?:\/\//i;
+/** An http(s) link, or a placeholder (`{user.avatar}`) the bot turns into one when the message is sent. */
+const isLinkOrPlaceholder = (value: string) => LINK_URL_RE.test(value) || hasPlaceholder(value);
 const DISCORD_ID_MAX = 100;
 
 function fail(error: string): GuildActionState {
@@ -172,14 +175,14 @@ function validateEmbed(e: EmbedCustom, i: number, errors: string[], t: Translato
   }
   if (e.author) {
     if (e.author.name && e.author.name.length > 256) fail("authorNameLong", ctx);
-    if (e.author.icon_url && !LINK_URL_RE.test(e.author.icon_url)) fail("authorIconUrl", ctx);
-    if (e.author.url && !LINK_URL_RE.test(e.author.url)) fail("authorUrl", ctx);
+    if (e.author.icon_url && !isLinkOrPlaceholder(e.author.icon_url)) fail("authorIconUrl", ctx);
+    if (e.author.url && !isLinkOrPlaceholder(e.author.url)) fail("authorUrl", ctx);
   }
-  if (e.image && !LINK_URL_RE.test(e.image)) fail("imageUrl", ctx);
-  if (e.thumbnail && !LINK_URL_RE.test(e.thumbnail)) fail("thumbnailUrl", ctx);
+  if (e.image && !isLinkOrPlaceholder(e.image)) fail("imageUrl", ctx);
+  if (e.thumbnail && !isLinkOrPlaceholder(e.thumbnail)) fail("thumbnailUrl", ctx);
   if (e.footer) {
     if (e.footer.text && e.footer.text.length > 2048) fail("footerTextLong", ctx);
-    if (e.footer.icon_url && !LINK_URL_RE.test(e.footer.icon_url)) fail("footerIconUrl", ctx);
+    if (e.footer.icon_url && !isLinkOrPlaceholder(e.footer.icon_url)) fail("footerIconUrl", ctx);
   }
   if (e.fields && Array.isArray(e.fields)) {
     if (e.fields.length > SCENARIO_LIMITS.MAX_EMBED_FIELDS)
@@ -233,7 +236,7 @@ function validateButton(b: ButtonCustom, i: number, errors: string[], t: Transla
   if (!b.label || b.label.length === 0 || b.label.length > 80) fail("buttonLabelLength", ctx);
   if (!BUTTON_STYLES.has(b.style)) fail("buttonInvalidStyle", ctx, { style: String(b.style) });
   if (b.style === "LINK" && !b.url) fail("buttonLinkNeedsUrl", ctx);
-  if (b.style === "LINK" && b.url && !LINK_URL_RE.test(b.url)) fail("buttonInvalidUrl", ctx);
+  if (b.style === "LINK" && b.url && !isLinkOrPlaceholder(b.url)) fail("buttonInvalidUrl", ctx);
   if (b.style !== "LINK" && b.url) fail("buttonUrlOnlyLink", ctx);
 }
 

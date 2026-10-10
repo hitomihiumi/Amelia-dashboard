@@ -23,17 +23,19 @@ export const builder = {
     },
     modal: {
       title: "Modal title",
-      field: "New field",
+      field: "Field {n}",
     },
     embed: {
       name: "New embed",
-      field: "New field",
+      title: "Hello, {token}!",
+      description: "Write your message here. **Bold**, lists and placeholders like {token} work.",
+      field: "Field {n}",
       fieldValue: "Value",
     },
     selectMenu: {
       name: "New select menu",
       placeholder: "Choose an option…",
-      option: "New option",
+      option: "Option {n}",
     },
     scenario: {
       name: "New scenario",
