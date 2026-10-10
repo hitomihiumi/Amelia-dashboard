@@ -2,45 +2,36 @@ import type { Dict } from "../types";
 import type { profile as en } from "../en/profile";
 
 export const profile: Dict<typeof en> = {
-  nav: {
-    title: "Мій профіль",
-    section: "Профіль",
-    overview: "Огляд",
-    appearance: "Зовнішній вигляд",
-    backToSite: "Назад на сайт",
-  },
-
   overview: {
-    title: "Ваш профіль",
-    description: "Ваша активність на всіх серверах, де є Амелія, в одному місці.",
+    description: "Зведена статистика за всіма серверами з ботом Амелія.",
+    appearanceLink: {
+      title: "Вигляд карток",
+      description: "Кольори, біографія та вигляд карток рангу, профілю й нового рівня",
+    },
+    total: "Усього",
+    byServer: "За серверами",
     totals: {
-      servers: "Сервери",
-      serversHint:
-        "{active, plural, one {# з активністю} few {# з активністю} many {# з активністю} other {# з активністю}}",
-      messages: "Повідомлення",
+      servers: "Серверів",
+      serversHint: "де є бот",
+      level: "Сумарний рівень",
+      levelHint: "{xp} XP",
+      messages: "Повідомлень",
+      messagesHint: "надіслано за весь час",
       voice: "Час у голосових",
-      xp: "Усього досвіду",
-      level: "Найвищий рівень",
-      rank: "Найкраще місце",
-      rankHint: "У рейтингу досвіду сервера",
-      money: "Гроші",
-      moneyHint: "Гаманці та банки разом",
+      voiceHint: "накопичено за весь час",
     },
     servers: {
-      title: "Ваші сервери",
-      description:
-        "Сервери, на яких ви разом з Амелією. Статистика ведеться окремо для кожного з них.",
+      levelLine: "Рівень {level} · {xp} / {next} XP",
+      rank: "{rank}-е з {total}",
+      messagesShort: "повід.",
       empty: "Амелії поки немає на жодному з ваших серверів.",
       emptyHint: "Запросіть її на сервер, і ваша статистика з’явиться тут.",
-      noActivity: "Тут поки немає активності. Напишіть повідомлення або зайдіть у голосовий канал.",
-      level: "Рівень {level}",
-      rank: "{rank}-е з {total}",
-      rankLabel: "Місце",
-      messages: "Повідомлення",
-      voice: "Голос",
-      balance: "Баланс",
-      xp: "{xp} / {next} досвіду",
-      customize: "Налаштувати картки",
+    },
+    units: {
+      day: " д.",
+      hour: " год.",
+      minute: " хв.",
+      second: " с.",
     },
     errors: {
       title: "Не вдалося завантажити сервери",
@@ -50,6 +41,7 @@ export const profile: Dict<typeof en> = {
   },
 
   appearance: {
+    backToProfile: "Назад до профілю",
     title: "Вигляд карток",
     description:
       "Змініть, як виглядають ваші картки рангу, профілю та нового рівня. Кожен сервер зберігає власні налаштування, а попередній перегляд малюється точно так, як картку малює Амелія.",

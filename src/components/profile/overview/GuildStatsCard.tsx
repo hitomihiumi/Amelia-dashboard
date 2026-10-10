@@ -1,13 +1,12 @@
-import { Button, Column, Flex, Line, Row, Tag, Text } from "@once-ui-system/core";
-import { AvatarWFrame } from "@/components/user/AvatarWFrame";
+import { Column, Flex, Icon, Row, Tag, Text } from "@once-ui-system/core";
 import { getNextLevelXP } from "@/components/profile/cards/utils";
 import type { CardTimeUnits } from "@/components/profile/cards/types";
 import type { Formatters } from "@/i18n/format";
-import { formatDuration } from "@/lib/profile/format";
-import type { ProfileGuild } from "@/lib/profile/data";
 import type { Translator } from "@/i18n/translate";
+import type { ProfileGuild } from "@/lib/profile/data";
+import { formatDuration } from "@/lib/profile/format";
 
-/** What the member has done on one server, and a way into the card editor for it. */
+/** What the member has done on one server: level and XP, a progress bar, messages and voice time. */
 export function GuildStatsCard({
   guild,
   t,
@@ -23,102 +22,93 @@ export function GuildStatsCard({
   const nextXp = getNextLevelXP(stats.level);
   const progress = Math.min(100, Math.max(0, (stats.xp / nextXp) * 100));
 
-  const figures = [
-    { label: t("profile.overview.servers.messages"), value: format.number(stats.messageCount) },
-    { label: t("profile.overview.servers.voice"), value: formatDuration(stats.voiceTime, units) },
-    {
-      label: t("profile.overview.servers.balance"),
-      value: format.number(stats.wallet + stats.bank),
-    },
-  ];
-
   return (
     <Column
       gap="16"
-      padding="24"
+      padding="20"
       radius="l"
-      border="neutral-medium"
+      border="neutral-alpha-medium"
       background="surface"
       minWidth={0}
     >
-      <Flex gap="12" vertical="center" horizontal="between" style={{ minWidth: 0 }}>
+      <Row gap="12" vertical="center" horizontal="between" style={{ minWidth: 0 }}>
         <Row gap="12" vertical="center" style={{ minWidth: 0 }}>
-          <AvatarWFrame
-            size="l"
-            src={guild.iconUrl ?? undefined}
-            value={guild.iconUrl ? undefined : Array.from(guild.name)[0]?.toUpperCase()}
-            radius="full"
-          />
-          <Text variant="heading-strong-s" truncate>
-            {guild.name}
-          </Text>
+          {guild.iconUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`${guild.iconUrl}?size=96`}
+              alt=""
+              width={44}
+              height={44}
+              loading="lazy"
+              style={{ borderRadius: 12, objectFit: "cover", flexShrink: 0 }}
+            />
+          ) : (
+            <Row
+              center
+              radius="m"
+              background="neutral-alpha-weak"
+              border="neutral-alpha-medium"
+              style={{ width: 44, height: 44, flexShrink: 0 }}
+            >
+              <Text variant="label-strong-m" onBackground="neutral-medium">
+                {Array.from(guild.name)[0]?.toUpperCase()}
+              </Text>
+            </Row>
+          )}
+          <Column gap="2" minWidth={0}>
+            <Text variant="heading-strong-s" truncate>
+              {guild.name}
+            </Text>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              {t("profile.overview.servers.levelLine", {
+                level: stats.level,
+                xp: format.number(stats.xp),
+                next: format.number(nextXp),
+              })}
+            </Text>
+          </Column>
         </Row>
         {guild.rank !== null && (
-          <Tag size="m" scheme="brand">
+          <Tag size="m" scheme="brand" style={{ flexShrink: 0 }}>
             {t("profile.overview.servers.rank", { rank: guild.rank, total: guild.ranked })}
           </Tag>
         )}
-      </Flex>
+      </Row>
 
-      {guild.hasData ? (
-        <>
-          <Column gap="8">
-            <Flex horizontal="between" gap="8">
-              <Text variant="body-strong-s">
-                {t("profile.overview.servers.level", { level: stats.level })}
-              </Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">
-                {t("profile.overview.servers.xp", {
-                  xp: format.number(stats.xp),
-                  next: format.number(nextXp),
-                })}
-              </Text>
-            </Flex>
-            <Row
-              fillWidth
-              height={0.5}
-              radius="full"
-              background="neutral-alpha-medium"
-              overflow="hidden"
-              aria-hidden
-            >
-              <Row
-                fillHeight
-                radius="full"
-                solid="brand-strong"
-                style={{ width: `${progress}%`, minWidth: 6 }}
-              />
-            </Row>
-          </Column>
-
-          <Row gap="16" wrap>
-            {figures.map((figure) => (
-              <Column key={figure.label} gap="4" style={{ flex: "1 1 80px", minWidth: 0 }}>
-                <Text variant="label-default-xs" onBackground="neutral-weak">
-                  {figure.label}
-                </Text>
-                <Text variant="body-strong-m" style={{ fontVariantNumeric: "tabular-nums" }}>
-                  {figure.value}
-                </Text>
-              </Column>
-            ))}
-          </Row>
-        </>
-      ) : (
-        <Text variant="body-default-s" onBackground="neutral-weak">
-          {t("profile.overview.servers.noActivity")}
-        </Text>
-      )}
-
-      <Line />
-      <Button
-        variant="secondary"
-        prefixIcon="palette"
-        href={`/profile/appearance?guild=${guild.id}`}
+      <Row
         fillWidth
+        height={0.5}
+        radius="full"
+        background="neutral-alpha-medium"
+        overflow="hidden"
+        aria-hidden
       >
-        {t("profile.overview.servers.customize")}
-      </Button>
+        <Row
+          fillHeight
+          radius="full"
+          solid="brand-strong"
+          style={{ width: `${progress}%`, minWidth: progress > 0 ? 6 : 0 }}
+        />
+      </Row>
+
+      <Flex horizontal="between" gap="16" wrap>
+        <Row gap="8" vertical="center">
+          <Icon name="actionMessage" size="xs" onBackground="neutral-weak" />
+          <Text variant="body-strong-s" style={{ fontVariantNumeric: "tabular-nums" }}>
+            {format.number(stats.messageCount)}
+          </Text>
+          <Text variant="body-default-s" onBackground="neutral-weak">
+            {t("profile.overview.servers.messagesShort")}
+          </Text>
+        </Row>
+        <Row gap="8" vertical="center">
+          <Icon name="navPrivate" size="xs" onBackground="neutral-weak" />
+          <Text variant="body-strong-s" style={{ fontVariantNumeric: "tabular-nums" }}>
+            {formatDuration(stats.voiceTime, units)}
+          </Text>
+        </Row>
+      </Flex>
     </Column>
   );
 }

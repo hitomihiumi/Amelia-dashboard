@@ -1,4 +1,4 @@
-import { Column, Feedback, Text } from "@once-ui-system/core";
+import { Button, Column, Feedback, Text } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -39,6 +39,11 @@ export default async function AppearancePage({
     <PageHeader
       title={t("profile.appearance.title")}
       description={t("profile.appearance.description")}
+      actions={
+        <Button variant="secondary" prefixIcon="user" href="/profile">
+          {t("profile.appearance.backToProfile")}
+        </Button>
+      }
     />
   );
 

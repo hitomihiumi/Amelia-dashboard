@@ -1,42 +1,34 @@
 export const profile = {
-  nav: {
-    title: "My profile",
-    section: "Profile",
-    overview: "Overview",
-    appearance: "Appearance",
-    backToSite: "Back to site",
-  },
-
   overview: {
-    title: "Your profile",
-    description: "How active you are on every server that has Amelia, all in one place.",
+    description: "Combined statistics across all servers with Amelia.",
+    appearanceLink: {
+      title: "Card appearance",
+      description: "Colors, biography and the look of your rank, profile and level-up cards",
+    },
+    total: "Total",
+    byServer: "By server",
     totals: {
       servers: "Servers",
-      serversHint: "{active, plural, one {# with activity} other {# with activity}}",
+      serversHint: "with the bot",
+      level: "Combined level",
+      levelHint: "{xp} XP",
       messages: "Messages",
+      messagesHint: "sent all time",
       voice: "Voice time",
-      xp: "Total XP",
-      level: "Highest level",
-      rank: "Best rank",
-      rankHint: "In the XP ranking of a server",
-      money: "Money",
-      moneyHint: "Wallets and banks together",
+      voiceHint: "accumulated all time",
     },
     servers: {
-      title: "Your servers",
-      description:
-        "Servers you share with Amelia. Statistics are kept separately for each of them.",
+      levelLine: "Level {level} · {xp} / {next} XP",
+      rank: "#{rank} of {total}",
+      messagesShort: "msgs",
       empty: "Amelia is not on any of your servers yet.",
       emptyHint: "Invite her to a server and your statistics will show up here.",
-      noActivity: "No activity here yet. Send a message or join a voice channel.",
-      level: "Level {level}",
-      rank: "#{rank} of {total}",
-      rankLabel: "Rank",
-      messages: "Messages",
-      voice: "Voice",
-      balance: "Balance",
-      xp: "{xp} / {next} XP",
-      customize: "Customize cards",
+    },
+    units: {
+      day: "d",
+      hour: "h",
+      minute: "min",
+      second: "s",
     },
     errors: {
       title: "Could not load your servers",
@@ -46,6 +38,7 @@ export const profile = {
   },
 
   appearance: {
+    backToProfile: "Back to profile",
     title: "Card appearance",
     description:
       "Change how your rank, profile and level-up cards look. Every server keeps its own settings, and the preview is drawn exactly the way Amelia draws the card.",

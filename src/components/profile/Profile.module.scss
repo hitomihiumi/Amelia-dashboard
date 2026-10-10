@@ -1,0 +1,25 @@
+// The profile pages have no sidebar; the content column is still the `page` container that
+// the editor's layout (Appearance.module.scss) and the settings grids query.
+.page {
+  container-type: inline-size;
+  container-name: page;
+}
+
+// Small caps label above a block ("TOTAL", "BY SERVER").
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.avatar {
+  box-shadow: 0 0 40px var(--brand-alpha-medium);
+}
+
+.linkCard {
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--brand-alpha-strong);
+    background-color: var(--neutral-alpha-weak);
+  }
+}

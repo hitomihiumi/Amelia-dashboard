@@ -31,13 +31,11 @@ export interface ProfileGuild {
 
 export interface ProfileTotals {
   servers: number;
-  activeServers: number;
+  /** Levels of all servers added up; a server without activity counts as level 1. */
+  totalLevel: number;
+  totalXp: number;
   messages: number;
   voiceTime: number;
-  totalXp: number;
-  money: number;
-  topLevel: number;
-  bestRank: number | null;
 }
 
 const EMPTY_STATS: ProfileStats = {
@@ -112,18 +110,11 @@ export async function getProfileGuilds(
 }
 
 export function summarize(guilds: ProfileGuild[]): ProfileTotals {
-  const active = guilds.filter((g) => g.hasData);
   return {
     servers: guilds.length,
-    activeServers: active.length,
-    messages: active.reduce((sum, g) => sum + g.stats.messageCount, 0),
-    voiceTime: active.reduce((sum, g) => sum + g.stats.voiceTime, 0),
-    totalXp: active.reduce((sum, g) => sum + g.stats.totalXp, 0),
-    money: active.reduce((sum, g) => sum + g.stats.wallet + g.stats.bank, 0),
-    topLevel: active.reduce((max, g) => Math.max(max, g.stats.level), 0),
-    bestRank: active.reduce<number | null>(
-      (best, g) => (g.rank !== null && (best === null || g.rank < best) ? g.rank : best),
-      null,
-    ),
+    totalLevel: guilds.reduce((sum, g) => sum + g.stats.level, 0),
+    totalXp: guilds.reduce((sum, g) => sum + g.stats.totalXp, 0),
+    messages: guilds.reduce((sum, g) => sum + g.stats.messageCount, 0),
+    voiceTime: guilds.reduce((sum, g) => sum + g.stats.voiceTime, 0),
   };
 }

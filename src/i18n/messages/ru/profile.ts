@@ -2,45 +2,36 @@ import type { Dict } from "../types";
 import type { profile as en } from "../en/profile";
 
 export const profile: Dict<typeof en> = {
-  nav: {
-    title: "Мой профиль",
-    section: "Профиль",
-    overview: "Обзор",
-    appearance: "Внешний вид",
-    backToSite: "Назад на сайт",
-  },
-
   overview: {
-    title: "Ваш профиль",
-    description: "Ваша активность на всех серверах, где есть Амелия, в одном месте.",
+    description: "Сводная статистика по всем серверам с ботом Амелия.",
+    appearanceLink: {
+      title: "Внешний вид карточек",
+      description: "Цвета, биография и вид карточек ранга, профиля и нового уровня",
+    },
+    total: "Всего",
+    byServer: "По серверам",
     totals: {
-      servers: "Серверы",
-      serversHint:
-        "{active, plural, one {# с активностью} few {# с активностью} many {# с активностью} other {# с активностью}}",
-      messages: "Сообщения",
-      voice: "Время в голосовых",
-      xp: "Всего опыта",
-      level: "Высший уровень",
-      rank: "Лучшее место",
-      rankHint: "В рейтинге опыта сервера",
-      money: "Деньги",
-      moneyHint: "Кошельки и банки вместе",
+      servers: "Серверов",
+      serversHint: "где есть бот",
+      level: "Суммарный уровень",
+      levelHint: "{xp} XP",
+      messages: "Сообщений",
+      messagesHint: "отправлено за всё время",
+      voice: "Время в войсах",
+      voiceHint: "накоплено за всё время",
     },
     servers: {
-      title: "Ваши серверы",
-      description:
-        "Серверы, на которых вы вместе с Амелией. Статистика ведётся отдельно для каждого из них.",
+      levelLine: "Уровень {level} · {xp} / {next} XP",
+      rank: "{rank}-е из {total}",
+      messagesShort: "сообщ.",
       empty: "Амелии пока нет ни на одном из ваших серверов.",
       emptyHint: "Пригласите её на сервер, и ваша статистика появится здесь.",
-      noActivity: "Здесь пока нет активности. Напишите сообщение или зайдите в голосовой канал.",
-      level: "Уровень {level}",
-      rank: "{rank}-е из {total}",
-      rankLabel: "Место",
-      messages: "Сообщения",
-      voice: "Голос",
-      balance: "Баланс",
-      xp: "{xp} / {next} опыта",
-      customize: "Настроить карточки",
+    },
+    units: {
+      day: " д.",
+      hour: " ч.",
+      minute: " мин.",
+      second: " с.",
     },
     errors: {
       title: "Не удалось загрузить серверы",
@@ -50,6 +41,7 @@ export const profile: Dict<typeof en> = {
   },
 
   appearance: {
+    backToProfile: "Назад к профилю",
     title: "Внешний вид карточек",
     description:
       "Измените, как выглядят ваши карточки ранга, профиля и нового уровня. Каждый сервер хранит свои настройки, а предпросмотр рисуется ровно так, как карточку рисует Амелия.",

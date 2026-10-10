@@ -1,6 +1,6 @@
 import type { CardTimeUnits } from "@/components/profile/cards/types";
 
-/** "2h 14m": the two biggest non-zero units of a duration. */
+/** "2h 14m" / "2 ч. 14 мин.": the two biggest non-zero units; a unit may start with a space. */
 export function formatDuration(ms: number, units: CardTimeUnits): string {
   const safe = Number.isFinite(ms) ? Math.max(0, ms) : 0;
   const parts: [number, string][] = [
@@ -10,7 +10,7 @@ export function formatDuration(ms: number, units: CardTimeUnits): string {
     [Math.floor((safe % 60_000) / 1000), units.second],
   ];
   const start = parts.findIndex(([value]) => value > 0);
-  if (start === -1) return `0${units.second}`;
+  if (start === -1) return `0${units.minute}`;
   return parts
     .slice(start, start + 2)
     .filter(([value]) => value > 0)

@@ -1,14 +1,14 @@
-import { Feedback, Grid, Column, Text } from "@once-ui-system/core";
+import { Card, Column, Feedback, Grid, Icon, Row, Text } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
-import { PageHeader } from "@/components/layout/PageHeader";
+import { redirect } from "next/navigation";
 import { GuildStatsCard } from "@/components/profile/overview/GuildStatsCard";
+import { ProfileHeader } from "@/components/profile/overview/ProfileHeader";
 import { StatTiles } from "@/components/profile/overview/StatTiles";
+import styles from "@/components/profile/Profile.module.scss";
 import { getFormatters, getT } from "@/i18n/server";
 import { authOptions } from "@/lib/auth";
+import { type ProfileGuild, getProfileGuilds, summarize } from "@/lib/profile/data";
 import { formatDuration } from "@/lib/profile/format";
-import { getProfileGuilds, summarize } from "@/lib/profile/data";
-import type { ProfileGuild } from "@/lib/profile/data";
-import { redirect } from "next/navigation";
 
 export default async function ProfileOverviewPage() {
   const t = await getT();
@@ -16,11 +16,12 @@ export default async function ProfileOverviewPage() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) redirect("/");
 
+  const { user } = session;
   const units = {
-    day: t("profile.units.day"),
-    hour: t("profile.units.hour"),
-    minute: t("profile.units.minute"),
-    second: t("profile.units.second"),
+    day: t("profile.overview.units.day"),
+    hour: t("profile.overview.units.hour"),
+    minute: t("profile.overview.units.minute"),
+    second: t("profile.overview.units.second"),
   };
 
   let guilds: ProfileGuild[] = [];
@@ -30,7 +31,7 @@ export default async function ProfileOverviewPage() {
     loadError = "session";
   } else {
     try {
-      guilds = await getProfileGuilds(session.accessToken, session.user.id);
+      guilds = await getProfileGuilds(session.accessToken, user.id);
     } catch (e) {
       console.error("[Profile] Could not load the servers:", e);
       loadError =
@@ -42,10 +43,40 @@ export default async function ProfileOverviewPage() {
 
   return (
     <>
-      <PageHeader
-        title={t("profile.overview.title")}
+      <ProfileHeader
+        name={user.username || user.name || "User"}
         description={t("profile.overview.description")}
+        avatar={user.image ? `${user.image}?size=256` : null}
       />
+
+      <Card
+        href="/profile/appearance"
+        fillWidth
+        radius="l"
+        padding="16"
+        border="neutral-alpha-medium"
+        background="surface"
+        className={styles.linkCard}
+      >
+        <Row fillWidth gap="16" vertical="center">
+          <Row
+            center
+            radius="m"
+            background="brand-alpha-weak"
+            border="brand-alpha-medium"
+            style={{ width: 48, height: 48, flexShrink: 0 }}
+          >
+            <Icon name="palette" size="m" onBackground="brand-strong" />
+          </Row>
+          <Column gap="4" flex={1} minWidth={0}>
+            <Text variant="heading-strong-s">{t("profile.overview.appearanceLink.title")}</Text>
+            <Text variant="body-default-s" onBackground="neutral-weak">
+              {t("profile.overview.appearanceLink.description")}
+            </Text>
+          </Column>
+          <Icon name="chevronRight" size="s" onBackground="neutral-weak" />
+        </Row>
+      </Card>
 
       {loadError === "session" && (
         <Feedback
@@ -68,59 +99,52 @@ export default async function ProfileOverviewPage() {
 
       {!loadError && (
         <>
-          <StatTiles
-            items={[
-              {
-                icon: "navServers",
-                label: t("profile.overview.totals.servers"),
-                value: format.number(totals.servers),
-                hint: t("profile.overview.totals.serversHint", { active: totals.activeServers }),
-              },
-              {
-                icon: "mail",
-                label: t("profile.overview.totals.messages"),
-                value: format.number(totals.messages),
-              },
-              {
-                icon: "microphone",
-                label: t("profile.overview.totals.voice"),
-                value: formatDuration(totals.voiceTime, units),
-              },
-              {
-                icon: "navLevels",
-                label: t("profile.overview.totals.level"),
-                value: format.number(totals.topLevel),
-                hint: `${format.number(totals.totalXp)} ${t("profile.overview.totals.xp")}`,
-              },
-              {
-                icon: "trophy",
-                label: t("profile.overview.totals.rank"),
-                value: totals.bestRank === null ? "—" : `#${format.number(totals.bestRank)}`,
-                hint: t("profile.overview.totals.rankHint"),
-              },
-              {
-                icon: "money",
-                label: t("profile.overview.totals.money"),
-                value: format.number(totals.money),
-                hint: t("profile.overview.totals.moneyHint"),
-              },
-            ]}
-          />
+          <Column gap="16" fillWidth>
+            <Text variant="label-default-s" onBackground="neutral-weak" className={styles.eyebrow}>
+              {t("profile.overview.total")}
+            </Text>
+            <StatTiles
+              items={[
+                {
+                  icon: "navServers",
+                  label: t("profile.overview.totals.servers"),
+                  value: format.number(totals.servers),
+                  hint: t("profile.overview.totals.serversHint"),
+                },
+                {
+                  icon: "navLevels",
+                  label: t("profile.overview.totals.level"),
+                  value: format.number(totals.totalLevel),
+                  hint: t("profile.overview.totals.levelHint", {
+                    xp: format.number(totals.totalXp),
+                  }),
+                },
+                {
+                  icon: "actionMessage",
+                  label: t("profile.overview.totals.messages"),
+                  value: format.number(totals.messages),
+                  hint: t("profile.overview.totals.messagesHint"),
+                },
+                {
+                  icon: "navPrivate",
+                  label: t("profile.overview.totals.voice"),
+                  value: formatDuration(totals.voiceTime, units),
+                  hint: t("profile.overview.totals.voiceHint"),
+                },
+              ]}
+            />
+          </Column>
 
           <Column gap="16" fillWidth>
-            <Column gap="4">
-              <Text variant="heading-strong-m">{t("profile.overview.servers.title")}</Text>
-              <Text variant="body-default-s" onBackground="neutral-medium">
-                {t("profile.overview.servers.description")}
-              </Text>
-            </Column>
-
+            <Text variant="label-default-s" onBackground="neutral-weak" className={styles.eyebrow}>
+              {t("profile.overview.byServer")}
+            </Text>
             {guilds.length === 0 ? (
               <Column
                 gap="8"
                 padding="32"
                 radius="l"
-                border="neutral-medium"
+                border="neutral-alpha-medium"
                 background="surface"
                 horizontal="center"
               >
@@ -133,7 +157,7 @@ export default async function ProfileOverviewPage() {
               <Grid
                 fillWidth
                 gap="16"
-                style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))" }}
+                style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 420px), 1fr))" }}
               >
                 {guilds.map((guild) => (
                   <GuildStatsCard

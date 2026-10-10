@@ -248,6 +248,11 @@ export function AppearanceEditor({
       <PageHeader
         title={t("profile.appearance.title")}
         description={t("profile.appearance.description")}
+        actions={
+          <Button variant="secondary" prefixIcon="user" href="/profile">
+            {t("profile.appearance.backToProfile")}
+          </Button>
+        }
       />
 
       <Row gap="16" vertical="end" wrap fillWidth>
