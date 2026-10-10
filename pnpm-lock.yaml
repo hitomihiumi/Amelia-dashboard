@@ -18,13 +18,13 @@ importers:
         specifier: ^15.5.9
         version: 15.5.23(@mdx-js/loader@3.1.1)(@mdx-js/react@3.1.1(@types/react@19.0.1)(react@19.2.8))
       '@nmmty/adapter-browser':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0(@nmmty/lazycanvas@1.0.0)
       '@nmmty/adapter-react':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0(@nmmty/adapter-browser@1.0.0(@nmmty/lazycanvas@1.0.0))(@nmmty/lazycanvas@1.0.0)(react@19.2.8)
       '@nmmty/lazycanvas':
-        specifier: 1.0.0
+        specifier: ^1.0.0
         version: 1.0.0
       '@once-ui-system/core':
         specifier: ^2.0.0
