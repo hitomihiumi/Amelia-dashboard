@@ -14,6 +14,12 @@ const TIMEOUT_PATHS = new Set([
   "economy.timeout.rob",
 ]);
 
+/** The card number a new member gets: server id, member id and two random groups of four digits. */
+export function generateBalanceNumber(userId: string, guildId: string): string {
+  const group = () => String(Math.floor(Math.random() * 10_000)).padStart(4, "0");
+  return `${guildId.slice(0, 4)} ${userId.slice(0, 4)} ${group()} ${group()}`;
+}
+
 /**
  * Database User wrapper with type-safe access.
  * All schema paths live in PostgreSQL; only temp.* paths are served by TempCache (Redis).
@@ -45,7 +51,7 @@ export class DBUser {
       create: {
         userId: this.userId,
         guildId: this.guildId,
-        balanceNumber: `${this.guildId.slice(0, 4)} ${this.userId.slice(0, 4)} ${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)} ${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}${Math.floor(Math.random() * 10)}`,
+        balanceNumber: generateBalanceNumber(this.userId, this.guildId),
       },
     });
 

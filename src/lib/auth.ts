@@ -26,6 +26,7 @@ export const authOptions: NextAuthOptions = {
           id: profile.id,
           name: profile.global_name || profile.username,
           email: profile.email,
+          username: profile.username as string,
           image: profile.avatar
             ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.png`
             : null,
@@ -39,6 +40,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account, user }) {
       if (user) {
         token.avatarDecoration = (user as any).avatarDecoration;
+        token.username = (user as any).username;
       }
 
       if (account) {
@@ -84,6 +86,8 @@ export const authOptions: NextAuthOptions = {
       if (session.user && token.sub) {
         session.user.id = token.sub;
         session.user.avatarDecoration = token.avatarDecoration as string | null;
+        // The @handle, next to `name` (the display name). Missing in sessions from before it was stored.
+        session.user.username = token.username as string | undefined;
         // Lets the header show the admin panel shortcut. The panel itself re-checks on the server.
         session.user.isAdmin = isSiteAdmin(token.sub);
       }

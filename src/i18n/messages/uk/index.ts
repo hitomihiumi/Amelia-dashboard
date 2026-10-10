@@ -13,5 +13,6 @@ import { layouts } from "./layouts";
 import { send } from "./send";
 import { ai } from "./ai";
 import { adminAi } from "./adminAi";
+import { profile } from "./profile";
 
-export const uk = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, adminLogs, adminServers, layouts, send, ai, adminAi, };
+export const uk = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, adminLogs, adminServers, layouts, send, ai, adminAi, profile, };

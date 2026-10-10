@@ -162,6 +162,13 @@ export function Header() {
                       label={t("common.nav.dashboard")}
                       value={"dashboard"}
                     />
+                    <Option
+                      fillWidth
+                      prefix={<Icon size="xs" onBackground="neutral-weak" name="user" />}
+                      href={"/profile"}
+                      label={t("common.nav.profile")}
+                      value={"profile"}
+                    />
                     {session.user?.isAdmin && (
                       <Option
                         fillWidth
@@ -247,9 +254,14 @@ export function Header() {
 
           <Column gap="8" paddingTop="12" borderTop="neutral-alpha-weak">
             {authenticated ? (
-              <Button href="/dashboard" variant="secondary" fillWidth prefixIcon="navGeneral">
-                {t("common.nav.dashboard")}
-              </Button>
+              <>
+                <Button href="/dashboard" variant="secondary" fillWidth prefixIcon="navGeneral">
+                  {t("common.nav.dashboard")}
+                </Button>
+                <Button href="/profile" variant="secondary" fillWidth prefixIcon="user">
+                  {t("common.nav.profile")}
+                </Button>
+              </>
             ) : (
               <Button prefixIcon={"discord"} onClick={handleLogin} fillWidth>
                 {t("common.nav.login")}

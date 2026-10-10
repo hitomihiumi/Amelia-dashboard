@@ -1,0 +1,43 @@
+// The editor follows the `page` container (the room next to the sidebar), like SectionGrid.
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--static-space-24);
+  align-items: start;
+}
+
+// On narrow screens the card comes first, so a change is visible right where it is made.
+.preview {
+  order: -1;
+  min-width: 0;
+}
+
+@container page (min-width: 1020px) {
+  .layout {
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+  }
+
+  .preview {
+    order: 0;
+    position: sticky;
+    top: var(--static-space-24);
+  }
+}
+
+@media (max-width: 640px) {
+  .layout {
+    gap: var(--static-space-16);
+  }
+}
+
+// A neutral checkerboard behind the card: it has rounded corners and a transparent edge, and the
+// preview should show them the way Discord does.
+.stage {
+  background-color: var(--neutral-alpha-weak);
+  background-image: linear-gradient(45deg, var(--neutral-alpha-weak) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--neutral-alpha-weak) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--neutral-alpha-weak) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--neutral-alpha-weak) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
