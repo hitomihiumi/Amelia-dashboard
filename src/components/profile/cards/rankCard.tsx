@@ -88,7 +88,11 @@ export function rankCard(
         }}
       >
         <Group layout={{ position: "relative", width: 180, height: 180 }}>
-          <Image size={{ width: 180, height: 180, radius: { all: 90 } }} src={identity.avatar} />
+          <Image
+            size={{ width: 180, height: 180, radius: { all: 90 } }}
+            src={identity.avatar}
+            placeholder={{ color: colors.third_component, stroke: colors.second_component }}
+          />
           <Morph
             layout={{ position: "absolute" }}
             size={{ width: 180, height: 180, radius: { all: 90 } }}

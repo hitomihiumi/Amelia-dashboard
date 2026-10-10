@@ -159,7 +159,11 @@ export function profileCard(
           }}
         >
           <Group layout={{ position: "relative", width: 220, height: 220 }}>
-            <Image size={{ width: 220, height: 220, radius: { all: 110 } }} src={identity.avatar} />
+            <Image
+              size={{ width: 220, height: 220, radius: { all: 110 } }}
+              src={identity.avatar}
+              placeholder={{ color: colors.third_component, stroke: colors.second_component }}
+            />
             <Morph
               layout={{ position: "absolute" }}
               size={{ width: 220, height: 220, radius: { all: 110 } }}

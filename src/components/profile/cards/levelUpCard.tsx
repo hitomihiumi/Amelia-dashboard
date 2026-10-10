@@ -148,6 +148,7 @@ export function levelUpCard(avatar: string, level: number, colors: CardColors) {
             layout={{ width: 80, height: 80 }}
             size={{ width: 80, height: 80, radius: { all: 40 } }}
             src={avatar}
+            placeholder={{ color: colors.third_component, stroke: colors.second_component }}
           />
         </Group>
       </Group>
