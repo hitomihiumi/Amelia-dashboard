@@ -18,14 +18,14 @@ importers:
         specifier: ^15.5.9
         version: 15.5.23(@mdx-js/loader@3.1.1)(@mdx-js/react@3.1.1(@types/react@19.0.1)(react@19.2.8))
       '@nmmty/adapter-browser':
-        specifier: ^1.0.0
-        version: 1.0.0(@nmmty/lazycanvas@1.0.1)
+        specifier: ^1.1.0
+        version: 1.1.0(@nmmty/lazycanvas@1.1.0)
       '@nmmty/adapter-react':
-        specifier: ^1.0.0
-        version: 1.0.0(@nmmty/adapter-browser@1.0.0(@nmmty/lazycanvas@1.0.1))(@nmmty/lazycanvas@1.0.1)(react@19.2.8)
+        specifier: ^1.1.0
+        version: 1.1.0(@nmmty/adapter-browser@1.1.0(@nmmty/lazycanvas@1.1.0))(@nmmty/lazycanvas@1.1.0)(react@19.2.8)
       '@nmmty/lazycanvas':
-        specifier: ^1.0.1
-        version: 1.0.1
+        specifier: ^1.1.0
+        version: 1.1.0
       '@once-ui-system/core':
         specifier: ^2.0.0
         version: 2.0.0(compressorjs@1.3.0)(next@16.3.1(@types/node@20.17.23)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(sass@1.102.0))(prismjs@1.30.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(recharts@3.10.1(@types/react@19.0.1)(react-dom@19.2.8(react@19.2.8))(react-is@19.2.8)(react@19.2.8)(redux@5.0.1))(sass@1.102.0)(sharp@0.33.5)
@@ -796,22 +796,22 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@nmmty/adapter-browser@1.0.0':
-    resolution: {integrity: sha512-7wsTT8aOKrNhVSulMNtWcXhhRlN1IDGojf9W7lA5FMAzx1lW3S21TLuU4ljh+FVs2jO8DLXxGXxODJN5RTfCgQ==}
+  '@nmmty/adapter-browser@1.1.0':
+    resolution: {integrity: sha512-yMax6N5HZo70TeE8oVxI3jhA1RnvRNynqEbjsZNWy1XYSsp9KwUUrfBzvgZ1CSNi6rexyurbxR8qFfQcCLMRHw==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@nmmty/lazycanvas': ^1.0.0
+      '@nmmty/lazycanvas': ^1.1.0
 
-  '@nmmty/adapter-react@1.0.0':
-    resolution: {integrity: sha512-vHWq3rc09n54jDSY2uvelAPOk0BOyW2bJxHe+LUCzgZc/MrUgfN1XnzVP87KkNPjL9vzzBwsLxvU3+j1PffRIQ==}
+  '@nmmty/adapter-react@1.1.0':
+    resolution: {integrity: sha512-j/c9OU/JcT2yGDLYduQZgujzwREJL9xT8w2WDOl6tqTz6v1bIS+d7GaraVfsi/bS9LFKYukrpW/wf9kNk/Tq4Q==}
     engines: {node: '>=18'}
     peerDependencies:
-      '@nmmty/adapter-browser': ^1.0.0
-      '@nmmty/lazycanvas': ^1.0.0
+      '@nmmty/adapter-browser': ^1.1.0
+      '@nmmty/lazycanvas': ^1.1.0
       react: '>=18.0.0'
 
-  '@nmmty/lazycanvas@1.0.1':
-    resolution: {integrity: sha512-mlmt8JKUPYL1WVjqP6Z1Qv2Pu/LKqUKvi9csx6ClfKHYGbqkNvQAkIiuTLcRoNuRoCyZ1oBCRCqgfSJHncqGlg==}
+  '@nmmty/lazycanvas@1.1.0':
+    resolution: {integrity: sha512-oye0v0odb5s6WIbmp6AzySb/tJ58MGtt7hNBGVKhEWslaTE2vSRsJOpBLiHXAKolu0mmDyI2QxHjXX2Z4pJesA==}
     engines: {node: '>=18'}
 
   '@once-ui-system/core@2.0.0':
@@ -3441,17 +3441,17 @@ snapshots:
   '@next/swc-win32-x64-msvc@16.3.1':
     optional: true
 
-  '@nmmty/adapter-browser@1.0.0(@nmmty/lazycanvas@1.0.1)':
+  '@nmmty/adapter-browser@1.1.0(@nmmty/lazycanvas@1.1.0)':
     dependencies:
-      '@nmmty/lazycanvas': 1.0.1
+      '@nmmty/lazycanvas': 1.1.0
 
-  '@nmmty/adapter-react@1.0.0(@nmmty/adapter-browser@1.0.0(@nmmty/lazycanvas@1.0.1))(@nmmty/lazycanvas@1.0.1)(react@19.2.8)':
+  '@nmmty/adapter-react@1.1.0(@nmmty/adapter-browser@1.1.0(@nmmty/lazycanvas@1.1.0))(@nmmty/lazycanvas@1.1.0)(react@19.2.8)':
     dependencies:
-      '@nmmty/adapter-browser': 1.0.0(@nmmty/lazycanvas@1.0.1)
-      '@nmmty/lazycanvas': 1.0.1
+      '@nmmty/adapter-browser': 1.1.0(@nmmty/lazycanvas@1.1.0)
+      '@nmmty/lazycanvas': 1.1.0
       react: 19.2.8
 
-  '@nmmty/lazycanvas@1.0.1':
+  '@nmmty/lazycanvas@1.1.0':
     dependencies:
       js-yaml: 4.3.2
       yoga-layout: 3.2.1
