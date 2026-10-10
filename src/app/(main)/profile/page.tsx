@@ -46,7 +46,8 @@ export default async function ProfileOverviewPage() {
       <ProfileHeader
         name={user.username || user.name || "User"}
         description={t("profile.overview.description")}
-        avatar={user.image ? `${user.image}?size=256` : null}
+        avatar={user.image ? `${user.image}?size=256` : undefined}
+        frame={user.avatarDecoration ? `${user.avatarDecoration}?size=96` : null}
       />
 
       <Card
