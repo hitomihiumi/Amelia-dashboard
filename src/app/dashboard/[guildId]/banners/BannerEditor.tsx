@@ -39,6 +39,7 @@ import {
   Text,
 } from "@once-ui-system/core";
 import { useMemo, useRef, useState } from "react";
+import { PreviewPane, Workspace } from "../components/Workspace";
 import { LayerForm } from "./LayerForm";
 
 const LAYER_TYPES: BannerLayerType[] = ["text", "shape", "image", "avatar", "progress"];
@@ -159,6 +160,7 @@ function BackgroundForm({
         <>
           <ImageSourceField
             id="banner-bg-src"
+            purpose="background"
             label={t("banners.layer.image.link")}
             value={background.src}
             onChange={(src) => onChange({ ...background, src })}
@@ -251,7 +253,7 @@ export function BannerEditor({ guildId, banner, stats, onChange }: BannerEditorP
     setAddOpen(false);
     for (const file of files) {
       if (latest.current.layers.length >= BANNER_LIMITS.layers) return;
-      const image = await upload(file);
+      const image = await upload(file, "layer");
       if (!image) continue;
 
       const scale = Math.min(1, 480 / image.width, 300 / image.height);
@@ -310,222 +312,219 @@ export function BannerEditor({ guildId, banner, stats, onChange }: BannerEditorP
   const stack = [...banner.layers].reverse();
 
   return (
-    <Column fillWidth gap="16">
-      <Row fillWidth gap="12" wrap vertical="start">
-        <Column flex="2" minWidth={16} style={{ flexBasis: 240 }}>
-          <Input
-            id="banner-name"
-            label={t("banners.editor.name")}
-            value={banner.name}
-            maxLength={BANNER_LIMITS.name}
-            onChange={(e) => update({ name: e.target.value })}
-          />
-        </Column>
-        <Column flex="1" minWidth={16} style={{ flexBasis: 200 }}>
-          <LabelSelect
-            id="banner-timezone"
-            label={t("banners.editor.timezone")}
-            options={timezoneOptions}
-            selectedValue={banner.timezone}
-            setSelectedValue={(timezone) => update({ timezone: String(timezone) })}
-            searchable
-          />
-        </Column>
-      </Row>
-
-      {picker.input}
-      <BannerCanvas
-        guildId={guildId}
-        banner={banner}
-        stats={stats}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-        onChangeLayer={(id, patch) => updateLayer(id, patch)}
-        onDropFiles={(files) => void addPictures(files)}
-      />
-      <Text variant="body-default-xs" onBackground="neutral-weak">
-        {t("banners.editor.canvasHint")}
-      </Text>
-
-      <Grid
-        fillWidth
-        gap="16"
-        style={{
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
-          alignItems: "start",
-        }}
-      >
-        <Column fillWidth gap="8">
-          <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
-            <Text variant="label-strong-m">
-              {t("banners.editor.elements", {
-                count: banner.layers.length,
-                max: BANNER_LIMITS.layers,
-              })}
-            </Text>
-            <DropdownWrapper
-              open={addOpen}
-              onOpenChange={setAddOpen}
-              placement="bottom-end"
-              trigger={
-                <Button prefixIcon="plus" disabled={banner.layers.length >= BANNER_LIMITS.layers}>
-                  {t("banners.editor.add")}
-                </Button>
-              }
-              dropdown={
-                <Column gap="2" padding="4" minWidth={14}>
-                  {LAYER_TYPES.map((type) => (
+    <Workspace
+      aside={
+        <PreviewPane title={t("banners.editor.panel")} icon={<Icon name="palette" size="xs" />}>
+          <Column fillWidth gap="8">
+            <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
+              <Text variant="label-strong-m">
+                {t("banners.editor.elements", {
+                  count: banner.layers.length,
+                  max: BANNER_LIMITS.layers,
+                })}
+              </Text>
+              <DropdownWrapper
+                open={addOpen}
+                onOpenChange={setAddOpen}
+                placement="bottom-end"
+                trigger={
+                  <Button prefixIcon="plus" disabled={banner.layers.length >= BANNER_LIMITS.layers}>
+                    {t("banners.editor.add")}
+                  </Button>
+                }
+                dropdown={
+                  <Column gap="2" padding="4" minWidth={14}>
+                    {LAYER_TYPES.map((type) => (
+                      <Option
+                        key={type}
+                        value={type}
+                        label={t(`banners.layer.types.${type}` as MessageKey)}
+                        prefix={<Icon name={LAYER_ICON[type]} size="xs" />}
+                        onClick={() => addLayer(type)}
+                      />
+                    ))}
                     <Option
-                      key={type}
-                      value={type}
-                      label={t(`banners.layer.types.${type}` as MessageKey)}
-                      prefix={<Icon name={LAYER_ICON[type]} size="xs" />}
-                      onClick={() => addLayer(type)}
+                      value="upload"
+                      label={t("banners.images.addUpload")}
+                      prefix={<Icon name="plus" size="xs" />}
+                      onClick={() => {
+                        setAddOpen(false);
+                        picker.open();
+                      }}
                     />
-                  ))}
-                  <Option
-                    value="upload"
-                    label={t("banners.images.addUpload")}
-                    prefix={<Icon name="plus" size="xs" />}
-                    onClick={() => {
-                      setAddOpen(false);
-                      picker.open();
-                    }}
-                  />
-                </Column>
-              }
-            />
-          </Row>
-
-          <Column fillWidth gap="4">
-            {stack.map((layer) => {
-              const isSelected = layer.id === selectedId;
-              const index = banner.layers.findIndex((item) => item.id === layer.id);
-              return (
-                <Row
-                  key={layer.id}
-                  fillWidth
-                  vertical="center"
-                  gap="4"
-                  paddingX="8"
-                  paddingY="4"
-                  radius="m"
-                  border={isSelected ? "brand-strong" : "neutral-weak"}
-                  background={isSelected ? "surface" : "neutral-alpha-weak"}
-                >
-                  <Row
-                    as="button"
-                    {...NATIVE_BUTTON}
-                    flex="1"
-                    minWidth={0}
-                    vertical="center"
-                    gap="8"
-                    paddingY="4"
-                    style={{
-                      background: "transparent",
-                      border: 0,
-                      color: "inherit",
-                      font: "inherit",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      opacity: layer.visible ? 1 : 0.5,
-                    }}
-                    onClick={() => setSelectedId(layer.id)}
-                  >
-                    <Icon name={LAYER_ICON[layer.type]} size="xs" onBackground="neutral-weak" />
-                    <Text variant="body-default-s" style={{ overflowWrap: "anywhere" }}>
-                      {layerName(layer)}
-                    </Text>
-                  </Row>
-                  <IconButton
-                    icon={layer.visible ? "eye" : "eyeoff"}
-                    variant="ghost"
-                    size="s"
-                    tooltip={layer.visible ? t("banners.editor.hide") : t("banners.editor.show")}
-                    onClick={() => updateLayer(layer.id, { visible: !layer.visible })}
-                  />
-                  {isSelected ? (
-                    <>
-                      <IconButton
-                        icon="chevronUp"
-                        variant="ghost"
-                        size="s"
-                        tooltip={t("banners.editor.forward")}
-                        disabled={index === banner.layers.length - 1}
-                        onClick={() => reorder(layer.id, 1)}
-                      />
-                      <IconButton
-                        icon="chevronDown"
-                        variant="ghost"
-                        size="s"
-                        tooltip={t("banners.editor.backward")}
-                        disabled={index === 0}
-                        onClick={() => reorder(layer.id, -1)}
-                      />
-                      <IconButton
-                        icon="copy"
-                        variant="ghost"
-                        size="s"
-                        tooltip={t("builder.shared.duplicate")}
-                        disabled={banner.layers.length >= BANNER_LIMITS.layers}
-                        onClick={() => duplicate(layer)}
-                      />
-                      <ConfirmIconButton
-                        variant="immediate"
-                        tooltip={t("banners.editor.delete")}
-                        onConfirm={() => remove(layer.id)}
-                      />
-                    </>
-                  ) : null}
-                </Row>
-              );
-            })}
-
-            <Row
-              as="button"
-              {...NATIVE_BUTTON}
-              fillWidth
-              vertical="center"
-              gap="8"
-              paddingX="12"
-              paddingY="8"
-              radius="m"
-              border={selected === null ? "brand-strong" : "neutral-weak"}
-              background={selected === null ? "surface" : "neutral-alpha-weak"}
-              style={{ color: "inherit", font: "inherit", textAlign: "left", cursor: "pointer" }}
-              onClick={() => setSelectedId(null)}
-            >
-              <Icon name="image" size="xs" onBackground="neutral-weak" />
-              <Text variant="body-default-s">{t("banners.editor.background")}</Text>
+                  </Column>
+                }
+              />
             </Row>
-          </Column>
-        </Column>
 
-        <Column
-          fillWidth
-          gap="12"
-          padding="16"
-          radius="m"
-          border="neutral-medium"
-          background="surface"
-        >
-          <Text variant="label-strong-m">
-            {selected ? layerName(selected) : t("banners.editor.background")}
-          </Text>
-          {selected ? (
-            <LayerForm
-              key={selected.id}
-              layer={selected}
-              onChange={(patch) => updateLayer(selected.id, patch)}
+            <Column fillWidth gap="4" style={{ maxHeight: 260, overflowY: "auto" }}>
+              {stack.map((layer) => {
+                const isSelected = layer.id === selectedId;
+                const index = banner.layers.findIndex((item) => item.id === layer.id);
+                return (
+                  <Row
+                    key={layer.id}
+                    fillWidth
+                    vertical="center"
+                    gap="4"
+                    paddingX="8"
+                    paddingY="4"
+                    radius="m"
+                    border={isSelected ? "brand-strong" : "neutral-weak"}
+                    background={isSelected ? "surface" : "neutral-alpha-weak"}
+                  >
+                    <Row
+                      as="button"
+                      {...NATIVE_BUTTON}
+                      flex="1"
+                      minWidth={0}
+                      vertical="center"
+                      gap="8"
+                      paddingY="4"
+                      style={{
+                        background: "transparent",
+                        border: 0,
+                        color: "inherit",
+                        font: "inherit",
+                        textAlign: "left",
+                        cursor: "pointer",
+                        opacity: layer.visible ? 1 : 0.5,
+                      }}
+                      onClick={() => setSelectedId(layer.id)}
+                    >
+                      <Icon name={LAYER_ICON[layer.type]} size="xs" onBackground="neutral-weak" />
+                      <Text variant="body-default-s" style={{ overflowWrap: "anywhere" }}>
+                        {layerName(layer)}
+                      </Text>
+                    </Row>
+                    <IconButton
+                      icon={layer.visible ? "eye" : "eyeoff"}
+                      variant="ghost"
+                      size="s"
+                      tooltip={layer.visible ? t("banners.editor.hide") : t("banners.editor.show")}
+                      onClick={() => updateLayer(layer.id, { visible: !layer.visible })}
+                    />
+                    {isSelected ? (
+                      <>
+                        <IconButton
+                          icon="chevronUp"
+                          variant="ghost"
+                          size="s"
+                          tooltip={t("banners.editor.forward")}
+                          disabled={index === banner.layers.length - 1}
+                          onClick={() => reorder(layer.id, 1)}
+                        />
+                        <IconButton
+                          icon="chevronDown"
+                          variant="ghost"
+                          size="s"
+                          tooltip={t("banners.editor.backward")}
+                          disabled={index === 0}
+                          onClick={() => reorder(layer.id, -1)}
+                        />
+                        <IconButton
+                          icon="copy"
+                          variant="ghost"
+                          size="s"
+                          tooltip={t("builder.shared.duplicate")}
+                          disabled={banner.layers.length >= BANNER_LIMITS.layers}
+                          onClick={() => duplicate(layer)}
+                        />
+                        <ConfirmIconButton
+                          variant="immediate"
+                          tooltip={t("banners.editor.delete")}
+                          onConfirm={() => remove(layer.id)}
+                        />
+                      </>
+                    ) : null}
+                  </Row>
+                );
+              })}
+
+              <Row
+                as="button"
+                {...NATIVE_BUTTON}
+                fillWidth
+                vertical="center"
+                gap="8"
+                paddingX="12"
+                paddingY="8"
+                radius="m"
+                border={selected === null ? "brand-strong" : "neutral-weak"}
+                background={selected === null ? "surface" : "neutral-alpha-weak"}
+                style={{ color: "inherit", font: "inherit", textAlign: "left", cursor: "pointer" }}
+                onClick={() => setSelectedId(null)}
+              >
+                <Icon name="image" size="xs" onBackground="neutral-weak" />
+                <Text variant="body-default-s">{t("banners.editor.background")}</Text>
+              </Row>
+            </Column>
+          </Column>
+
+          <Column
+            fillWidth
+            gap="12"
+            padding="16"
+            radius="m"
+            border="neutral-medium"
+            background="surface"
+          >
+            <Text variant="label-strong-m">
+              {selected ? layerName(selected) : t("banners.editor.background")}
+            </Text>
+            {selected ? (
+              <LayerForm
+                key={selected.id}
+                layer={selected}
+                onChange={(patch) => updateLayer(selected.id, patch)}
+              />
+            ) : (
+              <BackgroundForm
+                background={banner.background}
+                onChange={(background) => update({ background })}
+              />
+            )}
+          </Column>
+        </PreviewPane>
+      }
+    >
+      <Column fillWidth gap="16">
+        <Row fillWidth gap="12" wrap vertical="start">
+          <Column flex="2" minWidth={16} style={{ flexBasis: 240 }}>
+            <Input
+              id="banner-name"
+              label={t("banners.editor.name")}
+              value={banner.name}
+              maxLength={BANNER_LIMITS.name}
+              onChange={(e) => update({ name: e.target.value })}
             />
-          ) : (
-            <BackgroundForm
-              background={banner.background}
-              onChange={(background) => update({ background })}
+          </Column>
+          <Column flex="1" minWidth={16} style={{ flexBasis: 200 }}>
+            <LabelSelect
+              id="banner-timezone"
+              label={t("banners.editor.timezone")}
+              options={timezoneOptions}
+              selectedValue={banner.timezone}
+              setSelectedValue={(timezone) => update({ timezone: String(timezone) })}
+              searchable
             />
-          )}
-        </Column>
-      </Grid>
-    </Column>
+          </Column>
+        </Row>
+
+        {picker.input}
+        <BannerCanvas
+          guildId={guildId}
+          banner={banner}
+          stats={stats}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          onChangeLayer={(id, patch) => updateLayer(id, patch)}
+          onDropFiles={(files) => void addPictures(files)}
+        />
+        <Text variant="body-default-xs" onBackground="neutral-weak">
+          {t("banners.editor.canvasHint")}
+        </Text>
+      </Column>
+    </Workspace>
   );
 }

@@ -4,6 +4,7 @@ import { Scene } from "@nmmty/adapter-react";
 import { Column } from "@once-ui-system/core";
 import { useDeferredValue, useMemo } from "react";
 import "./cardFonts.css";
+import type { CardBackgroundSpec } from "./cardBackground";
 import { levelUpCard, LEVEL_UP_CARD_SIZE } from "./levelUpCard";
 import { PROFILE_CARD_SIZE, profileCard } from "./profileCard";
 import { RANK_CARD_SIZE, rankCard } from "./rankCard";
@@ -34,6 +35,8 @@ export interface CardPreviewProps {
   bio?: string | null;
   icons?: ProfileIcon[];
   iconsPadding?: number;
+  /** The picture behind the card (it replaces the coloured blobs). */
+  background?: CardBackgroundSpec | null;
   /** Level the level-up card announces; defaults to one above the current level. */
   levelUpTo?: number;
   maxWidth?: number;
@@ -54,6 +57,7 @@ export function CardPreview({
   icons = [],
   iconsPadding = 10,
   levelUpTo,
+  background = null,
   maxWidth,
 }: CardPreviewProps) {
   const size = CARD_SIZES[kind];
@@ -73,26 +77,34 @@ export function CardPreview({
   const { bg_color, first_component, second_component, third_component } = colors;
   const { day, hour, minute, second } = units;
   const iconsKey = JSON.stringify(icons);
+  const backgroundSrc = background?.src ?? null;
+  const backgroundDim = background?.dim ?? 0;
 
   const tree = useMemo(() => {
     const palette = { bg_color, first_component, second_component, third_component };
     const who = { avatar, username, globalName };
     const numbers = { level, xp, voice_time };
     const timeUnits = { day, hour, minute, second };
+    const picture = backgroundSrc ? { src: backgroundSrc, dim: backgroundDim } : null;
     switch (kind) {
       case "rank":
-        return rankCard(who, numbers, palette, timeUnits, MIC_SRC);
+        return rankCard(who, numbers, palette, timeUnits, MIC_SRC, picture);
       case "profile":
         return profileCard(
           who,
           numbers,
           palette,
-          { bio, icons: JSON.parse(iconsKey) as ProfileIcon[], iconsPadding },
+          {
+            bio,
+            icons: JSON.parse(iconsKey) as ProfileIcon[],
+            iconsPadding,
+            background: picture,
+          },
           timeUnits,
           MIC_SRC,
         );
       case "level_up":
-        return levelUpCard(avatar, levelUpTo ?? level + 1, palette);
+        return levelUpCard(avatar, levelUpTo ?? level + 1, palette, picture);
     }
   }, [
     kind,
@@ -114,6 +126,8 @@ export function CardPreview({
     iconsKey,
     iconsPadding,
     levelUpTo,
+    backgroundSrc,
+    backgroundDim,
   ]);
 
   return (

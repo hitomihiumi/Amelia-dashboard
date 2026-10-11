@@ -72,7 +72,13 @@ export const banners = {
     },
   },
   editor: {
-    title: "Editing: {name}",
+    panel: "Elements and properties",
+    chooseTemplate:
+      "A server has one banner. Start from a template and change it however you like.",
+    replace: "Another template",
+    replaceHint: "Replaces the current banner with a fresh one:",
+    remove: "Delete the banner",
+    title: "Banner editor",
     description:
       "Click an element on the banner to select it, drag it to move it and drag the squares to resize it.",
     sampleNote:
@@ -160,7 +166,17 @@ export const banners = {
   images: {
     addUpload: "Upload pictures",
     upload: "Upload a picture",
-    hint: "PNG, JPEG, WebP or GIF, up to {max} MB (bigger ones are scaled down). Up to {count} pictures per server.",
+    hint: {
+      background:
+        "PNG, JPEG, WebP or GIF, up to {max} MB. The background is cut to the size of the banner (960×540): what hangs over is cropped around the centre. Up to {count} pictures per server.",
+      layer:
+        "PNG, JPEG, WebP or GIF, up to {max} MB. The picture is scaled down to fit the banner, never cropped. Up to {count} pictures per server.",
+    },
+    drop: {
+      background: "Drop a background here or click to choose one",
+      layer: "Drop a picture here or click to choose one",
+    },
+    full: "The server already has the most pictures it can keep. Delete one first.",
     missing: "The picture of this element is no longer in the library.",
     empty: "No pictures uploaded yet.",
     delete: "Delete the picture",

@@ -13,13 +13,7 @@ import type { MessageKey } from "@/i18n/messages";
 import { BANNER_INTERVALS } from "@/lib/banners/normalize";
 import { BANNER_TEMPLATES, type BannerTemplateId, createBanner } from "@/lib/banners/templates";
 import type { BannerContext } from "@/lib/banners/server";
-import { generateID } from "@/lib/db/generateID";
-import {
-  BANNER_LIMITS,
-  type BannerSettings,
-  type BannerStatus,
-  type ServerBanner,
-} from "@/lib/db/types";
+import type { BannerSettings, BannerStatus, ServerBanner } from "@/lib/db/types";
 import type { GuildActionState } from "@/types/dashboard";
 import {
   Button,
@@ -28,13 +22,11 @@ import {
   Feedback,
   Flex,
   Grid,
-  IconButton,
   Option,
   RevealFx,
   Row,
   SegmentedControl,
   Switch,
-  Tag,
   Text,
   useToast,
 } from "@once-ui-system/core";
@@ -72,7 +64,8 @@ export function BannersForm({ guildId, defaultSettings, context }: BannersFormPr
       enabled: defaultSettings.enabled,
       interval: defaultSettings.interval,
       activity_window: defaultSettings.activity_window,
-      active: defaultSettings.active,
+      // The one banner is always the one on the server.
+      active: defaultSettings.items[0]?.id ?? null,
       items: defaultSettings.items,
     }),
     // The draft is only seeded from the server once; later saves update the baseline.
@@ -82,7 +75,6 @@ export function BannersForm({ guildId, defaultSettings, context }: BannersFormPr
 
   const [draft, setDraft] = useState<Draft>(initial);
   const [baseline, setBaseline] = useState<Draft>(initial);
-  const [editingId, setEditingId] = useState<string | null>(initial.items[0]?.id ?? null);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -138,45 +130,23 @@ export function BannersForm({ guildId, defaultSettings, context }: BannersFormPr
     goal: t("banners.templates.labels.goal"),
   };
 
-  const addBanner = (template: BannerTemplateId) => {
+  /** A server keeps one banner: a template replaces whatever is there. */
+  const applyTemplate = (template: BannerTemplateId) => {
     setTemplateOpen(false);
-    if (draft.items.length >= BANNER_LIMITS.items) return;
     const banner = createBanner(
       template,
       t(`banners.templates.names.${template}` as MessageKey),
       labels,
     );
-    update({
-      items: [...draft.items, banner],
-      active: draft.active ?? banner.id,
-    });
-    setEditingId(banner.id);
+    update({ items: [banner], active: banner.id });
   };
 
-  const duplicateBanner = (banner: ServerBanner) => {
-    if (draft.items.length >= BANNER_LIMITS.items) return;
-    const copy: ServerBanner = {
-      ...JSON.parse(JSON.stringify(banner)),
-      id: generateID(),
-      name: t("banners.list.copyName", { name: banner.name }).slice(0, BANNER_LIMITS.name),
-    };
-    // Layers need ids of their own, or the copy would share them with the original.
-    copy.layers = copy.layers.map((layer) => ({ ...layer, id: generateID() }));
-    const index = draft.items.findIndex((item) => item.id === banner.id);
-    update({ items: [...draft.items.slice(0, index + 1), copy, ...draft.items.slice(index + 1)] });
-    setEditingId(copy.id);
-  };
+  /** Without a banner there is nothing to keep up to date, so the module goes off with it. */
+  const removeBanner = () => update({ items: [], active: null, enabled: false });
 
-  const removeBanner = (id: string) => {
-    const items = draft.items.filter((item) => item.id !== id);
-    update({ items, active: draft.active === id ? (items[0]?.id ?? null) : draft.active });
-    if (editingId === id) setEditingId(items[0]?.id ?? null);
-  };
+  const changeBanner = (next: ServerBanner) => update({ items: [next], active: next.id });
 
-  const changeBanner = (next: ServerBanner) =>
-    update({ items: draft.items.map((item) => (item.id === next.id ? next : item)) });
-
-  const editing = draft.items.find((item) => item.id === editingId) ?? null;
+  const banner = draft.items[0] ?? null;
 
   // ---------- delivery ----------
   const intervalOptions = useMemo(() => {
@@ -328,147 +298,106 @@ export function BannersForm({ guildId, defaultSettings, context }: BannersFormPr
         </Section>
 
         <Section
-          title={t("banners.list.title")}
-          description={t("banners.list.description")}
+          title={t("banners.editor.title")}
+          description={
+            banner ? t("banners.editor.description") : t("banners.editor.chooseTemplate")
+          }
           num={3}
-          icon="boxes"
+          icon="palette"
           span="full"
         >
-          <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
-            <Text variant="label-default-s">
-              {t("banners.list.count", { count: draft.items.length, max: BANNER_LIMITS.items })}
-            </Text>
-            <DropdownWrapper
-              open={templateOpen}
-              onOpenChange={setTemplateOpen}
-              placement="bottom-end"
-              trigger={
-                <Button prefixIcon="plus" disabled={draft.items.length >= BANNER_LIMITS.items}>
-                  {t("banners.list.add")}
-                </Button>
-              }
-              dropdown={
-                <Column gap="2" padding="4" minWidth={18}>
-                  <Text
-                    variant="body-default-xs"
-                    onBackground="neutral-weak"
-                    paddingX="8"
-                    paddingY="4"
-                  >
-                    {t("banners.list.templateHint")}
-                  </Text>
-                  {BANNER_TEMPLATES.map((template) => (
-                    <Option
-                      key={template}
-                      value={template}
-                      label={t(`banners.templates.names.${template}` as MessageKey)}
-                      description={t(`banners.templates.descriptions.${template}` as MessageKey)}
-                      onClick={() => addBanner(template)}
-                    />
-                  ))}
-                </Column>
-              }
-            />
-          </Row>
-
-          {draft.items.length === 0 ? (
-            <Feedback variant="info" description={t("banners.list.empty")} />
-          ) : (
+          {banner === null ? (
             <Grid
               fillWidth
               gap="12"
-              style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))" }}
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))" }}
             >
-              {draft.items.map((banner) => {
-                const isActive = draft.active === banner.id;
-                const isEditing = editingId === banner.id;
-                return (
-                  <Column
-                    key={banner.id}
-                    minWidth={0}
-                    gap="8"
-                    padding="12"
-                    radius="m"
-                    border={isEditing ? "brand-strong" : "neutral-medium"}
-                    background={isEditing ? "surface" : "neutral-alpha-weak"}
-                  >
-                    <Row
-                      as="button"
-                      {...NATIVE_BUTTON}
-                      fillWidth
-                      vertical="center"
-                      gap="8"
-                      style={{
-                        background: "transparent",
-                        border: 0,
-                        color: "inherit",
-                        font: "inherit",
-                        textAlign: "left",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => setEditingId(banner.id)}
-                    >
-                      <Text variant="body-strong-s" style={{ overflowWrap: "anywhere", flex: 1 }}>
-                        {banner.name}
-                      </Text>
-                      {isActive ? (
-                        <Tag size="s" background="success-alpha-weak" onBackground="success-strong">
-                          {t("banners.list.active")}
-                        </Tag>
-                      ) : null}
-                    </Row>
-                    <Text variant="body-default-xs" onBackground="neutral-weak">
-                      {t("banners.list.layers", { count: banner.layers.length })}
-                    </Text>
-                    <Row fillWidth gap="4" vertical="center">
-                      <Button
-                        size="s"
-                        variant={isActive ? "tertiary" : "secondary"}
-                        disabled={isActive}
-                        onClick={() => update({ active: banner.id })}
-                      >
-                        {isActive ? t("banners.list.inUse") : t("banners.list.use")}
-                      </Button>
-                      <Flex flex="1" />
-                      <IconButton
-                        icon="copy"
-                        variant="ghost"
-                        size="s"
-                        tooltip={t("builder.shared.duplicate")}
-                        disabled={draft.items.length >= BANNER_LIMITS.items}
-                        onClick={() => duplicateBanner(banner)}
-                      />
-                      <ConfirmIconButton
-                        variant="confirm"
-                        tooltip={t("banners.list.delete")}
-                        onConfirm={() => removeBanner(banner.id)}
-                      />
-                    </Row>
-                  </Column>
-                );
-              })}
+              {BANNER_TEMPLATES.map((template) => (
+                <Column
+                  key={template}
+                  as="button"
+                  {...NATIVE_BUTTON}
+                  gap="4"
+                  padding="16"
+                  radius="m"
+                  border="neutral-medium"
+                  background="neutral-alpha-weak"
+                  onClick={() => applyTemplate(template)}
+                  style={{
+                    color: "inherit",
+                    font: "inherit",
+                    textAlign: "left",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Text variant="body-strong-s">
+                    {t(`banners.templates.names.${template}` as MessageKey)}
+                  </Text>
+                  <Text variant="body-default-s" onBackground="neutral-weak">
+                    {t(`banners.templates.descriptions.${template}` as MessageKey)}
+                  </Text>
+                </Column>
+              ))}
             </Grid>
+          ) : (
+            <>
+              <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
+                <Feedback
+                  variant="info"
+                  description={t("banners.editor.sampleNote")}
+                  style={{ flex: "1 1 320px" }}
+                />
+                <Row gap="8" vertical="center">
+                  <DropdownWrapper
+                    open={templateOpen}
+                    onOpenChange={setTemplateOpen}
+                    placement="bottom-end"
+                    trigger={
+                      <Button variant="secondary" prefixIcon="redo">
+                        {t("banners.editor.replace")}
+                      </Button>
+                    }
+                    dropdown={
+                      <Column gap="2" padding="4" minWidth={18}>
+                        <Text
+                          variant="body-default-xs"
+                          onBackground="neutral-weak"
+                          paddingX="8"
+                          paddingY="4"
+                        >
+                          {t("banners.editor.replaceHint")}
+                        </Text>
+                        {BANNER_TEMPLATES.map((template) => (
+                          <Option
+                            key={template}
+                            value={template}
+                            label={t(`banners.templates.names.${template}` as MessageKey)}
+                            description={t(
+                              `banners.templates.descriptions.${template}` as MessageKey,
+                            )}
+                            onClick={() => applyTemplate(template)}
+                          />
+                        ))}
+                      </Column>
+                    }
+                  />
+                  <ConfirmIconButton
+                    variant="confirm"
+                    tooltip={t("banners.editor.remove")}
+                    onConfirm={removeBanner}
+                  />
+                </Row>
+              </Row>
+              <BannerEditor
+                key={banner.id}
+                guildId={guildId}
+                banner={banner}
+                stats={context.stats}
+                onChange={changeBanner}
+              />
+            </>
           )}
         </Section>
-
-        {editing ? (
-          <Section
-            title={t("banners.editor.title", { name: editing.name })}
-            description={t("banners.editor.description")}
-            num={4}
-            icon="palette"
-            span="full"
-          >
-            <Feedback variant="info" description={t("banners.editor.sampleNote")} />
-            <BannerEditor
-              key={editing.id}
-              guildId={guildId}
-              banner={editing}
-              stats={context.stats}
-              onChange={changeBanner}
-            />
-          </Section>
-        ) : null}
       </SectionGrid>
     </BannerImagesProvider>
   );

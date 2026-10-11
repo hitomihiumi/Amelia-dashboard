@@ -306,6 +306,7 @@ export function LayerForm({ layer, onChange }: LayerFormProps) {
           <Text variant="label-strong-s">{t("banners.layer.image.title")}</Text>
           <ImageSourceField
             id={id("src")}
+            purpose="layer"
             label={t("banners.layer.image.link")}
             value={layer.src}
             onChange={(src) => onChange({ src })}

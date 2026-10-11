@@ -5,8 +5,9 @@ import { prisma } from "@/lib/db/db";
 import { verifyUserIsGuildAdministrator } from "@/lib/discord/guilds-api";
 import { getServerSession } from "next-auth/next";
 import { NextResponse } from "next/server";
-import sharp from "sharp";
-import { BANNER_IMAGE_LIMITS, type BannerImageInfo } from "./images";
+import { processImage } from "@/lib/images/process";
+import { BANNER_HEIGHT, BANNER_WIDTH } from "@/lib/db/types";
+import { BANNER_IMAGE_LIMITS, type BannerImageInfo, type BannerImagePurpose } from "./images";
 
 /** Turns the caller away unless they administer the server. Returns null when they may go on. */
 export async function requireGuildAdminResponse(guildId: string): Promise<NextResponse | null> {
@@ -24,14 +25,28 @@ export async function requireGuildAdminResponse(guildId: string): Promise<NextRe
   return null;
 }
 
-const SELECT = { id: true, name: true, size: true, width: true, height: true } as const;
+const SELECT = {
+  id: true,
+  name: true,
+  size: true,
+  width: true,
+  height: true,
+  purpose: true,
+} as const;
 
-export async function listBannerImages(guildId: string): Promise<BannerImageInfo[]> {
-  return prisma.bannerImage.findMany({
-    where: { guildId },
+export async function listBannerImages(
+  guildId: string,
+  purpose?: BannerImagePurpose,
+): Promise<BannerImageInfo[]> {
+  const rows = await prisma.bannerImage.findMany({
+    where: { guildId, ...(purpose ? { purpose } : {}) },
     select: SELECT,
     orderBy: { createdAt: "desc" },
   });
+  return rows.map((row) => ({
+    ...row,
+    purpose: row.purpose === "background" ? "background" : "layer",
+  }));
 }
 
 export type StoreResult =
@@ -39,41 +54,26 @@ export type StoreResult =
   | { ok: false; error: "tooBig" | "tooMany" | "notAPicture" };
 
 /**
- * Checks and stores an uploaded picture. It is decoded and written again as WebP no larger than
- * `maxSide` pixels, so only real pictures are kept (a file that merely claims to be one is
- * refused) and nothing but pixels survives: no scripts, no metadata.
+ * Checks and stores an uploaded picture, made to fit the banner: a background is cut to exactly
+ * the size of the banner (the part that hangs over is cropped around the centre), a picture
+ * element is scaled down to fit inside the banner.
  */
 export async function storeBannerImage(
   guildId: string,
   fileName: string,
   bytes: Buffer,
+  purpose: BannerImagePurpose,
 ): Promise<StoreResult> {
-  if (bytes.byteLength > BANNER_IMAGE_LIMITS.maxBytes) return { ok: false, error: "tooBig" };
-
   if ((await prisma.bannerImage.count({ where: { guildId } })) >= BANNER_IMAGE_LIMITS.maxCount) {
     return { ok: false, error: "tooMany" };
   }
 
-  let output: { data: Buffer; info: sharp.OutputInfo };
-  try {
-    const source = sharp(bytes, { limitInputPixels: 50_000_000 });
-    const meta = await source.metadata();
-    if (!meta.format || !["png", "jpeg", "webp", "gif"].includes(meta.format)) {
-      return { ok: false, error: "notAPicture" };
-    }
-    output = await source
-      .rotate()
-      .resize({
-        width: BANNER_IMAGE_LIMITS.maxSide,
-        height: BANNER_IMAGE_LIMITS.maxSide,
-        fit: "inside",
-        withoutEnlargement: true,
-      })
-      .webp({ quality: 90 })
-      .toBuffer({ resolveWithObject: true });
-  } catch {
-    return { ok: false, error: "notAPicture" };
-  }
+  const picture = await processImage(bytes, {
+    kind: purpose === "background" ? "cover" : "inside",
+    width: BANNER_WIDTH,
+    height: BANNER_HEIGHT,
+  });
+  if (!picture.ok) return picture;
 
   // The row belongs to the server, which exists in the database as soon as the bot has seen it.
   await prisma.guild.upsert({ where: { id: guildId }, update: {}, create: { id: guildId } });
@@ -87,12 +87,13 @@ export async function storeBannerImage(
           .trim()
           .slice(0, 100) || "image",
       mime: "image/webp",
-      size: output.info.size,
-      width: output.info.width,
-      height: output.info.height,
-      data: new Uint8Array(output.data),
+      size: picture.size,
+      width: picture.width,
+      height: picture.height,
+      purpose,
+      data: new Uint8Array(picture.data),
     },
     select: SELECT,
   });
-  return { ok: true, image };
+  return { ok: true, image: { ...image, purpose } };
 }

@@ -16,12 +16,20 @@ import {
   isHexColor,
 } from "@/lib/profile/appearance";
 import type { CardColors, CardKind } from "@/components/profile/cards/types";
+import { type CardBackground, cardBackgroundId, clampDim } from "@/lib/profile/cardBackground";
+import { pruneCardBackgrounds } from "@/lib/profile/cardBackgroundStore";
 
 /** One card of one server, as it is sent from the editor. */
 export type CardPatch =
-  | { kind: "rank"; solid: CardColors }
-  | { kind: "level_up"; solid: CardColors }
-  | { kind: "profile"; solid: CardColors; bio: string; iconsPadding: number };
+  | { kind: "rank"; solid: CardColors; background: CardBackground }
+  | { kind: "level_up"; solid: CardColors; background: CardBackground }
+  | {
+      kind: "profile";
+      solid: CardColors;
+      background: CardBackground;
+      bio: string;
+      iconsPadding: number;
+    };
 
 export type SaveAppearanceResult = { ok: true; servers: number } | { ok: false; error: string };
 
@@ -66,8 +74,17 @@ export async function saveAppearance(
     // Validate every patch and turn it into the columns it changes.
     const data: {
       rankSolid?: Prisma.InputJsonObject;
+      rankUrl?: string | null;
+      rankMode?: boolean;
+      rankDim?: number;
       levelupSolid?: Prisma.InputJsonObject;
+      levelupUrl?: string | null;
+      levelupMode?: boolean;
+      levelupDim?: number;
       profileSolid?: Prisma.InputJsonObject;
+      profileUrl?: string | null;
+      profileMode?: boolean;
+      profileDim?: number;
       profileBio?: string;
       profileIconsPadding?: number;
     } = {};
@@ -84,9 +101,38 @@ export async function saveAppearance(
       // The colours are plain JSON in the database.
       const json: Prisma.InputJsonObject = { ...solid };
 
-      if (patch.kind === "rank") data.rankSolid = json;
-      else if (patch.kind === "level_up") data.levelupSolid = json;
-      else {
+      // The picture must be one of the member's own for this very card.
+      const image = patch.background?.image ?? null;
+      if (image !== null) {
+        const id = cardBackgroundId(image);
+        const owned = id
+          ? await prisma.cardBackground.findFirst({
+              where: { id, userId, kind: patch.kind },
+              select: { id: true },
+            })
+          : null;
+        if (!owned) return { ok: false, error: t("profile.errors.invalidBackground") };
+      }
+      const background = {
+        url: image,
+        mode: image !== null,
+        dim: clampDim(patch.background?.dim),
+      };
+
+      if (patch.kind === "rank") {
+        data.rankSolid = json;
+        data.rankUrl = background.url;
+        data.rankMode = background.mode;
+        data.rankDim = background.dim;
+      } else if (patch.kind === "level_up") {
+        data.levelupSolid = json;
+        data.levelupUrl = background.url;
+        data.levelupMode = background.mode;
+        data.levelupDim = background.dim;
+      } else {
+        data.profileUrl = background.url;
+        data.profileMode = background.mode;
+        data.profileDim = background.dim;
         if (typeof patch.bio !== "string" || patch.bio.length > BIO_MAX_LENGTH) {
           return { ok: false, error: t("profile.errors.bioTooLong", { max: BIO_MAX_LENGTH }) };
         }
@@ -128,6 +174,9 @@ export async function saveAppearance(
         }),
       ),
     );
+
+    // Pictures that no card uses any more are not kept.
+    for (const kind of seen) await pruneCardBackgrounds(userId, kind);
 
     revalidatePath("/profile");
     revalidatePath("/profile/appearance");

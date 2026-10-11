@@ -8,14 +8,20 @@ export const BANNER_IMAGE_LIMITS = {
   maxBytes: 4_200_000,
   /** Pictures kept per server. */
   maxCount: 20,
-  /** The longer side the picture is scaled down to when it is stored. */
-  maxSide: 2048,
   /** Accepted types, checked again on the server by the content of the file. */
   accept: "image/png,image/jpeg,image/webp,image/gif",
 } as const;
 
+/**
+ * What a banner picture is made to fit when it is uploaded: a background is cut to exactly the
+ * size of the banner, a picture element is only scaled down to fit inside it.
+ */
+export type BannerImagePurpose = "background" | "layer";
+export const BANNER_IMAGE_PURPOSES: readonly BannerImagePurpose[] = ["background", "layer"];
+
 export interface BannerImageInfo {
   id: string;
+  purpose: BannerImagePurpose;
   name: string;
   size: number;
   width: number;

@@ -5,6 +5,7 @@ import {
   Column,
   Dialog,
   Flex,
+  Media,
   Row,
   SegmentedControl,
   Slider,
@@ -12,9 +13,11 @@ import {
   Textarea,
   useToast,
 } from "@once-ui-system/core";
+import { MediaUpload } from "@once-ui-system/core/media";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { saveAppearance, type CardPatch } from "@/app/(main)/profile/actions";
 import { ColorInput } from "@/components/dashboard/ColorInput";
+import { shrinkForUpload } from "@/components/images/compress";
 import { Section } from "@/components/dashboard/Section";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { SelectReact } from "@/components/user/SelectReact";
@@ -27,6 +30,7 @@ import type {
 } from "@/components/profile/cards/types";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { useT } from "@/i18n/client";
+import type { MessageKey } from "@/i18n/messages";
 import {
   type Appearance,
   BIO_MAX_LENGTH,
@@ -38,6 +42,13 @@ import {
   defaultColors,
   sameCard,
 } from "@/lib/profile/appearance";
+import {
+  CARD_BACKGROUND_ACCEPT,
+  CARD_BACKGROUND_MAX_BYTES,
+  CARD_BACKGROUND_SIZES,
+  DEFAULT_CARD_BACKGROUND,
+  cardBackgroundUrl,
+} from "@/lib/profile/cardBackground";
 import styles from "./Appearance.module.scss";
 
 export interface EditorGuild {
@@ -65,16 +76,18 @@ function toPatch(kind: CardKind, a: Appearance): CardPatch {
     return {
       kind,
       solid: a.profile.solid,
+      background: a.profile.background,
       bio: a.profile.bio,
       iconsPadding: a.profile.iconsPadding,
     };
   }
-  return { kind, solid: a[kind].solid };
+  return { kind, solid: a[kind].solid, background: a[kind].background };
 }
 
 /** Copies one card from `from` over the same card of `to`. */
 function withCard(to: Appearance, kind: CardKind, from: Appearance): Appearance {
   const next = cloneAppearance(to);
+  next[kind].background = { ...from[kind].background };
   if (kind === "profile") {
     next.profile.solid = { ...from.profile.solid };
     next.profile.bio = from.profile.bio;
@@ -145,9 +158,47 @@ export function AppearanceEditor({
     });
   };
 
+  const background = draft[kind].background;
+  const [uploading, setUploading] = useState(false);
+
+  /** Sends the picture; the server cuts it to the size of the card and hands back its id. */
+  const uploadBackground = async (file: File) => {
+    const target = kind;
+    setUploading(true);
+    try {
+      const body = await shrinkForUpload(file, CARD_BACKGROUND_MAX_BYTES);
+      if (!body) {
+        addToast({ variant: "danger", message: t("profile.appearance.background.tooBig") });
+        return;
+      }
+      const form = new FormData();
+      form.set("file", body, file.name);
+      form.set("kind", target);
+      const res = await fetch("/api/profile/card-background", { method: "POST", body: form });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        const code =
+          json?.error === "tooBig" || json?.error === "notAPicture" ? json.error : "failed";
+        addToast({
+          variant: "danger",
+          message: t(`profile.appearance.background.${code}` as MessageKey),
+        });
+        return;
+      }
+      update((next) => {
+        next[target].background.image = json.image as string;
+      });
+    } catch {
+      addToast({ variant: "danger", message: t("profile.appearance.background.failed") });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const reset = () => {
     const defaults = defaultAppearance();
     update((next) => {
+      next[kind].background = { ...DEFAULT_CARD_BACKGROUND };
       if (kind === "profile") {
         next.profile.solid = defaults.profile.solid;
         next.profile.bio = defaults.profile.bio;
@@ -306,10 +357,88 @@ export function AppearanceEditor({
             </Column>
           </Section>
 
+          <Section
+            num={2}
+            icon="image"
+            title={t("profile.appearance.background.title")}
+            description={t("profile.appearance.background.description", {
+              size: `${CARD_BACKGROUND_SIZES[kind].width}×${CARD_BACKGROUND_SIZES[kind].height}`,
+            })}
+          >
+            <Column gap="12" fillWidth>
+              {background.image ? (
+                // The picture as the card will draw it. Not optimised by Next: the route needs the
+                // session cookie, which the optimiser does not send.
+                <Media
+                  src={cardBackgroundUrl(background.image) as string}
+                  alt={t("profile.appearance.background.title")}
+                  aspectRatio={`${CARD_BACKGROUND_SIZES[kind].width} / ${CARD_BACKGROUND_SIZES[kind].height}`}
+                  radius="m"
+                  border="neutral-medium"
+                  unoptimized
+                  style={{ maxWidth: kind === "profile" ? 320 : undefined }}
+                />
+              ) : null}
+              <MediaUpload
+                key={`${guild.id}-${kind}-${background.image ?? "none"}`}
+                compress={false}
+                aspectRatio={
+                  background.image
+                    ? "16 / 3"
+                    : `${CARD_BACKGROUND_SIZES[kind].width} / ${CARD_BACKGROUND_SIZES[kind].height}`
+                }
+                accept={CARD_BACKGROUND_ACCEPT}
+                radius="m"
+                loading={uploading}
+                emptyState={t(
+                  background.image
+                    ? "profile.appearance.background.replace"
+                    : "profile.appearance.background.drop",
+                )}
+                onFileUpload={uploadBackground}
+                style={{ maxWidth: kind === "profile" ? 320 : undefined }}
+              />
+              <Text variant="body-default-xs" onBackground="neutral-weak">
+                {t("profile.appearance.background.hint")}
+              </Text>
+              {background.image ? (
+                <>
+                  <Slider
+                    id={`appearance-${kind}-dim`}
+                    label={t("profile.appearance.background.dim")}
+                    min={0}
+                    max={100}
+                    step={1}
+                    showValue
+                    value={background.dim}
+                    onChange={(value) =>
+                      update((next) => {
+                        next[kind].background.dim = Math.round(value);
+                      })
+                    }
+                  />
+                  <Flex>
+                    <Button
+                      variant="secondary"
+                      prefixIcon="trash"
+                      onClick={() =>
+                        update((next) => {
+                          next[kind].background.image = null;
+                        })
+                      }
+                    >
+                      {t("profile.appearance.background.remove")}
+                    </Button>
+                  </Flex>
+                </>
+              ) : null}
+            </Column>
+          </Section>
+
           {kind === "profile" && (
             <>
               <Section
-                num={2}
+                num={3}
                 icon="text"
                 title={t("profile.appearance.bio.title")}
                 description={t("profile.appearance.bio.description")}
@@ -338,7 +467,7 @@ export function AppearanceEditor({
               </Section>
 
               <Section
-                num={3}
+                num={4}
                 icon="boxes"
                 title={t("profile.appearance.icons.title")}
                 description={t("profile.appearance.icons.description")}
@@ -405,6 +534,11 @@ export function AppearanceEditor({
               icons={draft.profile.icons}
               iconsPadding={draft.profile.iconsPadding}
               levelUpTo={guild.stats.level + 1}
+              background={
+                cardBackgroundUrl(background.image)
+                  ? { src: cardBackgroundUrl(background.image) as string, dim: background.dim }
+                  : null
+              }
             />
           </Column>
         </Column>

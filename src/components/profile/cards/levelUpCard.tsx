@@ -1,5 +1,6 @@
 import { Filters } from "@nmmty/lazycanvas";
 import { Group, Image, Morph, Path2D, Polygon, Text } from "@nmmty/adapter-react";
+import { cardBackgroundLayers, type CardBackgroundSpec } from "./cardBackground";
 import { CARD_MONO_FONT, type CardColors } from "./types";
 
 export const LEVEL_UP_CARD_SIZE = { width: 400, height: 120 } as const;
@@ -20,7 +21,12 @@ const ARROW =
  * The level-up announcement, laid out exactly like `LevelCard` of the bot
  * (src/helpers/canvas/LevelCard.tsx).
  */
-export function levelUpCard(avatar: string, level: number, colors: CardColors) {
+export function levelUpCard(
+  avatar: string,
+  level: number,
+  colors: CardColors,
+  background?: CardBackgroundSpec | null,
+) {
   const hexagon = (value: number) => (
     <Group layout={{ width: 80, height: 80, alignItems: "center", justifyContent: "center" }}>
       <Polygon
@@ -53,28 +59,32 @@ export function levelUpCard(avatar: string, level: number, colors: CardColors) {
       size={{ width: 400, height: 120, radius: { all: 25 } }}
       color={colors.bg_color}
     >
-      <Group layout={{ position: "absolute", width: "100%", height: "100%" }}>
-        <Path2D
-          path2D={BLOB_1}
-          color={colors.first_component}
-          transform={{ translate: { x: 0, y: 25 } }}
-          filter={Filters.blur(100)}
-          globalComposite="source-atop"
-        />
-        <Path2D
-          path2D={BLOB_2}
-          color={colors.second_component}
-          transform={{ translate: { x: 0, y: 35 } }}
-          filter={Filters.blur(50)}
-          globalComposite="source-atop"
-        />
-        <Path2D
-          path2D={BLOB_3}
-          color={colors.third_component}
-          transform={{ translate: { x: 30, y: 50 } }}
-          filter={Filters.blur(80)}
-        />
-      </Group>
+      {background ? (
+        cardBackgroundLayers(background, 400, 120, 25)
+      ) : (
+        <Group layout={{ position: "absolute", width: "100%", height: "100%" }}>
+          <Path2D
+            path2D={BLOB_1}
+            color={colors.first_component}
+            transform={{ translate: { x: 0, y: 25 } }}
+            filter={Filters.blur(100)}
+            globalComposite="source-atop"
+          />
+          <Path2D
+            path2D={BLOB_2}
+            color={colors.second_component}
+            transform={{ translate: { x: 0, y: 35 } }}
+            filter={Filters.blur(50)}
+            globalComposite="source-atop"
+          />
+          <Path2D
+            path2D={BLOB_3}
+            color={colors.third_component}
+            transform={{ translate: { x: 30, y: 50 } }}
+            filter={Filters.blur(80)}
+          />
+        </Group>
+      )}
 
       <Group
         layout={{

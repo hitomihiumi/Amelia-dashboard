@@ -7,6 +7,7 @@ import type { MessageKey } from "@/i18n/messages";
 import {
   BANNER_IMAGE_LIMITS,
   type BannerImageInfo,
+  type BannerImagePurpose,
   uploadId,
   uploadRef,
   uploadUrl,
@@ -24,7 +25,8 @@ import {
   Text,
   useToast,
 } from "@once-ui-system/core";
-import Compressor from "compressorjs";
+import { MediaUpload } from "@once-ui-system/core/media";
+import { shrinkForUpload } from "@/components/images/compress";
 import {
   type ReactNode,
   createContext,
@@ -44,7 +46,7 @@ interface BannerImagesValue {
   /** A picture is being sent or the list is being loaded. */
   busy: boolean;
   ensureLoaded: () => void;
-  upload: (file: File) => Promise<BannerImageInfo | null>;
+  upload: (file: File, purpose: BannerImagePurpose) => Promise<BannerImageInfo | null>;
   remove: (id: string) => Promise<void>;
 }
 
@@ -57,21 +59,6 @@ export function useBannerImages(): BannerImagesValue {
   const value = useContext(BannerImagesContext);
   if (!value) throw new Error("useBannerImages must be used inside <BannerImagesProvider>");
   return value;
-}
-
-/** Scales a big picture down in the browser, so it fits what the host accepts. */
-function compress(file: File): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    new Compressor(file, {
-      quality: 0.85,
-      maxWidth: BANNER_IMAGE_LIMITS.maxSide,
-      maxHeight: BANNER_IMAGE_LIMITS.maxSide,
-      // A big PNG would stay big; as a JPEG it fits.
-      convertSize: 1_000_000,
-      success: resolve,
-      error: reject,
-    });
-  });
 }
 
 export function BannerImagesProvider({
@@ -119,24 +106,22 @@ export function BannerImagesProvider({
   }, [guildId, fail]);
 
   const upload = useCallback(
-    async (file: File): Promise<BannerImageInfo | null> => {
+    async (file: File, purpose: BannerImagePurpose): Promise<BannerImageInfo | null> => {
       if (!file.type.startsWith("image/")) {
         fail("notAPicture");
         return null;
       }
       setBusy(true);
       try {
-        let body: Blob = file;
-        if (file.size > BANNER_IMAGE_LIMITS.maxBytes) {
-          body = await compress(file).catch(() => file);
-        }
-        if (body.size > BANNER_IMAGE_LIMITS.maxBytes) {
+        const body = await shrinkForUpload(file, BANNER_IMAGE_LIMITS.maxBytes);
+        if (!body) {
           fail("tooBig");
           return null;
         }
 
         const form = new FormData();
         form.set("file", body, file.name);
+        form.set("purpose", purpose);
         const res = await fetch(`/api/dashboard/${guildId}/banner-images`, {
           method: "POST",
           body: form,
@@ -280,49 +265,55 @@ function Thumbnail({
   );
 }
 
-/** The pictures of the server: choose one, upload another, delete what is not used. */
-function ImageLibrary({ value, onChange }: { value: string; onChange: (next: string) => void }) {
+/**
+ * The pictures of the server for one purpose: drop or choose a file to add one, click a picture
+ * to use it, delete what no banner uses.
+ */
+function ImageLibrary({
+  value,
+  onChange,
+  purpose,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  purpose: BannerImagePurpose;
+}) {
   const t = useT();
-  const { guildId, images, busy, ensureLoaded, upload, remove } = useBannerImages();
-  const picker = useFilePicker(async (files) => {
-    const image = await upload(files[0]);
-    if (image) onChange(uploadRef(image.id));
-  });
+  const { guildId, images: all, busy, ensureLoaded, upload, remove } = useBannerImages();
 
   useEffect(() => ensureLoaded(), [ensureLoaded]);
 
+  const images = all === null ? null : all.filter((image) => image.purpose === purpose);
   const selected = uploadId(value);
   const missing =
     selected !== null && images !== null && !images.some((image) => image.id === selected);
+  const full = (all?.length ?? 0) >= BANNER_IMAGE_LIMITS.maxCount;
 
   return (
     <Column fillWidth gap="8">
-      {picker.input}
-      <Row fillWidth vertical="center" gap="12" wrap>
-        <Button
-          variant="secondary"
-          prefixIcon="plus"
-          onClick={picker.open}
-          loading={busy}
-          disabled={busy || (images?.length ?? 0) >= BANNER_IMAGE_LIMITS.maxCount}
-        >
-          {t("banners.images.upload")}
-        </Button>
-        <Text variant="body-default-xs" onBackground="neutral-weak" style={{ flex: "1 1 160px" }}>
-          {t("banners.images.hint", {
-            max: Math.round(BANNER_IMAGE_LIMITS.maxBytes / 1_000_000),
-            count: BANNER_IMAGE_LIMITS.maxCount,
-          })}
-        </Text>
-      </Row>
+      {/* Compressing is left to the upload itself: the component would stretch the picture. */}
+      <MediaUpload
+        compress={false}
+        aspectRatio="16 / 9"
+        radius="m"
+        accept={BANNER_IMAGE_LIMITS.accept}
+        loading={busy}
+        emptyState={t(full ? "banners.images.full" : `banners.images.drop.${purpose}`)}
+        onFileUpload={async (file) => {
+          if (full) return;
+          const image = await upload(file, purpose);
+          if (image) onChange(uploadRef(image.id));
+        }}
+        style={{ maxHeight: 160 }}
+      />
+      <Text variant="body-default-xs" onBackground="neutral-weak" paddingX="4">
+        {t(`banners.images.hint.${purpose}`, {
+          max: Math.round(BANNER_IMAGE_LIMITS.maxBytes / 1_000_000),
+          count: BANNER_IMAGE_LIMITS.maxCount,
+        })}
+      </Text>
 
       {missing ? <Feedback variant="warning" description={t("banners.images.missing")} /> : null}
-
-      {images !== null && images.length === 0 ? (
-        <Text variant="body-default-s" onBackground="neutral-weak">
-          {t("banners.images.empty")}
-        </Text>
-      ) : null}
 
       {images !== null && images.length > 0 ? (
         <Grid
@@ -352,10 +343,12 @@ export interface ImageSourceFieldProps {
   /** A link, a placeholder, or `upload:<id>`. */
   value: string;
   onChange: (next: string) => void;
+  /** A background is cut to the size of the banner, a picture element is only scaled down. */
+  purpose: BannerImagePurpose;
 }
 
 /** Where a picture comes from: a link typed in, or one uploaded to the server's library. */
-export function ImageSourceField({ id, label, value, onChange }: ImageSourceFieldProps) {
+export function ImageSourceField({ id, label, value, onChange, purpose }: ImageSourceFieldProps) {
   const t = useT();
   const [mode, setMode] = useState<"link" | "upload">(uploadId(value) ? "upload" : "link");
 
@@ -384,7 +377,7 @@ export function ImageSourceField({ id, label, value, onChange }: ImageSourceFiel
           onChange={onChange}
         />
       ) : (
-        <ImageLibrary value={value} onChange={onChange} />
+        <ImageLibrary value={value} onChange={onChange} purpose={purpose} />
       )}
     </Column>
   );
