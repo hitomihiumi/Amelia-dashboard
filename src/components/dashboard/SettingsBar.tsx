@@ -61,6 +61,8 @@ const NAV: NavGroup[] = [
     label: "settings.nav.utils",
     items: [
       { path: "/private", icon: "navPrivate", label: "settings.nav.privateRooms" },
+      { path: "/games", icon: "navGames", label: "settings.nav.games" },
+      { path: "/banners", icon: "navBanners", label: "settings.nav.banners" },
       { path: "/ai", icon: "navAi", label: "settings.nav.ai" },
     ],
   },

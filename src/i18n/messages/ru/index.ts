@@ -14,5 +14,8 @@ import { send } from "./send";
 import { ai } from "./ai";
 import { adminAi } from "./adminAi";
 import { profile } from "./profile";
+import { games } from "./games";
+import { levelAnnounce } from "./levelAnnounce";
+import { banners } from "./banners";
 
-export const ru = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, adminLogs, adminServers, layouts, send, ai, adminAi, profile, };
+export const ru = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, adminLogs, adminServers, layouts, send, ai, adminAi, profile, levelAnnounce, games, banners, };

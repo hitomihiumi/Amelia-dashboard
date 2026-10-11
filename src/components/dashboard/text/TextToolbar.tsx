@@ -4,6 +4,7 @@ import { EmojiPickerDropdown } from "@/components/dashboard/discord/EmojiPickerD
 import { useT } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/messages/types";
 import { emojiToText } from "@/lib/discord/emojis-api";
+import type { PlaceholderSet } from "@/lib/discord/placeholders";
 import {
   cycleHeading,
   insertLink,
@@ -135,6 +136,8 @@ export interface TextToolbarProps {
   placeholders?: boolean | "url";
   /** Offer the scenario placeholders. Off for messages that are posted outside a scenario. */
   scenario?: boolean;
+  /** Which placeholders to offer. */
+  placeholderSet?: PlaceholderSet;
   emoji?: boolean | "unicode";
   guildId?: string;
   /** Extra controls on the right, e.g. "remove this text". */
@@ -147,6 +150,7 @@ export function TextToolbar({
   format = "markdown",
   placeholders = true,
   scenario = true,
+  placeholderSet = "default",
   emoji = true,
   guildId,
   actions,
@@ -170,7 +174,12 @@ export function TextToolbar({
       {format === "markdown" ? <FormatButtons apply={apply} /> : null}
       {format === "markdown" && hasInsert ? <Separator /> : null}
       {placeholders ? (
-        <PlaceholderMenu apply={apply} scenario={scenario} urlOnly={placeholders === "url"} />
+        <PlaceholderMenu
+          apply={apply}
+          scenario={scenario}
+          set={placeholderSet}
+          urlOnly={placeholders === "url"}
+        />
       ) : null}
       {emoji ? <EmojiMenu apply={apply} guildId={guildId} unicodeOnly={emoji === "unicode"} /> : null}
       {actions ? (

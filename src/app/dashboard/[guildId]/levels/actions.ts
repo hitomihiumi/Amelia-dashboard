@@ -6,8 +6,10 @@ import { Guild } from "@/lib/db/Guild";
 import { revalidatePath } from "next/cache";
 import { requireGuildAdmin } from "@/app/dashboard/[guildId]/actions";
 import { GuildActionState } from "@/types/dashboard";
+import type { MessageKey } from "@/i18n/messages";
 import { GuildSchema } from "@/lib/db/types";
 import { getT } from "@/i18n/server";
+import { levelMessageProblem, normalizeLevelMessage } from "@/lib/levels/message";
 
 export async function updateLevelsSettings(
   guildId: string,
@@ -52,8 +54,23 @@ export async function updateLevelsSettings(
     ) {
       return { ok: false, error: t("settings.levels.errors.deleteDelay") };
     }
-    if (levels.message.channel !== null && typeof levels.message.channel !== "string") {
+    if (
+      levels.message.channel !== null &&
+      (typeof levels.message.channel !== "string" || !/^\d{17,20}$/.test(levels.message.channel))
+    ) {
       return { ok: false, error: t("settings.levels.errors.invalidChannel") };
+    }
+
+    // Only the known keys are kept, so nothing else a client sends reaches the database.
+    levels.message = {
+      enabled: levels.message.enabled === true,
+      channel: levels.message.channel,
+      delete: Math.round(levels.message.delete),
+      content: normalizeLevelMessage(levels.message.content),
+    };
+    const problem = levelMessageProblem(levels.message.content);
+    if (problem) {
+      return { ok: false, error: t(`levelAnnounce.errors.${problem}` as MessageKey) };
     }
 
     if (levels.level_roles && typeof levels.level_roles === "object") {

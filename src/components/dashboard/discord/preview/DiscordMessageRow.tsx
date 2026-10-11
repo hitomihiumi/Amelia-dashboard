@@ -10,6 +10,8 @@ import type {
   SelectMenuCustom,
 } from "@/lib/db/types";
 import { cn } from "@/lib/utils";
+import { Row } from "@once-ui-system/core";
+import type { ReactNode } from "react";
 import { DiscordButton } from "./DiscordButton";
 import { DiscordEmbed } from "./DiscordEmbed";
 import { DiscordLayout } from "./DiscordLayout";
@@ -28,6 +30,10 @@ export interface DiscordMessageRowProps {
   layout?: LayoutCustom | null;
   /** The buttons and select menus the layout points at. */
   layoutLibrary?: LayoutLibrary;
+  /** A file attached to the message, shown under its content (for example a rendered card). */
+  attachment?: ReactNode;
+  /** Shown as the picture of the first embed when that embed has none. */
+  embedImage?: ReactNode;
   buttonSize?: "sm" | "md";
   /** Highlight on hover, matching Discord's own message-row hover affordance. */
   hoverable?: boolean;
@@ -45,6 +51,8 @@ export function DiscordMessageRow({
   selectMenus = [],
   layout,
   layoutLibrary,
+  attachment,
+  embedImage,
   buttonSize = "md",
   hoverable = false,
   showEmptyHint = false,
@@ -54,7 +62,7 @@ export function DiscordMessageRow({
   const text = (content ?? "").trim();
   const visibleEmbeds = embeds.slice(0, 10);
   const hasComponents = buttons.length > 0 || selectMenus.length > 0;
-  const isEmpty = !text && visibleEmbeds.length === 0 && !hasComponents;
+  const isEmpty = !text && visibleEmbeds.length === 0 && !hasComponents && !attachment;
 
   if (layout) {
     return (
@@ -79,9 +87,15 @@ export function DiscordMessageRow({
       {visibleEmbeds.length > 0 ? (
         <div className="mt-[4px] space-y-2">
           {visibleEmbeds.map((embed, i) => (
-            <DiscordEmbed key={i} embed={embed} />
+            <DiscordEmbed key={i} embed={embed} imageSlot={i === 0 ? embedImage : undefined} />
           ))}
         </div>
+      ) : null}
+
+      {attachment ? (
+        <Row marginTop="4" overflow="hidden" radius="m" style={{ maxWidth: 400 }}>
+          {attachment}
+        </Row>
       ) : null}
 
       {hasComponents ? (

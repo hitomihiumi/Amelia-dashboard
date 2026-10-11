@@ -31,6 +31,7 @@ import { DashIcon } from "@/components/dashboard/DashIcon";
 import { Section } from "@/components/dashboard/Section";
 import { SectionGrid } from "@/components/layout/SectionGrid";
 import { useT } from "@/i18n/client";
+import { LevelAnnouncement } from "./LevelAnnouncement";
 
 /** Form fields sharing a row while each keeps ~220px; `fill` keeps a lone field from stretching. */
 function Fields({ children, fill = false }: { children: React.ReactNode; fill?: boolean }) {
@@ -293,6 +294,7 @@ export function LevelsForm({
         description={t("settings.levels.announcementsDescription")}
         num={3}
         icon="send"
+        span="full"
         switcher={
           <Switch
             checked={levels.message.enabled}
@@ -305,31 +307,13 @@ export function LevelsForm({
           />
         }
       >
-        <Fields>
-          <ChannelSelect
-            label={t("settings.levels.announcementChannel")}
-            id="level-up-channel"
-            options={channelOptions}
-            selectedChannel={levels.message.channel || ""}
-            setSelectedChannel={(val) =>
-              setLevels((p) => ({
-                ...p,
-                message: { ...p.message, channel: (val as string) || null },
-              }))
-            }
-          />
-          <NumberInput
-            id="msg-delete-delay"
-            label={t("settings.levels.deleteDelay")}
-            value={levels.message.delete}
-            onChange={(value) =>
-              setLevels((p) => ({
-                ...p,
-                message: { ...p.message, delete: Number(value) },
-              }))
-            }
-          />
-        </Fields>
+        <LevelAnnouncement
+          guildId={guildId}
+          value={levels.message}
+          onChange={(message) => setLevels((p) => ({ ...p, message }))}
+          channelOptions={channelOptions}
+          rewardRoleId={Object.values(levels.level_roles)[0]}
+        />
       </Section>
 
       <Section

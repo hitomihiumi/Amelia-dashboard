@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import React from "react";
 import { getT } from "@/i18n/server";
+import { normalizeLevelMessage } from "@/lib/levels/message";
 
 export default async function LevelsSettingsPage({
   params,
@@ -41,7 +42,12 @@ export default async function LevelsSettingsPage({
   const guild = new Guild(guildId);
 
   // Загружаем данные согласно схеме [cite: 1, 4]
-  const levels = await guild.get("utils.levels");
+  const stored = await guild.get("utils.levels");
+  // Servers saved before the announcement editor have `{}` or only some of its keys.
+  const levels = {
+    ...stored,
+    message: { ...stored.message, content: normalizeLevelMessage(stored.message?.content) },
+  };
   const levelUpEconomy = await guild.get("economy.income.level_up");
 
   return (

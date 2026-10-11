@@ -29,6 +29,10 @@ export interface PreviewMessage {
   layout?: LayoutCustom | null;
   /** The stored buttons and select menus the layout references. */
   layoutLibrary?: LayoutLibrary;
+  /** A file attached to the message, shown under its content (for example a rendered card). */
+  attachment?: ReactNode;
+  /** Shown as the picture of the first embed when that embed has none. */
+  embedImage?: ReactNode;
   /** If set, renders a Discord modal overlay on top of the channel frame instead of a message. */
   modal?: ModalCustom | null;
   /** If true, renders as a private DM card instead of the guild channel. */
@@ -127,6 +131,8 @@ export function DiscordPreview({ message }: DiscordPreviewProps) {
         selectMenus={message.selectMenus}
         layout={message.layout}
         layoutLibrary={message.layoutLibrary}
+        attachment={message.attachment}
+        embedImage={message.embedImage}
         hoverable
         showEmptyHint
         className="bg-discord-bg-primary"

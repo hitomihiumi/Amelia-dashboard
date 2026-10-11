@@ -74,6 +74,15 @@ import {
   IoSpeedometerOutline,
   IoWarningOutline,
   IoServerOutline,
+  IoGameController,
+  IoGameControllerOutline,
+  IoImage,
+  IoImageOutline,
+  IoRefresh,
+  IoSquare,
+  IoEllipse,
+  IoBarChartOutline,
+  IoPersonCircleOutline,
 } from "react-icons/io5";
 
 import { FaDiscord, FaGithub, FaHashtag } from "react-icons/fa";
@@ -164,6 +173,15 @@ export const iconLibrary = {
   navSiteSettings: IoSettingsOutline,
   navAdminPanel: IoShieldHalfOutline,
   navHome: IoHomeOutline,
+  navGames: IoGameControllerOutline,
+  navBanners: IoImageOutline,
+  gamepad: IoGameController,
+  image: IoImage,
+  refresh: IoRefresh,
+  square: IoSquare,
+  ellipse: IoEllipse,
+  progress: IoBarChartOutline,
+  avatar: IoPersonCircleOutline,
 } satisfies Record<string, IconType>;
 
 declare module "@once-ui-system/core" {
@@ -252,6 +270,15 @@ declare module "@once-ui-system/core" {
     navSiteSettings: true;
     navAdminPanel: true;
     navHome: true;
+    navGames: true;
+    navBanners: true;
+    gamepad: true;
+    image: true;
+    refresh: true;
+    square: true;
+    ellipse: true;
+    progress: true;
+    avatar: true;
   }
 }
 
