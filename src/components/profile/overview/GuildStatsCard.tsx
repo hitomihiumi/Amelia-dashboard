@@ -31,6 +31,7 @@ export function GuildStatsCard({
       border="neutral-alpha-medium"
       background="surface"
       minWidth={0}
+      fill
     >
       <Row gap="12" vertical="center" horizontal="between" style={{ minWidth: 0 }}>
         <Row gap="12" vertical="center" style={{ minWidth: 0 }}>

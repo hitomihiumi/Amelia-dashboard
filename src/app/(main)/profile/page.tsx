@@ -1,4 +1,4 @@
-import { Card, Column, Feedback, Grid, Icon, Row, Text } from "@once-ui-system/core";
+import { Card, Column, Feedback, Grid, Icon, RevealFx, Row, Text } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { GuildStatsCard } from "@/components/profile/overview/GuildStatsCard";
@@ -43,68 +43,83 @@ export default async function ProfileOverviewPage() {
 
   return (
     <>
-      <ProfileHeader
-        name={user.username || user.name || "User"}
-        description={t("profile.overview.description")}
-        avatar={user.image ? `${user.image}?size=256` : undefined}
-        frame={user.avatarDecoration ? `${user.avatarDecoration}?size=96` : null}
-      />
+      <RevealFx delay={300} translateY={-0.5}>
+        <ProfileHeader
+          name={user.username || user.name || "User"}
+          description={t("profile.overview.description")}
+          avatar={user.image ? `${user.image}?size=256` : undefined}
+          frame={user.avatarDecoration ? `${user.avatarDecoration}?size=96` : null}
+        />
+      </RevealFx>
 
-      <Card
-        href="/profile/appearance"
-        fillWidth
-        radius="l"
-        padding="16"
-        border="neutral-alpha-medium"
-        background="surface"
-        className={styles.linkCard}
-      >
-        <Row fillWidth gap="16" vertical="center">
-          <Row
-            center
-            radius="m"
-            background="brand-alpha-weak"
-            border="brand-alpha-medium"
-            style={{ width: 48, height: 48, flexShrink: 0 }}
-          >
-            <Icon name="palette" size="m" onBackground="brand-strong" />
+      <RevealFx delay={600} translateY={-0.5}>
+        <Card
+          href="/profile/appearance"
+          fillWidth
+          radius="l"
+          padding="16"
+          border="neutral-alpha-medium"
+          background="surface"
+          className={styles.linkCard}
+        >
+          <Row fillWidth gap="16" vertical="center">
+            <Row
+              center
+              radius="m"
+              background="brand-alpha-weak"
+              border="brand-alpha-medium"
+              style={{ width: 48, height: 48, flexShrink: 0 }}
+            >
+              <Icon name="palette" size="m" onBackground="brand-strong" />
+            </Row>
+            <Column gap="4" flex={1} minWidth={0}>
+              <Text variant="heading-strong-s">{t("profile.overview.appearanceLink.title")}</Text>
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                {t("profile.overview.appearanceLink.description")}
+              </Text>
+            </Column>
+            <Icon name="chevronRight" size="s" onBackground="neutral-weak" />
           </Row>
-          <Column gap="4" flex={1} minWidth={0}>
-            <Text variant="heading-strong-s">{t("profile.overview.appearanceLink.title")}</Text>
-            <Text variant="body-default-s" onBackground="neutral-weak">
-              {t("profile.overview.appearanceLink.description")}
-            </Text>
-          </Column>
-          <Icon name="chevronRight" size="s" onBackground="neutral-weak" />
-        </Row>
-      </Card>
+        </Card>
+      </RevealFx>
 
       {loadError === "session" && (
-        <Feedback
-          variant="danger"
-          title={t("settings.shared.sessionExpiredTitle")}
-          description={t("settings.shared.sessionExpiredText")}
-        />
+        <RevealFx delay={900} translateY={-0.5}>
+          <Feedback
+            variant="danger"
+            title={t("settings.shared.sessionExpiredTitle")}
+            description={t("settings.shared.sessionExpiredText")}
+          />
+        </RevealFx>
       )}
       {(loadError === "rateLimit" || loadError === "generic") && (
-        <Feedback
-          variant="danger"
-          title={t("profile.overview.errors.title")}
-          description={t(
-            loadError === "rateLimit"
-              ? "profile.overview.errors.rateLimit"
-              : "profile.overview.errors.generic",
-          )}
-        />
+        <RevealFx delay={900} translateY={-0.5}>
+          <Feedback
+            variant="danger"
+            title={t("profile.overview.errors.title")}
+            description={t(
+              loadError === "rateLimit"
+                ? "profile.overview.errors.rateLimit"
+                : "profile.overview.errors.generic",
+            )}
+          />
+        </RevealFx>
       )}
 
       {!loadError && (
         <>
           <Column gap="16" fillWidth>
-            <Text variant="label-default-s" onBackground="neutral-weak" className={styles.eyebrow}>
-              {t("profile.overview.total")}
-            </Text>
+            <RevealFx delay={900} translateY={-0.5}>
+              <Text
+                variant="label-default-s"
+                onBackground="neutral-weak"
+                className={styles.eyebrow}
+              >
+                {t("profile.overview.total")}
+              </Text>
+            </RevealFx>
             <StatTiles
+              start={4}
               items={[
                 {
                   icon: "navServers",
@@ -137,23 +152,32 @@ export default async function ProfileOverviewPage() {
           </Column>
 
           <Column gap="16" fillWidth>
-            <Text variant="label-default-s" onBackground="neutral-weak" className={styles.eyebrow}>
-              {t("profile.overview.byServer")}
-            </Text>
-            {guilds.length === 0 ? (
-              <Column
-                gap="8"
-                padding="32"
-                radius="l"
-                border="neutral-alpha-medium"
-                background="surface"
-                horizontal="center"
+            <RevealFx delay={1200} translateY={-0.5}>
+              <Text
+                variant="label-default-s"
+                onBackground="neutral-weak"
+                className={styles.eyebrow}
               >
-                <Text variant="body-strong-m">{t("profile.overview.servers.empty")}</Text>
-                <Text variant="body-default-s" onBackground="neutral-weak" align="center">
-                  {t("profile.overview.servers.emptyHint")}
-                </Text>
-              </Column>
+                {t("profile.overview.byServer")}
+              </Text>
+            </RevealFx>
+            {guilds.length === 0 ? (
+              <RevealFx delay={1500} translateY={-0.5} fill>
+                <Column
+                  gap="8"
+                  padding="32"
+                  radius="l"
+                  border="neutral-alpha-medium"
+                  background="surface"
+                  horizontal="center"
+                  fill
+                >
+                  <Text variant="body-strong-m">{t("profile.overview.servers.empty")}</Text>
+                  <Text variant="body-default-s" onBackground="neutral-weak" align="center">
+                    {t("profile.overview.servers.emptyHint")}
+                  </Text>
+                </Column>
+              </RevealFx>
             ) : (
               <Grid
                 fillWidth
@@ -161,13 +185,14 @@ export default async function ProfileOverviewPage() {
                 style={{ gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 420px), 1fr))" }}
               >
                 {guilds.map((guild) => (
-                  <GuildStatsCard
+                  <RevealFx
+                    delay={1500 + guilds.indexOf(guild) * 100}
+                    translateY={-0.5}
                     key={guild.id}
-                    guild={guild}
-                    t={t}
-                    format={format}
-                    units={units}
-                  />
+                    fill
+                  >
+                    <GuildStatsCard guild={guild} t={t} format={format} units={units} />
+                  </RevealFx>
                 ))}
               </Grid>
             )}

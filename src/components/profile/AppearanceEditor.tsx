@@ -6,6 +6,7 @@ import {
   Dialog,
   Flex,
   Media,
+  RevealFx,
   Row,
   SegmentedControl,
   Slider,
@@ -306,38 +307,47 @@ export function AppearanceEditor({
         }
       />
 
-      <Row gap="16" vertical="end" wrap fillWidth>
-        <Column style={{ flex: "1 1 260px", maxWidth: 420, minWidth: 0 }} gap="4">
-          <SelectReact
-            id="appearance-server"
-            label={t("profile.appearance.server")}
-            value={guild.id}
-            options={guilds.map((g) => ({
-              value: g.id,
-              label: dirtyByGuild[g.id] ? `${g.name} •` : g.name,
-            }))}
-            onSelect={(value) => setGuildId(String(value))}
-          />
+      <RevealFx fillWidth delay={300} translateY={-0.5}>
+        <Column gap="4" fillWidth>
+          <Flex
+            gap="16"
+            horizontal="start"
+            fill
+            vertical="center"
+            s={{ direction: "column-reverse" }}
+          >
+            <SelectReact
+              id="appearance-server"
+              label={t("profile.appearance.server")}
+              value={guild.id}
+              options={guilds.map((g) => ({
+                value: g.id,
+                label: dirtyByGuild[g.id] ? `${g.name} •` : g.name,
+              }))}
+              onSelect={(value) => setGuildId(String(value))}
+              style={{ maxWidth: "420px" }}
+            />
+            <SegmentedControl
+              fillWidth={false}
+              aria-label={t("profile.appearance.cardLabel")}
+              value={kind}
+              onChange={(value) => setKind(value as CardKind)}
+              buttons={CARD_KINDS.map((k) => ({
+                value: k,
+                label: t(`profile.appearance.cards.${k}`),
+              }))}
+            />
+          </Flex>
           <Text variant="body-default-xs" onBackground="neutral-weak">
             {t("profile.appearance.serverHint")}
           </Text>
         </Column>
-        <SegmentedControl
-          fillWidth={false}
-          aria-label={t("profile.appearance.cardLabel")}
-          value={kind}
-          onChange={(value) => setKind(value as CardKind)}
-          buttons={CARD_KINDS.map((k) => ({
-            value: k,
-            label: t(`profile.appearance.cards.${k}`),
-          }))}
-        />
-      </Row>
+      </RevealFx>
 
       <div className={styles.layout}>
         <Column gap="24" minWidth={0}>
           <Section
-            num={1}
+            num={2}
             icon="palette"
             title={t("profile.appearance.colors.title")}
             description={`${t("profile.appearance.colors.description")} ${t(
@@ -358,7 +368,7 @@ export function AppearanceEditor({
           </Section>
 
           <Section
-            num={2}
+            num={3}
             icon="image"
             title={t("profile.appearance.background.title")}
             description={t("profile.appearance.background.description", {
@@ -438,7 +448,7 @@ export function AppearanceEditor({
           {kind === "profile" && (
             <>
               <Section
-                num={3}
+                num={4}
                 icon="text"
                 title={t("profile.appearance.bio.title")}
                 description={t("profile.appearance.bio.description")}
@@ -467,7 +477,7 @@ export function AppearanceEditor({
               </Section>
 
               <Section
-                num={4}
+                num={5}
                 icon="boxes"
                 title={t("profile.appearance.icons.title")}
                 description={t("profile.appearance.icons.description")}
@@ -505,20 +515,12 @@ export function AppearanceEditor({
           </Flex>
         </Column>
 
-        <Column
-          gap="16"
-          padding="24"
-          radius="l"
-          border="neutral-medium"
-          background="surface"
+        <Section
+          num={1}
+          title={t("profile.appearance.preview.title")}
+          description={t("profile.appearance.preview.description")}
           className={styles.preview}
         >
-          <Column gap="4">
-            <Text variant="body-strong-l">{t("profile.appearance.preview.title")}</Text>
-            <Text variant="body-default-s" onBackground="neutral-medium">
-              {t("profile.appearance.preview.description")}
-            </Text>
-          </Column>
           <Column padding="16" radius="m" horizontal="center" className={styles.stage}>
             <CardPreview
               kind={kind}
@@ -541,7 +543,7 @@ export function AppearanceEditor({
               }
             />
           </Column>
-        </Column>
+        </Section>
       </div>
 
       <Dialog
