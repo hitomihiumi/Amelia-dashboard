@@ -1,6 +1,7 @@
 import { Group, Image, Morph, Text } from "@nmmty/adapter-react";
 import { Filters, Gradient } from "@nmmty/lazycanvas";
 import type { ReactElement } from "react";
+import { uploadId, uploadUrl } from "@/lib/banners/images";
 import { fillBannerText, metricValue } from "@/lib/banners/placeholders";
 import {
   BANNER_HEIGHT,
@@ -19,10 +20,15 @@ import {
 
 type Node = ReactElement;
 
-/** Pictures of other sites go through the proxy of the site, so the canvas can read them. */
-export function bannerImageSrc(link: string): string {
+/**
+ * Where the canvas loads a picture from. An upload comes from the image route of the dashboard,
+ * pictures of other sites go through the proxy of the site, so the canvas can read them.
+ */
+export function bannerImageSrc(link: string, guildId: string): string {
   const trimmed = link.trim();
   if (!trimmed) return "";
+  const upload = uploadId(trimmed);
+  if (upload) return uploadUrl(guildId, upload);
   try {
     const url = new URL(trimmed);
     if (url.hostname === "cdn.discordapp.com" || url.hostname === "media.discordapp.net")
@@ -71,6 +77,7 @@ function backgroundNodes(
   background: BannerBackground,
   stats: BannerStats,
   timezone: string,
+  guildId: string,
 ): Node[] {
   if (background.type === "gradient") {
     const line = gradientLine(background.angle);
@@ -82,7 +89,7 @@ function backgroundNodes(
   }
 
   if (background.type === "image") {
-    const src = bannerImageSrc(fillBannerText(background.src, stats, timezone));
+    const src = bannerImageSrc(fillBannerText(background.src, stats, timezone), guildId);
     const nodes: Node[] = [
       <Morph key="bg" layout={full} size={fullSize} color={background.color} />,
     ];
@@ -121,7 +128,12 @@ function backgroundNodes(
   return [<Morph key="bg" layout={full} size={fullSize} color={background.color} />];
 }
 
-function layerNodes(layer: BannerLayer, stats: BannerStats, timezone: string): Node[] {
+function layerNodes(
+  layer: BannerLayer,
+  stats: BannerStats,
+  timezone: string,
+  guildId: string,
+): Node[] {
   const opacity = layer.opacity / 100;
   const k = layer.id;
 
@@ -191,7 +203,7 @@ function layerNodes(layer: BannerLayer, stats: BannerStats, timezone: string): N
             ? (stats.top?.avatar ?? "")
             : stats.guild_icon
           : fillBannerText(layer.src, stats, timezone);
-      const src = bannerImageSrc(link);
+      const src = bannerImageSrc(link, guildId);
       const size = {
         width: Math.round(layer.width),
         height: Math.round(layer.height),
@@ -266,10 +278,10 @@ function layerNodes(layer: BannerLayer, stats: BannerStats, timezone: string): N
 }
 
 /** The whole banner as a LazyCanvas layer tree. */
-export function bannerScene(banner: ServerBanner, stats: BannerStats): Node {
-  const nodes: Node[] = backgroundNodes(banner.background, stats, banner.timezone);
+export function bannerScene(banner: ServerBanner, stats: BannerStats, guildId: string): Node {
+  const nodes: Node[] = backgroundNodes(banner.background, stats, banner.timezone, guildId);
   for (const layer of banner.layers) {
-    if (layer.visible) nodes.push(...layerNodes(layer, stats, banner.timezone));
+    if (layer.visible) nodes.push(...layerNodes(layer, stats, banner.timezone, guildId));
   }
 
   return (

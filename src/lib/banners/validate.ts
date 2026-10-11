@@ -1,5 +1,6 @@
 import { isLinkOrPlaceholder } from "@/lib/levels/message";
 import { BANNER_LIMITS } from "@/lib/db/types";
+import { uploadId } from "./images";
 
 export interface BannerProblem {
   key: string;

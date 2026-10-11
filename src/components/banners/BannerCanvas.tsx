@@ -56,12 +56,15 @@ function snap(value: number, targets: number[]): { value: number; hit: number | 
 }
 
 export interface BannerCanvasProps {
+  guildId: string;
   banner: ServerBanner;
   stats: BannerStats;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   /** A layer was moved or resized. */
   onChangeLayer: (id: string, patch: Partial<Rect>) => void;
+  /** Files dropped onto the canvas (pictures to add as elements). */
+  onDropFiles?: (files: File[]) => void;
 }
 
 /**
@@ -70,17 +73,19 @@ export interface BannerCanvasProps {
  * nudge it (Shift for bigger steps). Layers stick to the edges and the centre of the banner.
  */
 export function BannerCanvas({
+  guildId,
   banner,
   stats,
   selectedId,
   onSelect,
   onChangeLayer,
+  onDropFiles,
 }: BannerCanvasProps) {
   // Dragging changes the banner on every pointer event and each change is a redraw of the whole
   // canvas; the deferred copy is drawn for the position the pointer stopped on, while the
   // overlay (cheap) follows the pointer at once.
   const drawn = useDeferredValue(banner);
-  const tree = useMemo(() => bannerScene(drawn, stats), [drawn, stats]);
+  const tree = useMemo(() => bannerScene(drawn, stats, guildId), [drawn, stats, guildId]);
 
   const frameRef = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
@@ -224,6 +229,17 @@ export function BannerCanvas({
       role="application"
       aria-label={banner.name}
       onKeyDown={onKeyDown}
+      onDragOver={(event) => {
+        if (onDropFiles && event.dataTransfer.types.includes("Files")) event.preventDefault();
+      }}
+      onDrop={(event) => {
+        const files = [...event.dataTransfer.files].filter((file) =>
+          file.type.startsWith("image/"),
+        );
+        if (!onDropFiles || files.length === 0) return;
+        event.preventDefault();
+        onDropFiles(files);
+      }}
       style={{
         aspectRatio: `${BANNER_WIDTH} / ${BANNER_HEIGHT}`,
         outline: "none",

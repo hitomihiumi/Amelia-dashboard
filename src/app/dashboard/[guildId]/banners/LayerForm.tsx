@@ -1,6 +1,6 @@
 "use client";
 
-import { MediaUrlField } from "@/app/dashboard/[guildId]/components/layouts/MediaUrlField";
+import { ImageSourceField } from "@/components/banners/BannerImages";
 import { ColorInput } from "@/components/dashboard/ColorInput";
 import { LabelSelect } from "@/components/dashboard/discord/LabelSelect";
 import { TextTools } from "@/components/dashboard/text/TextTools";
@@ -304,11 +304,10 @@ export function LayerForm({ layer, onChange }: LayerFormProps) {
       {layer.type === "image" ? (
         <Column fillWidth gap="8">
           <Text variant="label-strong-s">{t("banners.layer.image.title")}</Text>
-          <MediaUrlField
+          <ImageSourceField
             id={id("src")}
             label={t("banners.layer.image.link")}
             value={layer.src}
-            placeholderSet="banner"
             onChange={(src) => onChange({ src })}
           />
           <Row fillWidth gap="8" vertical="end">

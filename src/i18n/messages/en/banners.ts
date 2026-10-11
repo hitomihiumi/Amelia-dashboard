@@ -4,15 +4,18 @@ export const banners = {
     "Design a banner with live statistics of your server. The bot draws it and sets it as the server banner on a schedule.",
   enable: {
     title: "Enable module",
-    description: "Keep the banner of the server up to date. The server needs boost level 2 and the bot the Manage Server permission.",
+    description:
+      "Keep the banner of the server up to date. The server needs boost level 2 and the bot the Manage Server permission.",
   },
   delivery: {
     title: "Updates",
     description: "How often the bot draws the banner again and which banner it puts on the server.",
     interval: "Update every",
-    intervalHint: "Discord limits how often a banner can change, so it is never updated more often than every 10 minutes.",
+    intervalHint:
+      "Discord limits how often a banner can change, so it is never updated more often than every 10 minutes.",
     window: "Most active member over the last",
-    windowHint: "Who wrote the most messages in this time. Shown by the {top.name} and {top.avatar} placeholders.",
+    windowHint:
+      "Who wrote the most messages in this time. Shown by the {top.name} and {top.avatar} placeholders.",
     hours: "{count, plural, one {# hour} other {# hours}}",
     minutes: "{count, plural, one {# minute} other {# minutes}}",
     refresh: "Update now",
@@ -70,12 +73,14 @@ export const banners = {
   },
   editor: {
     title: "Editing: {name}",
-    description: "Click an element on the banner to select it, drag it to move it and drag the squares to resize it.",
+    description:
+      "Click an element on the banner to select it, drag it to move it and drag the squares to resize it.",
     sampleNote:
       "The preview uses the real numbers of the server where the bot has them (members, online, boosts, messages) and examples for the rest.",
     name: "Name",
     timezone: "Time zone for the date and time",
-    canvasHint: "Arrow keys move the selected element by 1 pixel, with Shift by 10. Elements stick to the edges and the centre.",
+    canvasHint:
+      "Arrow keys move the selected element by 1 pixel, with Shift by 10. Elements stick to the edges and the centre.",
     elements: "Elements ({count}/{max})",
     add: "Add an element",
     background: "Background",
@@ -139,7 +144,8 @@ export const banners = {
       guildIcon: "Server icon",
       topMember: "Most active member",
       iconHint: "The icon of the server.",
-      topHint: "The avatar of the member who wrote the most. A grey circle is shown while nobody has written.",
+      topHint:
+        "The avatar of the member who wrote the most. A grey circle is shown while nobody has written.",
       borderColor: "Border colour",
       borderWidth: "Border width",
     },
@@ -149,6 +155,23 @@ export const banners = {
       goal: "Goal",
       fill: "Filled part",
       track: "Empty part",
+    },
+  },
+  images: {
+    addUpload: "Upload pictures",
+    upload: "Upload a picture",
+    hint: "PNG, JPEG, WebP or GIF, up to {max} MB (bigger ones are scaled down). Up to {count} pictures per server.",
+    missing: "The picture of this element is no longer in the library.",
+    empty: "No pictures uploaded yet.",
+    delete: "Delete the picture",
+    link: "Link",
+    uploaded: "Uploaded",
+    errors: {
+      tooBig: "The picture is too big. Choose a smaller one.",
+      tooMany: "The server already has the most pictures it can keep. Delete one first.",
+      notAPicture: "This file is not a picture the bot can use (PNG, JPEG, WebP or GIF).",
+      inUse: "A banner still uses this picture. Remove it from the banner first.",
+      failed: "The picture could not be uploaded.",
     },
   },
   metric: {
@@ -162,10 +185,11 @@ export const banners = {
     tooManyBanners: "You can keep at most {max} banners.",
     bannerId: "A banner has a broken or repeated ID.",
     bannerName: "Every banner needs a name.",
-    tooManyLayers: "\"{banner}\" has too many elements (at most {max}).",
-    invalidLink: "A picture in \"{banner}\" must be a link that starts with https:// or a placeholder.",
-    layerId: "An element of \"{banner}\" has a broken or repeated ID.",
-    textTooLong: "A text in \"{banner}\" is too long (at most {max} characters).",
+    tooManyLayers: '"{banner}" has too many elements (at most {max}).',
+    invalidLink:
+      'A picture in "{banner}" must be a link that starts with https:// or a placeholder.',
+    layerId: 'An element of "{banner}" has a broken or repeated ID.',
+    textTooLong: 'A text in "{banner}" is too long (at most {max} characters).',
     activeRequired: "Choose the banner to put on the server before turning the module on.",
     activeMissing: "The chosen banner does not exist.",
     interval: "The update interval must be between {min} and {max} minutes.",

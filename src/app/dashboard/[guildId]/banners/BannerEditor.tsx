@@ -1,16 +1,23 @@
 "use client";
 
-import { MediaUrlField } from "@/app/dashboard/[guildId]/components/layouts/MediaUrlField";
 import { BannerCanvas } from "@/components/banners/BannerCanvas";
+import {
+  ImageSourceField,
+  useBannerImages,
+  useFilePicker,
+} from "@/components/banners/BannerImages";
 import { ColorInput } from "@/components/dashboard/ColorInput";
 import { ConfirmIconButton } from "@/components/dashboard/ConfirmIconButton";
 import { LabelSelect } from "@/components/dashboard/discord/LabelSelect";
 import { useT } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/messages";
 import { defaultLayer, type BannerLayerType } from "@/lib/banners/templates";
+import { uploadRef } from "@/lib/banners/images";
 import { generateID } from "@/lib/db/generateID";
 import {
+  BANNER_HEIGHT,
   BANNER_LIMITS,
+  BANNER_WIDTH,
   type BannerBackground,
   type BannerLayer,
   type BannerStats,
@@ -31,7 +38,7 @@ import {
   Slider,
   Text,
 } from "@once-ui-system/core";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { LayerForm } from "./LayerForm";
 
 const LAYER_TYPES: BannerLayerType[] = ["text", "shape", "image", "avatar", "progress"];
@@ -150,11 +157,10 @@ function BackgroundForm({
 
       {background.type === "image" ? (
         <>
-          <MediaUrlField
+          <ImageSourceField
             id="banner-bg-src"
             label={t("banners.layer.image.link")}
             value={background.src}
-            placeholderSet="banner"
             onChange={(src) => onChange({ ...background, src })}
           />
           <Text variant="body-default-xs" onBackground="neutral-weak" paddingX="4">
@@ -193,6 +199,7 @@ function BackgroundForm({
 }
 
 export interface BannerEditorProps {
+  guildId: string;
   banner: ServerBanner;
   stats: BannerStats;
   onChange: (next: ServerBanner) => void;
@@ -202,8 +209,9 @@ export interface BannerEditorProps {
  * Edits one banner: its canvas (click, drag and resize the elements right on it), the list of
  * elements with their order and visibility, and the properties of what is selected.
  */
-export function BannerEditor({ banner, stats, onChange }: BannerEditorProps) {
+export function BannerEditor({ guildId, banner, stats, onChange }: BannerEditorProps) {
   const t = useT();
+  const { upload } = useBannerImages();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
@@ -233,6 +241,40 @@ export function BannerEditor({ banner, stats, onChange }: BannerEditorProps) {
     update({ layers: [...banner.layers, layer] });
     setSelectedId(layer.id);
   };
+
+  // An upload takes a moment, and the banner may have been edited by then.
+  const latest = useRef(banner);
+  latest.current = banner;
+
+  /** Uploads the pictures and adds each as a picture element, scaled to fit and centred. */
+  const addPictures = async (files: File[]) => {
+    setAddOpen(false);
+    for (const file of files) {
+      if (latest.current.layers.length >= BANNER_LIMITS.layers) return;
+      const image = await upload(file);
+      if (!image) continue;
+
+      const scale = Math.min(1, 480 / image.width, 300 / image.height);
+      const width = Math.max(4, Math.round(image.width * scale));
+      const height = Math.max(4, Math.round(image.height * scale));
+      const layer = {
+        ...defaultLayer(
+          "image",
+          image.name.replace(/\.[^.]+$/, "").slice(0, BANNER_LIMITS.name),
+          "",
+        ),
+        x: Math.round((BANNER_WIDTH - width) / 2),
+        y: Math.round((BANNER_HEIGHT - height) / 2),
+        width,
+        height,
+        src: uploadRef(image.id),
+        radius: 0,
+      } as BannerLayer;
+      onChange({ ...latest.current, layers: [...latest.current.layers, layer] });
+      setSelectedId(layer.id);
+    }
+  };
+  const picker = useFilePicker((files) => void addPictures(files), true);
 
   const duplicate = (layer: BannerLayer) => {
     if (banner.layers.length >= BANNER_LIMITS.layers) return;
@@ -291,12 +333,15 @@ export function BannerEditor({ banner, stats, onChange }: BannerEditorProps) {
         </Column>
       </Row>
 
+      {picker.input}
       <BannerCanvas
+        guildId={guildId}
         banner={banner}
         stats={stats}
         selectedId={selectedId}
         onSelect={setSelectedId}
         onChangeLayer={(id, patch) => updateLayer(id, patch)}
+        onDropFiles={(files) => void addPictures(files)}
       />
       <Text variant="body-default-xs" onBackground="neutral-weak">
         {t("banners.editor.canvasHint")}
@@ -338,6 +383,15 @@ export function BannerEditor({ banner, stats, onChange }: BannerEditorProps) {
                       onClick={() => addLayer(type)}
                     />
                   ))}
+                  <Option
+                    value="upload"
+                    label={t("banners.images.addUpload")}
+                    prefix={<Icon name="plus" size="xs" />}
+                    onClick={() => {
+                      setAddOpen(false);
+                      picker.open();
+                    }}
+                  />
                 </Column>
               }
             />
