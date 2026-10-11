@@ -65,6 +65,19 @@ export const profile = {
       third_component: "Third accent",
       invalid: "Use a hex color such as #C30F45.",
     },
+    background: {
+      title: "Background picture",
+      description:
+        "A picture behind the card, cut to {size} pixels: it is scaled until it covers the card and whatever hangs over is cropped around the centre.",
+      drop: "Drop a picture here or click to choose one",
+      hint: "PNG, JPEG, WebP or GIF, up to 4 MB. The picture replaces the coloured shapes of the card, and the card is saved with it.",
+      dim: "Darkening",
+      replace: "Replace the picture",
+      remove: "Remove the picture",
+      tooBig: "The picture is too big. Choose a smaller one.",
+      notAPicture: "This file is not a picture the bot can use (PNG, JPEG, WebP or GIF).",
+      failed: "The picture could not be uploaded.",
+    },
     bio: {
       title: "Biography",
       description: "The text under “Biography” on your profile card.",
@@ -114,6 +127,7 @@ export const profile = {
     invalidColor: "Colors must be hex values such as #C30F45.",
     bioTooLong: "The biography can have at most {max} characters.",
     invalidPadding: "The gap between icons must be a whole number from 0 to 10.",
+    invalidBackground: "The picture does not belong to this card. Upload it again.",
     internal: "Internal error while saving. Try again later.",
   },
 };

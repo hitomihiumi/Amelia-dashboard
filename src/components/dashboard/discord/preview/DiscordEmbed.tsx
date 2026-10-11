@@ -8,9 +8,13 @@ import { resolveDiscordColor } from "@/lib/discord/discord-style";
 import type { Formatters } from "@/i18n/format";
 import { replacePreviewTags } from "@/lib/discord/preview-tags";
 import { DiscordText } from "./DiscordText";
+import type { ReactNode } from "react";
+import { Row } from "@once-ui-system/core";
 
 export interface DiscordEmbedProps {
   embed: EmbedCustom;
+  /** Shown as the embed's picture when the embed has no image of its own (an attached card). */
+  imageSlot?: ReactNode;
 }
 
 /** Matches real Discord's embed footer timestamp style, e.g. "7/18/2026 1:32 AM" (localised). */
@@ -45,7 +49,7 @@ function groupEmbedFields(fields: EmbedField[]): EmbedField[][] {
   return rows;
 }
 
-export function DiscordEmbed({ embed }: DiscordEmbedProps) {
+export function DiscordEmbed({ embed, imageSlot }: DiscordEmbedProps) {
   const ctx = useDiscordPreviewOptional();
   const format = useFormat();
   // URL fields may use bot placeholders like {user.avatar} / {guild.icon}.
@@ -157,6 +161,12 @@ export function DiscordEmbed({ embed }: DiscordEmbedProps) {
             className="max-h-[400px] w-auto max-w-full rounded-md object-contain object-left-top"
           />
         </div>
+      ) : null}
+
+      {!showImage && imageSlot ? (
+        <Row marginTop="12" overflow="hidden" radius="m">
+          {imageSlot}
+        </Row>
       ) : null}
 
       {(showFooter || showTimestamp) && (

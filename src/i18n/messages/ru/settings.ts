@@ -41,6 +41,8 @@ export const settings: Dict<typeof en> = {
     utils: "Утилиты",
     privateRooms: "Приватные комнаты",
     ai: "Чат с ИИ",
+    games: "Поиск напарников",
+    banners: "Баннеры сервера",
     interactions: "Взаимодействия",
     components: "Компоненты",
     scenarios: "Сценарии",

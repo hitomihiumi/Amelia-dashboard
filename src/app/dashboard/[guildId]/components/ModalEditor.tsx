@@ -27,9 +27,19 @@ export interface ModalEditorProps {
   value: ModalCustom;
   guildId: string;
   onChange: (next: ModalCustom) => void;
+  /** Mention the custom id. Off where the modal is part of something else (a game's request form). */
+  showCustomId?: boolean;
+  /** Offer the placeholder menu. Off where the bot shows the texts as they are stored. */
+  placeholders?: boolean;
 }
 
-export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
+export function ModalEditor({
+  value,
+  guildId,
+  onChange,
+  showCustomId = true,
+  placeholders = true,
+}: ModalEditorProps) {
   const t = useT();
   const update = (patch: Partial<ModalCustom>) => onChange({ ...value, ...patch });
 
@@ -71,6 +81,7 @@ export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
         value={value.title}
         onValueChange={(title) => update({ title })}
         emoji="unicode"
+        placeholders={placeholders}
       >
         <Input
           id="modal-title"
@@ -82,7 +93,11 @@ export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
         />
       </TextTools>
       <Text variant="body-default-s" onBackground="neutral-weak">
-        {t("builder.shared.customId")} <InlineCode>{value.id}</InlineCode>.{" "}
+        {showCustomId ? (
+          <>
+            {t("builder.shared.customId")} <InlineCode>{value.id}</InlineCode>.{" "}
+          </>
+        ) : null}
         {t("builder.modals.limitHint", { max: MAX_FIELDS })}
       </Text>
       <Row fillWidth horizontal="between" vertical="center" gap="8">
@@ -105,6 +120,7 @@ export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
           <FieldRow
             key={field.id}
             field={field}
+            placeholders={placeholders}
             canDuplicate={value.fields.length < MAX_FIELDS}
             onChange={(patch) => updateField(i, patch)}
             onDuplicate={() => duplicateField(i)}
@@ -119,6 +135,7 @@ export function ModalEditor({ value, guildId, onChange }: ModalEditorProps) {
 
 function FieldRow({
   field,
+  placeholders,
   canDuplicate,
   onChange,
   onDuplicate,
@@ -126,6 +143,7 @@ function FieldRow({
   onMove,
 }: {
   field: IModalField;
+  placeholders: boolean;
   canDuplicate: boolean;
   onChange: (patch: Partial<IModalField>) => void;
   onDuplicate: () => void;
@@ -172,6 +190,7 @@ function FieldRow({
           value={field.name}
           onValueChange={(name) => onChange({ name })}
           emoji="unicode"
+          placeholders={placeholders}
         >
           <Input
             id={`field-${field.id}-name`}
@@ -187,6 +206,7 @@ function FieldRow({
           value={field.placeholder ?? ""}
           onValueChange={(placeholder) => onChange({ placeholder: placeholder || undefined })}
           emoji="unicode"
+          placeholders={placeholders}
         >
           <Input
             id={`field-${field.id}-placeholder`}

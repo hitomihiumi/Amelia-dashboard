@@ -4,6 +4,7 @@
 import { TextTools } from "@/components/dashboard/text/TextTools";
 import { useDiscordPreviewOptional } from "@/contexts/DiscordPreviewContext";
 import { useT } from "@/i18n/client";
+import type { PlaceholderSet } from "@/lib/discord/placeholders";
 import { replacePreviewTags } from "@/lib/discord/preview-tags";
 import { Column, Input, Row, Text } from "@once-ui-system/core";
 import { useEffect, useState } from "react";
@@ -82,10 +83,20 @@ export interface MediaUrlFieldProps {
   invalid?: boolean;
   placeholder?: string;
   label: string;
+  /** Which placeholders the menu offers; a component message's by default. */
+  placeholderSet?: PlaceholderSet;
 }
 
 /** Link input with an instant thumbnail check. Used for gallery items and section thumbnails. */
-export function MediaUrlField({ id, value, onChange, invalid, label, placeholder }: MediaUrlFieldProps) {
+export function MediaUrlField({
+  id,
+  value,
+  onChange,
+  invalid,
+  label,
+  placeholder,
+  placeholderSet,
+}: MediaUrlFieldProps) {
   const t = useT();
   const hasPlaceholder = /\{[a-zA-Z][\w.]*\}/.test(value);
 
@@ -93,7 +104,15 @@ export function MediaUrlField({ id, value, onChange, invalid, label, placeholder
     <Row fillWidth gap="12" minWidth="0" vertical="start">
       <MediaThumb url={value} />
       <Column flex="1" gap="8" minWidth="0">
-        <TextTools id={id} value={value} onValueChange={onChange} placeholders="url" emoji={false}>
+        <TextTools
+          id={id}
+          value={value}
+          onValueChange={onChange}
+          placeholders="url"
+          placeholderSet={placeholderSet}
+          scenario={placeholderSet ? false : undefined}
+          emoji={false}
+        >
           <Input
             id={id}
             label={label}

@@ -1,4 +1,4 @@
-import { Column, Grid, Icon, Row, Text } from "@once-ui-system/core";
+import { Column, Grid, Icon, RevealFx, Row, Text } from "@once-ui-system/core";
 import styles from "@/components/profile/Profile.module.scss";
 import type { IconName } from "@/resources/icons";
 
@@ -10,7 +10,7 @@ export interface StatTileData {
 }
 
 /** The headline numbers of the profile: label with icon, the number, a line of context. */
-export function StatTiles({ items }: { items: StatTileData[] }) {
+export function StatTiles({ items, start = 0 }: { items: StatTileData[]; start: number }) {
   return (
     <Grid
       fillWidth
@@ -18,28 +18,39 @@ export function StatTiles({ items }: { items: StatTileData[] }) {
       style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))" }}
     >
       {items.map((item) => (
-        <Column
+        <RevealFx
+          delay={300 + 100 * (start + items.indexOf(item))}
+          translateY={-0.5}
+          fill
           key={item.label}
-          gap="12"
-          padding="20"
-          radius="l"
-          border="neutral-alpha-medium"
-          background="surface"
-          minWidth={0}
         >
-          <Row gap="8" vertical="center">
-            <Icon name={item.icon} size="s" onBackground="neutral-weak" />
-            <Text variant="label-default-s" onBackground="neutral-weak" className={styles.eyebrow}>
-              {item.label}
+          <Column
+            gap="12"
+            padding="20"
+            radius="l"
+            border="neutral-alpha-medium"
+            background="surface"
+            minWidth={0}
+            fill
+          >
+            <Row gap="8" vertical="center">
+              <Icon name={item.icon} size="s" onBackground="neutral-weak" />
+              <Text
+                variant="label-default-s"
+                onBackground="neutral-weak"
+                className={styles.eyebrow}
+              >
+                {item.label}
+              </Text>
+            </Row>
+            <Text variant="heading-strong-xl" style={{ fontVariantNumeric: "tabular-nums" }}>
+              {item.value}
             </Text>
-          </Row>
-          <Text variant="heading-strong-xl" style={{ fontVariantNumeric: "tabular-nums" }}>
-            {item.value}
-          </Text>
-          <Text variant="body-default-xs" onBackground="neutral-weak">
-            {item.hint}
-          </Text>
-        </Column>
+            <Text variant="body-default-xs" onBackground="neutral-weak">
+              {item.hint}
+            </Text>
+          </Column>
+        </RevealFx>
       ))}
     </Grid>
   );

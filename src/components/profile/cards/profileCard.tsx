@@ -8,6 +8,7 @@ import {
   type CardTimeUnits,
   type ProfileIcon,
 } from "./types";
+import { cardBackgroundLayers, type CardBackgroundSpec } from "./cardBackground";
 import { formatVoiceTime, getNextLevelXP } from "./utils";
 
 export const PROFILE_CARD_SIZE = { width: 736, height: 736 } as const;
@@ -53,11 +54,14 @@ export function profileCard(
     bio: string | null;
     icons: ProfileIcon[];
     iconsPadding: number;
+    /** The picture behind the card, drawn instead of the coloured blobs. */
+    background?: CardBackgroundSpec | null;
   },
   units: CardTimeUnits,
   micSrc: string,
   iconSrc: (name: string) => string | undefined = () => undefined,
 ) {
+  const background = options.background;
   const nextXp = getNextLevelXP(stats.level);
   const rawBar = (415 * Number(stats.xp)) / nextXp;
   const xpbar = Number.isFinite(rawBar) ? Math.max(rawBar, 30) : 30;
@@ -119,22 +123,26 @@ export function profileCard(
       size={{ width: 736, height: 736, radius: { all: 30 } }}
       color={colors.bg_color}
     >
-      <Group layout={{ position: "absolute", width: "100%", height: "100%" }}>
-        <Path2D
-          path2D={BLOB_TOP}
-          color={colors.third_component}
-          transform={{ translate: { x: 0, y: 208 } }}
-          filter={Filters.blur(100)}
-          globalComposite="source-atop"
-        />
-        <Path2D
-          path2D={BLOB_BOTTOM}
-          transform={{ translate: { x: 0, y: 440 } }}
-          filter={Filters.blur(80)}
-          color={colors.second_component}
-          globalComposite="source-atop"
-        />
-      </Group>
+      {background ? (
+        cardBackgroundLayers(background, 736, 736, 30)
+      ) : (
+        <Group layout={{ position: "absolute", width: "100%", height: "100%" }}>
+          <Path2D
+            path2D={BLOB_TOP}
+            color={colors.third_component}
+            transform={{ translate: { x: 0, y: 208 } }}
+            filter={Filters.blur(100)}
+            globalComposite="source-atop"
+          />
+          <Path2D
+            path2D={BLOB_BOTTOM}
+            transform={{ translate: { x: 0, y: 440 } }}
+            filter={Filters.blur(80)}
+            color={colors.second_component}
+            globalComposite="source-atop"
+          />
+        </Group>
+      )}
 
       <Group
         layout={{

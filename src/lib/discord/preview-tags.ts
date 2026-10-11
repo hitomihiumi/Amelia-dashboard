@@ -10,6 +10,17 @@ export type PreviewTagContext = {
   guildName?: string | null;
   guildIconUrl?: string | null;
   botAvatarUrl?: string | null;
+  /** Set while previewing a level-up announcement. */
+  level?: PreviewLevel;
+};
+
+/** The sample numbers a level-up preview shows for `{level}` and friends. */
+export type PreviewLevel = {
+  level: number;
+  totalXp: number;
+  messages: number;
+  /** The reward role as shown, e.g. `@Veteran`; empty when there is none. */
+  rewardRole: string;
 };
 
 /** Sample snowflakes shown in previews (match Discord's id shape). */
@@ -44,6 +55,15 @@ export function replacePreviewTags(text: string, ctx?: PreviewTagContext): strin
   s = s.replace(/\{guild\.id\}/gi, ctx?.guildId ?? "0");
   s = s.replace(/\{guild\.name\}/gi, ctx?.guildName || "Server");
   s = s.replace(/\{guild\.icon\}/gi, ctx?.guildIconUrl || "");
+
+  // Level-up announcement
+  if (ctx?.level) {
+    s = s.replace(/\{level\}/gi, String(ctx.level.level));
+    s = s.replace(/\{level\.prev\}/gi, String(Math.max(0, ctx.level.level - 1)));
+    s = s.replace(/\{xp\.total\}/gi, String(ctx.level.totalXp));
+    s = s.replace(/\{messages\}/gi, String(ctx.level.messages));
+    s = s.replace(/\{reward\.role\}/gi, ctx.level.rewardRole);
+  }
 
   // Time (frozen for hydration safety; rendered through the same locale as DiscordText)
   s = s.replace(/\{date\}/gi, frozenDate.toLocaleDateString("en-US"));

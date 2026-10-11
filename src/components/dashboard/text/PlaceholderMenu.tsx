@@ -1,7 +1,7 @@
 "use client";
 
 import { useT } from "@/i18n/client";
-import { placeholderGroups, type PlaceholderDef } from "@/lib/discord/placeholders";
+import { placeholderGroups, type PlaceholderDef, type PlaceholderSet } from "@/lib/discord/placeholders";
 import { insertTemplate } from "@/lib/layouts/markdown";
 import { Column, DropdownWrapper, IconButton, Line, Option, Text } from "@once-ui-system/core";
 import { Fragment, type ComponentProps, useState } from "react";
@@ -14,6 +14,8 @@ export interface PlaceholderMenuProps {
   urlOnly?: boolean;
   /** Offer the scenario group. Off for messages that are posted outside a scenario. */
   scenario?: boolean;
+  /** Which placeholders to offer: those of a component message (default), a level-up or a banner. */
+  set?: PlaceholderSet;
   /** `s` ghost button for the formatting bar, `m` for a field. */
   size?: "s" | "m";
   placement?: ComponentProps<typeof DropdownWrapper>["placement"];
@@ -24,12 +26,13 @@ export function PlaceholderMenu({
   apply,
   urlOnly = false,
   scenario = true,
+  set = "default",
   size = "s",
   placement = "bottom-start",
 }: PlaceholderMenuProps) {
   const t = useT();
   const [open, setOpen] = useState(false);
-  const groups = placeholderGroups({ urlOnly, scenario });
+  const groups = placeholderGroups({ urlOnly, scenario, set });
 
   const pick = (item: PlaceholderDef) => {
     setOpen(false);

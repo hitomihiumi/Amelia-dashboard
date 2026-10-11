@@ -37,6 +37,8 @@ export const settings = {
     utils: "Utils",
     privateRooms: "Private Rooms",
     ai: "AI chat",
+    games: "Teammate search",
+    banners: "Server banners",
     interactions: "Interactions",
     components: "Components",
     scenarios: "Scenarios",

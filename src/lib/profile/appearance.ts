@@ -1,20 +1,27 @@
 import type { CardColors, CardKind, ProfileIcon } from "@/components/profile/cards/types";
 import { defaultDisplayOptions } from "@/lib/db/types/UserSchema";
+import {
+  type CardBackground,
+  DEFAULT_CARD_BACKGROUND,
+  cardBackgroundId,
+  clampDim,
+} from "./cardBackground";
 
 /**
  * What a member can change about their cards with `/appearance` of the bot. It is kept per
  * server, so every server a member is on has its own copy.
  */
 export interface Appearance {
-  rank: { solid: CardColors };
+  rank: { solid: CardColors; background: CardBackground };
   profile: {
     solid: CardColors;
+    background: CardBackground;
     bio: string;
     iconsPadding: number;
     /** Not editable on the site (the bot has no icon pictures yet); kept as it was stored. */
     icons: ProfileIcon[];
   };
-  level_up: { solid: CardColors };
+  level_up: { solid: CardColors; background: CardBackground };
 }
 
 export const CARD_KINDS: readonly CardKind[] = ["rank", "profile", "level_up"] as const;
@@ -42,14 +49,15 @@ export function defaultColors(kind: CardKind): CardColors {
 
 export function defaultAppearance(): Appearance {
   return {
-    rank: { solid: defaultColors("rank") },
+    rank: { solid: defaultColors("rank"), background: { ...DEFAULT_CARD_BACKGROUND } },
     profile: {
       solid: defaultColors("profile"),
+      background: { ...DEFAULT_CARD_BACKGROUND },
       bio: "",
       iconsPadding: defaultDisplayOptions.profile.icons_padding,
       icons: [],
     },
-    level_up: { solid: defaultColors("level_up") },
+    level_up: { solid: defaultColors("level_up"), background: { ...DEFAULT_CARD_BACKGROUND } },
   };
 }
 
@@ -86,31 +94,56 @@ function readIcons(raw: unknown): ProfileIcon[] {
 /** The columns of a `User` row that hold the card settings. */
 export interface AppearanceRow {
   rankSolid: unknown;
+  rankUrl: string | null;
+  rankMode: boolean;
+  rankDim: number;
+  profileUrl: string | null;
+  profileMode: boolean;
+  profileDim: number;
   profileSolid: unknown;
   profileBio: string;
   profileIcons: unknown;
   profileIconsPadding: number;
   levelupSolid: unknown;
+  levelupUrl: string | null;
+  levelupMode: boolean;
+  levelupDim: number;
+}
+
+/** The picture of a card: used while the member's switch for it is on and the link is ours. */
+function readBackground(url: string | null, mode: boolean, dim: number): CardBackground {
+  return {
+    image: mode && cardBackgroundId(url) ? url : null,
+    dim: clampDim(dim),
+  };
 }
 
 export function appearanceFromRow(row: AppearanceRow | null | undefined): Appearance {
   const defaults = defaultAppearance();
   if (!row) return defaults;
   return {
-    rank: { solid: readColors(row.rankSolid, defaults.rank.solid) },
+    rank: {
+      solid: readColors(row.rankSolid, defaults.rank.solid),
+      background: readBackground(row.rankUrl, row.rankMode, row.rankDim),
+    },
     profile: {
       solid: readColors(row.profileSolid, defaults.profile.solid),
+      background: readBackground(row.profileUrl, row.profileMode, row.profileDim),
       bio: row.profileBio ?? "",
       iconsPadding: clampIconsPadding(row.profileIconsPadding),
       icons: readIcons(row.profileIcons),
     },
-    level_up: { solid: readColors(row.levelupSolid, defaults.level_up.solid) },
+    level_up: {
+      solid: readColors(row.levelupSolid, defaults.level_up.solid),
+      background: readBackground(row.levelupUrl, row.levelupMode, row.levelupDim),
+    },
   };
 }
 
 /** Whether two cards of one kind would be drawn the same. */
 export function sameCard(kind: CardKind, a: Appearance, b: Appearance): boolean {
   if (JSON.stringify(a[kind].solid) !== JSON.stringify(b[kind].solid)) return false;
+  if (JSON.stringify(a[kind].background) !== JSON.stringify(b[kind].background)) return false;
   if (kind !== "profile") return true;
   return a.profile.bio === b.profile.bio && a.profile.iconsPadding === b.profile.iconsPadding;
 }

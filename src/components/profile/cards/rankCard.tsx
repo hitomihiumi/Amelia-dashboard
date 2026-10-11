@@ -7,6 +7,7 @@ import {
   type CardStats,
   type CardTimeUnits,
 } from "./types";
+import { cardBackgroundLayers, type CardBackgroundSpec } from "./cardBackground";
 import { formatVoiceTime, getNextLevelXP } from "./utils";
 
 export const RANK_CARD_SIZE = { width: 736, height: 260 } as const;
@@ -28,6 +29,7 @@ export function rankCard(
   colors: CardColors,
   units: CardTimeUnits,
   micSrc: string,
+  background?: CardBackgroundSpec | null,
 ) {
   const nextXp = getNextLevelXP(stats.level);
   const rawBar = (475 * Number(stats.xp)) / nextXp;
@@ -56,25 +58,29 @@ export function rankCard(
       size={{ width: 736, height: 260, radius: { all: 30 } }}
       color={colors.bg_color}
     >
-      <Group layout={{ position: "absolute", width: "100%", height: "100%" }}>
-        <Path2D
-          path2D={ellipse(368, 300, 400, 200)}
-          color={colors.first_component}
-          filter={Filters.blur(50)}
-          globalComposite="source-atop"
-        />
-        <Path2D
-          path2D={ellipse(368, 350, 400, 200)}
-          color={colors.second_component}
-          filter={Filters.blur(40)}
-          globalComposite="source-atop"
-        />
-        <Path2D
-          path2D={ellipse(368, 400, 400, 200)}
-          color={colors.third_component}
-          filter={Filters.blur(80)}
-        />
-      </Group>
+      {background ? (
+        cardBackgroundLayers(background, 736, 260, 30)
+      ) : (
+        <Group layout={{ position: "absolute", width: "100%", height: "100%" }}>
+          <Path2D
+            path2D={ellipse(368, 300, 400, 200)}
+            color={colors.first_component}
+            filter={Filters.blur(50)}
+            globalComposite="source-atop"
+          />
+          <Path2D
+            path2D={ellipse(368, 350, 400, 200)}
+            color={colors.second_component}
+            filter={Filters.blur(40)}
+            globalComposite="source-atop"
+          />
+          <Path2D
+            path2D={ellipse(368, 400, 400, 200)}
+            color={colors.third_component}
+            filter={Filters.blur(80)}
+          />
+        </Group>
+      )}
 
       <Group
         layout={{

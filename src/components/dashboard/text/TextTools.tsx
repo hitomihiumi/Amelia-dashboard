@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { applyToField, type ApplyEdit } from "./applyEdit";
 import { EmojiMenu, TextToolbar } from "./TextToolbar";
 import { PlaceholderMenu } from "./PlaceholderMenu";
+import type { PlaceholderSet } from "@/lib/discord/placeholders";
 
 export interface TextToolsProps {
   /** The id of the `Input` or `Textarea` passed as `children`. */
@@ -20,6 +21,8 @@ export interface TextToolsProps {
   placeholders?: boolean | "url";
   /** Offer the scenario placeholders. Off for messages that are posted outside a scenario. */
   scenario?: boolean;
+  /** Which placeholders to offer: a component message's (default), a level-up's or a banner's. */
+  placeholderSet?: PlaceholderSet;
   /** `unicode` offers only standard emojis, for text Discord does not render server emojis in. */
   emoji?: boolean | "unicode";
   guildId?: string;
@@ -38,6 +41,7 @@ export function TextTools({
   format = multiline ? "markdown" : "none",
   placeholders = true,
   scenario = true,
+  placeholderSet = "default",
   emoji = true,
   guildId,
 }: TextToolsProps) {
@@ -53,6 +57,7 @@ export function TextTools({
           format={format}
           placeholders={placeholders}
           scenario={scenario}
+          placeholderSet={placeholderSet}
           emoji={emoji}
           guildId={guildId}
         />
@@ -70,7 +75,13 @@ export function TextTools({
       {/* The field is 56px tall, the buttons 32px. */}
       <Flex marginTop="8" gap="2" style={{ flexShrink: 0 }}>
         {placeholders ? (
-          <PlaceholderMenu apply={apply} scenario={scenario} urlOnly={placeholders === "url"} size="m" />
+          <PlaceholderMenu
+            apply={apply}
+            scenario={scenario}
+            set={placeholderSet}
+            urlOnly={placeholders === "url"}
+            size="m"
+          />
         ) : null}
         {emoji ? <EmojiMenu apply={apply} guildId={guildId} unicodeOnly={emoji === "unicode"} size="m" /> : null}
       </Flex>
