@@ -78,10 +78,38 @@ async function takeCooldown(guildId: string, userId: string): Promise<boolean> {
   }
 }
 
+interface DiscordErrorBody {
+  code?: number;
+  message?: string;
+  errors?: unknown;
+}
+
+/**
+ * Discord nests the real reason of an "Invalid Form Body" under `errors`, keyed by the path of the
+ * offending field (`components[0].components[2].accessory.emoji`). Flatten it to `path: message`.
+ */
+function describeFieldErrors(node: unknown, path = ""): string[] {
+  if (!node || typeof node !== "object") return [];
+  const record = node as Record<string, unknown>;
+  const direct = record._errors;
+  const out: string[] = [];
+  if (Array.isArray(direct)) {
+    for (const entry of direct) {
+      const message = (entry as { message?: unknown })?.message;
+      if (typeof message === "string") out.push(path ? `${path}: ${message}` : message);
+    }
+  }
+  for (const [key, value] of Object.entries(record)) {
+    if (key === "_errors") continue;
+    out.push(...describeFieldErrors(value, path ? `${path}.${key}` : key));
+  }
+  return out;
+}
+
 /** Discord's own explanation, reduced to what an admin can act on. */
 function discordFailure(
   status: number,
-  body: { code?: number; message?: string } | null,
+  body: DiscordErrorBody | null,
   t: Awaited<ReturnType<typeof getT>>,
 ): string {
   switch (body?.code) {
@@ -91,7 +119,11 @@ function discordFailure(
     case 10003: // Unknown Channel
       return t("send.errors.channelGone");
     case 50035: // Invalid Form Body
-      return t("send.errors.rejected", { reason: body.message ?? "" });
+      return t("send.errors.rejected", {
+        reason: [body.message, ...describeFieldErrors(body.errors).slice(0, 3)]
+          .filter(Boolean)
+          .join(" — "),
+      });
     default:
       return status === 403
         ? t("send.errors.noPermission")
@@ -212,10 +244,10 @@ export async function sendDashboardMessage(
   if (!res) return { ok: false, error: t("send.errors.noToken") };
 
   if (!res.ok) {
-    const failure = (await res.json().catch(() => null)) as {
-      code?: number;
-      message?: string;
-    } | null;
+    const failure = (await res.json().catch(() => null)) as DiscordErrorBody | null;
+    if (failure?.code === 50035) {
+      console.error("Discord rejected a dashboard message", JSON.stringify(failure.errors));
+    }
     return { ok: false, error: discordFailure(res.status, failure, t) };
   }
 
