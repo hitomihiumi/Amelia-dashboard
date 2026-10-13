@@ -21,8 +21,10 @@ $split-at: 1000px;
   }
 }
 
+// Only the split layout caps the pane's height, so only there should the body keep its scroll to
+// itself. When the pane is stacked below the editor it must hand touch scrolling to the page.
 .paneBody {
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
 }
 
 .paneEmpty {
@@ -42,6 +44,10 @@ $split-at: 1000px;
     position: sticky;
     top: var(--static-space-16);
     max-height: calc(100vh - var(--static-space-32));
+  }
+
+  .paneBody {
+    overscroll-behavior: contain;
   }
 
   .paneEmpty {

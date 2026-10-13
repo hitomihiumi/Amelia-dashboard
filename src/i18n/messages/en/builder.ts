@@ -363,6 +363,7 @@ export const builder = {
     inspectorTitle: "Properties",
     stepTitle: "Step settings",
     stepPreview: "Message preview",
+    deleteStep: "Delete step",
   },
 
   preview: {

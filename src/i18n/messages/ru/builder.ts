@@ -375,6 +375,7 @@ export const builder: Dict<typeof en> = {
     inspectorTitle: "Свойства",
     stepTitle: "Настройки шага",
     stepPreview: "Предпросмотр сообщения",
+    deleteStep: "Удалить шаг",
   },
 
   preview: {
