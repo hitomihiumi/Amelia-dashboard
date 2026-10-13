@@ -379,6 +379,15 @@ export function ScenarioEditor({
             onUpdate={(action) => updateStepAction(selectedStep.id, action)}
             onUpdateMeta={(patch) => updateStepMeta(selectedStep.id, patch)}
           />
+          <Button
+            variant="danger"
+            size="m"
+            fillWidth
+            prefixIcon="trash"
+            onClick={() => removeStep(selectedStep.id)}
+          >
+            {t("builder.workspace.deleteStep")}
+          </Button>
         </>
       ) : (
         <PreviewEmpty
