@@ -124,7 +124,8 @@ function resolveEmoji(value: unknown): DiscordJson | undefined {
 
   if (!text.includes(":")) return { name: text, animated: false };
 
-  const match = text.match(/^<?(?:(a):)?(\w{2,32}):(\d{17,20})?>?$/);
+  // Same pattern as discord.js: `<:name:id>` has a colon right after `<`, `<a:name:id>` has the flag first.
+  const match = text.match(/^<?(a)?:?(\w{2,32}):(\d{17,20})?>?$/);
   if (!match) return { name: text, animated: false };
   const out: DiscordJson = { name: match[2], animated: Boolean(match[1]) };
   if (match[3]) out.id = match[3];
