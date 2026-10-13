@@ -39,9 +39,11 @@ import { ActionNodeForm } from "./ActionNodeForm";
 import { type ScenarioEdge, ScenarioFlow, type ScenarioNode } from "./ScenarioFlow";
 import styles from "./ScenarioEditor.module.scss";
 import { buildPreviewForStep } from "./previewBuild";
+import { awaitedComponents } from "./scenarioInteractions";
 import {
   TRIGGER_TYPE_OPTION_LABEL,
   type StepFactory,
+  TRIGGER_NODE_ID,
   nodesEdgesToSteps,
   stepsToNodesEdges,
 } from "./scenarioGraph";
@@ -58,7 +60,7 @@ export interface ScenarioEditorProps {
 
 const TRIGGER_OPTIONS: ScenarioTriggerType[] = ["button", "select_menu", "modal_submit"];
 
-const stepFactory: StepFactory = {
+const baseStepFactory: StepFactory = {
   defaultStep: (id) => ({ id, order: 0, action: { type: "reply" } }),
 };
 
@@ -99,6 +101,9 @@ export function ScenarioEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scenario.id]);
 
+  // The saved components decide which answers a step can still be continued from.
+  const stepFactory = useMemo<StepFactory>(() => ({ ...baseStepFactory, library }), [library]);
+
   // Single source of truth: the canvas. Any nodes/edges change recomputes the
   // scenario.steps and pushes it up. Meta changes (name/trigger/etc) bypass
   // this effect by calling onChange directly without touching nodes/edges.
@@ -113,15 +118,38 @@ export function ScenarioEditor({
     [scenario, onChange],
   );
 
-  const updateStepAction = useCallback((stepId: string, action: ScenarioAction) => {
-    setNodes((prev) =>
-      prev.map((n) =>
-        n.id === stepId && n.data?.kind === "step"
-          ? { ...n, data: { ...n.data, step: { ...(n.data.step as ScenarioStep), action } } }
-          : n,
-      ),
-    );
-  }, []);
+  const updateStepAction = useCallback(
+    (stepId: string, action: ScenarioAction) => {
+      setNodes((prev) =>
+        prev.map((n) =>
+          n.id === stepId && n.data?.kind === "step"
+            ? { ...n, data: { ...n.data, step: { ...(n.data.step as ScenarioStep), action } } }
+            : n,
+        ),
+      );
+      // Picking another modal, or taking a button off the message, removes the answer links
+      // that hung off what is no longer shown
+      const shown = new Set(awaitedComponents(action, library).map((component) => component.id));
+      setEdges((prev) =>
+        prev.some(
+          (e) =>
+            e.source === stepId &&
+            e.data?.branch === "interaction" &&
+            !shown.has(e.data.componentId ?? ""),
+        )
+          ? prev.filter(
+              (e) =>
+                !(
+                  e.source === stepId &&
+                  e.data?.branch === "interaction" &&
+                  !shown.has(e.data.componentId ?? "")
+                ),
+            )
+          : prev,
+      );
+    },
+    [library],
+  );
 
   const updateStepMeta = useCallback((stepId: string, patch: Partial<ScenarioStep>) => {
     setNodes((prev) =>
@@ -174,12 +202,48 @@ export function ScenarioEditor({
     return buildPreviewForStep(selectedStep, library, t, role);
   }, [selectedStep, library, roles, t]);
 
-  // Only meaningful when the scenario's trigger is a modal submit — lets the
-  // "input" condition editor offer real field names instead of a raw index.
-  const triggerModalFields = useMemo(() => {
-    if (scenario.trigger?.type !== "modal_submit") return undefined;
-    return library.modals.find((m) => m.id === scenario.trigger?.componentId)?.fields;
-  }, [scenario.trigger, library.modals]);
+  // The modal whose submit the selected step runs after, found by walking the links back to the
+  // trigger or to the step that showed the modal. Lets the "input" condition editor offer real
+  // field names instead of a raw index, and flags a step that cannot open another modal.
+  const submittedModal = useMemo(() => {
+    if (!selectedStep) return null;
+    const incoming = new Map<string, ScenarioEdge[]>();
+    for (const e of edges) incoming.set(e.target, [...(incoming.get(e.target) ?? []), e]);
+
+    const stepOf = (id: string) =>
+      nodes.find((n) => n.id === id && n.data?.kind === "step")?.data?.step as
+        | ScenarioStep
+        | undefined;
+
+    const seen = new Set<string>([selectedStep.id]);
+    const queue = [selectedStep.id];
+    while (queue.length > 0) {
+      const current = queue.shift() as string;
+      for (const e of incoming.get(current) ?? []) {
+        if (e.source === TRIGGER_NODE_ID) {
+          if (scenario.trigger?.type === "modal_submit") {
+            return {
+              fields: library.modals.find((m) => m.id === scenario.trigger?.componentId)?.fields,
+            };
+          }
+          continue;
+        }
+        const source = stepOf(e.source);
+        if (
+          e.data?.branch === "interaction" &&
+          source?.action.type === "show_modal" &&
+          source.action.modalId === e.data.componentId
+        ) {
+          return { fields: library.modals.find((m) => m.id === source.action.modalId)?.fields };
+        }
+        if (!seen.has(e.source)) {
+          seen.add(e.source);
+          queue.push(e.source);
+        }
+      }
+    }
+    return null;
+  }, [selectedStep, nodes, edges, scenario.trigger, library.modals]);
 
   const useTrigger = scenario.trigger != null;
   const triggerType = scenario.trigger?.type ?? "button";
@@ -375,7 +439,8 @@ export function ScenarioEditor({
             library={library}
             roles={roles}
             channels={channels}
-            triggerModalFields={triggerModalFields}
+            triggerModalFields={submittedModal?.fields}
+            afterModalSubmit={submittedModal != null}
             onUpdate={(action) => updateStepAction(selectedStep.id, action)}
             onUpdateMeta={(patch) => updateStepMeta(selectedStep.id, patch)}
           />

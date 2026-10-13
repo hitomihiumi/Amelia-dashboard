@@ -351,6 +351,14 @@ export const builder = {
     layoutNamed: "Layout: {name}",
     layoutNone: "Layout: not selected",
     layoutGone: "Layout: not found",
+    answerModal: "Submitted: {name}",
+    answerButton: "Clicked: {name}",
+    answerSelect: "Selected: {name}",
+    answerUnnamed: "(deleted)",
+    answerHint:
+      "The blue outputs on the step continue the scenario once the user answers the modal, button or select menu: connect them to the steps that should run next. Variables set before this step are not carried over to those steps.",
+    modalAfterModalWarning:
+      "Discord cannot open a modal in response to a modal submit. Show it from a button or select menu instead.",
   },
 
   workspace: {
@@ -512,6 +520,11 @@ export const builder = {
       onFailureMissing: "{ctx}: on-failure points to missing step \"{id}\"",
       onSuccessSelf: "{ctx}: on-success references itself",
       onFailureSelf: "{ctx}: on-failure references itself",
+      onInteractionMissing: "{ctx}: the answer link points to unknown step \"{id}\"",
+      onInteractionSelf: "{ctx}: an answer link references its own step",
+      onInteractionNotShown: "{ctx}: \"{id}\" is not shown by this step, so its answer cannot be linked",
+      onInteractionDuplicate:
+        "{ctx}: the answer to \"{id}\" is already linked from another step, a component can continue only one step",
     },
   },
 };

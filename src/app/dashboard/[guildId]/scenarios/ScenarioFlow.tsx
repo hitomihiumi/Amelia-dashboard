@@ -18,6 +18,7 @@ import {
   applyEdgeChanges,
   applyNodeChanges,
   useReactFlow,
+  useUpdateNodeInternals,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { DashIcon } from "@/components/dashboard/DashIcon";
@@ -29,7 +30,7 @@ import type { DiscordRole } from "@/lib/discord/role-style";
 import { Button, Column, IconButton, Row, Text } from "@once-ui-system/core";
 import type React from "react";
 import { LuLayoutTemplate } from "react-icons/lu";
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   ACTION_LABELS,
   ACTION_icons,
@@ -38,6 +39,7 @@ import {
   TRIGGER_NODE_ID,
   canvasEdge,
 } from "./scenarioGraph";
+import { awaitedComponents, interactionHandleId } from "./scenarioInteractions";
 import { LAYOUT_CAPABLE_ACTIONS } from "./scenarioValidation";
 import type { ComponentsLibrary } from "./scenariosTypes";
 
@@ -164,7 +166,8 @@ export function ScenarioFlow({
             (e) =>
               e.source === edge.source &&
               e.target === edge.target &&
-              e.data?.branch === edge.data?.branch,
+              e.data?.branch === edge.data?.branch &&
+              e.sourceHandle === edge.sourceHandle,
           )
         ) {
           next.push(edge);
@@ -352,7 +355,9 @@ function TriggerNode({ data }: NodeProps<ScenarioNode>) {
       style={{ minWidth: 160, boxShadow: "0 6px 16px rgba(0,0,0,0.25)", overflow: "visible" }}
     >
       <DashIcon name="trigger" size="s" />
-      <Text variant="label-strong-s">{hasTrigger ? t("builder.flow.trigger") : t("builder.flow.entryNoTrigger")}</Text>
+      <Text variant="label-strong-s">
+        {hasTrigger ? t("builder.flow.trigger") : t("builder.flow.entryNoTrigger")}
+      </Text>
       <Handle type="source" position={Position.Right} id="success" />
     </Row>
   );
@@ -417,7 +422,15 @@ function describeStepLayout(
     : { label: t("builder.flow.layoutGone"), warn: true };
 }
 
-function StepNode({ data, selected }: NodeProps<ScenarioNode>) {
+const ANSWER_HANDLE_COLOR = "#4c8dff";
+
+const ANSWER_LABELS = {
+  modal: "builder.flow.answerModal",
+  button: "builder.flow.answerButton",
+  select: "builder.flow.answerSelect",
+} as const;
+
+function StepNode({ id, data, selected }: NodeProps<ScenarioNode>) {
   const t = useT();
   const step = (data ?? {}).step as ScenarioStep | undefined;
   const actionType = step?.action?.type;
@@ -426,6 +439,20 @@ function StepNode({ data, selected }: NodeProps<ScenarioNode>) {
   const libraryContext = useContext(ScenarioFlowLibraryContext);
   const target = describeStepTarget(step, libraryContext, t);
   const layoutLine = describeStepLayout(step, libraryContext, t);
+
+  // One outgoing handle per modal / button / select menu the step shows: what comes after the
+  // user's answer is wired from there, not from a separate scenario.
+  const answers = useMemo(
+    () => (libraryContext ? awaitedComponents(step?.action, libraryContext.library) : []),
+    [step?.action, libraryContext],
+  );
+  const updateNodeInternals = useUpdateNodeInternals();
+  const answerKey = answers.map((a) => a.id).join("|");
+  // biome-ignore lint/correctness/useExhaustiveDependencies: answerKey stands for the handle set
+  useEffect(() => {
+    updateNodeInternals(id);
+  }, [id, answerKey, updateNodeInternals]);
+
   return (
     <Row
       gap="8"
@@ -446,7 +473,7 @@ function StepNode({ data, selected }: NodeProps<ScenarioNode>) {
         <DashIcon name={ACTION_icons[actionType]} size="s" style={{ flexShrink: 0 }} />
       )}
 
-      <Column gap="4" style={{ minWidth: 0 }}>
+      <Column gap="4" style={{ minWidth: 0, flex: 1 }}>
         <Text variant="label-strong-s">{label}</Text>
         {step?.name && (
           <Text
@@ -483,6 +510,36 @@ function StepNode({ data, selected }: NodeProps<ScenarioNode>) {
             ⚡ {t("builder.flow.conditionsCount", { count: step?.conditions?.length ?? 0 })}
           </Text>
         )}
+        {answers.map((answer) => (
+          <div
+            key={answer.id}
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              minHeight: 20,
+              marginTop: 2,
+              paddingTop: 4,
+              borderTop: "1px dashed var(--neutral-border-medium)",
+            }}
+          >
+            <Text
+              variant="label-default-s"
+              style={{ color: ANSWER_HANDLE_COLOR, wordBreak: "break-word" }}
+            >
+              ↩{" "}
+              {t(ANSWER_LABELS[answer.kind], {
+                name: answer.label || t("builder.flow.answerUnnamed"),
+              })}
+            </Text>
+            <Handle
+              type="source"
+              position={Position.Right}
+              id={interactionHandleId(answer.id)}
+              style={{ right: -9, top: "60%", background: ANSWER_HANDLE_COLOR }}
+            />
+          </div>
+        ))}
       </Column>
 
       <Handle

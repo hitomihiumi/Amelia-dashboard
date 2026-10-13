@@ -22,6 +22,7 @@ import {
 import type { GuildActionState } from "@/types/dashboard";
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
+import { awaitedComponents } from "./scenarioInteractions";
 import { type LibraryIds, makeReporter, validateAction } from "./scenarioValidation";
 
 const TRIGGER_TYPE_TO_COLLECTION: Record<ScenarioTriggerType, keyof ComponentsLibrary> = {
@@ -132,6 +133,9 @@ export async function updateScenarios(
   const errors: string[] = [];
   const report = makeReporter(errors, t);
   const scenarioIds = new Set<string>();
+  // Which step continues the answer to a component: one per component, or the bot could not tell
+  // which of two messages / scenarios a click belongs to.
+  const answerOwners = new Map<string, string>();
 
   parsed.forEach((scenario, i) => {
     const ctx = `scenario[${i}]`;
@@ -219,6 +223,24 @@ export async function updateScenarios(
       }
       if (step.onSuccess === step.id) report("onSuccessSelf", sctx);
       if (step.onFailure === step.id) report("onFailureSelf", sctx);
+
+      const shown = new Set(awaitedComponents(step.action, library).map((c) => c.id));
+      for (const [componentId, target] of Object.entries(step.onInteraction ?? {})) {
+        if (typeof target !== "string" || !stepIds.has(target)) {
+          report("onInteractionMissing", sctx, { id: String(target) });
+        } else if (target === step.id) {
+          report("onInteractionSelf", sctx);
+        }
+        if (!shown.has(componentId)) {
+          report("onInteractionNotShown", sctx, { id: componentId });
+        }
+        const owner = answerOwners.get(componentId);
+        if (owner && owner !== `${scenario.id}/${step.id}`) {
+          report("onInteractionDuplicate", sctx, { id: componentId });
+        } else {
+          answerOwners.set(componentId, `${scenario.id}/${step.id}`);
+        }
+      }
     });
   });
 

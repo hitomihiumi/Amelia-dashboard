@@ -31,6 +31,7 @@ import React from "react";
 import { LuLayoutTemplate } from "react-icons/lu";
 import { layoutReferenceProblems, summarizeLayout } from "./layoutSummary";
 import { ACTION_LABELS } from "./scenarioGraph";
+import { awaitedComponents } from "./scenarioInteractions";
 import type { ComponentsLibrary } from "./scenariosTypes";
 
 const CONDITION_OPERATOR_LABEL: Record<ScenarioConditionOperator, MessageKey> = {
@@ -92,6 +93,8 @@ export interface ActionNodeFormProps {
   channels: GuildChannelOption[];
   /** Fields of the modal that triggers this scenario, when the trigger is a modal submit. */
   triggerModalFields?: IModalField[];
+  /** The step runs on the submit of a modal (the trigger's, or one an earlier step showed). */
+  afterModalSubmit?: boolean;
   onUpdate: (action: ScenarioAction) => void;
   onUpdateMeta: (patch: Partial<ScenarioStep>) => void;
 }
@@ -103,12 +106,14 @@ export function ActionNodeForm({
   roles,
   channels,
   triggerModalFields,
+  afterModalSubmit,
   onUpdate,
   onUpdateMeta,
 }: ActionNodeFormProps) {
   const t = useT();
   const action = step.action;
   const update = (patch: Partial<ScenarioAction>) => onUpdate({ ...action, ...patch });
+  const answers = awaitedComponents(action, library);
 
   return (
     <Column gap="12" fillWidth padding="12" border="neutral-weak" radius="m" background="surface">
@@ -127,6 +132,16 @@ export function ActionNodeForm({
         guildId={guildId}
         update={update}
       />
+      {action.type === "show_modal" && afterModalSubmit && (
+        <Text variant="body-default-s" onBackground="warning-medium">
+          {t("builder.flow.modalAfterModalWarning")}
+        </Text>
+      )}
+      {answers.length > 0 && (
+        <Text variant="body-default-s" onBackground="neutral-weak">
+          {t("builder.flow.answerHint")}
+        </Text>
+      )}
 
       <ConditionsEditor
         step={step}
@@ -173,7 +188,7 @@ function ActionBody({
           guildId={guildId}
           update={update}
         />
-      )
+      );
     case "show_modal":
       return (
         <ReferenceField
@@ -343,7 +358,9 @@ function MessageActionFields({
         <SegmentedControl
           fillWidth
           value={isLayout ? "layout" : "classic"}
-          onChange={(v) => update({ layoutId: v === "layout" ? (action.layoutId ?? "") : undefined })}
+          onChange={(v) =>
+            update({ layoutId: v === "layout" ? (action.layoutId ?? "") : undefined })
+          }
           buttons={[
             { label: t("builder.actions.messageType.classic"), value: "classic" },
             { label: t("builder.actions.messageType.layout"), value: "layout" },
@@ -575,12 +592,7 @@ export function LayoutPicker({
                 {selected.name || t("builder.fallback.layout")}
               </Text>
             </Row>
-            <Button
-              size="s"
-              variant="tertiary"
-              suffixIcon="arrowUpRight"
-              href={layoutsHref}
-            >
+            <Button size="s" variant="tertiary" suffixIcon="arrowUpRight" href={layoutsHref}>
               {t("builder.actions.layout.edit")}
             </Button>
           </Row>
@@ -811,7 +823,13 @@ function ConditionRow({
             label: t(CONDITION_TYPE_LABEL[type]),
           }))}
         />
-        <IconButton icon="trash" variant="ghost" size="s" tooltip={t("builder.conditions.remove")} onClick={onDelete} />
+        <IconButton
+          icon="trash"
+          variant="ghost"
+          size="s"
+          tooltip={t("builder.conditions.remove")}
+          onClick={onDelete}
+        />
       </Row>
       {condition.type === "variable" && (
         <Input

@@ -363,6 +363,14 @@ export const builder: Dict<typeof en> = {
     layoutNamed: "Макет: {name}",
     layoutNone: "Макет: не выбран",
     layoutGone: "Макет: не найден",
+    answerModal: "Отправлено: {name}",
+    answerButton: "Нажата: {name}",
+    answerSelect: "Выбрано: {name}",
+    answerUnnamed: "(удалено)",
+    answerHint:
+      "Синие выходы шага продолжают сценарий, когда пользователь отвечает на модальное окно, кнопку или селект-меню: соедините их с шагами, которые должны выполниться дальше. Переменные, заданные до этого шага, в них не переносятся.",
+    modalAfterModalWarning:
+      "Discord не позволяет открыть модальное окно в ответ на отправку модального окна. Показывайте его из кнопки или селект-меню.",
   },
 
   workspace: {
@@ -523,6 +531,11 @@ export const builder: Dict<typeof en> = {
       onFailureMissing: "{ctx}: переход при ошибке ведёт на несуществующий шаг «{id}»",
       onSuccessSelf: "{ctx}: переход при успехе ведёт на сам шаг",
       onFailureSelf: "{ctx}: переход при ошибке ведёт на сам шаг",
+      onInteractionMissing: "{ctx}: переход по ответу ведёт на неизвестный шаг \"{id}\"",
+      onInteractionSelf: "{ctx}: переход по ответу ведёт на сам шаг",
+      onInteractionNotShown: "{ctx}: шаг не показывает \"{id}\", поэтому ответ на него нельзя связать",
+      onInteractionDuplicate:
+        "{ctx}: ответ на \"{id}\" уже связан с другим шагом, компонент может продолжать только один шаг",
     },
   },
 };

@@ -9,6 +9,13 @@ import type {
 import { MarkerType } from "@xyflow/react";
 import type { Edge, Node } from "@xyflow/react";
 import type { IconName } from "@/resources/icons";
+import {
+  type InteractionLibrary,
+  awaitedComponents,
+  componentIdOfHandle,
+  continuationTargetIds,
+  interactionHandleId,
+} from "./scenarioInteractions";
 
 /** Node id reserved for the trigger source (always rendered as a visual entry point). */
 export const TRIGGER_NODE_ID = "__trigger__";
@@ -20,9 +27,17 @@ export type ScenarioNodeData = {
 };
 
 export type ScenarioEdgeData = {
-  /** "default" = trigger→step (entry, not stored as onSuccess/onFailure); "success" / "fail" = step→step. */
-  branch: "success" | "fail" | "default";
+  /**
+   * "default" = trigger→step (entry, not stored as onSuccess/onFailure); "success" / "fail" = step→step;
+   * "interaction" = the answer to a modal / button / select menu a step showed → the step that
+   * continues from it (stored in `onInteraction[componentId]`).
+   */
+  branch: "success" | "fail" | "default" | "interaction";
+  /** Only for "interaction": the modal / button / select menu whose answer this edge carries. */
+  componentId?: string;
 };
+
+const ANSWER_EDGE_COLOR = "#4c8dff";
 
 const ARROW_MARKER = { type: MarkerType.ArrowClosed as const, width: 16, height: 16 };
 
@@ -37,6 +52,9 @@ const ARROW_MARKER = { type: MarkerType.ArrowClosed as const, width: 16, height:
  * onSuccess/onFailure at all. Both edge kinds are therefore synthesised here
  * so the canvas reflects actual execution order instead of showing detached
  * nodes for every scenario that doesn't explicitly wire every link.
+ *
+ * A scenario that wires answers (`onInteraction`) is the exception: the bot then runs strictly
+ * along the links, so nothing is synthesised and each chain ends where its last link ends.
  */
 export function stepsToNodesEdges(scenario: ScenarioCustom): {
   nodes: Node<ScenarioNodeData>[];
@@ -60,15 +78,23 @@ export function stepsToNodesEdges(scenario: ScenarioCustom): {
 
   const edges: Edge<ScenarioEdgeData>[] = [];
   const targeted = new Set<string>();
+  const explicitLinksOnly = continuationTargetIds(sortedSteps).size > 0;
+  const stepIds = new Set(sortedSteps.map((s) => s.id));
 
   for (let i = 0; i < sortedSteps.length; i++) {
     const step = sortedSteps[i];
     const nextStep = sortedSteps[i + 1];
 
+    for (const [componentId, target] of Object.entries(step.onInteraction ?? {})) {
+      if (!stepIds.has(target)) continue;
+      edges.push(makeInteractionEdge(step.id, target, componentId));
+      targeted.add(target);
+    }
+
     if (step.onSuccess) {
       edges.push(makeEdge(step.id, step.onSuccess, "success"));
       targeted.add(step.onSuccess);
-    } else if (nextStep) {
+    } else if (nextStep && !explicitLinksOnly) {
       // No explicit link — mirror the runner's "next step in order" fallback.
       edges.push(makeEdge(step.id, nextStep.id, "success"));
       targeted.add(nextStep.id);
@@ -119,6 +145,25 @@ function makeEdge(
   };
 }
 
+function makeInteractionEdge(
+  source: string,
+  target: string,
+  componentId: string,
+): Edge<ScenarioEdgeData> {
+  return {
+    id: `e-${source}-${target}-interaction-${componentId}`,
+    source,
+    target,
+    sourceHandle: interactionHandleId(componentId),
+    targetHandle: "in",
+    type: "smoothstep",
+    data: { branch: "interaction", componentId },
+    markerEnd: { ...ARROW_MARKER, color: ANSWER_EDGE_COLOR },
+    style: { stroke: ANSWER_EDGE_COLOR },
+    className: "scenario-edge scenario-edge-interaction",
+  };
+}
+
 /** Marker shape used when a user draws a fresh edge on the canvas. */
 export function canvasEdge(conn: {
   source: string;
@@ -127,6 +172,10 @@ export function canvasEdge(conn: {
   targetHandle: string | null;
 }): Edge<ScenarioEdgeData> {
   const handle = conn.sourceHandle ?? undefined;
+  const componentId = componentIdOfHandle(handle);
+  if (componentId && conn.source !== TRIGGER_NODE_ID) {
+    return makeInteractionEdge(conn.source, conn.target, componentId);
+  }
   const branch: ScenarioEdgeData["branch"] =
     conn.source === TRIGGER_NODE_ID
       ? "default"
@@ -151,6 +200,8 @@ export function canvasEdge(conn: {
 
 export interface StepFactory {
   defaultStep(id: string): ScenarioStep;
+  /** Component library: answers of a step that no longer shows the component are dropped on save. */
+  library?: InteractionLibrary;
 }
 
 /**
@@ -204,7 +255,8 @@ export function nodesEdgesToSteps(
     const ordered = [...next].sort((a, b) => {
       const aBranch = edges.find((e) => e.source === cur && e.target === a)?.data?.branch ?? "";
       const bBranch = edges.find((e) => e.source === cur && e.target === b)?.data?.branch ?? "";
-      const w = (br: string) => (br === "success" ? 0 : br === "fail" ? 1 : 2);
+      const w = (br: string) =>
+        br === "success" ? 0 : br === "fail" ? 1 : br === "interaction" ? 2 : 3;
       return w(aBranch) - w(bBranch);
     });
     for (const t of ordered) {
@@ -225,10 +277,16 @@ export function nodesEdgesToSteps(
   // Per-step successors from edges (success/fail; default edges ignored).
   const successEdges = new Map<string, string | undefined>();
   const failEdges = new Map<string, string | undefined>();
+  const answerEdges = new Map<string, Record<string, string>>();
   for (const e of edges) {
     if (!byId.has(e.source) || !byId.has(e.target)) continue;
     if (e.data?.branch === "success") successEdges.set(e.source, e.target);
     else if (e.data?.branch === "fail") failEdges.set(e.source, e.target);
+    else if (e.data?.branch === "interaction") {
+      const componentId = e.data.componentId ?? componentIdOfHandle(e.sourceHandle);
+      if (!componentId) continue;
+      answerEdges.set(e.source, { ...answerEdges.get(e.source), [componentId]: e.target });
+    }
   }
 
   return orderedIds.map((id, order) => {
@@ -236,7 +294,19 @@ export function nodesEdgesToSteps(
     const base = (node.data?.step ?? factory.defaultStep(id)) as ScenarioStep;
     const onSuccess = sanitizeTarget(successEdges.get(id), (t) => byId.has(t));
     const onFailure = sanitizeTarget(failEdges.get(id), (t) => byId.has(t));
-    return { ...base, id, order, onSuccess, onFailure };
+
+    // Only answers to something the step still shows can be continued
+    const shown = new Set(
+      awaitedComponents(base.action, factory.library ?? {}).map((component) => component.id),
+    );
+    const answers = Object.fromEntries(
+      Object.entries(answerEdges.get(id) ?? {}).filter(
+        ([componentId]) => !factory.library || shown.has(componentId),
+      ),
+    );
+    const onInteraction = Object.keys(answers).length > 0 ? answers : undefined;
+
+    return { ...base, id, order, onSuccess, onFailure, onInteraction };
   });
 }
 
