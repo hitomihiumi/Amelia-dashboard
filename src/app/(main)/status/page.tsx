@@ -1,8 +1,7 @@
 import React from "react";
 import { Column, Flex, RevealFx, Text } from "@once-ui-system/core";
-import { Meta } from "@once-ui-system/core";
 import type { Metadata } from "next";
-import { baseURL, schema } from "@/resources";
+import { pageMetadata } from "@/lib/seo/metadata";
 import { evaluateIncidents, getIncidents, getStatusSnapshot } from "@/lib/status/status";
 import { getT } from "@/i18n/server";
 import { IncidentCard } from "@/components/status/IncidentCard";
@@ -18,10 +17,9 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
 
-  return Meta.generate({
-    title: `${t("site.status.metaTitle")} – ${schema.name}`,
+  return pageMetadata({
+    title: t("site.status.metaTitle"),
     description: t("site.status.metaDescription"),
-    baseURL,
     path: "/status",
   });
 }

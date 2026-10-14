@@ -6,13 +6,14 @@ import "@/resources/custom.css";
 import classNames from "classnames";
 
 import { fonts, fontStacks, style, dataStyle } from "@/resources/once-ui.config";
-import { Column, Flex, Meta, ThemeInit } from "@once-ui-system/core";
+import { Column, Flex, ThemeInit } from "@once-ui-system/core";
 import { Providers } from "@/components/Providers";
 
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { baseURL, meta, schema } from "@/resources";
 import { Metadata } from "next";
+import { ogCardUrl } from "@/lib/seo/metadata";
 
 import { cookies } from "next/headers";
 import { CONSENT_COOKIE, parseConsent } from "@/lib/consent";
@@ -23,21 +24,31 @@ import { LOCALE_META } from "@/i18n/config";
 import { getLocale, loadMessages } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const baseMetadata = Meta.generate({
-    title: meta.home.title,
-    description: meta.home.description,
-    baseURL: baseURL,
-    path: meta.home.path,
-    image: meta.home.image,
-  });
+  const image = ogCardUrl(meta.home.title.split(" – ")[0], meta.home.description);
 
   return {
-    ...baseMetadata,
-    metadataBase: new URL(`${baseURL}`),
+    metadataBase: new URL(baseURL),
+    title: meta.home.title,
+    description: meta.home.description,
+    keywords: meta.home.keywords,
+    applicationName: schema.name,
+    authors: [schema.author],
+    creator: schema.author.name,
+    category: "technology",
     openGraph: {
-      ...baseMetadata.openGraph,
-      siteName: meta.home.title,
-      locale: schema.locale,
+      type: "website",
+      siteName: schema.name,
+      locale: schema.locale.replace("-", "_"),
+      title: meta.home.title,
+      description: meta.home.description,
+      url: baseURL,
+      images: [{ url: image, alt: meta.home.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: meta.home.title,
+      description: meta.home.description,
+      images: [image],
     },
     robots: {
       index: true,
@@ -49,6 +60,14 @@ export async function generateMetadata(): Promise<Metadata> {
         "max-image-preview": "large",
         "max-snippet": -1,
       },
+    },
+    // Ownership proof for Google Search Console / Yandex Webmaster; both are optional.
+    verification: {
+      google: process.env.GOOGLE_SITE_VERIFICATION || undefined,
+      yandex: process.env.YANDEX_VERIFICATION || undefined,
+      other: process.env.BING_SITE_VERIFICATION
+        ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION }
+        : undefined,
     },
   };
 }

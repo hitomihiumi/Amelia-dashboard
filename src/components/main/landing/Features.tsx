@@ -49,7 +49,7 @@ export async function Features() {
   return (
     <Column fillWidth gap="16">
       <Column gap="8">
-        <Text variant="heading-strong-l">{t("site.landing.features.title")}</Text>
+        <Text as="h2" variant="heading-strong-l">{t("site.landing.features.title")}</Text>
         <Text variant="body-default-m" onBackground="neutral-medium">
           {t("site.landing.features.subtitle")}
         </Text>
@@ -69,7 +69,7 @@ export async function Features() {
             background="surface"
           >
             <Icon name={feature.icon} size="m" onBackground="brand-medium" />
-            <Text variant="heading-strong-s">{t(feature.title)}</Text>
+            <Text as="h3" variant="heading-strong-s">{t(feature.title)}</Text>
             <Text variant="body-default-s" onBackground="neutral-weak">
               {t(feature.text)}
             </Text>

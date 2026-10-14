@@ -104,7 +104,7 @@ export function StatusView({
           >
             <Icon name={HEADLINE_ICON[overall]} size="l" />
           </Flex>
-          <Text variant="display-strong-xs" align="center">
+          <Text as="h1" variant="display-strong-xs" align="center">
             {t(`site.status.headline.${overall}`)}
           </Text>
           <Text variant="body-default-m" onBackground="neutral-weak" align="center">

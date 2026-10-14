@@ -55,7 +55,7 @@ export function Hero({
           <Text variant="heading-strong-xs" onBackground="brand-medium">
             <TypeFx words={words} speed={80} hold={2000} trigger="instant" />
           </Text>
-          <Text variant="display-strong-l" onBackground="brand-weak">
+          <Text as="h1" variant="display-strong-l" onBackground="brand-weak">
             Amelia
           </Text>
         </Column>

@@ -1,13 +1,28 @@
 import React from "react";
 import { notFound } from "next/navigation";
-import { Button, Column, Flex, Row, Tag, Text, Meta } from "@once-ui-system/core";
+import { Button, Column, Flex, Row, Tag, Text } from "@once-ui-system/core";
 import type { Metadata } from "next";
 import { baseURL, schema } from "@/resources";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { ogCardUrl, pageMetadata } from "@/lib/seo/metadata";
 import { Markdown } from "@/components/content/Markdown";
 import { getFormatters, getT } from "@/i18n/server";
 import { getPostBySlug, isNewsCategory } from "@/lib/news/news";
 
 export const dynamic = "force-dynamic";
+
+/** Posts written without a summary still get a description made of their first words. */
+function articleDescription(markdown: string): string {
+  const text = markdown
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/[#>*_`~|-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return text.length > 160 ? `${text.slice(0, 157).trimEnd()}…` : text;
+}
 
 export async function generateMetadata({
   params,
@@ -19,18 +34,14 @@ export async function generateMetadata({
 
   if (!post) return {};
 
-  return Meta.generate({
-    title: `${post.title} – ${schema.name}`,
-    description: post.summary || "",
-    baseURL,
+  return pageMetadata({
+    title: post.title,
+    description: post.summary || articleDescription(post.content),
     path: `/news/${post.slug}`,
     type: "article",
     publishedTime: (post.publishedAt ?? post.createdAt).toISOString(),
-    image:
-      post.coverUrl ||
-      `/api/og/generate?title=${encodeURIComponent(post.title)}&description=${encodeURIComponent(
-        post.summary || "",
-      )}`,
+    modifiedTime: post.updatedAt.toISOString(),
+    image: post.coverUrl || undefined,
   });
 }
 
@@ -42,8 +53,24 @@ export default async function NewsPostPage({ params }: { params: Promise<{ slug:
 
   if (!post) notFound();
 
+  const cover = post.coverUrl || ogCardUrl(post.title, post.summary || undefined);
+
   return (
     <Flex fillWidth horizontal="center" paddingY="40" paddingX="16">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          mainEntityOfPage: `${baseURL}/news/${post.slug}`,
+          headline: post.title,
+          description: post.summary || articleDescription(post.content),
+          image: cover.startsWith("http") ? cover : `${baseURL}${cover}`,
+          datePublished: (post.publishedAt ?? post.createdAt).toISOString(),
+          dateModified: post.updatedAt.toISOString(),
+          author: { "@type": "Person", name: schema.author.name, url: schema.author.url },
+          publisher: { "@type": "Organization", name: schema.name, url: baseURL },
+        }}
+      />
       <Column maxWidth="s" fillWidth gap="24">
         <Button size="s" variant="secondary" prefixIcon="back" href="/news">
           {t("site.news.allNews")}
@@ -60,7 +87,7 @@ export default async function NewsPostPage({ params }: { params: Promise<{ slug:
               {format.date(post.publishedAt ?? post.createdAt, { dateStyle: "long" })}
             </Text>
           </Row>
-          <Text variant="display-strong-xs">{post.title}</Text>
+          <Text as="h1" variant="display-strong-xs">{post.title}</Text>
           {post.summary && (
             <Text variant="body-default-m" onBackground="neutral-medium">
               {post.summary}
