@@ -145,6 +145,7 @@ export const site = {
   legal: {
     lastUpdated: "Last updated: {date}",
     terms: {
+      metaDescription: "How Amelia, the Discord bot, may be used: acceptable use, availability and termination of access.",
       s1: {
         title: "1. Acceptance of Terms",
         text: "By inviting Amelia (the “Bot”) to your Discord server or logging into our Dashboard, you agree to comply with and be bound by these Terms of Service. If you do not agree with these terms, you must remove the Bot from your server and cease using the Dashboard.",
@@ -174,6 +175,7 @@ export const site = {
       },
     },
     privacy: {
+      metaDescription: "What data the Amelia Discord bot and its dashboard store, why, and how to have it removed.",
       s1: {
         title: "1. Information We Collect",
         intro:

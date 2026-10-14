@@ -8,9 +8,42 @@ import { LandingStats } from "@/components/main/landing/LandingStats";
 import { Features } from "@/components/main/landing/Features";
 import { LatestNews } from "@/components/main/landing/LatestNews";
 import { StatusTeaser } from "@/components/main/landing/StatusTeaser";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { baseURL, meta, schema } from "@/resources";
 import { getT } from "@/i18n/server";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+// Title, description and social card come from the root layout; the page only claims its URL.
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+
+const STRUCTURED_DATA = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${baseURL}/#website`,
+    url: baseURL,
+    name: schema.name,
+    description: meta.home.description,
+    inLanguage: ["en", "ru", "uk"],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "@id": `${baseURL}/#bot`,
+    name: schema.name,
+    url: baseURL,
+    description: meta.home.description,
+    image: `${baseURL}${schema.logo}`,
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Discord",
+    isAccessibleForFree: true,
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    author: { "@type": "Person", name: schema.author.name, url: schema.author.url },
+    sameAs: schema.sameAs,
+  },
+];
 
 export default async function Home() {
   const t = await getT();
@@ -32,6 +65,7 @@ export default async function Home() {
 
   return (
     <Flex fill horizontal="center" paddingY="32" paddingX="16">
+      <JsonLd data={STRUCTURED_DATA} />
       <Column maxWidth="l" fill gap="xl">
         <RevealFx translateY={-0.5}>
           <Row fill center>
@@ -55,7 +89,7 @@ export default async function Home() {
               <Text variant="label-default-s" onBackground="brand-medium">
                 {t("site.landing.stats.eyebrow")}
               </Text>
-              <Text variant="heading-strong-l" align="center">
+              <Text as="h2" variant="heading-strong-l" align="center">
                 {t("site.landing.stats.title")}
               </Text>
             </Column>

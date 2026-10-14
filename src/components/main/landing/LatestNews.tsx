@@ -14,7 +14,7 @@ export async function LatestNews({ posts }: { posts: NewsPost[] }) {
   return (
     <Column fillWidth gap="16">
       <Row fillWidth horizontal="between" vertical="center" gap="8" wrap>
-        <Text variant="heading-strong-l">{t("site.landing.latestNews.title")}</Text>
+        <Text as="h2" variant="heading-strong-l">{t("site.landing.latestNews.title")}</Text>
         <Button size="s" variant="secondary" href="/news">
           {t("site.landing.latestNews.all")}
         </Button>
@@ -43,7 +43,7 @@ export async function LatestNews({ posts }: { posts: NewsPost[] }) {
                   {format.date(post.publishedAt ?? post.createdAt, { dateStyle: "long" })}
                 </Text>
               </Row>
-              <Text variant="heading-strong-s">{post.title}</Text>
+              <Text as="h3" variant="heading-strong-s">{post.title}</Text>
               {post.summary && (
                 <Text variant="body-default-s" onBackground="neutral-weak">
                   {post.summary}

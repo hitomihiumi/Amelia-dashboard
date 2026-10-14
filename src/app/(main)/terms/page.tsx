@@ -1,5 +1,17 @@
 import { Flex, Text, Column, Line, List, ListItem, RevealFx } from "@once-ui-system/core";
+import type { Metadata } from "next";
 import { getFormatters, getT } from "@/i18n/server";
+import { pageMetadata } from "@/lib/seo/metadata";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+
+  return pageMetadata({
+    title: t("common.nav.terms"),
+    description: t("site.legal.terms.metaDescription"),
+    path: "/terms",
+  });
+}
 
 export default async function TermsOfServicePage() {
   const t = await getT();
@@ -10,7 +22,7 @@ export default async function TermsOfServicePage() {
       <Column maxWidth="m" gap="24" fillWidth>
         <RevealFx translateY={-0.5}>
           <Column gap="8">
-            <Text variant="heading-strong-xl">{t("common.nav.terms")}</Text>
+            <Text as="h1" variant="heading-strong-xl">{t("common.nav.terms")}</Text>
             <Text variant="body-default-m" onBackground="neutral-weak">
               {t("site.legal.lastUpdated", {
                 date: format.date("2026-05-09", { dateStyle: "long", timeZone: "UTC" }),

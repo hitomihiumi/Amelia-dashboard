@@ -3,6 +3,11 @@ import { notFound } from "next/navigation";
 import { Avatar, Column, Flex, Row, Text } from "@once-ui-system/core";
 import { fetchGuildBrief } from "@/lib/discord/rest";
 import { getT } from "@/i18n/server";
+import { PRIVATE_METADATA } from "@/lib/seo/metadata";
+import type { Metadata } from "next";
+
+// Only meant for signed in people: kept out of search results.
+export const metadata: Metadata = { ...PRIVATE_METADATA, title: "Submit – Amelia" };
 
 export default async function SubmitLayout({
   children,

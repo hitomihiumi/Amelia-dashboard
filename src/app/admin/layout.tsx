@@ -7,6 +7,11 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { UnsavedChangesProvider } from "@/contexts/UnsavedChangesContext";
 import { UnsavedNavigationGuard } from "@/components/layout/UnsavedNavigationGuard";
 import { UnsavedBar } from "@/components/layout/UnsavedBar";
+import { PRIVATE_METADATA } from "@/lib/seo/metadata";
+import type { Metadata } from "next";
+
+// Only meant for signed in people: kept out of search results.
+export const metadata: Metadata = { ...PRIVATE_METADATA, title: "Admin panel – Amelia" };
 
 export const dynamic = "force-dynamic";
 

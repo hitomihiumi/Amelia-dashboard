@@ -11,13 +11,13 @@ import {
   Text,
   Card,
   HeadingNav,
-  Meta,
   Schema,
   Button,
 } from "@once-ui-system/core";
 import { baseURL, layout, schema } from "@/resources";
 import { CustomMDX } from "@/components/docs/mdx";
 import { Metadata } from "next";
+import { MIN_INDEXABLE_DOC_LENGTH, ogCardUrl, pageMetadata } from "@/lib/seo/metadata";
 import React from "react";
 
 export async function generateMetadata({
@@ -34,16 +34,15 @@ export async function generateMetadata({
 
   if (!doc) return {};
 
-  return Meta.generate({
-    title: doc.metadata.title + " – " + schema.name,
-    description: doc.metadata.summary || "",
-    baseURL,
+  return pageMetadata({
+    title: doc.metadata.title,
+    description: doc.metadata.summary || schema.description,
     path: `/docs/${doc.slug}`,
     type: "article",
-    publishedTime: doc.metadata.updatedAt,
-    image:
-      doc.metadata.image ||
-      `/api/og/generate?title=${encodeURIComponent(doc.metadata.title)}&description=${encodeURIComponent(doc.metadata.summary || "")}`,
+    publishedTime: doc.metadata.updatedAt || undefined,
+    image: doc.metadata.image,
+    // Placeholder pages stay reachable but are kept out of search results.
+    noindex: doc.content.trim().length < MIN_INDEXABLE_DOC_LENGTH,
   });
 }
 
@@ -83,7 +82,7 @@ export default async function Docs({ params }: { params: Promise<{ slug: string[
             path={`/docs/${doc.slug}`}
             datePublished={doc.metadata.updatedAt}
             dateModified={doc.metadata.updatedAt}
-            image={doc.metadata.image}
+            image={doc.metadata.image || ogCardUrl(doc.metadata.title, doc.metadata.summary)}
             author={{
               name: schema.name,
             }}

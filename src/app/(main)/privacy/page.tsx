@@ -1,6 +1,18 @@
 import { Flex, Text, Column, Line, List, ListItem, RevealFx } from "@once-ui-system/core";
+import type { Metadata } from "next";
 import { getFormatters, getT } from "@/i18n/server";
+import { pageMetadata } from "@/lib/seo/metadata";
 import { CookieSettingsButton } from "@/components/consent/CookieSettingsButton";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+
+  return pageMetadata({
+    title: t("common.nav.privacy"),
+    description: t("site.legal.privacy.metaDescription"),
+    path: "/privacy",
+  });
+}
 
 export default async function PrivacyPolicyPage() {
   const t = await getT();
@@ -11,7 +23,7 @@ export default async function PrivacyPolicyPage() {
       <Column maxWidth="m" gap="24" fillWidth>
         <RevealFx translateY={-0.5}>
           <Column gap="8">
-            <Text variant="heading-strong-xl">{t("common.nav.privacy")}</Text>
+            <Text as="h1" variant="heading-strong-xl">{t("common.nav.privacy")}</Text>
             <Text variant="body-default-m" onBackground="neutral-weak">
               {t("site.legal.lastUpdated", {
                 date: format.date("2026-10-03", { dateStyle: "long", timeZone: "UTC" }),

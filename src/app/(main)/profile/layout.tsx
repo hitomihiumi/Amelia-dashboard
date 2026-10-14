@@ -7,6 +7,11 @@ import { UnsavedNavigationGuard } from "@/components/layout/UnsavedNavigationGua
 import styles from "@/components/profile/Profile.module.scss";
 import { UnsavedChangesProvider } from "@/contexts/UnsavedChangesContext";
 import { authOptions } from "@/lib/auth";
+import { PRIVATE_METADATA } from "@/lib/seo/metadata";
+import type { Metadata } from "next";
+
+// Only meant for signed in people: kept out of search results.
+export const metadata: Metadata = { ...PRIVATE_METADATA, title: "Profile – Amelia" };
 
 export const dynamic = "force-dynamic";
 

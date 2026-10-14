@@ -8,12 +8,11 @@ import {
   Row,
   Tag,
   Text,
-  Meta,
   RevealFx,
   Card,
 } from "@once-ui-system/core";
 import type { Metadata } from "next";
-import { baseURL, schema } from "@/resources";
+import { pageMetadata } from "@/lib/seo/metadata";
 import { getFormatters, getT } from "@/i18n/server";
 import {
   NEWS_CATEGORIES,
@@ -24,14 +23,20 @@ import {
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; page?: string }>;
+}): Promise<Metadata> {
   const t = await getT();
+  const query = await searchParams;
 
-  return Meta.generate({
-    title: `${t("site.news.title")} – ${schema.name}`,
+  return pageMetadata({
+    title: t("site.news.title"),
     description: t("site.news.metaDescription"),
-    baseURL,
     path: "/news",
+    // Filtered and paged views repeat the same posts; the posts themselves are in the sitemap.
+    noindex: Boolean(query.category) || (Number(query.page) || 1) > 1,
   });
 }
 
@@ -63,7 +68,7 @@ export default async function NewsPage({
       <Column maxWidth="l" fillWidth gap="32">
         <RevealFx translateY={-0.5}>
           <Column gap="8">
-            <Text variant="display-strong-xs">{t("site.news.title")}</Text>
+            <Text as="h1" variant="display-strong-xs">{t("site.news.title")}</Text>
             <Text variant="body-default-m" onBackground="neutral-medium">
               {t("site.news.subtitle")}
             </Text>
@@ -135,7 +140,7 @@ export default async function NewsPage({
                     {format.date(post.publishedAt ?? post.createdAt, { dateStyle: "long" })}
                   </Text>
                 </Row>
-                <Text variant="heading-strong-s">{post.title}</Text>
+                <Text as="h2" variant="heading-strong-s">{post.title}</Text>
                 {post.summary && (
                   <Text variant="body-default-s" onBackground="neutral-weak">
                     {post.summary}
