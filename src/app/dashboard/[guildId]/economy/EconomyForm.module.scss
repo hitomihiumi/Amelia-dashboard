@@ -35,6 +35,12 @@
     grid-column: 2;
     grid-row: 1 / span 4;
   }
+
+  // The slot machine has the warning and three fields: it gets the whole row below the others.
+  .incomeGrid > .slots {
+    grid-column: 1 / -1;
+    grid-row: 5;
+  }
 }
 
 .groupLabel {

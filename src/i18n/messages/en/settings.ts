@@ -156,6 +156,17 @@ export const settings = {
     maxPunishment: "Max Punishment",
     failChance: "Chance of failure",
     winChance: "Chance of win",
+    slotsTitle: "Slot machine",
+    slotsDescription:
+      "A slot machine on the website, played with the server currency. Virtual currency only: no real money is involved.",
+    slotsMinBet: "Min bet",
+    slotsMaxBet: "Max bet",
+    slotsCooldown: "Pause between spins (s)",
+    slotsWarningTitle: "Virtual currency only. Not real gambling.",
+    slotsWarning:
+      "Players spin with the server's virtual currency, which cannot be bought, sold or withdrawn. Every page of the game says that it is not gambling with real money and does not encourage it. Please never trade the currency for real money or real prizes: casinos on real money are harmful.",
+    slotsHint:
+      "Members play on the website or open it with the /slots command. The theoretical return of the machine is about {rtp}%.",
     errors: {
       salaryNegative: "Salary cannot be negative.",
       minSalaryRange: "Minimum salary out of range.",
@@ -174,6 +185,10 @@ export const settings = {
       robPunishmentRange: "Rob punishment out of range.",
       robPunishmentOrder: "Minimum rob punishment cannot be greater than maximum rob punishment.",
       robFailChance: "Rob fail chance must be between 0 and 100.",
+      slotsMinBet: "Minimum bet must be at least 1.",
+      slotsMaxBet: "Maximum bet cannot be greater than {max}.",
+      slotsBetOrder: "Minimum bet cannot be greater than maximum bet.",
+      slotsCooldown: "Pause between spins must be between 1 and {max} seconds.",
     },
   },
   shop: {

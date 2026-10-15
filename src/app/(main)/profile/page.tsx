@@ -83,6 +83,37 @@ export default async function ProfileOverviewPage() {
         </Card>
       </RevealFx>
 
+      <RevealFx delay={750} translateY={-0.5}>
+        <Card
+          href="/profile/slots"
+          fillWidth
+          radius="l"
+          padding="16"
+          border="neutral-alpha-medium"
+          background="surface"
+          className={styles.linkCard}
+        >
+          <Row fillWidth gap="16" vertical="center">
+            <Row
+              center
+              radius="m"
+              background="brand-alpha-weak"
+              border="brand-alpha-medium"
+              style={{ width: 48, height: 48, flexShrink: 0 }}
+            >
+              <Icon name="gamepad" size="m" onBackground="brand-strong" />
+            </Row>
+            <Column gap="4" flex={1} minWidth={0}>
+              <Text variant="heading-strong-s">{t("slots.page.linkTitle")}</Text>
+              <Text variant="body-default-s" onBackground="neutral-weak">
+                {t("slots.page.linkDescription")}
+              </Text>
+            </Column>
+            <Icon name="chevronRight" size="s" onBackground="neutral-weak" />
+          </Row>
+        </Card>
+      </RevealFx>
+
       {loadError === "session" && (
         <RevealFx delay={900} translateY={-0.5}>
           <Feedback
