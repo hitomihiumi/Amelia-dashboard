@@ -4,8 +4,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db/db";
 import { getT } from "@/i18n/server";
-import { INT32_MAX, resolveSpin, type SlotOutcome, type SlotSymbol } from "@/lib/slots/config";
-import { drawReels } from "@/lib/slots/engine";
+import {
+  INT32_MAX,
+  evaluateGrid,
+  isLineMode,
+  type LineWin,
+  type SlotGrid,
+} from "@/lib/slots/config";
+import { drawGrid } from "@/lib/slots/engine";
 import { SNOWFLAKE, findMemberGuild } from "@/lib/slots/access";
 
 export type SpinErrorCode =
@@ -15,25 +21,49 @@ export type SpinErrorCode =
   | "notMember"
   | "disabled"
   | "invalidBet"
+  | "invalidLines"
   | "betRange"
   | "insufficient"
   | "cooldown"
   | "balanceTooHigh"
+  | "busy"
   | "generic";
+
+/** Free spins a member has won and still has to play. */
+export interface FreeSpinState {
+  left: number;
+  /** Bet on one line, the same for the whole round. */
+  perLine: number;
+  lines: number;
+  /** What the round has paid so far. */
+  won: number;
+}
 
 export type SpinResponse =
   | {
       ok: true;
-      reels: SlotSymbol[];
-      outcome: SlotOutcome;
-      multiplier: number;
-      /** Coins paid out in total. The bet is already spent, so the net is `payout - bet`. */
+      /** The symbols the reels stop on, `grid[reel][row]`. */
+      grid: SlotGrid;
+      wins: LineWin[];
+      /** Cells that are part of a win, `[reel, row]`. */
+      cells: [number, number][];
+      /** Coins paid out by the lines in total. */
       payout: number;
+      /** Coins taken for this spin, 0 for a free spin. */
       bet: number;
+      perLine: number;
+      lines: number;
       /** The balance after the spin. */
       wallet: number;
-      /** Reel indexes that make up the win. */
-      winning: number[];
+      /** This spin was a free one. */
+      free: boolean;
+      /** Free spins this spin has won. */
+      freeAwarded: number;
+      /** Free spins that are left after this spin, `null` when there are none. */
+      freeState: FreeSpinState | null;
+      /** A free spin round ended with this spin and paid this much in total. */
+      freeRoundTotal: number | null;
+      scatters: number;
     }
   | {
       ok: false;
@@ -49,13 +79,20 @@ export type SpinResponse =
  * One spin of the slot machine, played with the member's own balance on one server.
  *
  * Everything that matters happens here: the browser only asks for a spin and plays an animation
- * of the answer. The reels are drawn with a secure random generator, and the bet, the payout and
- * the pause between spins are applied in a single conditional UPDATE, so two spins sent at the
- * same moment cannot spend the same coins or skip the pause.
+ * of the answer. The cells are drawn with a secure random generator, and the bet, the payout, the
+ * free spins and the pause between spins are applied in a single conditional UPDATE, so two spins
+ * sent at the same moment cannot spend the same coins, play the same free spin or skip the pause.
+ *
+ * While the member has free spins left, every call plays one of them at the bet and lines the round
+ * started with, whatever the browser sends.
  *
  * Virtual server currency only. Nothing here touches real money.
  */
-export async function spinSlots(guildId: string, bet: number): Promise<SpinResponse> {
+export async function spinSlots(
+  guildId: string,
+  perLine: number,
+  lines: number,
+): Promise<SpinResponse> {
   const t = await getT();
   const fail = (
     code: SpinErrorCode,
@@ -77,7 +114,6 @@ export async function spinSlots(guildId: string, bet: number): Promise<SpinRespo
     }
 
     if (typeof guildId !== "string" || !SNOWFLAKE.test(guildId)) return fail("invalidServer");
-    if (typeof bet !== "number" || !Number.isSafeInteger(bet)) return fail("invalidBet");
 
     // Only servers the member really is on.
     const member = await findMemberGuild(session.accessToken, guildId);
@@ -85,23 +121,44 @@ export async function spinSlots(guildId: string, bet: number): Promise<SpinRespo
 
     const guild = await prisma.guild.findUnique({
       where: { id: guildId },
-      select: {
-        slotsEnabled: true,
-        slotsMinBet: true,
-        slotsMaxBet: true,
-        slotsCooldown: true,
-      },
+      select: { slotsEnabled: true, slotsMinBet: true, slotsMaxBet: true, slotsCooldown: true },
     });
     if (!guild) return fail("invalidServer");
     if (!guild.slotsEnabled) return fail("disabled");
 
-    if (bet < guild.slotsMinBet || bet > guild.slotsMaxBet) {
-      return fail("betRange", { min: guild.slotsMinBet, max: guild.slotsMaxBet });
+    const current = await prisma.user.findUnique({
+      where: { userId_guildId: { userId, guildId } },
+      select: {
+        wallet: true,
+        slotsTimeout: true,
+        slotsFreeSpins: true,
+        slotsFreeBet: true,
+        slotsFreeLines: true,
+        slotsFreeWon: true,
+      },
+    });
+
+    const free = (current?.slotsFreeSpins ?? 0) > 0;
+    const playPerLine = free ? (current?.slotsFreeBet ?? 0) : perLine;
+    const playLines = free ? (current?.slotsFreeLines ?? 1) : lines;
+
+    if (!free) {
+      if (typeof perLine !== "number" || !Number.isSafeInteger(perLine) || perLine < 1) {
+        return fail("invalidBet");
+      }
+      if (!isLineMode(lines)) return fail("invalidLines");
+      const total = perLine * lines;
+      if (total < guild.slotsMinBet || total > guild.slotsMaxBet) {
+        return fail("betRange", { min: guild.slotsMinBet, max: guild.slotsMaxBet });
+      }
     }
 
+    const total = playPerLine * playLines;
+    const bet = free ? 0 : total;
+
     // The draw does not depend on anything the member sends, only the bet scales the payout.
-    const reels = drawReels();
-    const result = resolveSpin(reels, bet);
+    const grid = drawGrid();
+    const result = evaluateGrid(grid, playPerLine, playLines, free);
     const net = result.payout - bet;
 
     const now = new Date();
@@ -110,26 +167,61 @@ export async function spinSlots(guildId: string, bet: number): Promise<SpinRespo
     // The balance is a 32-bit integer: refuse a spin whose payout would not fit.
     const headroom = net > 0 ? INT32_MAX - net : INT32_MAX;
 
-    const wallet = await prisma.$transaction(async (tx) => {
-      const updated = await tx.user.updateMany({
-        where: {
-          userId,
-          guildId,
-          wallet: { gte: bet, lte: headroom },
-          OR: [{ slotsTimeout: null }, { slotsTimeout: { lte: cutoff } }],
-        },
-        data: { wallet: { increment: net }, slotsTimeout: now },
-      });
+    const left = free
+      ? (current?.slotsFreeSpins ?? 0) - 1 + result.freeSpinsAwarded
+      : result.freeSpinsAwarded;
+    const roundWon = free ? (current?.slotsFreeWon ?? 0) + result.payout : 0;
+
+    const outcome = await prisma.$transaction(async (tx) => {
+      const updated = free
+        ? // A free spin: only if the round is exactly where it was read, so one call plays it once.
+          await tx.user.updateMany({
+            where: {
+              userId,
+              guildId,
+              slotsFreeSpins: current?.slotsFreeSpins,
+              slotsFreeWon: current?.slotsFreeWon,
+              wallet: { lte: headroom },
+            },
+            data: {
+              wallet: { increment: net },
+              slotsFreeSpins: left,
+              slotsFreeWon: left > 0 ? roundWon : 0,
+            },
+          })
+        : await tx.user.updateMany({
+            where: {
+              userId,
+              guildId,
+              slotsFreeSpins: 0,
+              wallet: { gte: bet, lte: headroom },
+              OR: [{ slotsTimeout: null }, { slotsTimeout: { lte: cutoff } }],
+            },
+            data: {
+              wallet: { increment: net },
+              slotsTimeout: now,
+              ...(left > 0
+                ? {
+                    slotsFreeSpins: left,
+                    slotsFreeBet: playPerLine,
+                    slotsFreeLines: playLines,
+                    slotsFreeWon: 0,
+                  }
+                : {}),
+            },
+          });
 
       const row = await tx.user.findUnique({
         where: { userId_guildId: { userId, guildId } },
-        select: { wallet: true, slotsTimeout: true },
+        select: { wallet: true, slotsTimeout: true, slotsFreeSpins: true },
       });
       return { applied: updated.count === 1, row };
     });
 
-    if (!wallet.applied) {
-      const row = wallet.row;
+    if (!outcome.applied) {
+      const row = outcome.row;
+      if (free || (row?.slotsFreeSpins ?? 0) > 0)
+        return fail("busy", undefined, { wallet: row?.wallet });
       if (!row || row.wallet < bet) {
         return fail("insufficient", undefined, { wallet: row?.wallet ?? 0 });
       }
@@ -143,22 +235,25 @@ export async function spinSlots(guildId: string, bet: number): Promise<SpinRespo
       return fail(
         "cooldown",
         { seconds: Math.ceil(retryAfterMs / 1000) },
-        {
-          retryAfterMs,
-          wallet: row.wallet,
-        },
+        { retryAfterMs, wallet: row.wallet },
       );
     }
 
     return {
       ok: true,
-      reels,
-      outcome: result.outcome,
-      multiplier: result.multiplier,
+      grid,
+      wins: result.wins,
+      cells: result.cells,
       payout: result.payout,
       bet,
-      wallet: wallet.row?.wallet ?? 0,
-      winning: result.winning,
+      perLine: playPerLine,
+      lines: playLines,
+      wallet: outcome.row?.wallet ?? 0,
+      free,
+      freeAwarded: result.freeSpinsAwarded,
+      freeState: left > 0 ? { left, perLine: playPerLine, lines: playLines, won: roundWon } : null,
+      freeRoundTotal: free && left === 0 ? roundWon : null,
+      scatters: result.scatters,
     };
   } catch (error) {
     console.error("[Slots Spin Error]:", error);

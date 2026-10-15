@@ -82,7 +82,14 @@ export default async function SlotsGamePage({
     }),
     prisma.user.findUnique({
       where: { userId_guildId: { userId: session.user.id, guildId } },
-      select: { wallet: true, slotsTimeout: true },
+      select: {
+        wallet: true,
+        slotsTimeout: true,
+        slotsFreeSpins: true,
+        slotsFreeBet: true,
+        slotsFreeLines: true,
+        slotsFreeWon: true,
+      },
     }),
   ]);
   if (!guild) notFound();
@@ -121,6 +128,16 @@ export default async function SlotsGamePage({
         currency={{ emoji: guild.currencyEmoji, id: guild.currencyId }}
         wallet={wallet}
         cooldownLeftMs={cooldownLeftMs}
+        freeState={
+          row && row.slotsFreeSpins > 0
+            ? {
+                left: row.slotsFreeSpins,
+                perLine: row.slotsFreeBet,
+                lines: row.slotsFreeLines,
+                won: row.slotsFreeWon,
+              }
+            : null
+        }
       />
       {wallet < guild.slotsMinBet && (
         <Row horizontal="center">

@@ -8,8 +8,9 @@ $gold-dark: #c98200;
 $ink: #0b0612;
 
 .stage {
+  --gap-ratio: 0.09;
   --cell: clamp(60px, 20vw, 112px);
-  --gap: clamp(6px, 1.6vw, 10px);
+  --gap: calc(var(--cell) * var(--gap-ratio));
 
   position: relative;
   width: 100%;
@@ -163,8 +164,15 @@ $ink: #0b0612;
 
 .strip {
   position: absolute;
-  inset: 0;
-  will-change: transform, filter;
+  top: 0;
+  left: 0;
+  width: 100%;
+  // One percent of this height is one cell, so the engine can move the strip with plain
+  // percentages of a transform, which the browser does on the graphics card without repainting.
+  height: calc(var(--cell) * 100);
+  will-change: transform;
+  backface-visibility: hidden;
+  contain: layout style;
 }
 
 .cell {
@@ -177,69 +185,90 @@ $ink: #0b0612;
   place-items: center;
 }
 
+// No filters on anything that moves: they would be painted again on every frame.
 .symbol {
   width: 80%;
   height: 80%;
-  filter: drop-shadow(0 3px 2px rgb(0 0 0 / 32%));
-  transition: opacity 0.25s ease;
 }
 
-// Only the middle row pays: the rows above and below are there to look at.
-.cell[data-row="0"] .symbol,
-.cell[data-row="2"] .symbol {
-  opacity: 0.55;
-}
-
-.cell[data-win="true"] .symbol {
-  opacity: 1;
-  filter: drop-shadow(0 0 10px $gold) drop-shadow(0 0 3px #fff);
-  animation: pop 0.8s cubic-bezier(0.3, 1.6, 0.5, 1) both;
-}
-
-.cell[data-win="true"]::before {
+// Only the lines in play pay, the rows between them are there to look at: a light veil on the
+// top and bottom row, nothing on the middle one.
+.reel::before {
   content: "";
   position: absolute;
-  inset: 6%;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgb(20 8 31 / 22%) 0,
+    rgb(20 8 31 / 22%) 33.333%,
+    transparent 33.333%,
+    transparent 66.666%,
+    rgb(20 8 31 / 22%) 66.666%,
+    rgb(20 8 31 / 22%) 100%
+  );
+  pointer-events: none;
+}
+
+// The lines in play, drawn over the reels. One unit of the drawing is one cell.
+.lines {
+  position: absolute;
+  top: var(--gap);
+  left: var(--gap);
+  width: calc(var(--cell) * (3 + 2 * var(--gap-ratio)));
+  height: calc(var(--cell) * 3);
+  overflow: visible;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.2s ease;
+}
+
+.lines[data-hidden="true"] {
+  opacity: 0;
+}
+
+.linePath {
+  fill: none;
+  stroke-width: 0.05;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  stroke-width: 2px;
+  stroke-opacity: 0.55;
+  stroke-dasharray: 5 5;
+}
+
+.linePath[data-win="true"] {
+  stroke-width: 4px;
+  stroke-opacity: 1;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 6px currentColor);
+  animation: lineGlow 0.45s ease-in-out 4 alternate;
+}
+
+.hits {
+  position: absolute;
+  top: var(--gap);
+  left: var(--gap);
+  width: calc(var(--cell) * (3 + 2 * var(--gap-ratio)));
+  height: calc(var(--cell) * 3);
+  pointer-events: none;
+  z-index: 2;
+}
+
+// A ring around a cell that is part of a win.
+.hit {
+  position: absolute;
+  left: calc(var(--reel) * var(--cell) * (1 + var(--gap-ratio)));
+  top: calc(var(--row) * var(--cell));
+  width: var(--cell);
+  height: var(--cell);
   border-radius: 14px;
   box-shadow:
     inset 0 0 0 3px $gold,
     0 0 18px 2px rgb(255 201 40 / 65%);
-  animation: ring 0.7s ease-out 3;
-}
-
-.payline {
-  position: absolute;
-  left: 2px;
-  right: 2px;
-  top: calc(var(--gap) + var(--cell) * 1.5);
-  height: 0;
-  border-top: 2px solid rgb(255 84 96 / 85%);
-  box-shadow: 0 0 10px rgb(255 84 96 / 70%);
-  pointer-events: none;
-}
-
-.payline::before,
-.payline::after {
-  content: "";
-  position: absolute;
-  top: -8px;
-  border: 7px solid transparent;
-}
-
-.payline::before {
-  left: -2px;
-  border-left-color: #ff5460;
-}
-
-.payline::after {
-  right: -2px;
-  border-right-color: #ff5460;
-}
-
-.stage[data-state="win"] .payline {
-  border-top-color: $gold;
-  box-shadow: 0 0 16px $gold;
-  animation: flash 0.3s ease-in-out infinite alternate;
+  background: radial-gradient(circle, rgb(255 242 160 / 30%), transparent 70%);
+  animation: ring 0.7s ease-in-out 4 alternate;
 }
 
 .glass {
@@ -248,6 +277,7 @@ $ink: #0b0612;
   border-radius: 18px;
   background: linear-gradient(118deg, rgb(255 255 255 / 15%), rgb(255 255 255 / 0%) 34%);
   pointer-events: none;
+  z-index: 3;
 }
 
 // ---- screen ----------------------------------------------------------------------------------
@@ -663,6 +693,90 @@ $ink: #0b0612;
   font-variant-numeric: tabular-nums;
 }
 
+// ---- lines and free spins ---------------------------------------------------------------------
+
+.modes {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip[aria-pressed="true"] {
+  background: rgb(255 201 40 / 22%);
+  border-color: $gold;
+  color: #fff;
+}
+
+.hint {
+  font-size: 12px;
+  color: rgb(246 233 255 / 62%);
+  font-variant-numeric: tabular-nums;
+}
+
+.freeBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 12px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid rgb(255 214 58 / 55%);
+  background: linear-gradient(90deg, rgb(37 211 197 / 24%), rgb(255 201 40 / 24%));
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stage[data-free="true"] .cabinet {
+  background: linear-gradient(165deg, #0f5a63 0%, #143a52 46%, #0b1424 100%);
+}
+
+.stage[data-free="true"]::before {
+  background: radial-gradient(60% 50% at 50% 42%, rgb(37 211 197 / 45%), transparent 72%);
+}
+
+.spin[data-free="true"] {
+  font-size: clamp(15px, 4.4vw, 20px);
+  letter-spacing: 0.1em;
+  background: linear-gradient(180deg, #ffe27a, #f2a900 55%, #b36b00);
+  color: #3a2200;
+  text-shadow: none;
+  box-shadow:
+    0 6px 0 #6b4200,
+    0 14px 24px -6px rgb(242 169 0 / 55%),
+    inset 0 2px 0 rgb(255 255 255 / 45%);
+}
+
+.winList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.winBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 9%);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.winBadge i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c);
+}
+
 // ---- keyframes -------------------------------------------------------------------------------
 
 @keyframes chase {
@@ -707,6 +821,15 @@ $ink: #0b0612;
   }
 }
 
+@keyframes lineGlow {
+  from {
+    stroke-opacity: 0.55;
+  }
+  to {
+    stroke-opacity: 1;
+  }
+}
+
 @keyframes ring {
   from {
     opacity: 0.35;
@@ -743,9 +866,8 @@ $ink: #0b0612;
 // the reels land without the long run (see `quick` in SlotMachine).
 @media (prefers-reduced-motion: reduce) {
   .light,
-  .payline,
-  .cell[data-win="true"] .symbol,
-  .cell[data-win="true"]::before,
+  .linePath,
+  .hit,
   .stage::before {
     animation: none !important;
   }
