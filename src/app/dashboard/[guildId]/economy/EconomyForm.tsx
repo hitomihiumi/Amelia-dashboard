@@ -14,6 +14,7 @@ import {
   Line,
   useToast,
   NumberInput,
+  Feedback,
 } from "@once-ui-system/core";
 import { useUnsavedChanges } from "@/contexts/UnsavedChangesContext";
 import { updateEconomySettings } from "./actions";
@@ -25,6 +26,7 @@ import { EmojiPickerDropdown } from "@/components/dashboard/discord/EmojiPickerD
 import { emojiFromString, emojiToText, isUnicodeEmoji } from "@/lib/discord/emojis-api";
 import { Section } from "@/components/dashboard/Section";
 import { useT } from "@/i18n/client";
+import { SLOT_LIMITS, theoreticalReturn } from "@/lib/slots/config";
 import styles from "./EconomyForm.module.scss";
 
 type Form = Pick<GuildSchema["economy"], "income" | "currency">;
@@ -105,6 +107,8 @@ export function EconomyForm({
     setIncome((prev) => ({ ...prev, work: { ...prev.work, ...patch } }));
   const setRob = (patch: Partial<Form["income"]["rob"]>) =>
     setIncome((prev) => ({ ...prev, rob: { ...prev.rob, ...patch } }));
+  const setSlots = (patch: Partial<Form["income"]["slots"]>) =>
+    setIncome((prev) => ({ ...prev, slots: { ...prev.slots, ...patch } }));
   const setRobIncome = (patch: Partial<Form["income"]["rob"]["income"]>) =>
     setIncome((prev) => ({ ...prev, rob: { ...prev.rob, income: { ...prev.rob.income, ...patch } } }));
   const setRobPunishment = (patch: Partial<Form["income"]["rob"]["punishment"]>) =>
@@ -388,6 +392,54 @@ export function EconomyForm({
                 max={100}
                 step={1}
               />
+            </IncomeCard>
+
+            <IncomeCard
+              className={styles.slots}
+              title={t("settings.economy.slotsTitle")}
+              description={t("settings.economy.slotsDescription")}
+              enabled={income.slots.enabled}
+              onToggle={() => setSlots({ enabled: !income.slots.enabled })}
+            >
+              <Feedback
+                variant="warning"
+                title={t("settings.economy.slotsWarningTitle")}
+                description={t("settings.economy.slotsWarning")}
+              />
+              <Fields>
+                <NumberInput
+                  id={"slots-min-bet"}
+                  label={t("settings.economy.slotsMinBet")}
+                  value={income.slots.min_bet}
+                  onChange={(value) => setSlots({ min_bet: Number(value) })}
+                  min={1}
+                  max={SLOT_LIMITS.maxBet}
+                  step={1}
+                />
+                <NumberInput
+                  id={"slots-max-bet"}
+                  label={t("settings.economy.slotsMaxBet")}
+                  value={income.slots.max_bet}
+                  onChange={(value) => setSlots({ max_bet: Number(value) })}
+                  min={1}
+                  max={SLOT_LIMITS.maxBet}
+                  step={1}
+                />
+                <NumberInput
+                  id={"slots-cooldown"}
+                  label={t("settings.economy.slotsCooldown")}
+                  value={income.slots.cooldown}
+                  onChange={(value) => setSlots({ cooldown: Number(value) })}
+                  min={1}
+                  max={SLOT_LIMITS.maxCooldown}
+                  step={1}
+                />
+              </Fields>
+              <Text variant="body-default-xs" onBackground="neutral-weak">
+                {t("settings.economy.slotsHint", {
+                  rtp: (theoreticalReturn() * 100).toFixed(1),
+                })}
+              </Text>
             </IncomeCard>
           </Grid>
         </Section>

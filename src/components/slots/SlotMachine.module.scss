@@ -1,0 +1,761 @@
+// The slot machine is a self-contained object: its cabinet keeps the same dark, metallic look in
+// the light and in the dark theme, only the page around it follows the theme. The colours here are
+// illustration colours (gold, glass, felt), which is why they are not design tokens.
+
+$gold-light: #fff2a0;
+$gold: #ffc928;
+$gold-dark: #c98200;
+$ink: #0b0612;
+
+.stage {
+  --cell: clamp(60px, 20vw, 112px);
+  --gap: clamp(6px, 1.6vw, 10px);
+
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin-inline: auto;
+  isolation: isolate;
+}
+
+// Soft glow behind the cabinet, in the brand colour of the site.
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  z-index: -1;
+  background: radial-gradient(60% 50% at 50% 42%, var(--brand-alpha-medium), transparent 72%);
+  filter: blur(28px);
+  opacity: 0.9;
+  transition: opacity 0.4s ease;
+}
+
+.stage[data-state="win"]::before {
+  opacity: 1;
+  animation: glowPulse 0.9s ease-in-out 3;
+}
+
+.cabinet {
+  position: relative;
+  border-radius: 28px;
+  padding: clamp(14px, 3.2vw, 22px);
+  background: linear-gradient(165deg, #5b1f70 0%, #2b0f3d 46%, #14081f 100%);
+  border: 2px solid rgb(255 255 255 / 12%);
+  box-shadow:
+    0 34px 60px -24px rgb(0 0 0 / 65%),
+    inset 0 2px 0 rgb(255 255 255 / 20%),
+    inset 0 -10px 24px rgb(0 0 0 / 45%);
+  color: #f6e9ff;
+}
+
+// ---- marquee ---------------------------------------------------------------------------------
+
+.marquee {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(18px, 4.4vw, 26px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  background: linear-gradient($gold-light, $gold 58%, $gold-dark);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 45%));
+}
+
+.ribbon {
+  min-width: 0;
+  max-width: 100%;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 214 58 / 45%);
+  background: rgb(0 0 0 / 35%);
+  color: #ffe27a;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.lights {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 12px 4px 0;
+}
+
+.light {
+  flex: 1;
+  max-width: 10px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: $gold;
+  box-shadow: 0 0 8px $gold;
+  animation: chase 1.8s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 0.11s);
+}
+
+.stage[data-state="spin"] .light {
+  animation-duration: 0.55s;
+}
+
+.stage[data-state="win"] .light {
+  animation: flash 0.32s ease-in-out infinite alternate;
+  animation-delay: 0s;
+}
+
+// ---- reels -----------------------------------------------------------------------------------
+
+.window {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin: 14px auto 0;
+  padding: var(--gap);
+  border-radius: 18px;
+  background: linear-gradient(180deg, $ink, #1b1028);
+  box-shadow:
+    inset 0 8px 20px rgb(0 0 0 / 75%),
+    0 0 0 3px #d6a21b,
+    0 0 0 5px rgb(255 255 255 / 12%);
+}
+
+.reels {
+  display: flex;
+  justify-content: center;
+  gap: var(--gap);
+}
+
+.reel {
+  position: relative;
+  width: var(--cell);
+  height: calc(var(--cell) * 3);
+  overflow: hidden;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #efe4cc, #fffaf0 22%, #fffaf0 78%, #efe4cc);
+}
+
+// A cylinder: the rows at the top and bottom fall into shadow.
+.reel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgb(20 8 31 / 62%),
+    rgb(20 8 31 / 0%) 30%,
+    rgb(20 8 31 / 0%) 70%,
+    rgb(20 8 31 / 62%)
+  );
+  pointer-events: none;
+}
+
+.strip {
+  position: absolute;
+  inset: 0;
+  will-change: transform, filter;
+}
+
+.cell {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: var(--cell);
+  top: calc(var(--row) * var(--cell));
+  display: grid;
+  place-items: center;
+}
+
+.symbol {
+  width: 80%;
+  height: 80%;
+  filter: drop-shadow(0 3px 2px rgb(0 0 0 / 32%));
+  transition: opacity 0.25s ease;
+}
+
+// Only the middle row pays: the rows above and below are there to look at.
+.cell[data-row="0"] .symbol,
+.cell[data-row="2"] .symbol {
+  opacity: 0.55;
+}
+
+.cell[data-win="true"] .symbol {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px $gold) drop-shadow(0 0 3px #fff);
+  animation: pop 0.8s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.cell[data-win="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 6%;
+  border-radius: 14px;
+  box-shadow:
+    inset 0 0 0 3px $gold,
+    0 0 18px 2px rgb(255 201 40 / 65%);
+  animation: ring 0.7s ease-out 3;
+}
+
+.payline {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: calc(var(--gap) + var(--cell) * 1.5);
+  height: 0;
+  border-top: 2px solid rgb(255 84 96 / 85%);
+  box-shadow: 0 0 10px rgb(255 84 96 / 70%);
+  pointer-events: none;
+}
+
+.payline::before,
+.payline::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  border: 7px solid transparent;
+}
+
+.payline::before {
+  left: -2px;
+  border-left-color: #ff5460;
+}
+
+.payline::after {
+  right: -2px;
+  border-right-color: #ff5460;
+}
+
+.stage[data-state="win"] .payline {
+  border-top-color: $gold;
+  box-shadow: 0 0 16px $gold;
+  animation: flash 0.3s ease-in-out infinite alternate;
+}
+
+.glass {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: linear-gradient(118deg, rgb(255 255 255 / 15%), rgb(255 255 255 / 0%) 34%);
+  pointer-events: none;
+}
+
+// ---- screen ----------------------------------------------------------------------------------
+
+.screen {
+  margin-top: 14px;
+  min-height: 66px;
+  padding: 10px 14px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 2px;
+  border-radius: 12px;
+  background: $ink;
+  border: 1px solid rgb(255 255 255 / 10%);
+  box-shadow: inset 0 2px 10px rgb(0 0 0 / 55%);
+  color: #ffe27a;
+  font-weight: 600;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.screen[data-tone="win"] {
+  border-color: rgb(255 201 40 / 70%);
+  box-shadow:
+    inset 0 2px 10px rgb(0 0 0 / 55%),
+    0 0 20px rgb(255 201 40 / 35%);
+  color: $gold-light;
+}
+
+.screen[data-tone="error"] {
+  border-color: rgb(255 84 96 / 55%);
+  color: #ffb3b9;
+}
+
+.screen[data-tone="lose"] {
+  color: #d8c8ea;
+}
+
+.screenMain {
+  font-size: clamp(14px, 3.6vw, 17px);
+  line-height: 1.3;
+}
+
+.screenSub {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.8;
+  line-height: 1.35;
+}
+
+// ---- controls --------------------------------------------------------------------------------
+
+.controls {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgb(0 0 0 / 30%);
+  border: 1px solid rgb(255 255 255 / 8%);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgb(246 233 255 / 62%);
+}
+
+.amount {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(20px, 5vw, 26px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+}
+
+.coin {
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+}
+
+.currencyImage {
+  width: 1.15em;
+  height: 1.15em;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.betBox {
+  display: flex;
+  align-items: stretch;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 14%);
+  background: $ink;
+}
+
+.step {
+  width: 44px;
+  border: 0;
+  background: rgb(255 255 255 / 6%);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.step:hover:not(:disabled) {
+  background: rgb(255 255 255 / 14%);
+}
+
+.step:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.betInput {
+  width: clamp(80px, 22vw, 120px);
+  border: 0;
+  background: transparent;
+  color: #fff;
+  text-align: center;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+
+.betInput:focus-visible {
+  box-shadow: inset 0 0 0 2px $gold;
+}
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 16%);
+  background: rgb(255 255 255 / 7%);
+  color: #f6e9ff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.chip:hover:not(:disabled) {
+  background: rgb(255 255 255 / 15%);
+  border-color: rgb(255 214 58 / 55%);
+}
+
+.chip:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.chip:focus-visible,
+.step:focus-visible,
+.spin:focus-visible,
+.toggle:focus-visible {
+  outline: 2px solid $gold;
+  outline-offset: 2px;
+}
+
+.spin {
+  position: relative;
+  width: 100%;
+  padding: 16px 20px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ff7a6b, #e0312f 55%, #b0121f);
+  color: #fff;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 0 rgb(0 0 0 / 35%);
+  box-shadow:
+    0 6px 0 #6f0a14,
+    0 14px 24px -6px rgb(224 49 47 / 55%),
+    inset 0 2px 0 rgb(255 255 255 / 35%);
+  cursor: pointer;
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease,
+    filter 0.2s ease;
+}
+
+.spin:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.spin:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow:
+    0 2px 0 #6f0a14,
+    0 8px 16px -6px rgb(224 49 47 / 55%),
+    inset 0 2px 0 rgb(255 255 255 / 35%);
+}
+
+.spin:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.7) brightness(0.8);
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgb(246 233 255 / 80%);
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle input {
+  accent-color: $gold;
+  width: 16px;
+  height: 16px;
+}
+
+// ---- lever -----------------------------------------------------------------------------------
+
+.lever {
+  position: absolute;
+  top: 28%;
+  right: -34px;
+  width: 34px;
+  height: 150px;
+  border: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  z-index: -1;
+}
+
+.leverArm {
+  position: absolute;
+  left: 10px;
+  bottom: 30px;
+  width: 8px;
+  height: 100px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #8a8a98, #e9e9f2 45%, #6d6d7b);
+  transform-origin: 50% 100%;
+  transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.leverArm::before {
+  content: "";
+  position: absolute;
+  top: -16px;
+  left: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff9a8a, #e0312f 55%, #8f1020);
+  box-shadow: 0 3px 6px rgb(0 0 0 / 45%);
+}
+
+.leverBase {
+  position: absolute;
+  left: 2px;
+  bottom: 10px;
+  width: 24px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #4a3a5c, #7d6a94 45%, #3a2c4a);
+  box-shadow: inset 0 2px 0 rgb(255 255 255 / 25%);
+}
+
+.stage[data-state="spin"] .leverArm {
+  transform: rotate(0deg) scaleY(0.55);
+}
+
+.stage:not([data-state="spin"]) .leverArm {
+  transform: rotate(-4deg);
+}
+
+// The lever sticks out of the cabinet, so it needs room on both sides of the page.
+@media (max-width: 760px) {
+  .lever {
+    display: none;
+  }
+}
+
+// ---- coins -----------------------------------------------------------------------------------
+
+.burst {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 28px;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.flyingCoin {
+  position: absolute;
+  top: 18%;
+  left: var(--x);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, $gold-light, $gold 55%, $gold-dark);
+  box-shadow:
+    inset 0 0 0 2px rgb(154 106 0 / 70%),
+    0 2px 6px rgb(0 0 0 / 45%);
+  opacity: 0;
+  animation: coinFall var(--dur) cubic-bezier(0.35, 0.1, 0.65, 1) var(--delay) forwards;
+}
+
+// ---- gate ------------------------------------------------------------------------------------
+
+.gate {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(8 4 14 / 78%);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.25s ease-out;
+}
+
+.gateCard {
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+
+.locked {
+  filter: blur(6px) grayscale(0.4);
+  pointer-events: none;
+  user-select: none;
+}
+
+// ---- break reminder --------------------------------------------------------------------------
+
+.breakCard {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  border-radius: 28px;
+  background: rgb(14 7 22 / 88%);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.25s ease-out;
+}
+
+.breakInner {
+  display: grid;
+  gap: 12px;
+  max-width: 380px;
+  text-align: center;
+  justify-items: center;
+}
+
+// ---- pay table -------------------------------------------------------------------------------
+
+.payRow {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--neutral-alpha-weak);
+}
+
+.paySymbols {
+  display: flex;
+  align-items: center;
+}
+
+.paySymbol {
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 2px 1px rgb(0 0 0 / 25%));
+}
+
+.payMultiplier {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+// ---- keyframes -------------------------------------------------------------------------------
+
+@keyframes chase {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes flash {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes glowPulse {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.16);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes ring {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes coinFall {
+  0% {
+    opacity: 0;
+    transform: translate(0, -30px) rotate(0deg) scale(0.6);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), 420px) rotate(var(--rot)) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// People who asked their system for less motion get a calm machine: lights and coins stay still,
+// the reels land without the long run (see `quick` in SlotMachine).
+@media (prefers-reduced-motion: reduce) {
+  .light,
+  .payline,
+  .cell[data-win="true"] .symbol,
+  .cell[data-win="true"]::before,
+  .stage::before {
+    animation: none !important;
+  }
+
+  .flyingCoin {
+    display: none;
+  }
+
+  .leverArm,
+  .spin {
+    transition: none;
+  }
+}

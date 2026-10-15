@@ -17,5 +17,6 @@ import { profile } from "./profile";
 import { games } from "./games";
 import { levelAnnounce } from "./levelAnnounce";
 import { banners } from "./banners";
+import { slots } from "./slots";
 
-export const en = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, adminLogs, adminServers, layouts, send, ai, adminAi, profile, levelAnnounce, games, banners, };
+export const en = { common, site, admin, settings, builder, moderation, docs, adminNews, adminIncidents, adminLogs, adminServers, layouts, send, ai, adminAi, profile, levelAnnounce, games, banners, slots, };

@@ -8,6 +8,7 @@ import { requireGuildAdmin } from "@/app/dashboard/[guildId]/actions";
 import { GuildActionState } from "@/types/dashboard";
 import { GuildSchema } from "@/lib/db/types";
 import { getT } from "@/i18n/server";
+import { SLOT_LIMITS } from "@/lib/slots/config";
 
 export async function updateEconomySettings(
   guildId: string,
@@ -121,6 +122,36 @@ export async function updateEconomySettings(
     }
     if (income.rob.punishment.fail_chance < 5 || income.rob.punishment.fail_chance > 95) {
       return { ok: false, error: t("settings.economy.errors.robFailChance") };
+    }
+
+    // The slot machine. Bounds match the bot's /setting economy and the spin action.
+    const slots = income.slots;
+    if (
+      !slots ||
+      typeof slots.enabled !== "boolean" ||
+      !Number.isInteger(slots.min_bet) ||
+      !Number.isInteger(slots.max_bet) ||
+      !Number.isInteger(slots.cooldown)
+    ) {
+      return { ok: false, error: t("settings.errors.invalidFormat") };
+    }
+    if (slots.min_bet < 1) {
+      return { ok: false, error: t("settings.economy.errors.slotsMinBet") };
+    }
+    if (slots.max_bet > SLOT_LIMITS.maxBet) {
+      return {
+        ok: false,
+        error: t("settings.economy.errors.slotsMaxBet", { max: SLOT_LIMITS.maxBet }),
+      };
+    }
+    if (slots.min_bet > slots.max_bet) {
+      return { ok: false, error: t("settings.economy.errors.slotsBetOrder") };
+    }
+    if (slots.cooldown < 1 || slots.cooldown > SLOT_LIMITS.maxCooldown) {
+      return {
+        ok: false,
+        error: t("settings.economy.errors.slotsCooldown", { max: SLOT_LIMITS.maxCooldown }),
+      };
     }
 
     const guild = new Guild(guildId);
