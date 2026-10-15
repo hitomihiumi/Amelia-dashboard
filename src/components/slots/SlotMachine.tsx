@@ -2,27 +2,49 @@
 
 import { Button, Checkbox, Column, Row, Text } from "@once-ui-system/core";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { spinSlots, type SpinResponse } from "@/app/(main)/profile/slots/actions";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type FreeSpinState,
+  type SpinResponse,
+  spinSlots,
+} from "@/app/(main)/profile/slots/actions";
 import { useFormat, useT } from "@/i18n/client";
-import { BREAK_REMINDER_EVERY, type SlotSymbol } from "@/lib/slots/config";
+import {
+  BREAK_REMINDER_EVERY,
+  LINE_MODES,
+  type LineMode,
+  type LineWin,
+  PAYLINES,
+  SLOT_REELS,
+  type SlotGrid,
+  type SlotSymbol,
+} from "@/lib/slots/config";
 import { Currency, type SlotsCurrency } from "./Currency";
-import { PayTable } from "./PayTable";
+import { LINE_COLORS, PayTable } from "./PayTable";
+import { REEL_STRIPS, ReelEngine, STRIP_LENGTH, wrap } from "./reelEngine";
 import { ResponsibleBanner, ResponsibleNotice } from "./Responsible";
-import { REEL_STRIPS, ReelEngine, symbolAt } from "./reelEngine";
 import styles from "./SlotMachine.module.scss";
 import { SlotSymbolDefs, SlotSymbolIcon } from "./symbols";
 
 const ACK_KEY = "amelia:slots:ack:v1";
 const QUICK_KEY = "amelia:slots:quick";
+const LINES_KEY = "amelia:slots:lines";
 /** Where the reels stand before the first spin. */
 const START_POSITIONS = [3, 8, 13];
-/** Rows drawn per reel: one above, three visible, one below, so a sliding reel never shows a gap. */
-const ROWS = [-1, 0, 1, 2, 3];
+/** The cells drawn per reel: the loop plus the ones around it, so the seam never shows. */
+const NODES = Array.from({ length: STRIP_LENGTH + 4 }, (_, i) => i - 1);
 const LIGHTS = Array.from({ length: 16 }, (_, i) => i);
+/** One unit of the line drawing is a cell; this is the gap between two reels in cells. */
+const GAP_RATIO = 0.09;
+const DRAWING_WIDTH = SLOT_REELS + 2 * GAP_RATIO;
 
 type Phase = "idle" | "spin";
 type Tone = "neutral" | "win" | "lose" | "error";
+type Overlay =
+  | { kind: "freeWon"; count: number }
+  | { kind: "freeEnd"; total: number }
+  | { kind: "break" }
+  | null;
 
 interface Screen {
   tone: Tone;
@@ -50,6 +72,8 @@ export interface SlotMachineProps {
   wallet: number;
   /** Milliseconds until the member may spin again, `0` when they already may. */
   cooldownLeftMs: number;
+  /** Free spins the member has won and not played yet. */
+  freeState: FreeSpinState | null;
 }
 
 function readStorage(key: string): string | null {
@@ -74,35 +98,6 @@ function prefersReducedMotion(): boolean {
   );
 }
 
-/** A number that counts up or down to its target, so a changed balance is seen, not just replaced. */
-function useCountUp(target: number, durationMs = 700): number {
-  const [value, setValue] = useState(target);
-  const current = useRef(target);
-
-  useEffect(() => {
-    if (current.current === target) return;
-    if (prefersReducedMotion()) {
-      current.current = target;
-      setValue(target);
-      return;
-    }
-    const from = current.current;
-    const start = performance.now();
-    let frame = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / durationMs);
-      const eased = 1 - (1 - t) ** 3;
-      current.current = Math.round(from + (target - from) * eased);
-      setValue(current.current);
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [target, durationMs]);
-
-  return value;
-}
-
 /** A bet that is a bit bigger or smaller, in steps that fit its size (5, 50, 500, ...). */
 function betStep(bet: number): number {
   if (bet < 10) return 1;
@@ -122,6 +117,129 @@ function makeCoins(count: number): Coin[] {
   }));
 }
 
+/**
+ * A number that counts up or down to its target. It keeps its own state, so the count does not
+ * make the whole machine render again on every frame.
+ */
+const AnimatedAmount = memo(function AnimatedAmount({
+  value,
+  format,
+}: {
+  value: number;
+  format: (value: number) => string;
+}) {
+  const [shown, setShown] = useState(value);
+  const current = useRef(value);
+
+  useEffect(() => {
+    if (current.current === value) return;
+    if (prefersReducedMotion()) {
+      current.current = value;
+      setShown(value);
+      return;
+    }
+    const from = current.current;
+    const start = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / 700);
+      current.current = Math.round(from + (value - from) * (1 - (1 - t) ** 3));
+      setShown(current.current);
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+
+  return <>{format(shown)}</>;
+});
+
+/** One cell of a reel. Memoised: when a landing changes three symbols, only those three render again. */
+const Cell = memo(function Cell({ symbol, row }: { symbol: SlotSymbol; row: number }) {
+  return (
+    <div className={styles.cell} style={{ "--row": row } as React.CSSProperties}>
+      <SlotSymbolIcon symbol={symbol} className={styles.symbol} />
+    </div>
+  );
+});
+
+/**
+ * One reel: a loop of symbols that the engine slides with a transform. It only renders again when
+ * the symbols of the landing change, never while the reel moves.
+ */
+const Reel = memo(function Reel({
+  strip,
+  overrides,
+  start,
+  label,
+  setRef,
+}: {
+  strip: readonly SlotSymbol[];
+  overrides: Record<number, SlotSymbol>;
+  start: number;
+  label: string;
+  setRef: (el: HTMLDivElement | null) => void;
+}) {
+  return (
+    <div className={styles.reel} role="img" aria-label={label}>
+      <div
+        className={styles.strip}
+        ref={setRef}
+        style={{ transform: `translate3d(0, ${start}%, 0)` }}
+      >
+        {NODES.map((node) => {
+          const index = wrap(node);
+          return <Cell key={node} symbol={overrides[index] ?? strip[index]} row={1 - node} />;
+        })}
+      </div>
+    </div>
+  );
+});
+
+/** The lines in play, drawn over the reels. */
+const LinesOverlay = memo(function LinesOverlay({
+  lines,
+  winLines,
+  hidden,
+}: {
+  lines: number;
+  winLines: number[];
+  hidden: boolean;
+}) {
+  const paths = useMemo(
+    () =>
+      PAYLINES.slice(0, lines).map((rows, index) => {
+        const points = rows.map((row, reel) => [reel * (1 + GAP_RATIO) + 0.5, row + 0.5]);
+        const first = points[0];
+        const last = points[points.length - 1];
+        const all = [[0, first[1]], ...points, [DRAWING_WIDTH, last[1]]];
+        return { index, d: all.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ") };
+      }),
+    [lines],
+  );
+
+  return (
+    <svg
+      className={styles.lines}
+      data-hidden={hidden}
+      viewBox={`0 0 ${DRAWING_WIDTH} 3`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {paths.map(({ index, d }) => (
+        <path
+          key={index}
+          d={d}
+          className={styles.linePath}
+          data-win={winLines.includes(index)}
+          style={{ stroke: LINE_COLORS[index], color: LINE_COLORS[index] }}
+        />
+      ))}
+    </svg>
+  );
+});
+
 export function SlotMachine({
   guildId,
   min,
@@ -130,25 +248,31 @@ export function SlotMachine({
   currency,
   wallet: initialWallet,
   cooldownLeftMs,
+  freeState: initialFree,
 }: SlotMachineProps) {
   const t = useT();
   const format = useFormat();
   const router = useRouter();
+  const formatNumber = useCallback((value: number) => format.number(value), [format]);
 
   const [ack, setAck] = useState<"unknown" | "yes" | "no">("unknown");
   const [acknowledged, setAcknowledged] = useState(false);
   const [quick, setQuick] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const [wallet, setWallet] = useState(initialWallet);
-  const [bet, setBet] = useState(() => Math.min(Math.max(min, 10), max));
-  const [betText, setBetText] = useState(() => String(Math.min(Math.max(min, 10), max)));
-  const [cells, setCells] = useState<number[]>(START_POSITIONS);
-  const [winning, setWinning] = useState<number[]>([]);
+  const [lines, setLines] = useState<LineMode>(1);
+  const [freeState, setFreeState] = useState<FreeSpinState | null>(initialFree);
+  const [perLine, setPerLine] = useState(() => Math.min(Math.max(min, 10), max));
+  const [perLineText, setPerLineText] = useState(() => String(Math.min(Math.max(min, 10), max)));
+  const [overrides, setOverrides] = useState<Record<number, SlotSymbol>[]>([{}, {}, {}]);
+  const [grid, setGrid] = useState<SlotGrid | null>(null);
+  const [wins, setWins] = useState<LineWin[]>([]);
+  const [winCells, setWinCells] = useState<[number, number][]>([]);
   const [screen, setScreen] = useState<Screen>({ tone: "neutral", main: "" });
   const [win, setWin] = useState(false);
   const [coins, setCoins] = useState<Coin[]>([]);
   const [stats, setStats] = useState({ spins: 0, wagered: 0, won: 0 });
-  const [breakOpen, setBreakOpen] = useState(false);
+  const [overlay, setOverlay] = useState<Overlay>(null);
   // Both start at 0 and are set after mounting, so the server and the browser render the same.
   const [cooldownUntil, setCooldownUntil] = useState(0);
   const [now, setNow] = useState(0);
@@ -160,8 +284,23 @@ export function SlotMachine({
   const quickRef = useRef(quick);
   quickRef.current = quick;
   const reducedRef = useRef(false);
+  const timers = useRef<number[]>([]);
 
-  const shownWallet = useCountUp(wallet);
+  const refSetters = useMemo(
+    () =>
+      Array.from({ length: SLOT_REELS }, (_, reel) => (el: HTMLDivElement | null) => {
+        stripRefs.current[reel] = el;
+      }),
+    [],
+  );
+
+  const later = useCallback((fn: () => void, ms: number) => {
+    timers.current.push(
+      window.setTimeout(() => {
+        if (mountedRef.current) fn();
+      }, ms),
+    );
+  }, []);
 
   // ---- setup -------------------------------------------------------------------------------
 
@@ -170,46 +309,40 @@ export function SlotMachine({
     setAck(readStorage(ACK_KEY) === "yes" ? "yes" : "no");
     const stored = readStorage(QUICK_KEY);
     setQuick(stored === null ? reducedRef.current : stored === "1");
+    const savedLines = Number(readStorage(LINES_KEY));
+    if ((LINE_MODES as readonly number[]).includes(savedLines)) setLines(savedLines as LineMode);
     if (cooldownLeftMs > 0) {
       setNow(Date.now());
       setCooldownUntil(Date.now() + cooldownLeftMs);
     }
+    setScreen({
+      tone: "neutral",
+      main: initialFree ? t("slots.machine.freeLocked") : t("slots.machine.ready"),
+    });
     // Only the state the page was opened with.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    setScreen({ tone: "neutral", main: t("slots.machine.ready") });
-    // The first message only; later ones come from spins.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const onFrame = useCallback((reel: number, pos: number, speed: number) => {
-    const whole = Math.floor(pos);
-    const el = stripRefs.current[reel];
-    if (el) {
-      el.style.transform = `translateY(calc(var(--cell) * ${(pos - whole).toFixed(4)}))`;
-      const blur = speed > 5 && !reducedRef.current ? Math.min(3, (speed - 5) * 0.22) : 0;
-      el.style.filter = blur > 0.1 ? `blur(${blur.toFixed(2)}px)` : "none";
-    }
-    setCells((previous) => {
-      if (previous[reel] === whole) return previous;
-      const next = previous.slice();
-      next[reel] = whole;
-      return next;
-    });
-  }, []);
-
+  // The engine moves the strips directly; React is not involved while a reel turns.
   useEffect(() => {
     mountedRef.current = true;
-    const engine = new ReelEngine(REEL_STRIPS, onFrame, START_POSITIONS);
+    const engine = new ReelEngine(
+      SLOT_REELS,
+      (reel, offset) => {
+        const el = stripRefs.current[reel];
+        if (el) el.style.transform = `translate3d(0, ${offset.toFixed(3)}%, 0)`;
+      },
+      START_POSITIONS,
+    );
     engineRef.current = engine;
     return () => {
       mountedRef.current = false;
       engine.dispose();
       engineRef.current = null;
+      timers.current.forEach((id) => window.clearTimeout(id));
+      timers.current = [];
     };
-  }, [onFrame]);
+  }, []);
 
   // Counts the pause between spins down on the button.
   useEffect(() => {
@@ -223,33 +356,94 @@ export function SlotMachine({
     return () => window.clearInterval(timer);
   }, [cooldownUntil]);
 
-  // ---- bet ---------------------------------------------------------------------------------
+  // ---- lines and bet -----------------------------------------------------------------------
 
-  const applyBet = useCallback(
-    (value: number) => {
-      const next = Math.min(max, Math.max(min, Math.round(value)));
-      setBet(next);
-      setBetText(String(next));
-    },
+  const range = useCallback(
+    (mode: number) => ({ lo: Math.ceil(min / mode), hi: Math.floor(max / mode) }),
     [min, max],
   );
+  const modeAvailable = (mode: number) => {
+    const { lo, hi } = range(mode);
+    return lo <= hi;
+  };
+
+  const inFree = freeState !== null;
+  const activeLines = freeState ? freeState.lines : lines;
+  const activePerLine = freeState ? freeState.perLine : perLine;
+  const total = activePerLine * activeLines;
+  const { lo: perMin, hi: perMax } = range(lines);
+
+  const applyPerLine = useCallback(
+    (value: number, mode: number = lines) => {
+      const { lo, hi } = range(mode);
+      const next = Math.min(hi, Math.max(lo, Math.round(value)));
+      setPerLine(next);
+      setPerLineText(String(next));
+    },
+    [lines, range],
+  );
+
+  const pickLines = (mode: LineMode) => {
+    setLines(mode);
+    writeStorage(LINES_KEY, String(mode));
+    applyPerLine(perLine, mode);
+  };
 
   const onBetInput = (text: string) => {
     const digits = text.replace(/\D/g, "").slice(0, 7);
-    setBetText(digits);
-    if (digits) setBet(Number(digits));
+    setPerLineText(digits);
+    if (digits) setPerLine(Number(digits));
   };
 
-  const onBetBlur = () => applyBet(betText ? Number(betText) : min);
-
-  const betValid = Number.isInteger(bet) && bet >= min && bet <= max;
-  const canAfford = wallet >= bet;
-  const secondsLeft = cooldownUntil > now ? Math.ceil((cooldownUntil - now) / 1000) : 0;
+  const betValid =
+    Number.isInteger(perLine) && perLine >= perMin && perLine <= perMax && perMin <= perMax;
+  const canAfford = inFree || wallet >= total;
+  const secondsLeft = !inFree && cooldownUntil > now ? Math.ceil((cooldownUntil - now) / 1000) : 0;
   const locked = ack !== "yes";
   const canSpin =
-    !locked && phase === "idle" && !breakOpen && betValid && canAfford && secondsLeft === 0;
+    !locked &&
+    phase === "idle" &&
+    overlay === null &&
+    (inFree || betValid) &&
+    canAfford &&
+    secondsLeft === 0;
 
   // ---- spin --------------------------------------------------------------------------------
+
+  const showResult = useCallback(
+    (response: Extract<SpinResponse, { ok: true }>) => {
+      const symbolName = (symbol: string) => t(`slots.symbols.${symbol as SlotSymbol}`);
+      const net = response.payout - response.bet;
+
+      if (response.wins.length > 0) {
+        const only = response.wins.length === 1 ? response.wins[0] : null;
+        setScreen({
+          tone: "win",
+          main: only
+            ? only.outcome === "triple"
+              ? t("slots.result.lineWin", { line: only.line + 1, symbol: symbolName(only.symbol) })
+              : t("slots.result.linePair", { line: only.line + 1 })
+            : t("slots.result.manyLines", { count: response.wins.length }),
+          sub:
+            response.free || net <= 0
+              ? t("slots.result.win", { amount: format.number(response.payout) })
+              : `${t("slots.result.win", { amount: format.number(response.payout) })} · ${t("slots.result.net", { amount: format.number(net) })}`,
+        });
+      } else if (response.freeAwarded > 0) {
+        setScreen({
+          tone: "win",
+          main: t("slots.result.freeWon", { count: response.freeAwarded }),
+        });
+      } else {
+        setScreen({
+          tone: "lose",
+          main: t("slots.result.lose"),
+          sub: response.free ? undefined : t("slots.result.loseHint"),
+        });
+      }
+    },
+    [format, t],
+  );
 
   const spin = useCallback(async () => {
     const engine = engineRef.current;
@@ -258,21 +452,22 @@ export function SlotMachine({
 
     const startedAt = Date.now();
     const useQuick = quickRef.current || reducedRef.current;
-    const placed = bet;
     const before = wallet;
+    const placed = inFree ? 0 : total;
 
     setPhase("spin");
     setWin(false);
-    setWinning([]);
+    setWins([]);
+    setWinCells([]);
     setCoins([]);
     setScreen({ tone: "neutral", main: t("slots.machine.spinning") });
     // The bet leaves the balance the moment the reels start, as it does on the server.
-    setWallet((w) => w - placed);
+    if (placed > 0) setWallet((w) => w - placed);
     engine.start();
 
     let response: SpinResponse;
     try {
-      response = await spinSlots(guildId, placed);
+      response = await spinSlots(guildId, activePerLine, activeLines);
     } catch {
       response = { ok: false, code: "generic", error: t("slots.errors.generic") };
     }
@@ -290,62 +485,75 @@ export function SlotMachine({
     }
 
     // Give the reels a moment to run even when the answer came back at once.
-    const minRun = useQuick ? 200 : 900;
+    const minRun = useQuick ? 450 : 900;
     await engine.stop(
-      response.reels,
       { quick: useQuick },
       Math.max(0, minRun - (Date.now() - startedAt)),
+      (plans) => {
+        // The symbols the server drew go onto the strips just ahead of the reels.
+        setOverrides(
+          plans.map((plan, reel) => ({
+            [wrap(plan.index + 1)]: response.grid[reel][0],
+            [wrap(plan.index)]: response.grid[reel][1],
+            [wrap(plan.index - 1)]: response.grid[reel][2],
+          })),
+        );
+      },
     );
     if (!mountedRef.current) return;
 
-    const net = response.payout - response.bet;
+    setGrid(response.grid);
     setWallet(response.wallet);
-    setCooldownUntil(startedAt + cooldown * 1000);
+    setWins(response.wins);
+    setWinCells(response.cells);
+    setFreeState(response.freeState);
+    if (!response.free) setCooldownUntil(startedAt + cooldown * 1000);
     setNow(Date.now());
+    showResult(response);
 
     if (response.payout > 0) {
-      const symbol = response.reels[response.winning[0] ?? 0];
-      setWinning(response.winning);
+      const ratio = response.payout / Math.max(1, response.perLine * response.lines);
       setWin(true);
-      setCoins(
-        makeCoins(
-          response.outcome === "triple"
-            ? Math.min(64, 26 + Math.round(response.multiplier / 6))
-            : 14,
-        ),
-      );
-      window.setTimeout(() => mountedRef.current && setCoins([]), 3600);
-      window.setTimeout(() => mountedRef.current && setWin(false), 2800);
-      setScreen({
-        tone: "win",
-        main:
-          response.outcome === "triple"
-            ? t("slots.result.triple", { symbol: t(`slots.symbols.${symbol}`) })
-            : t("slots.result.pair"),
-        sub:
-          net > 0
-            ? `${t("slots.result.win", { amount: format.number(response.payout) })} · ${t("slots.result.net", { amount: format.number(net) })}`
-            : t("slots.result.even"),
-      });
-    } else {
-      setScreen({
-        tone: "lose",
-        main: t("slots.result.lose"),
-        sub: t("slots.result.loseHint"),
-      });
+      setCoins(makeCoins(Math.min(64, 12 + Math.round(ratio * 1.2))));
+      later(() => setCoins([]), 3600);
+      later(() => setWin(false), 2800);
     }
 
-    const spins = stats.spins + 1;
     setStats((s) => ({
-      spins: s.spins + 1,
+      spins: s.spins + (response.free ? 0 : 1),
       wagered: s.wagered + response.bet,
       won: s.won + response.payout,
     }));
-    if (spins % BREAK_REMINDER_EVERY === 0) setBreakOpen(true);
+
+    // What comes next: the free spins just won, the end of a round, or a reminder to rest.
+    if (response.freeAwarded > 0 && !response.free) {
+      later(() => setOverlay({ kind: "freeWon", count: response.freeAwarded }), 1100);
+    } else if (response.freeRoundTotal !== null) {
+      later(() => setOverlay({ kind: "freeEnd", total: response.freeRoundTotal ?? 0 }), 1100);
+    } else if (
+      !response.free &&
+      response.freeState === null &&
+      (stats.spins + 1) % BREAK_REMINDER_EVERY === 0
+    ) {
+      later(() => setOverlay({ kind: "break" }), 900);
+    }
 
     setPhase("idle");
     busyRef.current = false;
-  }, [bet, canSpin, cooldown, format, guildId, stats.spins, t, wallet]);
+  }, [
+    activeLines,
+    activePerLine,
+    canSpin,
+    cooldown,
+    guildId,
+    inFree,
+    later,
+    showResult,
+    stats.spins,
+    t,
+    total,
+    wallet,
+  ]);
 
   // Space or Enter spin when nothing else on the page wants the key.
   useEffect(() => {
@@ -353,7 +561,11 @@ export function SlotMachine({
       if (event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
       if (event.code !== "Space" && event.key !== "Enter") return;
       const target = event.target as HTMLElement | null;
-      if (target?.closest("input, textarea, select, button, a, [role='dialog']")) return;
+      if (
+        target?.closest("input, textarea, select, button, a, [role='dialog'], [role='alertdialog']")
+      ) {
+        return;
+      }
       event.preventDefault();
       void spin();
     };
@@ -363,14 +575,10 @@ export function SlotMachine({
 
   // ---- parts -------------------------------------------------------------------------------
 
-  const centers = useMemo(
-    () => cells.map((n, reel) => symbolAt(REEL_STRIPS[reel], n)) as SlotSymbol[],
-    [cells],
-  );
-
   const net = stats.won - stats.wagered;
   const signed = (value: number) => `${value > 0 ? "+" : ""}${format.number(value)}`;
   const state = phase === "spin" ? "spin" : win ? "win" : "idle";
+  const winLines = useMemo(() => wins.map((w) => w.line), [wins]);
 
   const acknowledge = () => {
     writeStorage(ACK_KEY, "yes");
@@ -380,9 +588,18 @@ export function SlotMachine({
   const spinLabel =
     phase === "spin"
       ? t("slots.machine.spinning")
-      : secondsLeft > 0
-        ? t("slots.machine.wait", { seconds: secondsLeft })
-        : t("slots.machine.spin");
+      : freeState
+        ? t("slots.machine.spinFree", { left: freeState.left })
+        : secondsLeft > 0
+          ? t("slots.machine.wait", { seconds: secondsLeft })
+          : t("slots.machine.spin");
+
+  const reelLabel = (reel: number) =>
+    phase === "spin" || !grid
+      ? t("slots.machine.reel", { n: reel + 1 })
+      : `${t("slots.machine.reel", { n: reel + 1 })}: ${grid[reel].map((s) => t(`slots.symbols.${s}`)).join(", ")}`;
+
+  const bettingLocked = phase === "spin" || inFree;
 
   return (
     <Column gap="24" fillWidth>
@@ -395,7 +612,7 @@ export function SlotMachine({
         inert={locked}
         aria-hidden={locked || undefined}
       >
-        <div className={styles.stage} data-state={state}>
+        <div className={styles.stage} data-state={state} data-free={inFree}>
           <button
             type="button"
             className={styles.lever}
@@ -423,54 +640,66 @@ export function SlotMachine({
               ))}
             </div>
 
+            {freeState && (
+              <div className={styles.freeBar} role="status">
+                <span>
+                  {t("slots.machine.freeBar")} ·{" "}
+                  {t("slots.machine.freeLeft", { left: freeState.left })}
+                </span>
+                <span>
+                  {t("slots.machine.freeRound", { amount: format.number(freeState.won) })}
+                </span>
+              </div>
+            )}
+
             <div className={styles.window}>
               <div className={styles.reels}>
                 {REEL_STRIPS.map((strip, reel) => (
-                  <div
+                  <Reel
                     key={reel}
-                    className={styles.reel}
-                    role="img"
-                    aria-label={
-                      phase === "spin"
-                        ? t("slots.machine.reel", { n: reel + 1 })
-                        : `${t("slots.machine.reel", { n: reel + 1 })}: ${t(`slots.symbols.${centers[reel]}`)}`
-                    }
-                  >
-                    <div
-                      className={styles.strip}
-                      ref={(el) => {
-                        stripRefs.current[reel] = el;
-                      }}
-                    >
-                      {ROWS.map((row) => (
-                        <div
-                          key={row}
-                          className={styles.cell}
-                          data-row={row}
-                          data-win={row === 1 && phase === "idle" && winning.includes(reel)}
-                          style={{ "--row": row } as React.CSSProperties}
-                        >
-                          <SlotSymbolIcon
-                            symbol={symbolAt(strip, cells[reel] + 1 - row)}
-                            className={styles.symbol}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                    strip={strip}
+                    overrides={overrides[reel]}
+                    start={START_POSITIONS[reel]}
+                    label={reelLabel(reel)}
+                    setRef={refSetters[reel]}
+                  />
                 ))}
               </div>
-              <div
-                className={styles.payline}
-                role="presentation"
-                title={t("slots.machine.payline")}
-              />
+              <LinesOverlay lines={activeLines} winLines={winLines} hidden={phase === "spin"} />
+              <div className={styles.hits} aria-hidden="true">
+                {phase === "idle" &&
+                  winCells.map(([reel, row]) => (
+                    <span
+                      key={`${reel}:${row}`}
+                      className={styles.hit}
+                      style={{ "--reel": reel, "--row": row } as React.CSSProperties}
+                    />
+                  ))}
+              </div>
               <div className={styles.glass} />
             </div>
 
             <div className={styles.screen} data-tone={screen.tone} role="status" aria-live="polite">
               <span className={styles.screenMain}>{screen.main}</span>
               {screen.sub && <span className={styles.screenSub}>{screen.sub}</span>}
+              {phase === "idle" && wins.length > 0 && (
+                <span className={styles.winList}>
+                  {wins.map((w) => (
+                    <span
+                      key={w.line}
+                      className={styles.winBadge}
+                      style={{ "--c": LINE_COLORS[w.line] } as React.CSSProperties}
+                    >
+                      <i />
+                      {t("slots.result.badge", {
+                        line: w.line + 1,
+                        symbol: t(`slots.symbols.${w.symbol}`),
+                        amount: format.number(w.payout),
+                      })}
+                    </span>
+                  ))}
+                </span>
+              )}
             </div>
 
             <div className={styles.controls}>
@@ -479,20 +708,51 @@ export function SlotMachine({
                   <span className={styles.label}>{t("slots.machine.balance")}</span>
                   <span className={styles.amount}>
                     <Currency currency={currency} />
-                    {format.number(shownWallet)}
+                    <AnimatedAmount value={wallet} format={formatNumber} />
                   </span>
                 </Column>
                 <Column gap="4" horizontal="end">
+                  <span className={styles.label}>{t("slots.machine.totalBet")}</span>
+                  <span className={styles.amount}>
+                    <Currency currency={currency} />
+                    {format.number(total)}
+                  </span>
+                </Column>
+              </div>
+
+              <div className={styles.row}>
+                <Column gap="4">
+                  <span className={styles.label}>{t("slots.machine.lines")}</span>
+                  <div className={styles.modes} role="group" aria-label={t("slots.machine.lines")}>
+                    {LINE_MODES.map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        className={styles.chip}
+                        aria-pressed={activeLines === mode}
+                        aria-label={t("slots.machine.linesAria", { n: mode })}
+                        disabled={bettingLocked || !modeAvailable(mode)}
+                        title={
+                          modeAvailable(mode) ? undefined : t("slots.machine.linesUnavailable")
+                        }
+                        onClick={() => pickLines(mode)}
+                      >
+                        {mode}
+                      </button>
+                    ))}
+                  </div>
+                </Column>
+                <Column gap="4" horizontal="end">
                   <span className={styles.label} id="slots-bet-label">
-                    {t("slots.machine.bet")}
+                    {t("slots.machine.perLine")}
                   </span>
                   <div className={styles.betBox}>
                     <button
                       type="button"
                       className={styles.step}
                       aria-label={t("slots.machine.betDecrease")}
-                      onClick={() => applyBet(bet - betStep(bet - 1))}
-                      disabled={phase === "spin" || bet <= min}
+                      onClick={() => applyPerLine(perLine - betStep(perLine - 1))}
+                      disabled={bettingLocked || perLine <= perMin}
                     >
                       −
                     </button>
@@ -501,17 +761,17 @@ export function SlotMachine({
                       inputMode="numeric"
                       autoComplete="off"
                       aria-labelledby="slots-bet-label"
-                      value={betText}
+                      value={inFree ? String(activePerLine) : perLineText}
                       onChange={(event) => onBetInput(event.target.value)}
-                      onBlur={onBetBlur}
-                      disabled={phase === "spin"}
+                      onBlur={() => applyPerLine(perLineText ? Number(perLineText) : perMin)}
+                      disabled={bettingLocked}
                     />
                     <button
                       type="button"
                       className={styles.step}
                       aria-label={t("slots.machine.betIncrease")}
-                      onClick={() => applyBet(bet + betStep(bet))}
-                      disabled={phase === "spin" || bet >= max}
+                      onClick={() => applyPerLine(perLine + betStep(perLine))}
+                      disabled={bettingLocked || perLine >= perMax}
                     >
                       +
                     </button>
@@ -523,49 +783,62 @@ export function SlotMachine({
                 <button
                   type="button"
                   className={styles.chip}
-                  disabled={phase === "spin"}
-                  onClick={() => applyBet(min)}
+                  disabled={bettingLocked}
+                  onClick={() => applyPerLine(perMin)}
                 >
                   {t("slots.machine.betMin")}
                 </button>
                 <button
                   type="button"
                   className={styles.chip}
-                  disabled={phase === "spin"}
+                  disabled={bettingLocked}
                   aria-label={t("slots.machine.betHalf")}
-                  onClick={() => applyBet(Math.floor(bet / 2))}
+                  onClick={() => applyPerLine(Math.floor(perLine / 2))}
                 >
                   ½
                 </button>
                 <button
                   type="button"
                   className={styles.chip}
-                  disabled={phase === "spin"}
+                  disabled={bettingLocked}
                   aria-label={t("slots.machine.betDouble")}
-                  onClick={() => applyBet(bet * 2)}
+                  onClick={() => applyPerLine(perLine * 2)}
                 >
                   ×2
                 </button>
                 <button
                   type="button"
                   className={styles.chip}
-                  disabled={phase === "spin"}
-                  onClick={() => applyBet(Math.max(min, Math.min(max, wallet)))}
+                  disabled={bettingLocked}
+                  onClick={() =>
+                    applyPerLine(Math.max(perMin, Math.min(perMax, Math.floor(wallet / lines))))
+                  }
                 >
                   {t("slots.machine.betMax")}
                 </button>
               </div>
 
+              <span className={styles.hint}>
+                {inFree
+                  ? t("slots.machine.freeLocked")
+                  : t("slots.machine.totalHint", {
+                      lines: activeLines,
+                      perLine: format.number(activePerLine),
+                      total: format.number(total),
+                    })}
+              </span>
+
               <button
                 type="button"
                 className={styles.spin}
+                data-free={inFree}
                 onClick={() => void spin()}
                 disabled={!canSpin}
               >
                 {spinLabel}
               </button>
 
-              {betValid && !canAfford && phase === "idle" && (
+              {!inFree && betValid && !canAfford && phase === "idle" && (
                 <Text variant="body-default-xs" align="center" style={{ color: "#ffb3b9" }}>
                   {t("slots.machine.notEnough")}
                 </Text>
@@ -584,27 +857,45 @@ export function SlotMachine({
               </label>
             </div>
 
-            {breakOpen && (
+            {overlay && (
               <div
                 className={styles.breakCard}
                 role="alertdialog"
-                aria-labelledby="slots-break-title"
+                aria-labelledby="slots-overlay-title"
               >
                 <div className={styles.breakInner}>
-                  <Text variant="heading-strong-m" id="slots-break-title" style={{ color: "#fff" }}>
-                    {t("slots.breakReminder.title")}
+                  <Text
+                    variant="heading-strong-m"
+                    id="slots-overlay-title"
+                    style={{ color: "#fff" }}
+                  >
+                    {overlay.kind === "freeWon"
+                      ? t("slots.result.freeWon", { count: overlay.count })
+                      : overlay.kind === "freeEnd"
+                        ? t("slots.result.freeEnd")
+                        : t("slots.breakReminder.title")}
                   </Text>
                   <Text variant="body-default-s" style={{ color: "#e7d8f5" }}>
-                    {t("slots.breakReminder.text", {
-                      count: format.number(stats.spins),
-                      net: signed(net),
-                    })}
+                    {overlay.kind === "freeWon"
+                      ? t("slots.result.freeWonText")
+                      : overlay.kind === "freeEnd"
+                        ? t("slots.result.freeEndText", { amount: format.number(overlay.total) })
+                        : t("slots.breakReminder.text", {
+                            count: format.number(stats.spins),
+                            net: signed(net),
+                          })}
                   </Text>
                   <Button
                     variant="secondary"
                     size="m"
-                    label={t("slots.breakReminder.dismiss")}
-                    onClick={() => setBreakOpen(false)}
+                    label={
+                      overlay.kind === "freeWon"
+                        ? t("slots.result.freeStart")
+                        : overlay.kind === "freeEnd"
+                          ? t("slots.result.continue")
+                          : t("slots.breakReminder.dismiss")
+                    }
+                    onClick={() => setOverlay(null)}
                   />
                 </div>
               </div>

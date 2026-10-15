@@ -1,11 +1,12 @@
 import { Column, Feedback, Icon, Row, Text } from "@once-ui-system/core";
+import { memo } from "react";
 import type { Translator } from "@/i18n/translate";
 
 /**
  * The short reminder that sits on top of every page of the game. It cannot be closed: the slot
  * machine only ever uses the virtual currency of a Discord server, and says so all the time.
  */
-export function ResponsibleBanner({ t }: { t: Translator }) {
+export const ResponsibleBanner = memo(function ResponsibleBanner({ t }: { t: Translator }) {
   return (
     <Feedback
       variant="warning"
@@ -15,12 +16,12 @@ export function ResponsibleBanner({ t }: { t: Translator }) {
       role="note"
     />
   );
-}
+});
 
 const POINTS = ["point1", "point2", "point3", "point4", "point5"] as const;
 
 /** Everything the player should know before spinning, as a list. */
-export function ResponsibleNotice({
+export const ResponsibleNotice = memo(function ResponsibleNotice({
   t,
   compact,
   titleId,
@@ -55,4 +56,4 @@ export function ResponsibleNotice({
       </Column>
     </Column>
   );
-}
+});

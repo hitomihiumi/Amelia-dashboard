@@ -72,6 +72,11 @@ export function SlotSymbolDefs() {
           <stop offset="0.5" stopColor="#e5162e" />
           <stop offset="1" stopColor="#8d0618" />
         </linearGradient>
+        <linearGradient id="sl-scatter" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#ffb3f0" />
+          <stop offset="0.5" stopColor="#d338e6" />
+          <stop offset="1" stopColor="#6f1a85" />
+        </linearGradient>
         <linearGradient id="sl-coin" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#fff2a0" />
           <stop offset="0.55" stopColor="#ffc928" />
@@ -238,6 +243,54 @@ const SHAPES: Record<SlotSymbol, React.ReactNode> = {
         strokeWidth="2"
         fill="none"
         strokeLinejoin="round"
+      />
+    </>
+  ),
+  scatter: (
+    <>
+      <rect
+        x="15"
+        y="44"
+        width="70"
+        height="44"
+        rx="6"
+        fill="url(#sl-scatter)"
+        stroke="#5a1470"
+        strokeWidth="3"
+      />
+      <rect
+        x="10"
+        y="30"
+        width="80"
+        height="19"
+        rx="5"
+        fill="url(#sl-scatter)"
+        stroke="#5a1470"
+        strokeWidth="3"
+      />
+      <rect
+        x="44"
+        y="30"
+        width="12"
+        height="58"
+        fill="url(#sl-coin)"
+        stroke="#9a6a00"
+        strokeWidth="2"
+      />
+      <path
+        d="M50 30 C34 6 14 18 30 30Z M50 30 C66 6 86 18 70 30Z"
+        fill="url(#sl-coin)"
+        stroke="#9a6a00"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M18 18 L20.5 24 L26 26.5 L20.5 29 L18 35 L15.5 29 L10 26.5 L15.5 24Z"
+        fill="#fff6c2"
+      />
+      <path
+        d="M82 12 L83.8 16.2 L88 18 L83.8 19.8 L82 24 L80.2 19.8 L76 18 L80.2 16.2Z"
+        fill="#fff6c2"
       />
     </>
   ),
