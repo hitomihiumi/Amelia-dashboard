@@ -8,15 +8,13 @@ $gold-dark: #c98200;
 $ink: #0b0612;
 
 .stage {
-  --gap-ratio: 0.09;
-  --cell: clamp(60px, 20vw, 112px);
-  --gap: calc(var(--cell) * var(--gap-ratio));
-
   position: relative;
   width: 100%;
   max-width: 500px;
   margin-inline: auto;
   isolation: isolate;
+  // The cells are sized from the width of the stage, so any number of reels fits.
+  container-type: inline-size;
 }
 
 // Soft glow behind the cabinet, in the brand colour of the site.
@@ -37,9 +35,21 @@ $ink: #0b0612;
 }
 
 .cabinet {
+  // Size of a cell: as large as the room beside the control panel allows, up to a limit. The reels
+  // and the gaps between them (a ninth of a cell) have to fit into what is left of the stage.
+  --gap-ratio: 0.09;
+  --pad: clamp(14px, 3.2vw, 22px);
+  --side: 0px;
+  --cell-max: 84px;
+  --cell: min(
+    var(--cell-max),
+    calc((100cqw - 2 * var(--pad) - var(--side) - 6px) / (var(--reels) + 0.09 * (var(--reels) + 1)))
+  );
+  --gap: calc(var(--cell) * var(--gap-ratio));
+
   position: relative;
   border-radius: 28px;
-  padding: clamp(14px, 3.2vw, 22px);
+  padding: var(--pad);
   background: linear-gradient(165deg, #5b1f70 0%, #2b0f3d 46%, #14081f 100%);
   border: 2px solid rgb(255 255 255 / 12%);
   box-shadow:
@@ -215,7 +225,7 @@ $ink: #0b0612;
   position: absolute;
   top: var(--gap);
   left: var(--gap);
-  width: calc(var(--cell) * (3 + 2 * var(--gap-ratio)));
+  width: calc(var(--cell) * (var(--reels) + (var(--reels) - 1) * var(--gap-ratio)));
   height: calc(var(--cell) * 3);
   overflow: visible;
   pointer-events: none;
@@ -250,7 +260,7 @@ $ink: #0b0612;
   position: absolute;
   top: var(--gap);
   left: var(--gap);
-  width: calc(var(--cell) * (3 + 2 * var(--gap-ratio)));
+  width: calc(var(--cell) * (var(--reels) + (var(--reels) - 1) * var(--gap-ratio)));
   height: calc(var(--cell) * 3);
   pointer-events: none;
   z-index: 2;
@@ -278,6 +288,57 @@ $ink: #0b0612;
   background: linear-gradient(118deg, rgb(255 255 255 / 15%), rgb(255 255 255 / 0%) 34%);
   pointer-events: none;
   z-index: 3;
+}
+
+// ---- body: the playfield and the control panel ----------------------------------------------
+
+.body {
+  display: grid;
+  gap: 0;
+}
+
+.field {
+  min-width: 0;
+}
+
+.info {
+  display: grid;
+  gap: 24px;
+}
+
+// Wide screens: the controls stand beside the reels, the machine gets much lower, and the pay
+// table sits next to the notice instead of below it.
+@media (min-width: 980px) {
+  .stage {
+    max-width: 1160px;
+  }
+
+  .cabinet {
+    --pad: 22px;
+    --side: 346px;
+    --cell-max: 108px;
+  }
+
+  .body {
+    grid-template-columns: minmax(0, 1fr) 332px;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .body > .controls {
+    margin-top: 14px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .info {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+  }
 }
 
 // ---- screen ----------------------------------------------------------------------------------
@@ -583,7 +644,7 @@ $ink: #0b0612;
 }
 
 // The lever sticks out of the cabinet, so it needs room on both sides of the page.
-@media (max-width: 760px) {
+@media (max-width: 1280px) {
   .lever {
     display: none;
   }

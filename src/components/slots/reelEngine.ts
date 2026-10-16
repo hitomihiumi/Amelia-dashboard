@@ -9,61 +9,12 @@ export const STRIP_LENGTH = 16;
  * twice, in an order of its own.
  */
 export const REEL_STRIPS: SlotSymbol[][] = [
-  [
-    "cherry",
-    "lemon",
-    "bell",
-    "scatter",
-    "clover",
-    "star",
-    "cherry",
-    "diamond",
-    "lemon",
-    "seven",
-    "bell",
-    "cherry",
-    "clover",
-    "lemon",
-    "star",
-    "scatter",
-  ],
-  [
-    "lemon",
-    "cherry",
-    "clover",
-    "bell",
-    "diamond",
-    "cherry",
-    "scatter",
-    "lemon",
-    "star",
-    "cherry",
-    "bell",
-    "seven",
-    "lemon",
-    "clover",
-    "scatter",
-    "star",
-  ],
-  [
-    "bell",
-    "cherry",
-    "star",
-    "lemon",
-    "scatter",
-    "clover",
-    "cherry",
-    "seven",
-    "lemon",
-    "bell",
-    "cherry",
-    "scatter",
-    "diamond",
-    "lemon",
-    "clover",
-    "star",
-  ],
-];
+  "cherry lemon bell scatter clover star cherry diamond lemon seven bell cherry clover lemon star scatter",
+  "lemon cherry clover bell diamond cherry scatter lemon star cherry bell seven lemon clover scatter star",
+  "bell cherry star lemon scatter clover cherry seven lemon bell cherry scatter diamond lemon clover star",
+  "clover lemon cherry diamond bell scatter cherry star lemon seven cherry clover scatter bell lemon star",
+  "star cherry bell lemon clover cherry scatter lemon diamond bell cherry seven clover scatter lemon star",
+].map((strip) => strip.split(" ") as SlotSymbol[]);
 
 /** The strip index a position stands on, always in `0 ..< STRIP_LENGTH`. */
 export function wrap(position: number): number {
@@ -127,6 +78,8 @@ export type FrameHandler = (reel: number, offset: number) => void;
  */
 export class ReelEngine {
   private reels: ReelState[];
+  /** How many reels take part in the current spin. */
+  private active = 0;
   private frame = 0;
   private lastTime = 0;
   private waiters: Array<() => void> = [];
@@ -158,8 +111,10 @@ export class ReelEngine {
     });
   }
 
-  start(): void {
-    for (const reel of this.reels) {
+  /** The first `count` reels start turning. */
+  start(count: number = this.reels.length): void {
+    this.active = count;
+    for (const reel of this.reels.slice(0, count)) {
       reel.mode = "spin";
       reel.landAt = null;
       reel.speed = 0;
@@ -180,7 +135,7 @@ export class ReelEngine {
     const stagger = quick ? 90 : 330;
     const travel = quick ? 6 : 8;
 
-    const plans = this.reels.map((reel, index) => {
+    const plans = this.reels.slice(0, this.active).map((reel, index) => {
       const delay = (minRunMs + stagger * index) / 1000;
       // Where the reel is when it starts to land, then a fixed run of braking.
       const ahead = distanceAfter(reel.mode === "spin" ? reel.speed : 0, delay);

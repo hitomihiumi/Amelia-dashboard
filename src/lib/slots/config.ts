@@ -4,10 +4,14 @@
  *
  * Virtual server currency only. Nothing here can be bought, deposited or withdrawn.
  *
- * The machine is a grid of 3 reels × 3 rows. A *payline* is a path over the grid with one cell
- * on every reel; the player picks how many of the 9 lines are in play and bets on each of them.
- * Every cell is drawn on its own. The *scatter* pays nothing on a line, but three or more of
- * them anywhere on the grid start free spins.
+ * The machine is a grid of 3, 4 or 5 reels × 3 rows. A *payline* is a path over the grid with one
+ * cell on every reel; the player picks how many of the 9 lines are in play and bets on each of them.
+ * A line pays when the same symbol stands on it three or more times in a row from the left reel.
+ * Every cell is drawn on its own. The *scatter* pays nothing on a line, but enough of them anywhere
+ * on the grid start free spins.
+ *
+ * Each width has its own pay table and scatter odds, worked out so that the machine pays back about
+ * the same (94.3%) whatever the width.
  */
 
 export const SLOT_SYMBOLS = [
@@ -22,14 +26,15 @@ export const SLOT_SYMBOLS = [
 ] as const;
 
 export type SlotSymbol = (typeof SLOT_SYMBOLS)[number];
+export type LineSymbol = Exclude<SlotSymbol, "scatter">;
 
 /** Symbols that make a winning line. The scatter is not one of them. */
 export const LINE_SYMBOLS = SLOT_SYMBOLS.filter(
-  (symbol): symbol is Exclude<SlotSymbol, "scatter"> => symbol !== "scatter",
+  (symbol): symbol is LineSymbol => symbol !== "scatter",
 );
 
-/** Relative chance of a symbol in one cell; the weights add up to 106. */
-export const SLOT_WEIGHTS: Record<SlotSymbol, number> = {
+/** Relative chance of a line symbol in one cell; the scatter's weight depends on the width. */
+const LINE_WEIGHTS: Record<LineSymbol, number> = {
   cherry: 30,
   lemon: 24,
   bell: 18,
@@ -37,40 +42,99 @@ export const SLOT_WEIGHTS: Record<SlotSymbol, number> = {
   star: 8,
   diamond: 5,
   seven: 2,
-  scatter: 6,
 };
 
-/** What three of a kind on a line pay, as a multiple of the bet on that line. */
-export const SLOT_TRIPLE_MULTIPLIER: Record<Exclude<SlotSymbol, "scatter">, number> = {
-  cherry: 7,
-  lemon: 11,
-  bell: 20,
-  clover: 36,
-  star: 90,
-  diamond: 220,
-  seven: 1000,
-};
-
-/** Exactly two cherries on a line pay a small consolation. */
-export const SLOT_PAIR_CHERRY_MULTIPLIER = 1.5;
-
-export const SLOT_REELS = 3;
+/** The widths of the machine. */
+export const REEL_COUNTS = [3, 4, 5] as const;
+export type ReelCount = (typeof REEL_COUNTS)[number];
+export const MAX_REELS = 5;
 export const SLOT_ROWS = 3;
 
+export function isReelCount(value: unknown): value is ReelCount {
+  return typeof value === "number" && (REEL_COUNTS as readonly number[]).includes(value);
+}
+
+interface WidthRules {
+  /** Relative chance of the scatter in one cell. */
+  scatterWeight: number;
+  /** Scatters on the grid it takes to start free spins. */
+  minScatters: number;
+  /**
+   * What a line pays as a multiple of the bet on it, for three, four and five symbols in a row
+   * (only as many entries are used as the machine has reels).
+   */
+  pays: Record<LineSymbol, readonly [number, number, number]>;
+}
+
+const RULES: Record<ReelCount, WidthRules> = {
+  3: {
+    scatterWeight: 6,
+    minScatters: 3,
+    pays: {
+      cherry: [7, 7, 7],
+      lemon: [11, 11, 11],
+      bell: [20, 20, 20],
+      clover: [36, 36, 36],
+      star: [90, 90, 90],
+      diamond: [220, 220, 220],
+      seven: [1000, 1000, 1000],
+    },
+  },
+  4: {
+    scatterWeight: 8,
+    minScatters: 4,
+    pays: {
+      cherry: [6, 18, 18],
+      lemon: [9, 27, 27],
+      bell: [16, 48, 48],
+      clover: [28, 84, 84],
+      star: [71, 213, 213],
+      diamond: [173, 519, 519],
+      seven: [786, 2358, 2358],
+    },
+  },
+  5: {
+    scatterWeight: 6,
+    minScatters: 4,
+    pays: {
+      cherry: [4, 12, 48],
+      lemon: [7, 21, 84],
+      bell: [12, 36, 144],
+      clover: [22, 66, 264],
+      star: [55, 165, 660],
+      diamond: [133, 399, 1596],
+      seven: [606, 1818, 7272],
+    },
+  },
+};
+
+/** Exactly two cherries among the first three cells of a line pay a small consolation. */
+export const SLOT_PAIR_CHERRY_MULTIPLIER = 1.5;
+
+/** The scatter's weight, the minimum scatters for free spins and the pay table of a width. */
+export function rulesFor(reels: ReelCount): WidthRules {
+  return RULES[reels];
+}
+
+/** Relative chance of every symbol in one cell at this width. */
+export function weightsFor(reels: ReelCount): Record<SlotSymbol, number> {
+  return { ...LINE_WEIGHTS, scatter: RULES[reels].scatterWeight };
+}
+
 /**
- * The nine paylines: for every reel the row it passes through (0 is the top row). The player
- * plays the first 1, 3, 5 or 9 of them.
+ * The nine paylines: for every reel the row it passes through (0 is the top row). The player plays
+ * the first 1, 3, 5 or 9 of them, over as many reels as the machine has.
  */
-export const PAYLINES: readonly (readonly [number, number, number])[] = [
-  [1, 1, 1],
-  [0, 0, 0],
-  [2, 2, 2],
-  [0, 1, 2],
-  [2, 1, 0],
-  [0, 1, 0],
-  [2, 1, 2],
-  [1, 0, 1],
-  [1, 2, 1],
+export const PAYLINES: readonly (readonly number[])[] = [
+  [1, 1, 1, 1, 1],
+  [0, 0, 0, 0, 0],
+  [2, 2, 2, 2, 2],
+  [0, 1, 2, 1, 0],
+  [2, 1, 0, 1, 2],
+  [0, 1, 0, 1, 0],
+  [2, 1, 2, 1, 2],
+  [1, 0, 1, 0, 1],
+  [1, 2, 1, 2, 1],
 ];
 
 /** The line modes the player can pick between. */
@@ -81,12 +145,16 @@ export function isLineMode(value: unknown): value is LineMode {
   return typeof value === "number" && (LINE_MODES as readonly number[]).includes(value);
 }
 
-/** Free spins: how many three, four, five or more scatters give. */
-export function freeSpinsFor(scatters: number): number {
-  if (scatters < 3) return 0;
-  if (scatters === 3) return 8;
-  if (scatters === 4) return 10;
-  if (scatters === 5) return 12;
+/**
+ * Free spins: the first count that starts them gives 8, then 10, 12 and, with three more than the
+ * minimum or beyond, 15.
+ */
+export function freeSpinsFor(reels: ReelCount, scatters: number): number {
+  const over = scatters - RULES[reels].minScatters;
+  if (over < 0) return 0;
+  if (over === 0) return 8;
+  if (over === 1) return 10;
+  if (over === 2) return 12;
   return 15;
 }
 
@@ -110,14 +178,16 @@ export const BREAK_REMINDER_EVERY = 25;
 /** What the reels stopped on: `grid[reel][row]`. */
 export type SlotGrid = SlotSymbol[][];
 
-export type LineOutcome = "triple" | "pair";
+export type LineOutcome = "run" | "pair";
 
 export interface LineWin {
   /** Index into `PAYLINES`. */
   line: number;
   outcome: LineOutcome;
-  /** The symbol of three of a kind, `cherry` for the pair. */
-  symbol: Exclude<SlotSymbol, "scatter">;
+  /** The symbol of the run, `cherry` for the pair. */
+  symbol: LineSymbol;
+  /** How many symbols in a row, 2 for the pair. */
+  count: number;
   multiplier: number;
   /** Coins this line pays, already with the free spin multiplier. */
   payout: number;
@@ -137,29 +207,36 @@ export interface SpinEvaluation {
   cells: [number, number][];
 }
 
-/** The multiple of the line bet and the reels that make up the win, or `null` for no win. */
+/**
+ * What one line pays: the symbols standing on it, left to right. `null` for no win. A run of the same
+ * symbol from the left reel pays by its length; two cherries among the first three pay the consolation.
+ */
 export function evaluateLine(
   symbols: readonly SlotSymbol[],
-): {
-  outcome: LineOutcome;
-  symbol: Exclude<SlotSymbol, "scatter">;
-  multiplier: number;
-  reels: number[];
-} | null {
-  const [a, b, c] = symbols;
-  if (a === b && b === c && a !== "scatter") {
-    return {
-      outcome: "triple",
-      symbol: a,
-      multiplier: SLOT_TRIPLE_MULTIPLIER[a],
-      reels: [0, 1, 2],
-    };
+  reels: ReelCount = symbols.length as ReelCount,
+): Pick<LineWin, "outcome" | "symbol" | "count" | "multiplier" | "reels"> | null {
+  const first = symbols[0];
+  if (first !== "scatter") {
+    let count = 1;
+    while (count < symbols.length && symbols[count] === first) count++;
+    if (count >= 3) {
+      return {
+        outcome: "run",
+        symbol: first,
+        count,
+        multiplier: RULES[reels].pays[first][count - 3],
+        reels: Array.from({ length: count }, (_, i) => i),
+      };
+    }
   }
-  const cherries = symbols.flatMap((symbol, index) => (symbol === "cherry" ? [index] : []));
+  const cherries = symbols
+    .slice(0, 3)
+    .flatMap((symbol, index) => (symbol === "cherry" ? [index] : []));
   if (cherries.length === 2) {
     return {
       outcome: "pair",
       symbol: "cherry",
+      count: 2,
       multiplier: SLOT_PAIR_CHERRY_MULTIPLIER,
       reels: cherries,
     };
@@ -177,21 +254,22 @@ export function evaluateGrid(
   lines: number,
   free = false,
 ): SpinEvaluation {
+  const reels = grid.length as ReelCount;
   const factor = free ? FREE_SPIN_WIN_MULTIPLIER : 1;
   const wins: LineWin[] = [];
   const cells = new Map<string, [number, number]>();
 
   for (let line = 0; line < lines; line++) {
     const path = PAYLINES[line];
-    const found = evaluateLine(path.map((row, reel) => grid[reel][row]));
+    const found = evaluateLine(
+      grid.map((column, reel) => column[path[reel]]),
+      reels,
+    );
     if (!found) continue;
     wins.push({
       line,
-      outcome: found.outcome,
-      symbol: found.symbol,
-      multiplier: found.multiplier,
+      ...found,
       payout: Math.floor(perLine * found.multiplier * factor),
-      reels: found.reels,
     });
     for (const reel of found.reels) cells.set(`${reel}:${path[reel]}`, [reel, path[reel]]);
   }
@@ -201,55 +279,45 @@ export function evaluateGrid(
     wins,
     payout: wins.reduce((sum, win) => sum + win.payout, 0),
     scatters,
-    freeSpinsAwarded: freeSpinsFor(scatters),
+    freeSpinsAwarded: freeSpinsFor(reels, scatters),
     cells: [...cells.values()],
   };
 }
 
-const TOTAL_WEIGHT = SLOT_SYMBOLS.reduce((sum, symbol) => sum + SLOT_WEIGHTS[symbol], 0);
-
-/** Chance that one cell shows the symbol, 0..1. */
-export function symbolChance(symbol: SlotSymbol): number {
-  return SLOT_WEIGHTS[symbol] / TOTAL_WEIGHT;
+/** Chance that one cell shows the symbol at this width, 0..1. */
+export function symbolChance(symbol: SlotSymbol, reels: ReelCount = 3): number {
+  const weights = weightsFor(reels);
+  const total = SLOT_SYMBOLS.reduce((sum, s) => sum + weights[s], 0);
+  return weights[symbol] / total;
 }
 
-/** Chance of three of a kind of the symbol on one line, 0..1. */
-export function tripleChance(symbol: SlotSymbol): number {
-  return symbolChance(symbol) ** 3;
+/** Chance that a line has exactly `count` of the symbol in a row from the left reel, 0..1. */
+export function runChance(symbol: LineSymbol, count: number, reels: ReelCount = 3): number {
+  const p = symbolChance(symbol, reels);
+  return count < reels ? p ** count * (1 - p) : p ** count;
 }
 
-/** Chance of exactly two cherries on one line, 0..1. */
-export function pairCherryChance(): number {
-  const p = symbolChance("cherry");
+/** Chance of exactly two cherries among the first three cells of a line, 0..1. */
+export function pairCherryChance(reels: ReelCount = 3): number {
+  const p = symbolChance("cherry", reels);
   return 3 * p * p * (1 - p);
 }
 
 /** What one line pays per coin bet on it, over a very long time, without free spins. */
-export function lineReturn(): number {
-  let total = 0;
-  for (const a of SLOT_SYMBOLS) {
-    for (const b of SLOT_SYMBOLS) {
-      for (const c of SLOT_SYMBOLS) {
-        const chance = symbolChance(a) * symbolChance(b) * symbolChance(c);
-        total += chance * (evaluateLine([a, b, c])?.multiplier ?? 0);
-      }
+export function lineReturn(reels: ReelCount = 3): number {
+  let total = pairCherryChance(reels) * SLOT_PAIR_CHERRY_MULTIPLIER;
+  for (const symbol of LINE_SYMBOLS) {
+    for (let count = 3; count <= reels; count++) {
+      total += runChance(symbol, count, reels) * RULES[reels].pays[symbol][count - 3];
     }
   }
   return total;
 }
 
 /** Chance that one line pays anything, 0..1. */
-export function lineHitChance(): number {
-  let total = 0;
-  for (const a of SLOT_SYMBOLS) {
-    for (const b of SLOT_SYMBOLS) {
-      for (const c of SLOT_SYMBOLS) {
-        if (evaluateLine([a, b, c])) {
-          total += symbolChance(a) * symbolChance(b) * symbolChance(c);
-        }
-      }
-    }
-  }
+export function lineHitChance(reels: ReelCount = 3): number {
+  let total = pairCherryChance(reels);
+  for (const symbol of LINE_SYMBOLS) total += symbolChance(symbol, reels) ** 3;
   return total;
 }
 
@@ -260,22 +328,27 @@ function choose(n: number, k: number): number {
   return result;
 }
 
-/** Chance that a spin starts free spins (three or more scatters on the 9 cells), 0..1. */
-export function freeSpinChance(): number {
-  const cells = SLOT_REELS * SLOT_ROWS;
-  const p = symbolChance("scatter");
+/** Chance that a spin has exactly `k` scatters on the grid, 0..1. */
+function scatterCountChance(reels: ReelCount, k: number): number {
+  const cells = reels * SLOT_ROWS;
+  const p = symbolChance("scatter", reels);
+  return choose(cells, k) * p ** k * (1 - p) ** (cells - k);
+}
+
+/** Chance that a spin starts free spins, 0..1. */
+export function freeSpinChance(reels: ReelCount = 3): number {
   let total = 0;
-  for (let k = 3; k <= cells; k++) total += choose(cells, k) * p ** k * (1 - p) ** (cells - k);
+  for (let k = RULES[reels].minScatters; k <= reels * SLOT_ROWS; k++) {
+    total += scatterCountChance(reels, k);
+  }
   return total;
 }
 
 /** Free spins a single spin is worth on average. */
-function expectedFreeSpins(): number {
-  const cells = SLOT_REELS * SLOT_ROWS;
-  const p = symbolChance("scatter");
+function expectedFreeSpins(reels: ReelCount): number {
   let total = 0;
-  for (let k = 3; k <= cells; k++) {
-    total += choose(cells, k) * p ** k * (1 - p) ** (cells - k) * freeSpinsFor(k);
+  for (let k = RULES[reels].minScatters; k <= reels * SLOT_ROWS; k++) {
+    total += scatterCountChance(reels, k) * freeSpinsFor(reels, k);
   }
   return total;
 }
@@ -284,9 +357,8 @@ function expectedFreeSpins(): number {
  * What the machine pays back over a very long time, per coin bet (0.943 = 94.3%), free spins
  * included. The lines are independent of each other, so it does not depend on how many are played.
  */
-export function theoreticalReturn(): number {
-  const base = lineReturn();
-  const spins = expectedFreeSpins();
+export function theoreticalReturn(reels: ReelCount = 3): number {
+  const spins = expectedFreeSpins(reels);
   // Free spins can be won again, so each spin is worth `spins / (1 - spins)` free spins in the end.
-  return base * (1 + (FREE_SPIN_WIN_MULTIPLIER * spins) / (1 - spins));
+  return lineReturn(reels) * (1 + (FREE_SPIN_WIN_MULTIPLIER * spins) / (1 - spins));
 }
