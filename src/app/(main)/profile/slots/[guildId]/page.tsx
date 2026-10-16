@@ -88,6 +88,7 @@ export default async function SlotsGamePage({
         slotsFreeSpins: true,
         slotsFreeBet: true,
         slotsFreeLines: true,
+        slotsFreeReels: true,
         slotsFreeWon: true,
       },
     }),
@@ -134,6 +135,8 @@ export default async function SlotsGamePage({
                 left: row.slotsFreeSpins,
                 perLine: row.slotsFreeBet,
                 lines: row.slotsFreeLines,
+                reels:
+                  row.slotsFreeReels === 4 || row.slotsFreeReels === 5 ? row.slotsFreeReels : 3,
                 won: row.slotsFreeWon,
               }
             : null

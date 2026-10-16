@@ -14,8 +14,11 @@ import {
   LINE_MODES,
   type LineMode,
   type LineWin,
+  MAX_REELS,
   PAYLINES,
-  SLOT_REELS,
+  REEL_COUNTS,
+  type ReelCount,
+  isReelCount,
   type SlotGrid,
   type SlotSymbol,
 } from "@/lib/slots/config";
@@ -29,14 +32,18 @@ import { SlotSymbolDefs, SlotSymbolIcon } from "./symbols";
 const ACK_KEY = "amelia:slots:ack:v1";
 const QUICK_KEY = "amelia:slots:quick";
 const LINES_KEY = "amelia:slots:lines";
+const REELS_KEY = "amelia:slots:reels";
+/** The width from which the machine can have more than three reels. */
+const WIDE_QUERY = "(min-width: 980px)";
 /** Where the reels stand before the first spin. */
-const START_POSITIONS = [3, 8, 13];
+const START_POSITIONS = [3, 8, 13, 5, 10];
 /** The cells drawn per reel: the loop plus the ones around it, so the seam never shows. */
 const NODES = Array.from({ length: STRIP_LENGTH + 4 }, (_, i) => i - 1);
 const LIGHTS = Array.from({ length: 16 }, (_, i) => i);
 /** One unit of the line drawing is a cell; this is the gap between two reels in cells. */
 const GAP_RATIO = 0.09;
-const DRAWING_WIDTH = SLOT_REELS + 2 * GAP_RATIO;
+/** Width of the line drawing in cells: the reels and the gaps between them. */
+const drawingWidth = (reels: number) => reels + (reels - 1) * GAP_RATIO;
 
 type Phase = "idle" | "spin";
 type Tone = "neutral" | "win" | "lose" | "error";
@@ -198,31 +205,35 @@ const Reel = memo(function Reel({
 
 /** The lines in play, drawn over the reels. */
 const LinesOverlay = memo(function LinesOverlay({
+  reels,
   lines,
   winLines,
   hidden,
 }: {
+  reels: number;
   lines: number;
   winLines: number[];
   hidden: boolean;
 }) {
   const paths = useMemo(
     () =>
-      PAYLINES.slice(0, lines).map((rows, index) => {
-        const points = rows.map((row, reel) => [reel * (1 + GAP_RATIO) + 0.5, row + 0.5]);
+      PAYLINES.slice(0, lines).map((path, index) => {
+        const points = path
+          .slice(0, reels)
+          .map((row, reel) => [reel * (1 + GAP_RATIO) + 0.5, row + 0.5]);
         const first = points[0];
         const last = points[points.length - 1];
-        const all = [[0, first[1]], ...points, [DRAWING_WIDTH, last[1]]];
+        const all = [[0, first[1]], ...points, [drawingWidth(reels), last[1]]];
         return { index, d: all.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ") };
       }),
-    [lines],
+    [lines, reels],
   );
 
   return (
     <svg
       className={styles.lines}
       data-hidden={hidden}
-      viewBox={`0 0 ${DRAWING_WIDTH} 3`}
+      viewBox={`0 0 ${drawingWidth(reels)} 3`}
       preserveAspectRatio="none"
       aria-hidden="true"
       focusable="false"
@@ -261,10 +272,14 @@ export function SlotMachine({
   const [phase, setPhase] = useState<Phase>("idle");
   const [wallet, setWallet] = useState(initialWallet);
   const [lines, setLines] = useState<LineMode>(1);
+  const [reelCount, setReelCount] = useState<ReelCount>(3);
+  const [wide, setWide] = useState(false);
   const [freeState, setFreeState] = useState<FreeSpinState | null>(initialFree);
   const [perLine, setPerLine] = useState(() => Math.min(Math.max(min, 10), max));
   const [perLineText, setPerLineText] = useState(() => String(Math.min(Math.max(min, 10), max)));
-  const [overrides, setOverrides] = useState<Record<number, SlotSymbol>[]>([{}, {}, {}]);
+  const [overrides, setOverrides] = useState<Record<number, SlotSymbol>[]>(
+    Array.from({ length: MAX_REELS }, () => ({})),
+  );
   const [grid, setGrid] = useState<SlotGrid | null>(null);
   const [wins, setWins] = useState<LineWin[]>([]);
   const [winCells, setWinCells] = useState<[number, number][]>([]);
@@ -277,7 +292,9 @@ export function SlotMachine({
   const [cooldownUntil, setCooldownUntil] = useState(0);
   const [now, setNow] = useState(0);
 
-  const stripRefs = useRef<(HTMLDivElement | null)[]>([null, null, null]);
+  const stripRefs = useRef<(HTMLDivElement | null)[]>(
+    Array.from({ length: MAX_REELS }, () => null),
+  );
   const engineRef = useRef<ReelEngine | null>(null);
   const busyRef = useRef(false);
   const mountedRef = useRef(true);
@@ -288,7 +305,7 @@ export function SlotMachine({
 
   const refSetters = useMemo(
     () =>
-      Array.from({ length: SLOT_REELS }, (_, reel) => (el: HTMLDivElement | null) => {
+      Array.from({ length: MAX_REELS }, (_, reel) => (el: HTMLDivElement | null) => {
         stripRefs.current[reel] = el;
       }),
     [],
@@ -311,6 +328,8 @@ export function SlotMachine({
     setQuick(stored === null ? reducedRef.current : stored === "1");
     const savedLines = Number(readStorage(LINES_KEY));
     if ((LINE_MODES as readonly number[]).includes(savedLines)) setLines(savedLines as LineMode);
+    const savedReels = Number(readStorage(REELS_KEY));
+    if (isReelCount(savedReels)) setReelCount(savedReels);
     if (cooldownLeftMs > 0) {
       setNow(Date.now());
       setCooldownUntil(Date.now() + cooldownLeftMs);
@@ -323,11 +342,20 @@ export function SlotMachine({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // More than three reels are for wide screens.
+  useEffect(() => {
+    const query = window.matchMedia(WIDE_QUERY);
+    setWide(query.matches);
+    const onChange = (event: MediaQueryListEvent) => setWide(event.matches);
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+
   // The engine moves the strips directly; React is not involved while a reel turns.
   useEffect(() => {
     mountedRef.current = true;
     const engine = new ReelEngine(
-      SLOT_REELS,
+      MAX_REELS,
       (reel, offset) => {
         const el = stripRefs.current[reel];
         if (el) el.style.transform = `translate3d(0, ${offset.toFixed(3)}%, 0)`;
@@ -369,6 +397,7 @@ export function SlotMachine({
 
   const inFree = freeState !== null;
   const activeLines = freeState ? freeState.lines : lines;
+  const activeReels: ReelCount = freeState ? freeState.reels : wide ? reelCount : 3;
   const activePerLine = freeState ? freeState.perLine : perLine;
   const total = activePerLine * activeLines;
   const { lo: perMin, hi: perMax } = range(lines);
@@ -382,6 +411,11 @@ export function SlotMachine({
     },
     [lines, range],
   );
+
+  const pickReels = (count: ReelCount) => {
+    setReelCount(count);
+    writeStorage(REELS_KEY, String(count));
+  };
 
   const pickLines = (mode: LineMode) => {
     setLines(mode);
@@ -420,8 +454,12 @@ export function SlotMachine({
         setScreen({
           tone: "win",
           main: only
-            ? only.outcome === "triple"
-              ? t("slots.result.lineWin", { line: only.line + 1, symbol: symbolName(only.symbol) })
+            ? only.outcome === "run"
+              ? t("slots.result.lineWin", {
+                  line: only.line + 1,
+                  count: only.count,
+                  symbol: symbolName(only.symbol),
+                })
               : t("slots.result.linePair", { line: only.line + 1 })
             : t("slots.result.manyLines", { count: response.wins.length }),
           sub:
@@ -463,11 +501,11 @@ export function SlotMachine({
     setScreen({ tone: "neutral", main: t("slots.machine.spinning") });
     // The bet leaves the balance the moment the reels start, as it does on the server.
     if (placed > 0) setWallet((w) => w - placed);
-    engine.start();
+    engine.start(activeReels);
 
     let response: SpinResponse;
     try {
-      response = await spinSlots(guildId, activePerLine, activeLines);
+      response = await spinSlots(guildId, activePerLine, activeLines, activeReels);
     } catch {
       response = { ok: false, code: "generic", error: t("slots.errors.generic") };
     }
@@ -491,12 +529,16 @@ export function SlotMachine({
       Math.max(0, minRun - (Date.now() - startedAt)),
       (plans) => {
         // The symbols the server drew go onto the strips just ahead of the reels.
-        setOverrides(
-          plans.map((plan, reel) => ({
-            [wrap(plan.index + 1)]: response.grid[reel][0],
-            [wrap(plan.index)]: response.grid[reel][1],
-            [wrap(plan.index - 1)]: response.grid[reel][2],
-          })),
+        setOverrides((previous) =>
+          previous.map((current, reel) =>
+            plans[reel]
+              ? {
+                  [wrap(plans[reel].index + 1)]: response.grid[reel][0],
+                  [wrap(plans[reel].index)]: response.grid[reel][1],
+                  [wrap(plans[reel].index - 1)]: response.grid[reel][2],
+                }
+              : current,
+          ),
         );
       },
     );
@@ -543,6 +585,7 @@ export function SlotMachine({
   }, [
     activeLines,
     activePerLine,
+    activeReels,
     canSpin,
     cooldown,
     guildId,
@@ -612,7 +655,12 @@ export function SlotMachine({
         inert={locked}
         aria-hidden={locked || undefined}
       >
-        <div className={styles.stage} data-state={state} data-free={inFree}>
+        <div
+          className={styles.stage}
+          data-state={state}
+          data-free={inFree}
+          style={{ "--reels": activeReels } as React.CSSProperties}
+        >
           <button
             type="button"
             className={styles.lever}
@@ -640,221 +688,266 @@ export function SlotMachine({
               ))}
             </div>
 
-            {freeState && (
-              <div className={styles.freeBar} role="status">
-                <span>
-                  {t("slots.machine.freeBar")} ·{" "}
-                  {t("slots.machine.freeLeft", { left: freeState.left })}
-                </span>
-                <span>
-                  {t("slots.machine.freeRound", { amount: format.number(freeState.won) })}
-                </span>
-              </div>
-            )}
-
-            <div className={styles.window}>
-              <div className={styles.reels}>
-                {REEL_STRIPS.map((strip, reel) => (
-                  <Reel
-                    key={reel}
-                    strip={strip}
-                    overrides={overrides[reel]}
-                    start={START_POSITIONS[reel]}
-                    label={reelLabel(reel)}
-                    setRef={refSetters[reel]}
-                  />
-                ))}
-              </div>
-              <LinesOverlay lines={activeLines} winLines={winLines} hidden={phase === "spin"} />
-              <div className={styles.hits} aria-hidden="true">
-                {phase === "idle" &&
-                  winCells.map(([reel, row]) => (
-                    <span
-                      key={`${reel}:${row}`}
-                      className={styles.hit}
-                      style={{ "--reel": reel, "--row": row } as React.CSSProperties}
-                    />
-                  ))}
-              </div>
-              <div className={styles.glass} />
-            </div>
-
-            <div className={styles.screen} data-tone={screen.tone} role="status" aria-live="polite">
-              <span className={styles.screenMain}>{screen.main}</span>
-              {screen.sub && <span className={styles.screenSub}>{screen.sub}</span>}
-              {phase === "idle" && wins.length > 0 && (
-                <span className={styles.winList}>
-                  {wins.map((w) => (
-                    <span
-                      key={w.line}
-                      className={styles.winBadge}
-                      style={{ "--c": LINE_COLORS[w.line] } as React.CSSProperties}
-                    >
-                      <i />
-                      {t("slots.result.badge", {
-                        line: w.line + 1,
-                        symbol: t(`slots.symbols.${w.symbol}`),
-                        amount: format.number(w.payout),
-                      })}
+            <div className={styles.body}>
+              <div className={styles.field}>
+                {freeState && (
+                  <div className={styles.freeBar} role="status">
+                    <span>
+                      {t("slots.machine.freeBar")} ·{" "}
+                      {t("slots.machine.freeLeft", { left: freeState.left })}
                     </span>
-                  ))}
-                </span>
-              )}
-            </div>
+                    <span>
+                      {t("slots.machine.freeRound", { amount: format.number(freeState.won) })}
+                    </span>
+                  </div>
+                )}
 
-            <div className={styles.controls}>
-              <div className={styles.row}>
-                <Column gap="4">
-                  <span className={styles.label}>{t("slots.machine.balance")}</span>
-                  <span className={styles.amount}>
-                    <Currency currency={currency} />
-                    <AnimatedAmount value={wallet} format={formatNumber} />
-                  </span>
-                </Column>
-                <Column gap="4" horizontal="end">
-                  <span className={styles.label}>{t("slots.machine.totalBet")}</span>
-                  <span className={styles.amount}>
-                    <Currency currency={currency} />
-                    {format.number(total)}
-                  </span>
-                </Column>
-              </div>
-
-              <div className={styles.row}>
-                <Column gap="4">
-                  <span className={styles.label}>{t("slots.machine.lines")}</span>
-                  <div className={styles.modes} role="group" aria-label={t("slots.machine.lines")}>
-                    {LINE_MODES.map((mode) => (
-                      <button
-                        key={mode}
-                        type="button"
-                        className={styles.chip}
-                        aria-pressed={activeLines === mode}
-                        aria-label={t("slots.machine.linesAria", { n: mode })}
-                        disabled={bettingLocked || !modeAvailable(mode)}
-                        title={
-                          modeAvailable(mode) ? undefined : t("slots.machine.linesUnavailable")
-                        }
-                        onClick={() => pickLines(mode)}
-                      >
-                        {mode}
-                      </button>
+                <div className={styles.window}>
+                  <div className={styles.reels}>
+                    {REEL_STRIPS.slice(0, activeReels).map((strip, reel) => (
+                      <Reel
+                        key={reel}
+                        strip={strip}
+                        overrides={overrides[reel]}
+                        start={START_POSITIONS[reel]}
+                        label={reelLabel(reel)}
+                        setRef={refSetters[reel]}
+                      />
                     ))}
                   </div>
-                </Column>
-                <Column gap="4" horizontal="end">
-                  <span className={styles.label} id="slots-bet-label">
-                    {t("slots.machine.perLine")}
-                  </span>
-                  <div className={styles.betBox}>
-                    <button
-                      type="button"
-                      className={styles.step}
-                      aria-label={t("slots.machine.betDecrease")}
-                      onClick={() => applyPerLine(perLine - betStep(perLine - 1))}
-                      disabled={bettingLocked || perLine <= perMin}
-                    >
-                      −
-                    </button>
-                    <input
-                      className={styles.betInput}
-                      inputMode="numeric"
-                      autoComplete="off"
-                      aria-labelledby="slots-bet-label"
-                      value={inFree ? String(activePerLine) : perLineText}
-                      onChange={(event) => onBetInput(event.target.value)}
-                      onBlur={() => applyPerLine(perLineText ? Number(perLineText) : perMin)}
-                      disabled={bettingLocked}
-                    />
-                    <button
-                      type="button"
-                      className={styles.step}
-                      aria-label={t("slots.machine.betIncrease")}
-                      onClick={() => applyPerLine(perLine + betStep(perLine))}
-                      disabled={bettingLocked || perLine >= perMax}
-                    >
-                      +
-                    </button>
+                  <LinesOverlay
+                    reels={activeReels}
+                    lines={activeLines}
+                    winLines={winLines}
+                    hidden={phase === "spin"}
+                  />
+                  <div className={styles.hits} aria-hidden="true">
+                    {phase === "idle" &&
+                      winCells.map(([reel, row]) => (
+                        <span
+                          key={`${reel}:${row}`}
+                          className={styles.hit}
+                          style={{ "--reel": reel, "--row": row } as React.CSSProperties}
+                        />
+                      ))}
                   </div>
-                </Column>
+                  <div className={styles.glass} />
+                </div>
+
+                <div
+                  className={styles.screen}
+                  data-tone={screen.tone}
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span className={styles.screenMain}>{screen.main}</span>
+                  {screen.sub && <span className={styles.screenSub}>{screen.sub}</span>}
+                  {phase === "idle" && wins.length > 0 && (
+                    <span className={styles.winList}>
+                      {wins.map((w) => (
+                        <span
+                          key={w.line}
+                          className={styles.winBadge}
+                          style={{ "--c": LINE_COLORS[w.line] } as React.CSSProperties}
+                        >
+                          <i />
+                          {t("slots.result.badge", {
+                            line: w.line + 1,
+                            symbol: t(`slots.symbols.${w.symbol}`),
+                            amount: format.number(w.payout),
+                          })}
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <div className={styles.chips}>
+              <div className={styles.controls}>
+                <div className={styles.row}>
+                  <Column gap="4">
+                    <span className={styles.label}>{t("slots.machine.balance")}</span>
+                    <span className={styles.amount}>
+                      <Currency currency={currency} />
+                      <AnimatedAmount value={wallet} format={formatNumber} />
+                    </span>
+                  </Column>
+                  <Column gap="4" horizontal="end">
+                    <span className={styles.label}>{t("slots.machine.totalBet")}</span>
+                    <span className={styles.amount}>
+                      <Currency currency={currency} />
+                      {format.number(total)}
+                    </span>
+                  </Column>
+                </div>
+
+                <div className={styles.row}>
+                  <Column gap="4">
+                    <span className={styles.label}>{t("slots.machine.lines")}</span>
+                    <div
+                      className={styles.modes}
+                      role="group"
+                      aria-label={t("slots.machine.lines")}
+                    >
+                      {LINE_MODES.map((mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          className={styles.chip}
+                          aria-pressed={activeLines === mode}
+                          aria-label={t("slots.machine.linesAria", { n: mode })}
+                          disabled={bettingLocked || !modeAvailable(mode)}
+                          title={
+                            modeAvailable(mode) ? undefined : t("slots.machine.linesUnavailable")
+                          }
+                          onClick={() => pickLines(mode)}
+                        >
+                          {mode}
+                        </button>
+                      ))}
+                    </div>
+                  </Column>
+                  {(wide || inFree) && (
+                    <Column gap="4" horizontal="end">
+                      <span className={styles.label}>{t("slots.machine.reels")}</span>
+                      <div
+                        className={styles.modes}
+                        role="group"
+                        aria-label={t("slots.machine.reels")}
+                      >
+                        {REEL_COUNTS.map((count) => (
+                          <button
+                            key={count}
+                            type="button"
+                            className={styles.chip}
+                            aria-pressed={activeReels === count}
+                            aria-label={t("slots.machine.reelsAria", { n: count })}
+                            disabled={bettingLocked}
+                            onClick={() => pickReels(count)}
+                          >
+                            {count}
+                          </button>
+                        ))}
+                      </div>
+                    </Column>
+                  )}
+                </div>
+
+                <div className={styles.row}>
+                  <Column gap="4">
+                    <span className={styles.label} id="slots-bet-label">
+                      {t("slots.machine.perLine")}
+                    </span>
+                    <div className={styles.betBox}>
+                      <button
+                        type="button"
+                        className={styles.step}
+                        aria-label={t("slots.machine.betDecrease")}
+                        onClick={() => applyPerLine(perLine - betStep(perLine - 1))}
+                        disabled={bettingLocked || perLine <= perMin}
+                      >
+                        −
+                      </button>
+                      <input
+                        className={styles.betInput}
+                        inputMode="numeric"
+                        autoComplete="off"
+                        aria-labelledby="slots-bet-label"
+                        value={inFree ? String(activePerLine) : perLineText}
+                        onChange={(event) => onBetInput(event.target.value)}
+                        onBlur={() => applyPerLine(perLineText ? Number(perLineText) : perMin)}
+                        disabled={bettingLocked}
+                      />
+                      <button
+                        type="button"
+                        className={styles.step}
+                        aria-label={t("slots.machine.betIncrease")}
+                        onClick={() => applyPerLine(perLine + betStep(perLine))}
+                        disabled={bettingLocked || perLine >= perMax}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </Column>
+                </div>
+
+                <div className={styles.chips}>
+                  <button
+                    type="button"
+                    className={styles.chip}
+                    disabled={bettingLocked}
+                    onClick={() => applyPerLine(perMin)}
+                  >
+                    {t("slots.machine.betMin")}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.chip}
+                    disabled={bettingLocked}
+                    aria-label={t("slots.machine.betHalf")}
+                    onClick={() => applyPerLine(Math.floor(perLine / 2))}
+                  >
+                    ½
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.chip}
+                    disabled={bettingLocked}
+                    aria-label={t("slots.machine.betDouble")}
+                    onClick={() => applyPerLine(perLine * 2)}
+                  >
+                    ×2
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.chip}
+                    disabled={bettingLocked}
+                    onClick={() =>
+                      applyPerLine(Math.max(perMin, Math.min(perMax, Math.floor(wallet / lines))))
+                    }
+                  >
+                    {t("slots.machine.betMax")}
+                  </button>
+                </div>
+
+                <span className={styles.hint}>
+                  {inFree
+                    ? t("slots.machine.freeLocked")
+                    : t("slots.machine.totalHint", {
+                        lines: activeLines,
+                        perLine: format.number(activePerLine),
+                        total: format.number(total),
+                      })}
+                </span>
+
                 <button
                   type="button"
-                  className={styles.chip}
-                  disabled={bettingLocked}
-                  onClick={() => applyPerLine(perMin)}
+                  className={styles.spin}
+                  data-free={inFree}
+                  onClick={() => void spin()}
+                  disabled={!canSpin}
                 >
-                  {t("slots.machine.betMin")}
+                  {spinLabel}
                 </button>
-                <button
-                  type="button"
-                  className={styles.chip}
-                  disabled={bettingLocked}
-                  aria-label={t("slots.machine.betHalf")}
-                  onClick={() => applyPerLine(Math.floor(perLine / 2))}
-                >
-                  ½
-                </button>
-                <button
-                  type="button"
-                  className={styles.chip}
-                  disabled={bettingLocked}
-                  aria-label={t("slots.machine.betDouble")}
-                  onClick={() => applyPerLine(perLine * 2)}
-                >
-                  ×2
-                </button>
-                <button
-                  type="button"
-                  className={styles.chip}
-                  disabled={bettingLocked}
-                  onClick={() =>
-                    applyPerLine(Math.max(perMin, Math.min(perMax, Math.floor(wallet / lines))))
-                  }
-                >
-                  {t("slots.machine.betMax")}
-                </button>
+
+                {!inFree && betValid && !canAfford && phase === "idle" && (
+                  <Text variant="body-default-xs" align="center" style={{ color: "#ffb3b9" }}>
+                    {t("slots.machine.notEnough")}
+                  </Text>
+                )}
+
+                <label className={styles.toggle}>
+                  <input
+                    type="checkbox"
+                    checked={quick}
+                    onChange={(event) => {
+                      setQuick(event.target.checked);
+                      writeStorage(QUICK_KEY, event.target.checked ? "1" : "0");
+                    }}
+                  />
+                  {t("slots.machine.quick")}
+                </label>
               </div>
-
-              <span className={styles.hint}>
-                {inFree
-                  ? t("slots.machine.freeLocked")
-                  : t("slots.machine.totalHint", {
-                      lines: activeLines,
-                      perLine: format.number(activePerLine),
-                      total: format.number(total),
-                    })}
-              </span>
-
-              <button
-                type="button"
-                className={styles.spin}
-                data-free={inFree}
-                onClick={() => void spin()}
-                disabled={!canSpin}
-              >
-                {spinLabel}
-              </button>
-
-              {!inFree && betValid && !canAfford && phase === "idle" && (
-                <Text variant="body-default-xs" align="center" style={{ color: "#ffb3b9" }}>
-                  {t("slots.machine.notEnough")}
-                </Text>
-              )}
-
-              <label className={styles.toggle}>
-                <input
-                  type="checkbox"
-                  checked={quick}
-                  onChange={(event) => {
-                    setQuick(event.target.checked);
-                    writeStorage(QUICK_KEY, event.target.checked ? "1" : "0");
-                  }}
-                />
-                {t("slots.machine.quick")}
-              </label>
             </div>
 
             {overlay && (
@@ -945,20 +1038,28 @@ export function SlotMachine({
         </Row>
       )}
 
-      <Column
-        gap="32"
-        padding="24"
-        radius="l"
-        border="neutral-alpha-medium"
-        background="surface"
-        fillWidth
-      >
-        <PayTable t={t} format={format} />
-      </Column>
+      <div className={styles.info}>
+        <Column
+          gap="32"
+          padding="24"
+          radius="l"
+          border="neutral-alpha-medium"
+          background="surface"
+          fillWidth
+        >
+          <PayTable t={t} format={format} reels={activeReels} />
+        </Column>
 
-      <Column padding="24" radius="l" border="neutral-alpha-medium" background="surface" fillWidth>
-        <ResponsibleNotice t={t} />
-      </Column>
+        <Column
+          padding="24"
+          radius="l"
+          border="neutral-alpha-medium"
+          background="surface"
+          fillWidth
+        >
+          <ResponsibleNotice t={t} />
+        </Column>
+      </div>
 
       <Text variant="body-default-xs" onBackground="neutral-weak" align="center">
         {t("slots.footer.text")}

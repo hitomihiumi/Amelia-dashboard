@@ -8,6 +8,8 @@ import {
   INT32_MAX,
   evaluateGrid,
   isLineMode,
+  isReelCount,
+  type ReelCount,
   type LineWin,
   type SlotGrid,
 } from "@/lib/slots/config";
@@ -22,6 +24,7 @@ export type SpinErrorCode =
   | "disabled"
   | "invalidBet"
   | "invalidLines"
+  | "invalidReels"
   | "betRange"
   | "insufficient"
   | "cooldown"
@@ -35,6 +38,7 @@ export interface FreeSpinState {
   /** Bet on one line, the same for the whole round. */
   perLine: number;
   lines: number;
+  reels: ReelCount;
   /** What the round has paid so far. */
   won: number;
 }
@@ -53,6 +57,7 @@ export type SpinResponse =
       bet: number;
       perLine: number;
       lines: number;
+      reels: ReelCount;
       /** The balance after the spin. */
       wallet: number;
       /** This spin was a free one. */
@@ -92,6 +97,7 @@ export async function spinSlots(
   guildId: string,
   perLine: number,
   lines: number,
+  reels: number,
 ): Promise<SpinResponse> {
   const t = await getT();
   const fail = (
@@ -134,6 +140,7 @@ export async function spinSlots(
         slotsFreeSpins: true,
         slotsFreeBet: true,
         slotsFreeLines: true,
+        slotsFreeReels: true,
         slotsFreeWon: true,
       },
     });
@@ -141,12 +148,14 @@ export async function spinSlots(
     const free = (current?.slotsFreeSpins ?? 0) > 0;
     const playPerLine = free ? (current?.slotsFreeBet ?? 0) : perLine;
     const playLines = free ? (current?.slotsFreeLines ?? 1) : lines;
+    const playReels = free ? (current?.slotsFreeReels ?? 3) : reels;
 
     if (!free) {
       if (typeof perLine !== "number" || !Number.isSafeInteger(perLine) || perLine < 1) {
         return fail("invalidBet");
       }
       if (!isLineMode(lines)) return fail("invalidLines");
+      if (!isReelCount(reels)) return fail("invalidReels");
       const total = perLine * lines;
       if (total < guild.slotsMinBet || total > guild.slotsMaxBet) {
         return fail("betRange", { min: guild.slotsMinBet, max: guild.slotsMaxBet });
@@ -157,7 +166,7 @@ export async function spinSlots(
     const bet = free ? 0 : total;
 
     // The draw does not depend on anything the member sends, only the bet scales the payout.
-    const grid = drawGrid();
+    const grid = drawGrid(playReels as ReelCount);
     const result = evaluateGrid(grid, playPerLine, playLines, free);
     const net = result.payout - bet;
 
@@ -205,6 +214,7 @@ export async function spinSlots(
                     slotsFreeSpins: left,
                     slotsFreeBet: playPerLine,
                     slotsFreeLines: playLines,
+                    slotsFreeReels: playReels,
                     slotsFreeWon: 0,
                   }
                 : {}),
@@ -248,10 +258,20 @@ export async function spinSlots(
       bet,
       perLine: playPerLine,
       lines: playLines,
+      reels: playReels as ReelCount,
       wallet: outcome.row?.wallet ?? 0,
       free,
       freeAwarded: result.freeSpinsAwarded,
-      freeState: left > 0 ? { left, perLine: playPerLine, lines: playLines, won: roundWon } : null,
+      freeState:
+        left > 0
+          ? {
+              left,
+              perLine: playPerLine,
+              lines: playLines,
+              reels: playReels as ReelCount,
+              won: roundWon,
+            }
+          : null,
       freeRoundTotal: free && left === 0 ? roundWon : null,
       scatters: result.scatters,
     };
