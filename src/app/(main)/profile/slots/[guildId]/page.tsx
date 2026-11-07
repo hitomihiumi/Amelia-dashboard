@@ -28,11 +28,11 @@ export default async function SlotsGamePage({
 
   const back = (
     <Button
-      href="/profile/slots"
+      href={`/profile/${guildId}`}
       variant="tertiary"
       size="m"
       prefixIcon="back"
-      label={t("slots.page.back")}
+      label={t("profile.server.backToServer")}
     />
   );
 

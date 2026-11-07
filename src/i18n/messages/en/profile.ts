@@ -37,6 +37,51 @@ export const profile = {
     },
   },
 
+  server: {
+    description: "Your card, games and rankings on this server.",
+    backToServer: "Back to the server",
+    back: "All servers",
+    level: "Level",
+    appearance: {
+      title: "Card appearance",
+      description: "Colors, biography and the look of your rank, profile and level-up cards",
+    },
+    slots: {
+      title: "Slot machine",
+      description: "Spin the reels with the virtual currency of this server. Virtual coins only, no real money.",
+      disabled: "Turned off on this server",
+    },
+    leaderboard: {
+      title: "Leaderboards",
+      description: "See who leads the server by level, voice time and coins",
+    },
+    loadError: "Could not load the server",
+    notFound: "Amelia is not on this server, or you are not a member of it.",
+  },
+
+  leaderboard: {
+    title: "Leaderboards",
+    description: "The ranking of the members of {server}.",
+    tabs: {
+      level: "Level",
+      voice: "Voice",
+      coins: "Coins",
+    },
+    titles: {
+      level: "Level leaderboard",
+      voice: "Voice activity leaderboard",
+      coins: "Coin leaderboard",
+    },
+    levelValue: "Level {level} · {xp} XP",
+    footer: "Page {page} of {pages} — Total members: {total}",
+    yourPlace: "Your place: #{position}",
+    you: "You",
+    unknownMember: "Unknown member",
+    empty: "Nobody has a ranking on this server yet.",
+    prev: "Previous page",
+    next: "Next page",
+  },
+
   appearance: {
     backToProfile: "Back to profile",
     title: "Card appearance",
