@@ -1,4 +1,4 @@
-import { Card, Column, Feedback, Grid, Icon, RevealFx, Row, Text } from "@once-ui-system/core";
+import { Column, Feedback, Grid, RevealFx, Text } from "@once-ui-system/core";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { GuildStatsCard } from "@/components/profile/overview/GuildStatsCard";
@@ -50,68 +50,6 @@ export default async function ProfileOverviewPage() {
           avatar={user.image ? `${user.image}?size=256` : undefined}
           frame={user.avatarDecoration ? `${user.avatarDecoration}?size=96` : null}
         />
-      </RevealFx>
-
-      <RevealFx delay={600} translateY={-0.5}>
-        <Card
-          href="/profile/appearance"
-          fillWidth
-          radius="l"
-          padding="16"
-          border="neutral-alpha-medium"
-          background="surface"
-          className={styles.linkCard}
-        >
-          <Row fillWidth gap="16" vertical="center">
-            <Row
-              center
-              radius="m"
-              background="brand-alpha-weak"
-              border="brand-alpha-medium"
-              style={{ width: 48, height: 48, flexShrink: 0 }}
-            >
-              <Icon name="palette" size="m" onBackground="brand-strong" />
-            </Row>
-            <Column gap="4" flex={1} minWidth={0}>
-              <Text variant="heading-strong-s">{t("profile.overview.appearanceLink.title")}</Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">
-                {t("profile.overview.appearanceLink.description")}
-              </Text>
-            </Column>
-            <Icon name="chevronRight" size="s" onBackground="neutral-weak" />
-          </Row>
-        </Card>
-      </RevealFx>
-
-      <RevealFx delay={750} translateY={-0.5}>
-        <Card
-          href="/profile/slots"
-          fillWidth
-          radius="l"
-          padding="16"
-          border="neutral-alpha-medium"
-          background="surface"
-          className={styles.linkCard}
-        >
-          <Row fillWidth gap="16" vertical="center">
-            <Row
-              center
-              radius="m"
-              background="brand-alpha-weak"
-              border="brand-alpha-medium"
-              style={{ width: 48, height: 48, flexShrink: 0 }}
-            >
-              <Icon name="gamepad" size="m" onBackground="brand-strong" />
-            </Row>
-            <Column gap="4" flex={1} minWidth={0}>
-              <Text variant="heading-strong-s">{t("slots.page.linkTitle")}</Text>
-              <Text variant="body-default-s" onBackground="neutral-weak">
-                {t("slots.page.linkDescription")}
-              </Text>
-            </Column>
-            <Icon name="chevronRight" size="s" onBackground="neutral-weak" />
-          </Row>
-        </Card>
       </RevealFx>
 
       {loadError === "session" && (

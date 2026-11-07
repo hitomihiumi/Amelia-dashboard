@@ -1098,7 +1098,7 @@ export function SlotMachine({
                 variant="tertiary"
                 size="m"
                 label={t("slots.gate.leave")}
-                onClick={() => router.push("/profile/slots")}
+                onClick={() => router.push(`/profile/${guildId}`)}
               />
             </Row>
           </Column>

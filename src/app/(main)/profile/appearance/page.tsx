@@ -18,7 +18,8 @@ export default async function AppearancePage({
   if (!session?.user?.id) redirect("/");
 
   const { guild: guildParam } = await searchParams;
-  const wanted = Array.isArray(guildParam) ? guildParam[0] : guildParam;
+  const rawGuild = Array.isArray(guildParam) ? guildParam[0] : guildParam;
+  const wanted = rawGuild && /^\d{17,20}$/.test(rawGuild) ? rawGuild : undefined;
 
   let guilds: ProfileGuild[] = [];
   let loadError: "session" | "rateLimit" | "generic" | null = null;
@@ -40,8 +41,12 @@ export default async function AppearancePage({
       title={t("profile.appearance.title")}
       description={t("profile.appearance.description")}
       actions={
-        <Button variant="secondary" prefixIcon="user" href="/profile">
-          {t("profile.appearance.backToProfile")}
+        <Button
+          variant="secondary"
+          prefixIcon="user"
+          href={wanted ? `/profile/${wanted}` : "/profile"}
+        >
+          {wanted ? t("profile.server.backToServer") : t("profile.appearance.backToProfile")}
         </Button>
       }
     />

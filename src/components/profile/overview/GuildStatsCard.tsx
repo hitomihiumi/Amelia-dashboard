@@ -1,4 +1,5 @@
-import { Column, Flex, Icon, Row, Tag, Text } from "@once-ui-system/core";
+import { Card, Column, Flex, Icon, Row, Tag, Text } from "@once-ui-system/core";
+import styles from "@/components/profile/Profile.module.scss";
 import { AvatarWFrame } from "@/components/user/AvatarWFrame";
 import { getNextLevelXP } from "@/components/profile/cards/utils";
 import type { CardTimeUnits } from "@/components/profile/cards/types";
@@ -7,7 +8,8 @@ import type { Translator } from "@/i18n/translate";
 import type { ProfileGuild } from "@/lib/profile/data";
 import { formatDuration } from "@/lib/profile/format";
 
-/** What the member has done on one server: level and XP, a progress bar, messages and voice time. */
+/** What the member has done on one server: level and XP, a progress bar, messages and voice time.
+ * The card leads to the server's page with the card appearance, the slot machine and leaderboards. */
 export function GuildStatsCard({
   guild,
   t,
@@ -24,7 +26,9 @@ export function GuildStatsCard({
   const progress = Math.min(100, Math.max(0, (stats.xp / nextXp) * 100));
 
   return (
-    <Column
+    <Card
+      href={`/profile/${guild.id}`}
+      direction="column"
       gap="16"
       padding="20"
       radius="l"
@@ -32,6 +36,7 @@ export function GuildStatsCard({
       background="surface"
       minWidth={0}
       fill
+      className={styles.linkCard}
     >
       <Row gap="12" vertical="center" horizontal="between" style={{ minWidth: 0 }}>
         <Row gap="12" vertical="center" style={{ minWidth: 0 }}>
@@ -94,6 +99,6 @@ export function GuildStatsCard({
           </Text>
         </Row>
       </Flex>
-    </Column>
+    </Card>
   );
 }
