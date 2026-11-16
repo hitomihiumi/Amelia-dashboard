@@ -83,6 +83,9 @@ export const ai = {
     code: "Code files",
     codeHint:
       "Reads code and text files attached to a message (up to 3, 200 KB each) to explain or review them. Obvious secrets are blanked out before anything is sent. Files go to Google together with the message, so do not enable it for private code.",
+    actions: "Actions for administrators",
+    actionsHint:
+      "When a server administrator asks her in chat, she can change the bot's settings, moderate members and build custom components (embeds, buttons, scenarios). She only prepares the change: nothing happens until that administrator presses Apply under her message. Other members cannot use this.",
     stored: "Notes kept about members: {count}",
     clear: "Forget all notes",
     clearConfirm: "Delete everything Amelia has noted about the members of this server?",

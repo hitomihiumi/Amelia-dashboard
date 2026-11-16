@@ -33,6 +33,7 @@ const OPTION_KEYS = [
   "long_term",
   "images",
   "code",
+  "actions",
 ] as const satisfies (keyof AiOptions)[];
 
 export function AiForm({

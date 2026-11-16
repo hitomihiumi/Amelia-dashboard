@@ -62,6 +62,7 @@ export async function updateAiSettings(
       long_term: ai.options.long_term,
       images: ai.options.images,
       code: ai.options.code,
+      actions: ai.options.actions,
     });
 
     revalidatePath(`/dashboard/${guildId}/ai`);
@@ -94,7 +95,7 @@ function validateAi(ai: AiSettings, caps: AiGlobalConfig["caps"], t: Translator)
   }
 
   const options = ai.options as unknown as Record<string, unknown> | undefined;
-  for (const key of ["short_term", "long_term", "images", "code"]) {
+  for (const key of ["short_term", "long_term", "images", "code", "actions"]) {
     if (typeof options?.[key] !== "boolean") return t("ai.errors.invalid");
   }
 
