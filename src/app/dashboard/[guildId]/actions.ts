@@ -20,32 +20,22 @@ export async function updateGeneralSettings(
   if (gate.error) return { ok: false, error: gate.error };
 
   const newPrefix = formData.get("prefix") as string;
-
   const newLanguage = formData.get("language") as string;
 
-  const guild = new Guild(guildId);
-
-  if (newPrefix && newPrefix.length > 0 && newPrefix.length <= 5) {
-    await guild.set("settings.prefix", newPrefix);
-
-    revalidatePath(`/dashboard/${guildId}`);
-  } else {
-    return {
-      ok: false,
-      error: t("settings.general.invalidPrefix"),
-    };
+  if (!newPrefix || newPrefix.length === 0 || newPrefix.length > 5) {
+    return { ok: false, error: t("settings.general.invalidPrefix") };
+  }
+  if (newLanguage !== "en" && newLanguage !== "uk" && newLanguage !== "ru") {
+    return { ok: false, error: t("settings.general.invalidLanguage") };
   }
 
-  if (newLanguage && (newLanguage === "en" || newLanguage === "uk" || newLanguage === "ru")) {
-    await guild.set("settings.language", newLanguage);
+  // Both values are checked first and saved with a single write.
+  await new Guild(guildId).setMany([
+    ["settings.prefix", newPrefix],
+    ["settings.language", newLanguage],
+  ]);
 
-    revalidatePath(`/dashboard/${guildId}`);
-  } else {
-    return {
-      ok: false,
-      error: t("settings.general.invalidLanguage"),
-    };
-  }
+  revalidatePath(`/dashboard/${guildId}`);
 
   return {
     ok: true,

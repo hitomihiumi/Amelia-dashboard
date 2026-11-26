@@ -1,6 +1,7 @@
 import "server-only";
 
 import { DISCORD_API, discordFetch } from "./rest";
+import { invalidateGuildChannels } from "./channels-api";
 
 const CATEGORY_NAME = "Join To Create";
 const TRIGGER_VOICE_NAME = "Join To Create";
@@ -56,6 +57,7 @@ async function createGuildChannel(
       error: `Cannot create channel in Discord (${res.status}): ${t.slice(0, 200)}`,
     };
   }
+  invalidateGuildChannels(guildId);
   return (await res.json()) as ApiChannel;
 }
 

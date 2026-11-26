@@ -97,11 +97,13 @@ export async function updateComponents(
 
   const guild = new Guild(guildId);
   // Only touch the custom-component collections; preserve scenarios untouched.
-  await guild.set("utils.components.modals", modals);
-  await guild.set("utils.components.embed", embeds);
-  await guild.set("utils.components.buttons", buttons);
-  await guild.set("utils.components.selectMenus", selectMenus);
-  await guild.set("utils.components.layouts", layouts as LayoutCustom[]);
+  await guild.setMany([
+    ["utils.components.modals", modals],
+    ["utils.components.embed", embeds],
+    ["utils.components.buttons", buttons],
+    ["utils.components.selectMenus", selectMenus],
+    ["utils.components.layouts", layouts as LayoutCustom[]],
+  ]);
   revalidatePath(`/dashboard/${guildId}/components`);
   return { ok: true };
 }

@@ -102,8 +102,10 @@ export async function updateLevelsSettings(
 
     const guild = new Guild(guildId);
 
-    await guild.set("utils.levels", levels);
-    await guild.set("economy.income.level_up", economy);
+    await guild.setMany([
+      ["utils.levels", levels],
+      ["economy.income.level_up", economy],
+    ]);
 
     revalidatePath(`/dashboard/${guildId}/levels`);
     return { ok: true };

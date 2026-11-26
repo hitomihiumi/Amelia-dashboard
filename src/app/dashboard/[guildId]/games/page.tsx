@@ -3,6 +3,7 @@ import { getT } from "@/i18n/server";
 import { authOptions } from "@/lib/auth";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import { Guild } from "@/lib/db/Guild";
+import { early } from "@/lib/utils";
 import type { ChannelPickOption } from "@/lib/discord/channel-type";
 import { fetchGuildTextVoiceAndCategories } from "@/lib/discord/channels-api";
 import type { DiscordRole } from "@/lib/discord/role-style";
@@ -25,18 +26,23 @@ export default async function GamesSettingsPage({
   let roles: DiscordRole[] = [];
   let loadError: string | null = null;
 
+  // Started first: the database read overlaps with the Discord requests.
+  const storedPromise = early(new Guild(guildId).get("utils.find_team"));
+
   if (session?.accessToken) {
     try {
-      const list = await fetchGuildRoles(session.accessToken, guildId);
+      const [list, bundle] = await Promise.all([
+        fetchGuildRoles(session.accessToken, guildId),
+        fetchGuildTextVoiceAndCategories(session.accessToken, guildId),
+      ]);
       roles = list.map(({ id, name, color }) => ({ id, name, color }));
-      const bundle = await fetchGuildTextVoiceAndCategories(session.accessToken, guildId);
       textChannels = bundle.textChannels.map((c) => ({ ...c }));
     } catch (e) {
       loadError = e instanceof Error ? e.message : t("settings.shared.loadChannelsRolesFailed");
     }
   }
 
-  const settings = normalizeFindTeam(await new Guild(guildId).get("utils.find_team"));
+  const settings = normalizeFindTeam(await storedPromise);
 
   return (
     <Flex direction="column" gap="24">

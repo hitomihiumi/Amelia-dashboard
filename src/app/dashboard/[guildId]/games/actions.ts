@@ -73,8 +73,10 @@ export async function setupGamesChannels(guildId: string): Promise<SetupChannels
     if (!created.ok) return { ok: false, error: created.error };
 
     const guild = new Guild(guildId);
-    await guild.set("utils.find_team.channel", created.channel);
-    await guild.set("utils.find_team.send_channel", created.sendChannel);
+    await guild.setMany([
+      ["utils.find_team.channel", created.channel],
+      ["utils.find_team.send_channel", created.sendChannel],
+    ]);
 
     revalidatePath(`/dashboard/${guildId}/games`);
     return { ok: true, channel: created.channel, sendChannel: created.sendChannel };

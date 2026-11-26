@@ -27,6 +27,9 @@ export default async function GuildDashboardLayout({
     redirect("/");
   }
 
+  // The bot identity does not depend on the access check, so both run at once.
+  const botIdentityPromise = getBotPreviewIdentity();
+
   let access: Awaited<ReturnType<typeof getGuildAccessForDashboard>>;
   try {
     access = await getGuildAccessForDashboard(session.accessToken, guildId);
@@ -37,7 +40,7 @@ export default async function GuildDashboardLayout({
     redirect("/dashboard");
   }
 
-  const botIdentity = await getBotPreviewIdentity();
+  const botIdentity = await botIdentityPromise;
 
   return (
     <UnsavedChangesProvider>

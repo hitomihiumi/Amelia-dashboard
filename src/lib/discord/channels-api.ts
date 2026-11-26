@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cachedDiscord, invalidateDiscordCache } from "./cache";
+
 const DISCORD_API = "https://discord.com/api/v10";
 
 const TEXT_LIKE_TYPES = new Set([0, 5]);
@@ -76,11 +78,45 @@ async function fetchGuildRoles(guildId: string, botToken: string): Promise<RawRo
   return res.json() as Promise<RawRole[]>;
 }
 
-async function fetchGuildChannelsRawWithRetry(
+/** Channels change rarely; a short TTL spares Discord three requests on every page view and save. */
+const CHANNELS_TTL_MS = 30_000;
+
+export function invalidateGuildChannels(guildId: string) {
+  invalidateDiscordCache(`channels:${guildId}:`);
+}
+
+function fetchGuildChannelsRawWithRetry(
+  accessToken: string,
+  guildId: string,
+): Promise<RawChannel[]> {
+  const mode = process.env.DISCORD_BOT_TOKEN?.trim() ? "bot" : accessToken;
+  return cachedDiscord(`channels:${guildId}:${mode}`, CHANNELS_TTL_MS, () =>
+    fetchGuildChannelsRawUncached(accessToken, guildId),
+  );
+}
+
+type BotPerms = { botMember: RawMember | null; guildRoles: RawRole[] };
+
+/** The bot's member and the guild roles, needed to hide channels the bot cannot see. */
+function fetchBotPerms(guildId: string): Promise<BotPerms | null> {
+  const botToken = process.env.DISCORD_BOT_TOKEN?.trim();
+  const clientId = process.env.DISCORD_CLIENT_ID?.trim();
+  if (!botToken || !clientId) return Promise.resolve(null);
+  return Promise.all([
+    fetchBotMember(guildId, botToken, clientId),
+    fetchGuildRoles(guildId, botToken),
+  ]).then(([botMember, guildRoles]) => ({ botMember, guildRoles }));
+}
+
+async function fetchGuildChannelsRawUncached(
   accessToken: string,
   guildId: string,
 ): Promise<RawChannel[]> {
   const maxRetries = 8;
+  // Started up front so the permission lookups run alongside the channel list instead of after it.
+  const permsPromise = fetchBotPerms(guildId);
+  // A failure is handled below, where the result is used; avoid an unhandled rejection meanwhile.
+  permsPromise.catch(() => undefined);
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const res = await fetchGuildChannelsOnce(accessToken, guildId);
@@ -121,13 +157,10 @@ async function fetchGuildChannelsRawWithRetry(
     const channels = (await res.json()) as RawChannel[];
 
     // Calculate permissions if bot token is available
-    const botToken = process.env.DISCORD_BOT_TOKEN?.trim();
     const clientId = process.env.DISCORD_CLIENT_ID?.trim();
-    if (botToken && clientId) {
-      const [botMember, guildRoles] = await Promise.all([
-        fetchBotMember(guildId, botToken, clientId),
-        fetchGuildRoles(guildId, botToken),
-      ]);
+    const perms = await permsPromise;
+    if (perms && clientId) {
+      const { botMember, guildRoles } = perms;
 
       if (botMember && guildRoles.length > 0) {
         const ADMINISTRATOR = BigInt(8);

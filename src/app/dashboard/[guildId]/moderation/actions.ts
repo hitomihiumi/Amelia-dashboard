@@ -81,15 +81,17 @@ export async function updateModerationSettings(
 
     const guild = new Guild(guildId);
 
-    await guild.set("moderation.moderation_roles", settings.moderation_roles);
-    await guild.set("moderation.log_channel", settings.log_channel);
-    await guild.set("moderation.dm_notify", settings.dm_notify);
-    await guild.set("moderation.warn_expiry", settings.warn_expiry);
-    await guild.set("moderation.warn_thresholds", settings.warn_thresholds);
-
-    for (const kind of AUTOMOD_KINDS) {
-      await guild.set(`moderation.auto_moderation.${kind}` as any, autoMod[kind] as any);
-    }
+    await guild.setMany([
+      ["moderation.moderation_roles", settings.moderation_roles],
+      ["moderation.log_channel", settings.log_channel],
+      ["moderation.dm_notify", settings.dm_notify],
+      ["moderation.warn_expiry", settings.warn_expiry],
+      ["moderation.warn_thresholds", settings.warn_thresholds],
+      ...AUTOMOD_KINDS.map((kind): [string, unknown] => [
+        `moderation.auto_moderation.${kind}`,
+        autoMod[kind],
+      ]),
+    ]);
 
     // The rule ids belong to the server, never to the browser: read them back from the database.
     const stored = (await guild.get("moderation.auto_moderation")) as AutoModerationSettings;
@@ -388,8 +390,10 @@ export async function updateModerationForms(
 
     const guild = new Guild(guildId);
 
-    await guild.set("moderation.forms.report", report);
-    await guild.set("moderation.forms.appeal", appeal);
+    await guild.setMany([
+      ["moderation.forms.report", report],
+      ["moderation.forms.appeal", appeal],
+    ]);
 
     revalidatePath(`/dashboard/${guildId}/moderation/forms`);
     return { ok: true };
@@ -496,15 +500,17 @@ export async function updateAuditSettings(
 
     const guild = new Guild(guildId);
 
-    await guild.set("audit.enabled", audit.enabled);
-    await guild.set("audit.channel", audit.channel);
-    await guild.set("audit.ignore_channels", audit.ignore_channels);
-    await guild.set("audit.ignore_roles", audit.ignore_roles);
-    await guild.set("audit.ignore_bots", audit.ignore_bots);
-    await guild.set("audit.webhook.name", audit.webhook.name);
-    await guild.set("audit.webhook.avatar", audit.webhook.avatar);
-    await guild.set("audit.categories", audit.categories);
-    await guild.set("audit.events", audit.events);
+    await guild.setMany([
+      ["audit.enabled", audit.enabled],
+      ["audit.channel", audit.channel],
+      ["audit.ignore_channels", audit.ignore_channels],
+      ["audit.ignore_roles", audit.ignore_roles],
+      ["audit.ignore_bots", audit.ignore_bots],
+      ["audit.webhook.name", audit.webhook.name],
+      ["audit.webhook.avatar", audit.webhook.avatar],
+      ["audit.categories", audit.categories],
+      ["audit.events", audit.events],
+    ]);
 
     // Create the webhooks up front so the admin finds out about missing
     // permissions here, and not when the first event silently goes nowhere.

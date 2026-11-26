@@ -47,23 +47,31 @@ export async function updateAiSettings(
 
     const persona = ai.persona?.trim() ? ai.persona.trim() : null;
 
-    await guild.set("ai.enabled", ai.enabled);
-    await guild.set("ai.channels", ai.channels);
-    await guild.set("ai.ignore_channels", ai.ignore_channels);
-    await guild.set("ai.model", ai.model);
-    await guild.set("ai.persona", persona);
-    await guild.set("ai.limits", {
-      user_per_minute: ai.limits.user_per_minute,
-      user_per_day: ai.limits.user_per_day,
-      guild_per_day: ai.limits.guild_per_day,
-    });
-    await guild.set("ai.options", {
-      short_term: ai.options.short_term,
-      long_term: ai.options.long_term,
-      images: ai.options.images,
-      code: ai.options.code,
-      actions: ai.options.actions,
-    });
+    await guild.setMany([
+      ["ai.enabled", ai.enabled],
+      ["ai.channels", ai.channels],
+      ["ai.ignore_channels", ai.ignore_channels],
+      ["ai.model", ai.model],
+      ["ai.persona", persona],
+      [
+        "ai.limits",
+        {
+          user_per_minute: ai.limits.user_per_minute,
+          user_per_day: ai.limits.user_per_day,
+          guild_per_day: ai.limits.guild_per_day,
+        },
+      ],
+      [
+        "ai.options",
+        {
+          short_term: ai.options.short_term,
+          long_term: ai.options.long_term,
+          images: ai.options.images,
+          code: ai.options.code,
+          actions: ai.options.actions,
+        },
+      ],
+    ]);
 
     revalidatePath(`/dashboard/${guildId}/ai`);
 
