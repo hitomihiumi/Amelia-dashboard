@@ -34,6 +34,14 @@ export class Guild {
   }
 
   /**
+   * Get several paths with ONE database query (ASYNC - must use await).
+   * Values come back in the order of `paths`.
+   */
+  public async getMany(paths: string[]): Promise<any[]> {
+    return await this.db.getMany(paths);
+  }
+
+  /**
    * Set value by path (ASYNC - must use await)
    * Supports both literal paths (with type checking) and dynamic paths
    */
@@ -44,6 +52,14 @@ export class Guild {
   public async set(path: string, value: any): Promise<void>;
   public async set(path: string, value: any): Promise<void> {
     return await this.db.set(path as any, value);
+  }
+
+  /**
+   * Set several paths with ONE database write (ASYNC - must use await).
+   * Prefer this over awaiting `set` repeatedly when a form saves multiple paths.
+   */
+  public async setMany(entries: Array<[string, any]>): Promise<void> {
+    return await this.db.setMany(entries);
   }
 
   /**

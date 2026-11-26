@@ -1,4 +1,5 @@
 import { Guild } from "@/lib/db/Guild";
+import { early } from "@/lib/utils";
 import { ShopFrom } from "@/app/dashboard/[guildId]/shop/ShopForm";
 import { Feedback, Flex } from "@once-ui-system/core";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -42,6 +43,10 @@ export default async function GeneralSettingsPage({
   let roles: DiscordRole[] = [];
   let loadError: string | null = null;
 
+  const guild = new Guild(resolvedParams.guildId);
+  // Started first: the database read overlaps with the Discord request.
+  const settingsPromise = early(guild.get("economy.shop"));
+
   if (session?.accessToken) {
     try {
       const list = await fetchGuildRoles(session.accessToken, resolvedParams.guildId);
@@ -51,8 +56,7 @@ export default async function GeneralSettingsPage({
     }
   }
 
-  const guild = new Guild(resolvedParams.guildId);
-  const settings = await guild.get("economy.shop");
+  const settings = await settingsPromise;
 
   const processedRoles = shopRolesProcesse(settings.roles);
 

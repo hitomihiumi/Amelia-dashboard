@@ -1,4 +1,5 @@
 import { Guild } from "@/lib/db/Guild";
+import { early } from "@/lib/utils";
 import { PrivateForm } from "@/app/dashboard/[guildId]/private/PrivateForm";
 import { Feedback, Flex } from "@once-ui-system/core";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -22,6 +23,10 @@ export default async function GeneralSettingsPage({
   let categories: ChannelPickOption[] = [];
   let loadError: string | null = null;
 
+  const guild = new Guild(resolvedParams.guildId);
+  // Started first: the database read overlaps with the Discord request.
+  const settingsPromise = early(guild.get("utils.join_to_create"));
+
   if (session?.accessToken) {
     try {
       const bundle = await fetchGuildTextVoiceAndCategories(
@@ -35,8 +40,7 @@ export default async function GeneralSettingsPage({
     }
   }
 
-  const guild = new Guild(resolvedParams.guildId);
-  const settings = await guild.get("utils.join_to_create");
+  const settings = await settingsPromise;
 
   return (
     <Flex direction="column" gap="24">

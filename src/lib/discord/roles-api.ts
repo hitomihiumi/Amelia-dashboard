@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cachedDiscord, invalidateDiscordCache } from "./cache";
+
 const DISCORD_API = "https://discord.com/api/v10";
 
 function sleep(ms: number) {
@@ -31,7 +33,26 @@ export type GuildRoleOption = {
   position: number;
 };
 
-export async function fetchGuildRoles(
+/** Roles change rarely; a short TTL spares Discord a request on every page view and save. */
+const ROLES_TTL_MS = 30_000;
+
+/** Cache key: bot-token reads are the same for every user, user-token reads are per token. */
+function rolesCacheKey(accessToken: string, guildId: string): string {
+  const mode = process.env.DISCORD_BOT_TOKEN?.trim() ? "bot" : accessToken;
+  return `roles:${guildId}:${mode}`;
+}
+
+export function invalidateGuildRoles(guildId: string) {
+  invalidateDiscordCache(`roles:${guildId}:`);
+}
+
+export function fetchGuildRoles(accessToken: string, guildId: string): Promise<GuildRoleOption[]> {
+  return cachedDiscord(rolesCacheKey(accessToken, guildId), ROLES_TTL_MS, () =>
+    fetchGuildRolesUncached(accessToken, guildId),
+  );
+}
+
+async function fetchGuildRolesUncached(
   accessToken: string,
   guildId: string,
 ): Promise<GuildRoleOption[]> {
@@ -119,6 +140,7 @@ export async function patchGuildRole(
   });
 
   if (res.ok) {
+    invalidateGuildRoles(guildId);
     return { ok: true };
   }
 

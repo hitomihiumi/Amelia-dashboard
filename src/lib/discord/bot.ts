@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/db/db";
-import { fetchDiscordUserGuildsWithRetry, mergeGuildsWithBotPresence } from "./guilds-api";
+import { fetchDiscordUserGuilds, mergeGuildsWithBotPresence } from "./guilds-api";
 
 export async function getUserDashboardGuilds(accessToken: string) {
-  const discordGuilds = await fetchDiscordUserGuildsWithRetry(accessToken);
+  const discordGuilds = await fetchDiscordUserGuilds(accessToken);
 
   const discordGuildIds = discordGuilds.map((guild) => guild.id);
 

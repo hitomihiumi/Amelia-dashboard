@@ -1,4 +1,5 @@
 import { Guild } from "@/lib/db/Guild";
+import { early } from "@/lib/utils";
 import { Feedback, Flex } from "@once-ui-system/core";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { getServerSession } from "next-auth";
@@ -22,6 +23,9 @@ export default async function GeneralSettingsPage({
   let roles: DiscordRole[] = [];
   let loadError: string | null = null;
 
+  // Started first: the database read overlaps with the Discord request.
+  const settingsPromise = early(new Guild(resolvedParams.guildId).get("permissions.commands"));
+
   if (session?.accessToken) {
     try {
       const list = await fetchGuildRoles(session.accessToken, resolvedParams.guildId);
@@ -31,8 +35,7 @@ export default async function GeneralSettingsPage({
     }
   }
 
-  const guild = new Guild(resolvedParams.guildId);
-  const settings = await guild.get("permissions.commands");
+  const settings = await settingsPromise;
 
   return (
     <Flex direction="column" gap="24">

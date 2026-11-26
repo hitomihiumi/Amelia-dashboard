@@ -23,39 +23,72 @@ export default async function AuditPage({
   const t = await getT();
   const session = await getServerSession(authOptions);
 
-  let textChannels: ChannelPickOption[] = [];
-  let roles: DiscordRole[] = [];
-  let loadError: string | null = null;
-
-  if (session?.accessToken) {
+  // Discord (channels + roles) and the database are independent: load them together.
+  const loadDiscord = async () => {
+    if (!session?.accessToken) return null;
     try {
-      textChannels = await fetchGuildTextChannels(session.accessToken, guildId);
-      const list = await fetchGuildRoles(session.accessToken, guildId);
-      roles = list.map(({ id, name, color }) => ({ id, name, color }));
+      const [channelList, list] = await Promise.all([
+        fetchGuildTextChannels(session.accessToken, guildId),
+        fetchGuildRoles(session.accessToken, guildId),
+      ]);
+      return {
+        textChannels: channelList as ChannelPickOption[],
+        roles: list.map(({ id, name, color }) => ({ id, name, color })) as DiscordRole[],
+        loadError: null as string | null,
+      };
     } catch (e) {
-      loadError =
-        e instanceof Error ? e.message : t("moderation.errors.loadServerData");
+      return {
+        textChannels: [] as ChannelPickOption[],
+        roles: [] as DiscordRole[],
+        loadError: e instanceof Error ? e.message : t("moderation.errors.loadServerData"),
+      };
     }
-  }
+  };
 
   const guild = new Guild(guildId);
 
+  const [discord, stored] = await Promise.all([
+    loadDiscord(),
+    guild.getMany([
+      "audit.enabled",
+      "audit.channel",
+      "audit.ignore_channels",
+      "audit.ignore_roles",
+      "audit.ignore_bots",
+      "audit.webhook.name",
+      "audit.webhook.avatar",
+      "audit.categories",
+      "audit.events",
+    ]),
+  ]);
+  const textChannels = discord?.textChannels ?? [];
+  const roles = discord?.roles ?? [];
+  const loadError = discord?.loadError ?? null;
+  const [
+    auditEnabled,
+    auditChannel,
+    auditIgnoreChannels,
+    auditIgnoreRoles,
+    auditIgnoreBots,
+    webhookName,
+    webhookAvatar,
+    auditCategories,
+    auditEvents,
+  ] = stored;
+
   const settings: AuditSettings = {
     ...DEFAULT_AUDIT_SETTINGS,
-    enabled: Boolean(await guild.get("audit.enabled")),
-    channel: (await guild.get("audit.channel")) as string | null,
-    ignore_channels: ((await guild.get("audit.ignore_channels")) ??
-      []) as string[],
-    ignore_roles: ((await guild.get("audit.ignore_roles")) ?? []) as string[],
-    ignore_bots: Boolean(await guild.get("audit.ignore_bots")),
+    enabled: Boolean(auditEnabled),
+    channel: auditChannel as string | null,
+    ignore_channels: (auditIgnoreChannels ?? []) as string[],
+    ignore_roles: (auditIgnoreRoles ?? []) as string[],
+    ignore_bots: Boolean(auditIgnoreBots),
     webhook: {
-      name: (await guild.get("audit.webhook.name")) as string | null,
-      avatar: (await guild.get("audit.webhook.avatar")) as string | null,
+      name: webhookName as string | null,
+      avatar: webhookAvatar as string | null,
     },
-    categories: ((await guild.get("audit.categories")) ??
-      {}) as AuditSettings["categories"],
-    events: ((await guild.get("audit.events")) ??
-      {}) as AuditSettings["events"],
+    categories: (auditCategories ?? {}) as AuditSettings["categories"],
+    events: (auditEvents ?? {}) as AuditSettings["events"],
   };
 
   return (

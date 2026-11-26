@@ -1,4 +1,5 @@
 import { Guild } from "@/lib/db/Guild";
+import { early } from "@/lib/utils";
 import { LevelsForm } from "./LevelsForm";
 import { fetchGuildRoles } from "@/lib/discord/roles-api";
 import { DiscordRole } from "@/lib/discord/role-style";
@@ -12,6 +13,7 @@ import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import React from "react";
 import { getT } from "@/i18n/server";
 import { normalizeLevelMessage } from "@/lib/levels/message";
+import type { GuildSchema } from "@/lib/db/types";
 
 export default async function LevelsSettingsPage({
   params,
@@ -27,11 +29,17 @@ export default async function LevelsSettingsPage({
   let roles: DiscordRole[] = [];
   let loadError: string | null = null;
 
+  const guild = new Guild(guildId);
+  // Started first: the database read overlaps with the Discord requests.
+  const storedPromise = early(guild.getMany(["utils.levels", "economy.income.level_up"]));
+
   if (session?.accessToken) {
     try {
-      const list = await fetchGuildRoles(session.accessToken, guildId);
+      const [list, bundle] = await Promise.all([
+        fetchGuildRoles(session.accessToken, guildId),
+        fetchGuildTextVoiceAndCategories(session.accessToken, guildId),
+      ]);
       roles = list.map(({ id, name, color }) => ({ id, name, color }));
-      const bundle = await fetchGuildTextVoiceAndCategories(session.accessToken, guildId);
       voiceChannels = bundle.voiceChannels.map((c) => ({ ...c }));
       textChannels = bundle.textChannels.map((c) => ({ ...c }));
     } catch (e) {
@@ -39,16 +47,15 @@ export default async function LevelsSettingsPage({
     }
   }
 
-  const guild = new Guild(guildId);
-
-  // Загружаем данные согласно схеме [cite: 1, 4]
-  const stored = await guild.get("utils.levels");
+  const [stored, levelUpEconomy] = (await storedPromise) as [
+    GuildSchema["utils"]["levels"],
+    GuildSchema["economy"]["income"]["level_up"],
+  ];
   // Servers saved before the announcement editor have `{}` or only some of its keys.
   const levels = {
     ...stored,
     message: { ...stored.message, content: normalizeLevelMessage(stored.message?.content) },
   };
-  const levelUpEconomy = await guild.get("economy.income.level_up");
 
   return (
     <Flex direction="column" gap="24">
