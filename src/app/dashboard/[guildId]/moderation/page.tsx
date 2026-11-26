@@ -65,36 +65,55 @@ export default async function ModerationSettingsPage({
   const t = await getT();
   const session = await getServerSession(authOptions);
 
-  let textChannels: ChannelPickOption[] = [];
-  let roles: DiscordRole[] = [];
-  let loadError: string | null = null;
-
-  if (session?.accessToken) {
+  // Discord (channels + roles) and the database are independent: load them together.
+  const loadDiscord = async () => {
+    if (!session?.accessToken) return null;
     try {
-      const list = await fetchGuildRoles(session.accessToken, guildId);
-      roles = list.map(({ id, name, color }) => ({ id, name, color }));
-      textChannels = await fetchGuildTextChannels(session.accessToken, guildId);
+      const [list, channelList] = await Promise.all([
+        fetchGuildRoles(session.accessToken, guildId),
+        fetchGuildTextChannels(session.accessToken, guildId),
+      ]);
+      return {
+        roles: list.map(({ id, name, color }) => ({ id, name, color })) as DiscordRole[],
+        textChannels: channelList as ChannelPickOption[],
+        loadError: null as string | null,
+      };
     } catch (e) {
-      loadError =
-        e instanceof Error ? e.message : t("moderation.errors.loadServerData");
+      return {
+        roles: [] as DiscordRole[],
+        textChannels: [] as ChannelPickOption[],
+        loadError: e instanceof Error ? e.message : t("moderation.errors.loadServerData"),
+      };
     }
-  }
+  };
 
   const guild = new Guild(guildId);
 
+  const [discord, stored] = await Promise.all([
+    loadDiscord(),
+    guild.getMany([
+      "moderation.moderation_roles",
+      "moderation.log_channel",
+      "moderation.dm_notify",
+      "moderation.warn_expiry",
+      "moderation.warn_thresholds",
+      "moderation.auto_moderation",
+    ]),
+  ]);
+  const textChannels = discord?.textChannels ?? [];
+  const roles = discord?.roles ?? [];
+  const loadError = discord?.loadError ?? null;
+  const [modRoles, logChannel, dmNotify, warnExpiry, warnThresholds, storedAutoMod] = stored;
+
   const settings = {
-    moderation_roles: ((await guild.get("moderation.moderation_roles")) ??
-      []) as string[],
-    log_channel: (await guild.get("moderation.log_channel")) as string | null,
-    dm_notify: Boolean(await guild.get("moderation.dm_notify")),
-    warn_expiry: Number((await guild.get("moderation.warn_expiry")) ?? 0),
-    warn_thresholds: ((await guild.get("moderation.warn_thresholds")) ??
-      []) as WarnThreshold[],
+    moderation_roles: (modRoles ?? []) as string[],
+    log_channel: logChannel as string | null,
+    dm_notify: Boolean(dmNotify),
+    warn_expiry: Number(warnExpiry ?? 0),
+    warn_thresholds: (warnThresholds ?? []) as WarnThreshold[],
   };
 
-  const autoModeration = (await guild.get(
-    "moderation.auto_moderation",
-  )) as GuildSchema["moderation"]["auto_moderation"];
+  const autoModeration = storedAutoMod as GuildSchema["moderation"]["auto_moderation"];
 
   const { states: ruleStates, error: autoModError } = await loadRuleStates(
     guildId,

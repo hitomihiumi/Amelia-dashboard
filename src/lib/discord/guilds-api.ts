@@ -2,7 +2,9 @@ import type { DiscordPartialGuild, UserGuildCard } from "@/types/discord";
 
 const DISCORD_API = "https://discord.com/api/v10";
 
-const GUILD_LIST_CACHE_TTL_MS = 45_000;
+// Also gates every save (`verifyUserIsGuildAdministrator`), so a longer TTL means fewer Discord round trips
+// on save; the price is that a revoked admin keeps access for at most this long.
+const GUILD_LIST_CACHE_TTL_MS = 120_000;
 type GuildListCacheEntry = { expires: number; data: DiscordPartialGuild[] };
 const globalForDiscord = globalThis as unknown as {
   guildListCache?: Map<string, GuildListCacheEntry>;

@@ -54,11 +54,13 @@ export async function updateBannerSettings(
     const settings = normalizeBannerSettings(parsed);
 
     const guild = new Guild(guildId);
-    await guild.set("utils.banners.enabled", settings.enabled);
-    await guild.set("utils.banners.interval", settings.interval);
-    await guild.set("utils.banners.activity_window", settings.activity_window);
-    await guild.set("utils.banners.active", settings.active);
-    await guild.set("utils.banners.items", settings.items);
+    await guild.setMany([
+      ["utils.banners.enabled", settings.enabled],
+      ["utils.banners.interval", settings.interval],
+      ["utils.banners.activity_window", settings.activity_window],
+      ["utils.banners.active", settings.active],
+      ["utils.banners.items", settings.items],
+    ]);
 
     revalidatePath(`/dashboard/${guildId}/banners`);
     return { ok: true };

@@ -2,6 +2,7 @@ import { getT } from "@/i18n/server";
 import { authOptions } from "@/lib/auth";
 import { DISCORD_SESSION_EXPIRED_ERROR } from "@/lib/auth-errors";
 import { Guild } from "@/lib/db/Guild";
+import { early } from "@/lib/utils";
 import type {
   ButtonCustom,
   EmbedCustom,
@@ -33,22 +34,31 @@ export default async function ScenarioEditorRoute({
   let channels: GuildChannelOption[] = [];
   let loadError: string | null = null;
 
+  // Started first: the database read overlaps with the Discord requests.
+  const componentsPromise = early(new Guild(guildId).get("utils.components"));
+
   if (session?.accessToken) {
-    try {
-      const roleList = await fetchGuildRoles(session.accessToken, guildId);
-      roles = roleList.map(({ id, name, color }) => ({ id, name, color }));
-    } catch (e) {
+    const accessToken = session.accessToken;
+    // Roles and channels are independent requests, so they go out together.
+    const [rolesResult, channelsResult] = await Promise.allSettled([
+      fetchGuildRoles(accessToken, guildId),
+      fetchGuildTextChannels(accessToken, guildId),
+    ]);
+    if (rolesResult.status === "fulfilled") {
+      roles = rolesResult.value.map(({ id, name, color }) => ({ id, name, color }));
+    } else {
+      const e = rolesResult.reason;
       loadError = e instanceof Error ? e.message : t("builder.shared.loadRolesFailed");
     }
-    try {
-      channels = await fetchGuildTextChannels(session.accessToken, guildId);
-    } catch (e) {
-      if (!loadError) loadError = e instanceof Error ? e.message : t("builder.shared.loadChannelsFailed");
+    if (channelsResult.status === "fulfilled") {
+      channels = channelsResult.value;
+    } else if (!loadError) {
+      const e = channelsResult.reason;
+      loadError = e instanceof Error ? e.message : t("builder.shared.loadChannelsFailed");
     }
   }
 
-  const guild = new Guild(guildId);
-  const components = await guild.get("utils.components");
+  const components = await componentsPromise;
   const library: ComponentsLibrary = {
     modals: Array.isArray(components?.modals) ? (components.modals as ModalCustom[]) : [],
     embed: Array.isArray(components?.embed) ? (components.embed as EmbedCustom[]) : [],

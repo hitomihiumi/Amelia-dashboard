@@ -156,8 +156,10 @@ export async function updateEconomySettings(
 
     const guild = new Guild(guildId);
 
-    await guild.set("economy.currency", currency);
-    await guild.set("economy.income", income);
+    await guild.setMany([
+      ["economy.currency", currency],
+      ["economy.income", income],
+    ]);
 
     revalidatePath(`/dashboard/${guildId}/economy`);
 

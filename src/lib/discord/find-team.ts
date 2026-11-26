@@ -3,6 +3,7 @@ import "server-only";
 import type { FindTeamSettings } from "@/lib/games/findTeam";
 import { parseEmojiText } from "./emojis-api";
 import { botFetch } from "./rest";
+import { invalidateGuildChannels } from "./channels-api";
 
 const CHANNEL_TYPE_TEXT = 0;
 const CHANNEL_TYPE_CATEGORY = 4;
@@ -31,6 +32,7 @@ async function createChannel(guildId: string, body: Record<string, unknown>) {
     "Teammate search setup (dashboard)",
   );
   if (!res?.ok) return discordError(res, "Cannot create the channel in Discord");
+  invalidateGuildChannels(guildId);
   return { ok: true as const, id: ((await res.json()) as { id: string }).id };
 }
 
